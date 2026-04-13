@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import ForBusinessPage from "./pages/ForBusinessPage";
+import NotFoundPage from "./pages/NotFoundPage";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
 /* === Page loading screen === */
@@ -932,11 +933,17 @@ const App = () => {
 
 
 
-  const [page, setPage] = useState<"home" | "for-business">("home");
+  const [page, setPage] = useState<"home" | "for-business" | "not-found">("home");
+  const [notFoundKey, setNotFoundKey] = useState(0);
 
-  const navigateTo = (target: "home" | "for-business") => {
-    if (target === page) return;
-    setPage(target);
+  const navigateTo = (target: "home" | "for-business" | "not-found") => {
+    if (target === "not-found") {
+      setNotFoundKey((k) => k + 1);
+      setPage("not-found");
+    } else {
+      if (target === page) return;
+      setPage(target);
+    }
     const lenis = (window as any).__lenis;
     if (lenis) lenis.scrollTo(0, { immediate: true });
     else window.scrollTo({ top: 0 });
@@ -1080,7 +1087,9 @@ const App = () => {
         onNavigate={navigateTo}
       />
 
-      {page === "for-business" ? (
+      {page === "not-found" ? (
+        <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
+      ) : page === "for-business" ? (
         <ForBusinessPage theme={theme} openBooking={openBooking} />
       ) : (
       <>
