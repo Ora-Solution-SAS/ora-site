@@ -951,66 +951,6 @@ const App = () => {
 
   const benefitsRef = useRef<HTMLElement | null>(null);
   const [_benefitsPhase, setBenefitsPhase] = useState<"problem" | "solution">("problem");
-  const howItWorksRef = useRef<HTMLElement | null>(null);
-  const [_howItWorksProgress, setHowItWorksProgress] = useState(0); // 0..1
-  const howItWorksCardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [_activeHowItWorksStep, setActiveHowItWorksStep] = useState(0);
-
-  // Track active card + shrink animation on scroll (pure DOM, no React re-renders)
-  const activeStepRef = useRef(0);
-  useEffect(() => {
-    let raf = 0;
-    const totalCards = 4;
-    const compute = () => {
-      raf = 0;
-      const section = howItWorksRef.current;
-      if (!section) return;
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const sectionHeight = section.scrollHeight || section.offsetHeight;
-      const scrolled = vh - rect.top;
-      const progress = Math.max(0, Math.min(1, scrolled / sectionHeight));
-      const step = Math.min(totalCards - 1, Math.floor(progress * totalCards));
-
-      // Only update React state when the step actually changes
-      if (step !== activeStepRef.current) {
-        activeStepRef.current = step;
-        setActiveHowItWorksStep(step);
-      }
-
-      // Shrink effect — pure DOM manipulation, no React overhead
-      const cards = howItWorksCardRefs.current;
-      for (let i = 0; i < cards.length; i++) {
-        const el = cards[i];
-        if (!el) continue;
-        const inner = el.firstElementChild as HTMLElement | null;
-        if (!inner) continue;
-        const nextEl = cards[i + 1];
-        if (!nextEl) {
-          inner.style.transform = "scale3d(1,1,1)";
-          inner.style.borderRadius = "28px";
-          continue;
-        }
-        const nextRect = nextEl.getBoundingClientRect();
-        const stickyTop = vh * 0.2;
-        const raw = Math.max(0, Math.min(1, 1 - (nextRect.top - stickyTop) / (vh * 0.6)));
-        const t = 1 - Math.pow(1 - raw, 2);
-        const s = 1 - t * 0.06;
-        const radius = 28 + t * 16;
-        inner.style.transform = `scale3d(${s},${s},1)`;
-        inner.style.borderRadius = `${radius}px`;
-      }
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(compute);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true } as any);
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll as any);
-    };
-  }, []);
 
 
 
@@ -1112,44 +1052,6 @@ const App = () => {
   }, []);
 
   // How it works timeline progress (fills the center line as you scroll) — rAF throttled
-  const howItWorksProgressRef = useRef(-1);
-  useEffect(() => {
-    let raf = 0;
-
-    const compute = () => {
-      raf = 0;
-      const section = howItWorksRef.current;
-      if (!section) return;
-
-      const rect = section.getBoundingClientRect();
-      const viewportH = window.innerHeight || document.documentElement.clientHeight;
-
-      const start = viewportH * 0.85;
-      const end = viewportH * 0.15;
-      const raw = (start - rect.top) / (rect.height + start - end);
-      const p = Math.min(1, Math.max(0, raw));
-
-      if (Math.abs(p - howItWorksProgressRef.current) > 0.01) {
-        howItWorksProgressRef.current = p;
-        setHowItWorksProgress(p);
-      }
-    };
-
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(compute);
-    };
-
-    compute();
-    window.addEventListener("scroll", onScroll, { passive: true } as any);
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll as any);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
 
 
 
@@ -1191,6 +1093,14 @@ const App = () => {
 
       {/* FEATURES — alternating video + text rows */}
       <section id="features" className="relative -mt-16 pt-24 md:pt-32 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
+        <FadeInOnScroll direction="up">
+          <div className="text-center mb-20 md:mb-28">
+            <h2 className="font-poppins text-4xl md:text-6xl font-bold tracking-[-0.03em] text-[#111827] dark:text-white">
+              Découvrez{" "}
+              <span className="text-brand-gradient">Ora.</span>
+            </h2>
+          </div>
+        </FadeInOnScroll>
         <div className="max-w-6xl mx-auto space-y-36 md:space-y-52">
           {[
             {
@@ -1275,91 +1185,6 @@ const App = () => {
               </FeatureRow>
             );
           })}
-        </div>
-      </section>
-
-      {/* HOW IT WORKS — sticky stacking cards */}
-      <section
-        id="how-it-works"
-        ref={howItWorksRef}
-        className="relative -mt-16 pt-0 pb-24 md:pb-32 px-6 md:px-12 bg-white dark:bg-background"
-      >
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <FadeInOnScroll direction="up" delay={0}>
-              <h2 className="text-3xl md:text-5xl font-bold mb-4">
-                The Ora experience
-              </h2>
-            </FadeInOnScroll>
-            <FadeInOnScroll direction="up" delay={150}>
-              <p className="text-lg max-w-3xl mx-auto text-gray-500 dark:text-gray-300">
-                A simple process from discovery to deployment.
-              </p>
-            </FadeInOnScroll>
-          </div>
-        </div>
-
-        {/* Sticky stacking cards — each slides up over the previous */}
-        <div className="relative" style={{ paddingBottom: "30vh" }}>
-          {[
-            {
-              label: "Discovery call",
-              desc: "We review your Excel processes, files, and bottlenecks with your team.",
-              step: "Step 1",
-            },
-            {
-              label: "Blueprint",
-              desc: "We map triggers, inputs, outputs, edge cases — you validate the plan.",
-              step: "Step 2",
-            },
-            {
-              label: "Build & connect",
-              desc: "We connect to your existing tools and test everything on real data.",
-              step: "Step 3",
-            },
-            {
-              label: "Launch & optimise",
-              desc: "We deploy, monitor live usage, refine — then scale to new workflows.",
-              step: "Step 4",
-            },
-          ].map((card, idx) => (
-            <div
-              key={idx}
-              ref={(el) => { howItWorksCardRefs.current[idx] = el; }}
-              className="sticky"
-              style={{
-                top: "20vh",
-                zIndex: 10 + idx,
-                marginBottom: "12vh",
-              }}
-            >
-              <div
-                className="max-w-6xl mx-auto w-full rounded-[28px] overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.25)] origin-center"
-                style={{
-                  background: "radial-gradient(circle at center, #1F5BFF 0%, #174AE6 55%, #123EC4 100%)",
-                  willChange: "transform, border-radius",
-                  transform: "translateZ(0)",
-                  contain: "layout style paint",
-                }}
-              >
-                <div className="text-center px-8 pt-7 pb-3">
-                  <span className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium">{card.step}</span>
-                  <h3 className="mt-1.5 text-2xl md:text-3xl font-semibold text-white">{card.label}</h3>
-                  <p className="mt-1.5 text-sm md:text-base text-white/60 max-w-lg mx-auto">{card.desc}</p>
-                </div>
-                <div className="px-5 pb-4">
-                  <div className="w-full aspect-[2.5/1] rounded-[18px] bg-black/20 border border-white/10 flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <div className="w-12 h-12 mx-auto rounded-full bg-white/10 flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white/50" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                      </div>
-                      <p className="text-white/30 text-xs">Video</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
@@ -1508,22 +1333,6 @@ const App = () => {
         </div>,
         document.body
       )}
-
-      {/* DISCOVER ORA */}
-      <FadeInOnScroll>
-        <div className="py-16 md:py-24 px-6 lg:px-10 bg-white dark:bg-[#020617]">
-          <div className="max-w-5xl mx-auto">
-            <div
-              className="w-full rounded-[32px] flex items-center justify-center border border-gray-200/70 dark:border-white/[0.08] bg-gray-50/60 dark:bg-white/[0.03]"
-              style={{ minHeight: "420px" }}
-            >
-              <p className="text-2xl md:text-4xl font-light tracking-[-0.02em] text-center px-8 text-gray-400 dark:text-white/50">
-                Discover Ora Unlimited Engineering Solution
-              </p>
-            </div>
-          </div>
-        </div>
-      </FadeInOnScroll>
 
       {/* FOOTER */}
       <FadeInOnScroll>
