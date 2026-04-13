@@ -102,9 +102,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const isFreePlayRef      = useRef(false);  // video playing via play-button (no lock)
 
     /* ── Hourglass scroll-lock ── */
-    const revealProgress = useMotionValue(0);
-    const lockRef        = useRef<HTMLDivElement>(null);
-    const isLockedRef    = useRef(false);
+    const revealProgress            = useMotionValue(0);
+    const lockRef                   = useRef<HTMLDivElement>(null);
+    const isLockedRef               = useRef(false);
+    const hasHourglassCompletedRef  = useRef(false); // true after progress reaches 1 once
 
     /* Text reveal motion values */
     const l1o  = useTransform(revealProgress, [0,    0.22], [0, 1]);
@@ -209,7 +210,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       if (!el) return;
       const obs = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting && !isLockedRef.current) {
+          if (entry.isIntersecting && !isLockedRef.current && !hasHourglassCompletedRef.current) {
             isLockedRef.current = true;
             (window as any).__lenis?.stop();
           }
@@ -238,8 +239,19 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         (window as any).__lenis?.start();
       };
       const driveHourglass = (delta: number) => {
+        // Once completed, keep frozen at 1 — never re-engage
+        if (hasHourglassCompletedRef.current) {
+          revealProgress.set(1);
+          unlockHourglass();
+          return;
+        }
         const next = revealProgress.get() + delta;
-        if (next >= 1) { revealProgress.set(1); unlockHourglass(); return; }
+        if (next >= 1) {
+          revealProgress.set(1);
+          hasHourglassCompletedRef.current = true;
+          unlockHourglass();
+          return;
+        }
         if (next <= 0) { revealProgress.set(0); unlockHourglass(); return; }
         revealProgress.set(next);
       };

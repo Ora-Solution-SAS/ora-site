@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function AnimatedHeroTitle() {
   const [titleNumber, setTitleNumber] = useState(0);
+  const [done, setDone] = useState(false);
   const titles = useMemo(() => [
     "reportings manuels",
     "consolidations fastidieuses",
@@ -11,11 +12,15 @@ export function AnimatedHeroTitle() {
   ], []);
 
   useEffect(() => {
+    if (done) return;
     const timeoutId = setTimeout(() => {
-      setTitleNumber((prev) => (prev === titles.length - 1 ? 0 : prev + 1));
+      setTitleNumber((prev) => {
+        if (prev === titles.length - 1) { setDone(true); return prev; }
+        return prev + 1;
+      });
     }, 2000);
     return () => clearTimeout(timeoutId);
-  }, [titleNumber, titles]);
+  }, [titleNumber, titles, done]);
 
   return (
     <h1 className="hero-stagger hero-d1 font-poppins text-[clamp(2.6rem,6.5vw,4.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center">

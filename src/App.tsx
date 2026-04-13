@@ -683,6 +683,7 @@ cal-inline-widget .cal-loading {
 import Cal from "@calcom/embed-react";
 import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
+import { OraFooter } from "./components/Footer";
 import Hero from "./components/Hero";
 import {
   Clock,
@@ -1343,13 +1344,6 @@ const App = () => {
         document.body
       )}
 
-      {/* FOOTER */}
-      <FadeInOnScroll>
-        <footer className="py-12 px-6 md:px-12 bg-white dark:bg-black border-t border-border/20 text-gray-600 dark:text-gray-light">
-          <div className="max-w-7xl mx-auto text-center">© 2026 Ora – Paris • Luxembourg</div>
-        </footer>
-      </FadeInOnScroll>
-
       {/* Floating phone button */}
       <button
         onClick={openBooking}
@@ -1361,6 +1355,15 @@ const App = () => {
 
       </>
       )}
+
+      {/* FOOTER — visible on all pages */}
+      <FadeInOnScroll>
+        <OraFooter
+          onNavigate={navigateTo}
+          onBookCall={openBooking}
+          theme={theme}
+        />
+      </FadeInOnScroll>
 
     </div>
   );
