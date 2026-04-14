@@ -3,24 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export function AnimatedHeroTitle() {
   const [titleNumber, setTitleNumber] = useState(0);
-  const [done, setDone] = useState(false);
   const titles = useMemo(() => [
-    "reportings manuels",
-    "consolidations fastidieuses",
-    "retraitements Excel",
-    "dashboards à la main",
+    "reportings manuels.",
+    "consolidations fastidieuses.",
+    "retraitements Excel.",
+    "dashboards à la main.",
   ], []);
 
   useEffect(() => {
-    if (done) return;
     const timeoutId = setTimeout(() => {
-      setTitleNumber((prev) => {
-        if (prev === titles.length - 1) { setDone(true); return prev; }
-        return prev + 1;
-      });
+      setTitleNumber((prev) => (prev + 1) % titles.length);
     }, 2000);
     return () => clearTimeout(timeoutId);
-  }, [titleNumber, titles, done]);
+  }, [titleNumber, titles]);
 
   return (
     <h1 className="hero-stagger hero-d1 font-poppins text-[clamp(2.6rem,6.5vw,4.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center">

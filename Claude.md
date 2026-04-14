@@ -37,16 +37,33 @@
 - Tailwind utilities: `font-poppins`, `font-inter`, `font-sans` (defaults to Inter)
 - Utility class for brand gradient text: `text-brand-gradient`
 
+**Writing style — em dashes (`—`) are forbidden in UI copy.**
+- Never use `—` in visible text (labels, descriptions, subtitles, CTAs, body copy).
+- Replace with: a period, a comma, a colon, or restructure the sentence.
+- The only tolerated exception is inside code comments, never in rendered content.
+
 **Color palette:**
 
 | Name | Hex | Usage |
 |---|---|---|
 | Blue | `#3b82f6` | Primary accent, CTAs, gradient start |
 | Teal | `#0d9488` | Secondary accent, gradient end |
-| Dark background | `#111827` | Dark mode background |
-| Light background | `#fcfbf7` | Light mode background (warm off-white) |
+| Dark background | `#111827` | Dark mode — primary section bg |
+| Dark background alt | `#0f172a` | Dark mode — alternate section bg (subtle contrast) |
+| Light background | `#fcfbf7` | Light mode — primary section bg (warm off-white) |
+| Light background alt | `#ffffff` | Light mode — alternate section bg (pure white) |
 
 Brand gradient: `linear-gradient(to right, #3b82f6, #0d9488)`
+
+**Section background alternation rule:**
+Pages alternate between two backgrounds to create visual rhythm. Use these exact values — never use other dark shades (e.g. `#020617`, `#0a0a0a`) for section backgrounds.
+
+| Mode | Section A (primary) | Section B (contrast) |
+|---|---|---|
+| Light | `#fcfbf7` | `#ffffff` |
+| Dark | `#111827` | `#0f172a` |
+
+In JSX: `bg = dk ? "#111827" : "#fcfbf7"` and `bgContrast = dk ? "#0f172a" : "#ffffff"`
 
 > `tailwind.config.cjs` currently has older values (`#2563EB`, `#22d3ee`, `#020617`) — update these when doing the light/dark mode refactor.
 
@@ -86,6 +103,21 @@ Brand gradient: `linear-gradient(to right, #3b82f6, #0d9488)`
 **Target:** macOS and Windows (both required)
 
 **Rule:** Any new system-level integration must include a Windows fallback. Never add macOS-only code without a platform check.
+
+---
+
+## Pages
+
+**Page routing:**
+- The app uses a simple state-based router in `App.tsx` — no React Router. Pages are managed via `const [page, setPage] = useState<Page>("home")`.
+- The `Page` type lives in `App.tsx`: `type Page = "home" | "for-business" | "not-found" | ...`
+- **Default rule: any new page that has no design or implementation yet MUST redirect to the `"not-found"` page (404).** In `Navigation.tsx`, link it via `onNavigate("not-found")`. Only replace this once the real page is built.
+- The 404 page lives at `src/pages/NotFoundPage.tsx`. It features an animated Ora logo (bars wind into a spinning ring, then return) and a "Retour à l'accueil" button.
+- To add a real page: (1) add its key to the `Page` type in `App.tsx`, (2) create `src/pages/YourPage.tsx`, (3) add a render branch in the page conditional in `App.tsx`, (4) update the nav link from `"not-found"` to the new page key.
+
+**Footer:**
+- The footer (`src/components/Footer.tsx` → `src/components/ui/footer.tsx`) is rendered **outside** the page conditional in `App.tsx` — it appears on **all pages** by default.
+- It receives `onNavigate`, `onBookCall`, and `theme` props from `App.tsx`.
 
 ---
 

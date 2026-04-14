@@ -1,6 +1,6 @@
 import { Footer } from "./ui/footer";
 
-type Page = "home" | "for-business" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "not-found";
 
 interface OraFooterProps {
   onNavigate: (page: Page) => void;
@@ -28,6 +28,7 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
           title: "Produit",
           links: [
             { text: "Accueil", onClick: () => onNavigate("home") },
+            { text: "L'expérience Ora", onClick: () => onNavigate("ora-experience") },
             {
               text: "Solutions entreprise",
               onClick: () => onNavigate("for-business"),

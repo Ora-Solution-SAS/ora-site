@@ -12,7 +12,7 @@ import {
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 
-type Page = "home" | "for-business" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -235,7 +235,7 @@ const Navigation: React.FC<NavigationProps> = ({
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <button
-                    onClick={() => onNavigate("not-found")}
+                    onClick={() => onNavigate("ora-experience")}
                     className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
                   >
                     L'expérience Ora
@@ -329,7 +329,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="my-2 border-t border-gray-200/60 dark:border-white/[0.08]" />
 
             <button
-              onClick={() => { setMobileOpen(false); onNavigate("not-found"); }}
+              onClick={() => { setMobileOpen(false); onNavigate("ora-experience"); }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full"
             >
               L'expérience Ora

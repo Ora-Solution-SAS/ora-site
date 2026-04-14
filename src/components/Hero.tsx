@@ -2,8 +2,7 @@ import { forwardRef, useRef, useEffect, useState, useCallback } from "react";
 import { ArrowRight, Play, RefreshCw } from "lucide-react";
 import { LogosSlider } from "./LogosSlider";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
-import { LogoHourglass } from "./LogoHourglass";
-import { useTransform, useMotionValue, motion } from "framer-motion";
+import { useMotionValue, useTransform, motion } from "framer-motion";
 
 /* ── CSS ─────────────────────────────────────────────────────── */
 const heroCSS = `
@@ -101,20 +100,6 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const hasPreviewFiredRef = useRef(false);  // snap triggered at least once (no re-trigger)
     const isFreePlayRef      = useRef(false);  // video playing via play-button (no lock)
 
-    /* ── Hourglass scroll-lock ── */
-    const revealProgress            = useMotionValue(0);
-    const lockRef                   = useRef<HTMLDivElement>(null);
-    const isLockedRef               = useRef(false);
-    const hasHourglassCompletedRef  = useRef(false); // true after progress reaches 1 once
-
-    /* Text reveal motion values */
-    const l1o  = useTransform(revealProgress, [0,    0.22], [0, 1]);
-    const l1y  = useTransform(revealProgress, [0,    0.22], [24, 0]);
-    const l2o  = useTransform(revealProgress, [0.20, 0.40], [0, 1]);
-    const l2y  = useTransform(revealProgress, [0.20, 0.40], [24, 0]);
-    const l3o  = useTransform(revealProgress, [0.38, 0.58], [0, 1]);
-    const l3y  = useTransform(revealProgress, [0.38, 0.58], [24, 0]);
-    const ctaO = useTransform(revealProgress, [0.60, 0.75], [0, 1]);
 
     /* ─────────────────────────────────────────────────────────── *
      *  unlockPreview — release video scroll-lock                  *
@@ -202,15 +187,40 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       setTimeout(doLock, 900);
     }, []);
 
+
+    /* ── Text scroll-lock ── */
+    const revealProgress      = useMotionValue(0);
+    const lockRef             = useRef<HTMLDivElement>(null);
+    const isLockedRef         = useRef(false);
+    const hasTextCompletedRef = useRef(false);
+
+    /* Line reveal — opacity + y */
+    const l1o = useTransform(revealProgress, [0,    0.22], [0, 1]);
+    const l1y = useTransform(revealProgress, [0,    0.22], [28, 0]);
+    const l2o = useTransform(revealProgress, [0.20, 0.44], [0, 1]);
+    const l2y = useTransform(revealProgress, [0.20, 0.44], [28, 0]);
+    const l3o = useTransform(revealProgress, [0.42, 0.62], [0, 1]);
+
+    /* "Découvrez Ora." : grows → then exits downward out of the section */
+    const l3Size    = useTransform(revealProgress, [0.60, 0.92], ["1.75rem", "3.75rem"]);
+    const l3Leading = useTransform(revealProgress, [0.60, 0.92], [1.5, 1.12]);
+    const l3Track   = useTransform(revealProgress, [0.60, 0.92], ["-0.025em", "-0.04em"]);
+    /* slide-in 0.42→0.62, hold 0.62→0.72, exit downward 0.72→1.0 */
+    const l3TotalY  = useTransform(
+      revealProgress,
+      [0.42, 0.62, 0.72, 1.0],
+      [28,   0,    0,    700],
+    );
+
     /* ─────────────────────────────────────────────────────────── *
-     *  IntersectionObserver — hourglass section                   *
+     *  IntersectionObserver — text scroll-lock section            *
      * ─────────────────────────────────────────────────────────── */
     useEffect(() => {
       const el = lockRef.current;
       if (!el) return;
       const obs = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting && !isLockedRef.current && !hasHourglassCompletedRef.current) {
+          if (entry.isIntersecting && !isLockedRef.current && !hasTextCompletedRef.current) {
             isLockedRef.current = true;
             (window as any).__lenis?.stop();
           }
@@ -225,53 +235,49 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
      *  Wheel + touch handlers                                      *
      *                                                              *
      *  Priority order:                                             *
-     *   1. isSnappingRef  → block input, Lenis animates           *
+     *   1. isSnappingRef   → block input, Lenis animates          *
      *   2. isPreviewLocked → block; hard scroll skips             *
      *   3. ratio ≥ 0.8 & first time → trigger snap               *
-     *   4. isLockedRef    → drive hourglass progress              *
+     *   4. isLockedRef     → drive text reveal progress           *
      * ─────────────────────────────────────────────────────────── */
     useEffect(() => {
-      const SPEED     = 3600;
-      const FAST_SKIP = 60; // deltaY (px) that counts as "hard scroll"
+      const FAST_SKIP = 60;
+      const SPEED     = 3200;
 
-      const unlockHourglass = () => {
+      const unlockText = () => {
         isLockedRef.current = false;
         (window as any).__lenis?.start();
       };
-      const driveHourglass = (delta: number) => {
-        // Once completed, keep frozen at 1 — never re-engage
-        if (hasHourglassCompletedRef.current) {
+      const driveText = (delta: number) => {
+        if (hasTextCompletedRef.current) {
           revealProgress.set(1);
-          unlockHourglass();
+          unlockText();
           return;
         }
         const next = revealProgress.get() + delta;
         if (next >= 1) {
           revealProgress.set(1);
-          hasHourglassCompletedRef.current = true;
-          unlockHourglass();
+          hasTextCompletedRef.current = true;
+          unlockText();
           return;
         }
-        if (next <= 0) { revealProgress.set(0); unlockHourglass(); return; }
+        if (next <= 0) { revealProgress.set(0); unlockText(); return; }
         revealProgress.set(next);
       };
 
       const handleWheel = (e: WheelEvent) => {
-        // ① Snap in progress — Lenis's `lock:true` already blocks its own
-        //   wheel handler; we also preventDefault so the browser doesn't scroll.
+        // ① Snap in progress
         if (isSnappingRef.current) {
           e.preventDefault();
           return;
         }
-
-        // ② Video lock — only a hard downward scroll breaks out
+        // ② Video lock
         if (isPreviewLocked.current) {
           e.preventDefault();
           if (e.deltaY > FAST_SKIP) unlockPreview(true);
           return;
         }
-
-        // ③ Check whether snap should trigger (downward scroll, first time)
+        // ③ Snap trigger
         if (!hasPreviewFiredRef.current && e.deltaY > 0) {
           const el = frameRef.current;
           if (el) {
@@ -286,15 +292,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             }
           }
         }
-
-        // ④ Hourglass text reveal
+        // ④ Text reveal
         if (isLockedRef.current) {
           e.preventDefault();
-          driveHourglass(e.deltaY / SPEED);
+          driveText(e.deltaY / SPEED);
         }
       };
 
-      /* Touch ── mirrors wheel logic for mobile */
       let lastTouchY = 0;
       const handleTouchStart = (e: TouchEvent) => {
         if (!isSnappingRef.current && !isPreviewLocked.current && !isLockedRef.current) return;
@@ -309,7 +313,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         if (isPreviewLocked.current) {
           if (delta > 30) unlockPreview(true);
         } else {
-          driveHourglass(delta / SPEED);
+          driveText(delta / SPEED);
         }
         lastTouchY = y;
       };
@@ -444,48 +448,56 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             <LogosSlider />
           </div>
 
-          {/* ═══ SECTION 2A — scroll-lock: hourglass + text ═══ */}
+          {/* ═══ SECTION 2A — texte piloté par scroll-lock ═══ */}
           <div
             ref={lockRef}
-            className="relative z-[1] min-h-screen flex items-center bg-[#fcfbf7] dark:bg-[#111827]"
+            className="relative z-[1] min-h-screen flex items-center justify-center overflow-hidden bg-[#fcfbf7] dark:bg-[#111827]"
           >
-            <div className="w-full max-w-5xl mx-auto px-6 lg:px-10 py-16">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="w-full max-w-3xl mx-auto px-6 lg:px-10 text-center flex flex-col gap-7">
 
-                <div className="flex items-center justify-center order-2 md:order-1">
-                  <LogoHourglass progress={revealProgress} />
-                </div>
+              {/* Ligne 1 */}
+              <motion.p
+                className="font-poppins font-medium text-[#111827] dark:text-white"
+                style={{
+                  opacity: l1o,
+                  y: l1y,
+                  fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)",
+                  lineHeight: 1.5,
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                Votre temps est votre actif le plus précieux.
+              </motion.p>
 
-                <div className="flex flex-col justify-center gap-6 order-1 md:order-2">
-                  <motion.p
-                    className="font-poppins text-2xl md:text-[1.75rem] lg:text-[2rem] font-medium leading-[1.5] tracking-[-0.025em] text-[#111827] dark:text-white"
-                    style={{ opacity: l1o, y: l1y }}
-                  >
-                    Votre temps est votre actif le plus précieux.
-                  </motion.p>
-                  <motion.p
-                    className="font-poppins text-2xl md:text-[1.75rem] lg:text-[2rem] font-medium leading-[1.5] tracking-[-0.025em] text-[#111827] dark:text-white"
-                    style={{ opacity: l2o, y: l2y }}
-                  >
-                    Cessez de le gaspiller sur Excel.
-                  </motion.p>
-                  <motion.p
-                    className="font-poppins text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.25] tracking-[-0.03em] text-brand-gradient mt-2"
-                    style={{ opacity: l3o, y: l3y }}
-                  >
-                    Utilisez Ora.
-                  </motion.p>
-                  <motion.button
-                    onClick={openBooking}
-                    className="mt-4 w-fit inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_14px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
-                    style={{ opacity: ctaO }}
-                  >
-                    Réserver un appel
-                    <ArrowRight className="w-4 h-4" />
-                  </motion.button>
-                </div>
+              {/* Ligne 2 */}
+              <motion.p
+                className="font-poppins font-medium text-[#111827] dark:text-white"
+                style={{
+                  opacity: l2o,
+                  y: l2y,
+                  fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)",
+                  lineHeight: 1.5,
+                  letterSpacing: "-0.025em",
+                }}
+              >
+                Cessez de le gaspiller sur Excel.
+              </motion.p>
 
-              </div>
+              {/* Ligne 3 — grandit puis sort par le bas pour devenir le H2 de la section suivante */}
+              <motion.p
+                className="font-poppins font-bold"
+                style={{
+                  opacity: l3o,
+                  y: l3TotalY,
+                  fontSize: l3Size,
+                  lineHeight: l3Leading,
+                  letterSpacing: l3Track,
+                }}
+              >
+                <span className="text-[#111827] dark:text-white">Découvrez </span>
+                <span className="text-brand-gradient">Ora.</span>
+              </motion.p>
+
             </div>
           </div>
 

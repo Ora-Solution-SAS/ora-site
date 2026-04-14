@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import ForBusinessPage from "./pages/ForBusinessPage";
+import OraExperiencePage from "./pages/OraExperiencePage";
 import NotFoundPage from "./pages/NotFoundPage";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
@@ -694,6 +695,9 @@ import {
   TrendingUp,
   ShieldCheck,
   Phone,
+  ArrowRight,
+  Database,
+  GitMerge,
 } from "lucide-react";
 
 // ← Replace with your Cal.com username/event-slug once your account is set up
@@ -934,10 +938,10 @@ const App = () => {
 
 
 
-  const [page, setPage] = useState<"home" | "for-business" | "not-found">("home");
+  const [page, setPage] = useState<"home" | "for-business" | "ora-experience" | "not-found">("home");
   const [notFoundKey, setNotFoundKey] = useState(0);
 
-  const navigateTo = (target: "home" | "for-business" | "not-found") => {
+  const navigateTo = (target: "home" | "for-business" | "ora-experience" | "not-found") => {
     if (target === "not-found") {
       setNotFoundKey((k) => k + 1);
       setPage("not-found");
@@ -1092,6 +1096,8 @@ const App = () => {
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
       ) : page === "for-business" ? (
         <ForBusinessPage theme={theme} openBooking={openBooking} />
+      ) : page === "ora-experience" ? (
+        <OraExperiencePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : (
       <>
 
@@ -1105,7 +1111,7 @@ const App = () => {
       <section id="features" className="relative -mt-16 pt-24 md:pt-32 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         <FadeInOnScroll direction="up">
           <div className="text-center mb-20 md:mb-28">
-            <h2 className="font-poppins text-4xl md:text-6xl font-bold tracking-[-0.03em] text-[#111827] dark:text-white">
+            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-bold tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               Découvrez{" "}
               <span className="text-brand-gradient">Ora.</span>
             </h2>
@@ -1195,6 +1201,149 @@ const App = () => {
               </FeatureRow>
             );
           })}
+        </div>
+      </section>
+
+      {/* ── L'EXPÉRIENCE ORA ────────────────────────────────────────── */}
+      <section className="py-24 md:py-36 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]">
+        <div className="max-w-5xl mx-auto">
+          <FadeInOnScroll>
+            <div className="text-center mb-16">
+              <div className="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] mb-5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
+                L'expérience Ora
+              </div>
+              <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
+                Opérationnel en moins d'une semaine.
+              </h2>
+              <p className="mt-4 mx-auto text-base leading-relaxed max-w-md text-gray-500 dark:text-gray-400">
+                Nous configurons tout pour vous, sans toucher à votre organisation actuelle.
+              </p>
+            </div>
+          </FadeInOnScroll>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                num: "01",
+                icon: Database,
+                title: "Ora s'intègre à Excel",
+                desc: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.",
+              },
+              {
+                num: "02",
+                icon: GitMerge,
+                title: "Des automatisations sur mesure",
+                desc: "Nous configurons vos premiers workflows avec vous. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.",
+              },
+              {
+                num: "03",
+                icon: CheckCircle2,
+                title: "Laissez faire Ora, reprenez le contrôle",
+                desc: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin.",
+              },
+            ].map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <FadeInOnScroll key={i} delay={i * 100}>
+                  <div className="p-6 rounded-[22px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] h-full">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
+                        Étape {step.num}
+                      </span>
+                    </div>
+                    <h3 className="font-poppins font-bold tracking-tight text-[1rem] leading-snug mb-2 text-[#111827] dark:text-white">
+                      {step.title}
+                    </h3>
+                    <p className="text-[13.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+                      {step.desc}
+                    </p>
+                  </div>
+                </FadeInOnScroll>
+              );
+            })}
+          </div>
+
+          <FadeInOnScroll delay={350}>
+            <div className="flex justify-center mt-10">
+              <button
+                onClick={() => navigateTo("ora-experience")}
+                className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
+              >
+                Découvrir l'expérience Ora
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </FadeInOnScroll>
+        </div>
+      </section>
+
+      {/* ── CTA FINAL ────────────────────────────────────────────────── */}
+      <section className="py-24 md:py-32 px-6 md:px-12 bg-white dark:bg-[#111827]">
+        <div className="max-w-4xl mx-auto">
+          <FadeInOnScroll>
+            <div
+              className="rounded-[32px] border border-blue-100 dark:border-blue-500/15 px-8 md:px-16 py-16 md:py-20 grid md:grid-cols-2 gap-12 items-center"
+              style={{ background: "linear-gradient(135deg, #eff6ff 0%, #f0fdfa 100%)" }}
+            >
+              {/* Left — pitch */}
+              <div>
+                <div className="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] mb-5 bg-blue-100 text-blue-700 border border-blue-200">
+                  Appel découverte
+                </div>
+                <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-4xl leading-[1.12] text-[#111827] mb-4">
+                  30 minutes pour tout changer.
+                </h2>
+                <p className="text-base leading-relaxed text-gray-600 mb-8">
+                  Un appel simple, sans jargon. Vous nous décrivez votre quotidien, on identifie ce qu'Ora peut automatiser. Vous repartez avec un plan concret.
+                </p>
+                <button
+                  onClick={openBooking}
+                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
+                >
+                  Réserver mon appel
+                  <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
+                </button>
+                <p className="mt-3 text-[12px] text-gray-400">Gratuit · Sans engagement</p>
+              </div>
+
+              {/* Right — what to expect */}
+              <div className="flex flex-col gap-5">
+                {[
+                  {
+                    icon: Clock,
+                    title: "30 minutes chrono",
+                    desc: "Un format court et structuré, pensé pour aller à l'essentiel.",
+                  },
+                  {
+                    icon: Zap,
+                    title: "Identification de vos automatisations",
+                    desc: "On passe en revue vos tâches répétitives et on repère ce qu'Ora peut prendre en charge immédiatement.",
+                  },
+                  {
+                    icon: CheckCircle2,
+                    title: "Un plan sur mesure",
+                    desc: "Vous repartez avec une proposition concrète, adaptée à votre métier et vos outils actuels.",
+                  },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-4">
+                      <div className="w-9 h-9 rounded-xl bg-white/70 border border-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Icon className="w-4 h-4 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[14px] text-[#111827] mb-0.5">{item.title}</p>
+                        <p className="text-[13px] leading-relaxed text-gray-500">{item.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </FadeInOnScroll>
         </div>
       </section>
 
