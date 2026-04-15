@@ -4,60 +4,16 @@ import Lenis from "lenis";
 import ForBusinessPage from "./pages/ForBusinessPage";
 import OraExperiencePage from "./pages/OraExperiencePage";
 import NotFoundPage from "./pages/NotFoundPage";
+import OraLogoSpinner from "./components/OraLogoSpinner";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
-/* === Page loading screen === */
-@keyframes loaderPulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
-}
-@keyframes loaderBar {
-  0% { transform: scaleX(0); }
-  100% { transform: scaleX(1); }
-}
+/* === Booking loading screen fade-out === */
 @keyframes loaderFadeOut {
   0% { opacity: 1; }
   100% { opacity: 0; visibility: hidden; }
 }
-.loading-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: white;
-}
-.dark .loading-screen {
-  background: #0a0a0a;
-}
-.loading-screen.fade-out {
+.booking-loading-screen.fade-out {
   animation: loaderFadeOut 0.6s ease-out forwards;
-}
-.loading-logo {
-  font-size: 2.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  animation: loaderPulse 1.8s ease-in-out infinite;
-}
-.loading-bar-track {
-  margin-top: 1.5rem;
-  width: 120px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgba(0,0,0,0.06);
-  overflow: hidden;
-}
-.dark .loading-bar-track {
-  background: rgba(255,255,255,0.08);
-}
-.loading-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: linear-gradient(90deg, #38bdf8, #3b82f6);
-  transform-origin: left;
-  animation: loaderBar 1.2s ease-out forwards;
 }
 
 /* === Light hero animated aurora (subtle moving blue/pink) === */
@@ -160,188 +116,6 @@ const bubbleStyles = `
   animation: videoReveal 1.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* === Booking orb — animated glowing planet === */
-@keyframes orbFloat {
-  0%   { transform: translate(-40%, -48%) rotate(0deg) scale(1); }
-  10%  { transform: translate(-38%, -52%) rotate(3deg) scale(1.03); }
-  20%  { transform: translate(-44%, -56%) rotate(1deg) scale(1.01); }
-  30%  { transform: translate(-36%, -50%) rotate(-2deg) scale(1.04); }
-  40%  { transform: translate(-42%, -58%) rotate(2.5deg) scale(0.98); }
-  50%  { transform: translate(-35%, -54%) rotate(-1deg) scale(1.02); }
-  60%  { transform: translate(-43%, -46%) rotate(3.5deg) scale(1.01); }
-  70%  { transform: translate(-37%, -52%) rotate(-2.5deg) scale(1.03); }
-  80%  { transform: translate(-44%, -50%) rotate(1.5deg) scale(0.99); }
-  90%  { transform: translate(-39%, -55%) rotate(-1.5deg) scale(1.02); }
-  100% { transform: translate(-40%, -48%) rotate(0deg) scale(1); }
-}
-@keyframes orbSpin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-@keyframes orbShimmer {
-  0%   { opacity: 0.35; transform: translate(-50%, -50%) rotate(0deg) scale(1); }
-  25%  { opacity: 0.7; transform: translate(-47%, -53%) rotate(90deg) scale(1.06); }
-  50%  { opacity: 0.45; transform: translate(-53%, -47%) rotate(180deg) scale(1.02); }
-  75%  { opacity: 0.65; transform: translate(-48%, -51%) rotate(270deg) scale(1.04); }
-  100% { opacity: 0.35; transform: translate(-50%, -50%) rotate(360deg) scale(1); }
-}
-@keyframes orbRingPulse {
-  0%, 100% { opacity: 0.15; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
-  25% { opacity: 0.4; transform: translate(-50%, -50%) scale(1.05) rotate(2deg); }
-  50% { opacity: 0.5; transform: translate(-50%, -50%) scale(1.10) rotate(0deg); }
-  75% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.03) rotate(-2deg); }
-}
-@keyframes orbHaze {
-  0%, 100% { opacity: 0.2; transform: translate(-30%, -40%) scale(1); }
-  20% { opacity: 0.45; transform: translate(-22%, -48%) scale(1.12); }
-  40% { opacity: 0.55; transform: translate(-35%, -42%) scale(1.05); }
-  60% { opacity: 0.3; transform: translate(-28%, -50%) scale(1.15); }
-  80% { opacity: 0.5; transform: translate(-33%, -36%) scale(1.08); }
-}
-@keyframes orbDrift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  25% { transform: translate(12px, -8px) rotate(1deg); }
-  50% { transform: translate(-4px, -16px) rotate(-1deg); }
-  75% { transform: translate(8px, -4px) rotate(0.5deg); }
-}
-@keyframes orbGlint {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.8; transform: translate(-48%, -52%) scale(1.15); }
-}
-
-.booking-orb-wrap {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-.booking-orb {
-  position: absolute;
-  top: 58%;
-  left: 18%;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  will-change: transform;
-  animation: orbFloat 14s ease-in-out infinite;
-  background:
-    radial-gradient(circle at 34% 30%,
-      rgba(255,255,255,0.97) 0%,
-      rgba(220,240,255,0.90) 12%,
-      rgba(170,215,250,0.80) 28%,
-      rgba(120,190,245,0.72) 48%,
-      rgba(80,160,235,0.68) 68%,
-      rgba(50,130,215,0.75) 90%);
-  box-shadow:
-    0 0 50px 12px rgba(180,220,255,0.30),
-    0 0 100px 40px rgba(200,230,255,0.12),
-    inset 0 0 60px 15px rgba(255,255,255,0.65);
-}
-/* Bright highlight crescent (top-left lit edge) */
-.booking-orb::before {
-  content: '';
-  position: absolute;
-  top: 3%;
-  left: 6%;
-  width: 58%;
-  height: 58%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 30% 28%,
-    rgba(255,255,255,1) 0%,
-    rgba(255,255,255,0.70) 20%,
-    rgba(240,250,255,0.30) 45%,
-    transparent 70%);
-  filter: blur(2px);
-}
-/* Soft white atmospheric rim */
-.booking-orb::after {
-  content: '';
-  position: absolute;
-  inset: -10%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at 75% 80%,
-    rgba(200,230,255,0.20) 0%,
-    rgba(220,240,255,0.10) 40%,
-    transparent 70%);
-  filter: blur(12px);
-  animation: orbDrift 9s ease-in-out infinite;
-}
-/* Slow-spinning surface texture */
-.booking-orb-surface {
-  position: absolute;
-  inset: 2%;
-  border-radius: 50%;
-  background:
-    radial-gradient(ellipse at 60% 40%, rgba(255,255,255,0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 25% 70%, rgba(180,220,255,0.10) 0%, transparent 45%);
-  animation: orbSpin 30s linear infinite;
-}
-/* Light sweep across surface */
-.booking-orb-shimmer {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 125%;
-  height: 125%;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0%,
-    rgba(255,255,255,0.25) 8%,
-    transparent 18%,
-    rgba(255,255,255,0.15) 35%,
-    transparent 48%,
-    rgba(255,255,255,0.20) 62%,
-    transparent 75%,
-    rgba(220,240,255,0.12) 88%,
-    transparent 100%);
-  animation: orbShimmer 8s linear infinite;
-}
-/* Outer atmospheric ring */
-.booking-orb-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 135%;
-  height: 135%;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.30);
-  box-shadow:
-    0 0 35px 6px rgba(200,230,255,0.10),
-    inset 0 0 25px 4px rgba(255,255,255,0.06);
-  animation: orbRingPulse 6s ease-in-out infinite;
-}
-/* Bright glint spot */
-.booking-orb-glint {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40%;
-  height: 40%;
-  border-radius: 50%;
-  background: radial-gradient(circle,
-    rgba(255,255,255,0.60) 0%,
-    rgba(255,255,255,0.15) 40%,
-    transparent 70%);
-  filter: blur(6px);
-  animation: orbGlint 4s ease-in-out infinite;
-}
-/* Haze / bloom behind orb */
-.booking-orb-haze {
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  width: 300px;
-  height: 300px;
-  border-radius: 50%;
-  transform: translate(-30%, -40%);
-  background: radial-gradient(circle,
-    rgba(200,230,255,0.35) 0%,
-    rgba(180,220,250,0.12) 50%,
-    transparent 80%);
-  filter: blur(45px);
-  animation: orbHaze 10s ease-in-out infinite;
-}
 
 /* === Phone ringing animation for Discovery call step === */
 @keyframes phoneRing {
@@ -694,7 +468,6 @@ import {
   Zap,
   TrendingUp,
   ShieldCheck,
-  Phone,
   ArrowRight,
   Database,
   GitMerge,
@@ -833,98 +606,23 @@ const App = () => {
     };
   }, []);
 
+  // Scroll to top on initial page load / refresh
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, []);
+
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingReady, setBookingReady] = useState(false);
   const [bookingFading, setBookingFading] = useState(false);
-  const [bookingLang, setBookingLang] = useState<"en" | "fr">("en");
-  const [langSwitching, setLangSwitching] = useState(false);
-
-  const bookingT = {
-    en: {
-      title: "Book a discovery call",
-      desc: "Tell us what you want to automate. We'll review your workflows and follow up with the next steps.",
-      time: "30 min · Free · No commitment",
-      blueprint: "Tailored automation blueprint",
-      privacy: "Your data stays private",
-      langLabel: "Language",
-    },
-    fr: {
-      title: "Réservez un appel découverte",
-      desc: "Dites-nous ce que vous souhaitez automatiser. Nous analyserons vos processus et reviendrons vers vous avec les prochaines étapes.",
-      time: "30 min · Gratuit · Sans engagement",
-      blueprint: "Plan d'automatisation sur mesure",
-      privacy: "Vos données restent privées",
-      langLabel: "Langue",
-    },
-  } as const;
-
-  const bk = bookingT[bookingLang];
 
   const openBooking = () => {
     setIsBookingOpen(true);
     setBookingReady(false);
     setBookingFading(false);
-    setLangSwitching(false);
     setTimeout(() => {
       setBookingFading(true);
-      setTimeout(() => setBookingReady(true), 500);
-    }, 1000);
-  };
-
-  const switchBookingLang = (code: "en" | "fr") => {
-    if (code === bookingLang) return;
-    setLangSwitching(true);
-    setTimeout(() => {
-      setBookingLang(code);
-      setTimeout(() => setLangSwitching(false), 1400);
-    }, 300);
-  };
-
-  // Orb escape effect — planet moves away from cursor
-  const orbRef = useRef<HTMLDivElement | null>(null);
-  const orbWrapRef = useRef<HTMLDivElement | null>(null);
-  const orbOffset = useRef({ x: 0, y: 0 });
-
-  const handleOrbMouseMove = (e: React.MouseEvent) => {
-    const wrap = orbWrapRef.current;
-    const orb = orbRef.current;
-    if (!wrap || !orb) return;
-
-    const rect = wrap.getBoundingClientRect();
-    // Cursor position relative to the wrap center
-    const cx = e.clientX - rect.left;
-    const cy = e.clientY - rect.top;
-
-    // Orb center position (approximate)
-    const orbCx = rect.width * 0.18;
-    const orbCy = rect.height * 0.58;
-
-    const dx = orbCx - cx;
-    const dy = orbCy - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-
-    // Only react when cursor is within 200px of orb center
-    if (dist < 200) {
-      const strength = (1 - dist / 200) * 40;
-      const angle = Math.atan2(dy, dx);
-      orbOffset.current = {
-        x: Math.cos(angle) * strength,
-        y: Math.sin(angle) * strength,
-      };
-    } else {
-      orbOffset.current = { x: orbOffset.current.x * 0.9, y: orbOffset.current.y * 0.9 };
-    }
-
-    orb.style.translate = `${orbOffset.current.x}px ${orbOffset.current.y}px`;
-  };
-
-  const handleOrbMouseLeave = () => {
-    const orb = orbRef.current;
-    if (!orb) return;
-    orbOffset.current = { x: 0, y: 0 };
-    orb.style.transition = "translate 0.6s ease-out";
-    orb.style.translate = "0px 0px";
-    setTimeout(() => { if (orb) orb.style.transition = ""; }, 600);
+      setTimeout(() => setBookingReady(true), 600);
+    }, 1400);
   };
   // Smooth scroll helper used by CTA buttons
   const scrollToSection = (id: string) => {
@@ -1109,35 +807,40 @@ const App = () => {
 
       {/* FEATURES — alternating video + text rows */}
       <section id="features" className="relative -mt-16 pt-24 md:pt-32 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
-        <FadeInOnScroll direction="up">
-          <div className="features-heading text-center mb-20 md:mb-28">
+        <div className="features-heading text-center mb-20 md:mb-28">
+          <FadeInOnScroll direction="up">
             <h2 className="font-poppins text-4xl md:text-[3.75rem] font-bold tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               Découvrez{" "}
               <span className="text-brand-gradient">Ora.</span>
             </h2>
-          </div>
-        </FadeInOnScroll>
+          </FadeInOnScroll>
+          <FadeInOnScroll direction="up" delay={180}>
+            <p className="mt-5 text-[clamp(1rem,2vw,1.125rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
+              Des automatisations concrètes, adaptées à vos données et à vos processus métier.
+            </p>
+          </FadeInOnScroll>
+        </div>
         <div className="max-w-6xl mx-auto space-y-36 md:space-y-52">
           {[
             {
               tag: "Reporting",
-              title: "Monthly reports, generated in seconds",
-              desc: "Ora pulls data from your tools, cleans it, applies your logic, and delivers pixel-perfect reports — ready to share. No more late nights formatting spreadsheets before the board meeting.",
+              title: "Des rapports mensuels générés en quelques secondes",
+              desc: "Ora collecte vos données, les nettoie, applique votre logique et génère des rapports impeccables, prêts à partager. Fini les soirées à formater des tableaux avant les réunions.",
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
               video: "/Montlhy_Repor.mov",
             },
             {
-              tag: "Reconciliation",
-              title: "Match thousands of rows without lifting a finger",
-              desc: "Bank statements vs. invoices, CRM exports vs. billing — Ora cross-references your data sources, flags mismatches, and produces a clean reconciliation file every time.",
+              tag: "Réconciliation",
+              title: "Réconciliez des milliers de lignes sans effort",
+              desc: "Relevés bancaires, factures, exports CRM... Ora croise vos sources, détecte les écarts et produit un fichier de réconciliation propre à chaque fois.",
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
             },
             {
-              tag: "Data processing",
-              title: "Raw data in, structured output out",
-              desc: "CSVs, PDFs, emails — whatever the source, Ora extracts, normalizes, and routes your data exactly where it needs to go. Your team reviews results, not rows.",
+              tag: "Traitement de données",
+              title: "Données brutes en entrée, résultats structurés en sortie",
+              desc: "CSV, PDF, emails... quelle que soit la source, Ora extrait, normalise et redirige vos données au bon endroit. Votre équipe analyse les résultats, pas les lignes.",
               icon: Zap,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
             },
@@ -1188,7 +891,7 @@ const App = () => {
                               <path d="M8 5v14l11-7z" />
                             </svg>
                           </div>
-                          <span className="text-xs font-medium text-gray-400 dark:text-gray-500">Watch demo</span>
+                          <span className="text-xs font-medium text-gray-400 dark:text-gray-500">Voir la démo</span>
                         </div>
                         <div
                           className="absolute inset-0 opacity-60 dark:opacity-30"
@@ -1209,14 +912,11 @@ const App = () => {
         <div className="max-w-5xl mx-auto">
           <FadeInOnScroll>
             <div className="text-center mb-16">
-              <div className="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] mb-5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
-                L'expérience Ora
-              </div>
               <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
-                Opérationnel en moins d'une semaine.
+                L'expérience <span className="text-brand-gradient">Ora.</span>
               </h2>
-              <p className="mt-4 mx-auto text-base leading-relaxed max-w-md text-gray-500 dark:text-gray-400">
-                Nous configurons tout pour vous, sans toucher à votre organisation actuelle.
+              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-500 dark:text-gray-400">
+                Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.
               </p>
             </div>
           </FadeInOnScroll>
@@ -1347,129 +1047,79 @@ const App = () => {
         </div>
       </section>
 
+      </>
+      )}
+
+      {/* Booking modal — portal, visible on all pages */}
       {isBookingOpen && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-xl px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl px-4"
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
-          {/* Ora loading splash */}
+          {/* Loading screen with animated logo */}
           {!bookingReady && (
-            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-background ${bookingFading ? "loading-screen fade-out" : ""}`}>
-              <span className="loading-logo text-gradient" style={{ fontSize: "3rem" }}>Ora</span>
-              <p className="mt-3 text-sm text-gray-400 dark:text-gray-500">Preparing your booking...</p>
-              <div className="loading-bar-track mt-5" style={{ width: "140px" }}>
-                <div className="loading-bar-fill" />
-              </div>
+            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#fcfbf7] dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
+              <OraLogoSpinner gradientId="g-booking" size={72} />
+              <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">Chargement du calendrier...</p>
             </div>
           )}
 
           <div className={`relative w-full max-w-3xl transition-all duration-500 ${bookingReady ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
-            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-background">
+            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-[#111827]">
               {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsBookingOpen(false)}
-                className="absolute right-5 top-5 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                className="absolute right-5 top-5 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-5">
-                {/* LEFT — Brand panel with glowing orb */}
-                <div className="md:col-span-2 relative bg-gradient-to-br from-[#eaf4fd] via-[#d4ecfc] to-[#c0e2fa] p-6 md:p-7 flex flex-col justify-between text-gray-900 overflow-hidden min-h-[240px] md:min-h-0">
-                  {/* Glowing planet orb */}
-                  <div
-                    className="booking-orb-wrap"
-                    ref={orbWrapRef}
-                    onMouseMove={handleOrbMouseMove}
-                    onMouseLeave={handleOrbMouseLeave}
-                    style={{ pointerEvents: "auto" }}
-                  >
-                    <div className="booking-orb-haze" />
-                    <div className="booking-orb" ref={orbRef}>
-                      <div className="booking-orb-surface" />
-                      <div className="booking-orb-shimmer" />
-                      <div className="booking-orb-glint" />
-                      <div className="booking-orb-ring" />
-                    </div>
-                  </div>
-
-                  {/* Content on top of orb */}
-                  <div className="relative z-10">
-                    <span className="text-3xl font-bold tracking-tight text-blue-primary">Ora</span>
-                    <h3 className="mt-6 text-2xl md:text-3xl font-semibold leading-tight text-gray-900">
-                      {bk.title}
+                {/* LEFT — Brand panel */}
+                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden min-h-[220px] md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
+                  <div>
+                    <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
+                    <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
+                      Réservez un appel découverte
                     </h3>
-                    <p className="mt-3 text-gray-600 text-sm leading-relaxed">
-                      {bk.desc}
+                    <p className="mt-3 text-white/75 text-sm leading-relaxed">
+                      Dites-nous ce que vous souhaitez automatiser. Nous analyserons vos processus et reviendrons avec les prochaines étapes.
                     </p>
                   </div>
 
-                  <div className="relative z-10 mt-6 space-y-3">
+                  <div className="mt-6 space-y-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/60 backdrop-blur-sm border border-blue-200/50">
-                        <Clock className="w-4 h-4 text-blue-primary" />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
+                        <Clock className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-gray-700">{bk.time}</span>
+                      <span className="text-sm text-white/90">30 min · Gratuit · Sans engagement</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/60 backdrop-blur-sm border border-blue-200/50">
-                        <CheckCircle2 className="w-4 h-4 text-blue-primary" />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
+                        <CheckCircle2 className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-gray-700">{bk.blueprint}</span>
+                      <span className="text-sm text-white/90">Plan d'automatisation sur mesure</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/60 backdrop-blur-sm border border-blue-200/50">
-                        <Shield className="w-4 h-4 text-blue-primary" />
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
+                        <Shield className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-gray-700">{bk.privacy}</span>
-                    </div>
-                  </div>
-
-                  {/* Language picker */}
-                  <div className="relative z-10 mt-6">
-                    <p className="text-[11px] uppercase tracking-widest text-gray-500 font-medium mb-2">{bk.langLabel}</p>
-                    <div className="flex gap-2">
-                      {([
-                        { code: "en", flag: "🇬🇧", label: "English" },
-                        { code: "fr", flag: "🇫🇷", label: "Français" },
-                      ] as const).map((lang) => (
-                        <button
-                          key={lang.code}
-                          type="button"
-                          onClick={() => switchBookingLang(lang.code)}
-                          className={[
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border",
-                            bookingLang === lang.code
-                              ? "bg-white border-blue-300 text-gray-900 shadow-sm"
-                              : "bg-white/40 border-transparent text-gray-500 hover:bg-white/70",
-                          ].join(" ")}
-                        >
-                          <span className="text-sm leading-none">{lang.flag}</span>
-                          {lang.label}
-                        </button>
-                      ))}
+                      <span className="text-sm text-white/90">Vos données restent privées</span>
                     </div>
                   </div>
                 </div>
 
                 {/* RIGHT — Cal.com embed */}
                 <div className="md:col-span-3 relative p-2 md:p-3 overflow-y-auto" style={{ maxHeight: "80vh" }}>
-                  {/* Ora logo overlay during language switch */}
-                  {langSwitching && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white dark:bg-background rounded-r-[28px]">
-                      <span className="text-gradient font-bold tracking-tight" style={{ fontSize: "2.5rem" }}>Ora</span>
-                    </div>
-                  )}
                   {CAL_LINK ? (
                     <Cal
-                      key={bookingLang}
                       calLink={CAL_LINK}
                       style={{ width: "100%", height: "100%", overflow: "auto" }}
                       config={{
                         layout: "month_view" as const,
                         theme: theme === "dark" ? "dark" : "light",
-                        lang: bookingLang,
+                        lang: "fr",
                       }}
                     />
                   ) : (
@@ -1478,10 +1128,10 @@ const App = () => {
                         <Clock className="w-7 h-7 text-blue-500" />
                       </div>
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Booking coming soon
+                        Réservation bientôt disponible
                       </h4>
                       <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-                        Our scheduling system is being set up. Please check back shortly.
+                        Notre système de prise de rendez-vous est en cours de configuration.
                       </p>
                     </div>
                   )}
@@ -1493,17 +1143,6 @@ const App = () => {
         document.body
       )}
 
-      {/* Floating phone button */}
-      <button
-        onClick={openBooking}
-        aria-label="Book a call"
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-br from-sky-400 to-blue-600 text-white shadow-[0_4px_20px_rgba(14,165,233,0.4)] hover:shadow-[0_6px_28px_rgba(14,165,233,0.55)] hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
-      >
-        <Phone className="w-5 h-5" />
-      </button>
-
-      </>
-      )}
 
       {/* FOOTER — visible on all pages */}
       <FadeInOnScroll>
