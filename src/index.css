@@ -282,6 +282,14 @@
    }
  }
 
+ /* Titre statique #features masqué pendant l'animation de sortie du Hero */
+ .features-heading {
+   transition: opacity 0.35s ease;
+ }
+ body.hero-text-exiting .features-heading {
+   opacity: 0 !important;
+ }
+
  .laser-border {
    position: absolute;
    inset: 0;

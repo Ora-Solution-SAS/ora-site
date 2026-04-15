@@ -80,6 +80,14 @@ interface HeroProps {
   openBooking: () => void;
 }
 
+/* Retourne l'offsetTop absolu sans inclure les CSS transforms */
+function getPageOffsetTop(el: HTMLElement): number {
+  let top = 0;
+  let cur: HTMLElement | null = el;
+  while (cur) { top += cur.offsetTop; cur = cur.offsetParent as HTMLElement | null; }
+  return top;
+}
+
 /* ── Component ───────────────────────────────────────────────── */
 const Hero = forwardRef<HTMLElement, HeroProps>(
   ({ scrollToSection, openBooking }, ref) => {
@@ -189,28 +197,33 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
 
     /* ── Text scroll-lock ── */
-    const revealProgress      = useMotionValue(0);
-    const lockRef             = useRef<HTMLDivElement>(null);
-    const isLockedRef         = useRef(false);
-    const hasTextCompletedRef = useRef(false);
+    const revealProgress        = useMotionValue(0);
+    const lockRef               = useRef<HTMLDivElement>(null);
+    const isLockedRef           = useRef(false);
+    const hasTextCompletedRef   = useRef(false);
+    /* overlay fixe pour la sortie du texte */
+    const exitScrollStartRef    = useRef<number | null>(null);
+    const exitScrollTargetRef   = useRef<number | null>(null);
+    const l3Ref         = useRef<HTMLParagraphElement>(null);
+    const overlayRef    = useRef<HTMLDivElement>(null);
+    const overlayStartY = useRef(0);
+    const overlayEndY   = useRef(0);
+    const overlayActive = useRef(false);
 
     /* Line reveal — opacity + y */
     const l1o = useTransform(revealProgress, [0,    0.22], [0, 1]);
     const l1y = useTransform(revealProgress, [0,    0.22], [28, 0]);
     const l2o = useTransform(revealProgress, [0.20, 0.44], [0, 1]);
     const l2y = useTransform(revealProgress, [0.20, 0.44], [28, 0]);
-    const l3o = useTransform(revealProgress, [0.42, 0.62], [0, 1]);
+    /* fade-in 0.42→0.62, maintenu, fade-out 0.71→0.72 (l'overlay fixe prend le relais) */
+    const l3o = useTransform(revealProgress, [0.42, 0.62, 0.71, 0.72], [0, 1, 1, 0]);
 
     /* "Découvrez Ora." : grows → then exits downward out of the section */
     const l3Size    = useTransform(revealProgress, [0.60, 0.92], ["1.75rem", "3.75rem"]);
     const l3Leading = useTransform(revealProgress, [0.60, 0.92], [1.5, 1.12]);
     const l3Track   = useTransform(revealProgress, [0.60, 0.92], ["-0.025em", "-0.04em"]);
-    /* slide-in 0.42→0.62, hold 0.62→0.72, exit downward 0.72→1.0 */
-    const l3TotalY  = useTransform(
-      revealProgress,
-      [0.42, 0.62, 0.72, 1.0],
-      [28,   0,    0,    700],
-    );
+    /* slide-in uniquement — la sortie est gérée par l'overlay fixe */
+    const l3TotalY = useTransform(revealProgress, [0.42, 0.62], [28, 0]);
 
     /* ─────────────────────────────────────────────────────────── *
      *  IntersectionObserver — text scroll-lock section            *
@@ -248,6 +261,15 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         isLockedRef.current = false;
         (window as any).__lenis?.start();
       };
+      /* Nettoie l'overlay et réinitialise les refs d'exit */
+      const cleanupExit = () => {
+        if (overlayRef.current) overlayRef.current.style.display = "none";
+        overlayActive.current       = false;
+        exitScrollStartRef.current  = null;
+        exitScrollTargetRef.current = null;
+        document.body.classList.remove("hero-text-exiting");
+      };
+
       const driveText = (delta: number) => {
         if (hasTextCompletedRef.current) {
           revealProgress.set(1);
@@ -255,13 +277,86 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           return;
         }
         const next = revealProgress.get() + delta;
+
+        /* ── Phase de sortie (>0.71) : overlay fixe + scroll viewport ── */
+        if (next > 0.71) {
+          /* Initialisation : une seule fois au début de la phase */
+          if (exitScrollStartRef.current === null) {
+            exitScrollStartRef.current = window.scrollY;
+
+            const featuresEl = document.getElementById("features");
+            const h2El = document.querySelector<HTMLElement>("#features .features-heading h2");
+
+            if (featuresEl) {
+              exitScrollTargetRef.current =
+                featuresEl.getBoundingClientRect().top + window.scrollY;
+            }
+
+            /* Position écran du texte animé au moment du déclenchement */
+            const l3El = l3Ref.current;
+            if (l3El && h2El && overlayRef.current && exitScrollTargetRef.current !== null) {
+              const rect = l3El.getBoundingClientRect();
+              overlayStartY.current = rect.top;
+              /* Position layout du H2 (sans transforms FadeInOnScroll) */
+              overlayEndY.current   = getPageOffsetTop(h2El) - exitScrollTargetRef.current;
+
+              const cs = window.getComputedStyle(l3El);
+              const ov = overlayRef.current;
+              ov.style.top           = `${overlayStartY.current}px`;
+              ov.style.fontSize      = cs.fontSize;
+              ov.style.lineHeight    = cs.lineHeight;
+              ov.style.letterSpacing = cs.letterSpacing;
+              ov.style.display       = "block";
+              overlayActive.current  = true;
+            }
+
+            document.body.classList.add("hero-text-exiting");
+          }
+
+          const ratio = Math.min(Math.max((next - 0.71) / (1.0 - 0.71), 0), 1);
+
+          /* Scroll viewport vers #features */
+          if (exitScrollStartRef.current !== null && exitScrollTargetRef.current !== null) {
+            window.scrollTo({
+              top: exitScrollStartRef.current +
+                (exitScrollTargetRef.current - exitScrollStartRef.current) * ratio,
+              behavior: "instant" as ScrollBehavior,
+            });
+          }
+
+          /* Déplace l'overlay fixe + adapte la taille de police */
+          if (overlayRef.current && overlayActive.current) {
+            const ov = overlayRef.current;
+            ov.style.top = `${overlayStartY.current + (overlayEndY.current - overlayStartY.current) * ratio}px`;
+            /* Même courbe que l3Size (0.60→0.92 : 1.75rem→3.75rem) */
+            if (next < 0.92) {
+              const t = Math.min(Math.max((next - 0.60) / 0.32, 0), 1);
+              ov.style.fontSize = `${1.75 + t * 2}rem`;
+            } else {
+              ov.style.fontSize = "3.75rem";
+            }
+          }
+        }
+
         if (next >= 1) {
           revealProgress.set(1);
           hasTextCompletedRef.current = true;
+          /* Snap final sur #features */
+          if (exitScrollTargetRef.current !== null) {
+            window.scrollTo({ top: exitScrollTargetRef.current, behavior: "instant" as ScrollBehavior });
+          }
+          cleanupExit();
           unlockText();
           return;
         }
-        if (next <= 0) { revealProgress.set(0); unlockText(); return; }
+
+        if (next <= 0) {
+          cleanupExit();
+          revealProgress.set(0);
+          unlockText();
+          return;
+        }
+
         revealProgress.set(next);
       };
 
@@ -345,10 +440,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         <section
           ref={ref}
           id="hero"
-          className={`relative overflow-hidden${heroReady ? " hero-ready" : ""}`}
+          className={`relative${heroReady ? " hero-ready" : ""}`}
         >
-          {/* Background blobs */}
-          <div className="absolute inset-0 pointer-events-none" aria-hidden>
+          {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
             <div className="absolute inset-0 bg-[#fcfbf7] dark:bg-[#111827]" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
@@ -451,7 +546,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           {/* ═══ SECTION 2A — texte piloté par scroll-lock ═══ */}
           <div
             ref={lockRef}
-            className="relative z-[1] min-h-screen flex items-center justify-center overflow-hidden bg-[#fcfbf7] dark:bg-[#111827]"
+            className="relative z-[20] min-h-screen flex items-center justify-center bg-[#fcfbf7] dark:bg-[#111827]"
           >
             <div className="w-full max-w-3xl mx-auto px-6 lg:px-10 text-center flex flex-col gap-7">
 
@@ -483,8 +578,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 Cessez de le gaspiller sur Excel.
               </motion.p>
 
-              {/* Ligne 3 — grandit puis sort par le bas pour devenir le H2 de la section suivante */}
+              {/* Ligne 3 — grandit puis l'overlay fixe prend le relais pour rejoindre le H2 */}
               <motion.p
+                ref={l3Ref}
                 className="font-poppins font-bold"
                 style={{
                   opacity: l3o,
@@ -502,6 +598,23 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           </div>
 
         </section>
+
+        {/* ── Overlay fixe : "Découvrez Ora." en vol vers le titre de #features ── */}
+        <div
+          ref={overlayRef}
+          className="fixed left-1/2 z-[200] pointer-events-none font-poppins font-bold"
+          style={{
+            display: "none",
+            transform: "translateX(-50%)",
+            letterSpacing: "-0.04em",
+            lineHeight: 1.12,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span className="text-[#111827] dark:text-white">Découvrez </span>
+          <span className="text-brand-gradient">Ora.</span>
+        </div>
+
       </>
     );
   },

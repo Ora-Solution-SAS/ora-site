@@ -1110,7 +1110,7 @@ const App = () => {
       {/* FEATURES — alternating video + text rows */}
       <section id="features" className="relative -mt-16 pt-24 md:pt-32 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         <FadeInOnScroll direction="up">
-          <div className="text-center mb-20 md:mb-28">
+          <div className="features-heading text-center mb-20 md:mb-28">
             <h2 className="font-poppins text-4xl md:text-[3.75rem] font-bold tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               Découvrez{" "}
               <span className="text-brand-gradient">Ora.</span>
