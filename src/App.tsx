@@ -3,6 +3,7 @@ import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import ForBusinessPage from "./pages/ForBusinessPage";
 import OraExperiencePage from "./pages/OraExperiencePage";
+import SolutionTemplatePage from "./pages/SolutionTemplatePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -636,10 +637,10 @@ const App = () => {
 
 
 
-  const [page, setPage] = useState<"home" | "for-business" | "ora-experience" | "not-found">("home");
+  const [page, setPage] = useState<"home" | "for-business" | "ora-experience" | "solution-template" | "not-found">("home");
   const [notFoundKey, setNotFoundKey] = useState(0);
 
-  const navigateTo = (target: "home" | "for-business" | "ora-experience" | "not-found") => {
+  const navigateTo = (target: "home" | "for-business" | "ora-experience" | "solution-template" | "not-found") => {
     if (target === "not-found") {
       setNotFoundKey((k) => k + 1);
       setPage("not-found");
@@ -796,6 +797,8 @@ const App = () => {
         <ForBusinessPage theme={theme} openBooking={openBooking} />
       ) : page === "ora-experience" ? (
         <OraExperiencePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "solution-template" ? (
+        <SolutionTemplatePage theme={theme} openBooking={openBooking} />
       ) : (
       <>
 

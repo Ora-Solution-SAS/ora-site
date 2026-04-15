@@ -37,6 +37,13 @@
 - Tailwind utilities: `font-poppins`, `font-inter`, `font-sans` (defaults to Inter)
 - Utility class for brand gradient text: `text-brand-gradient`
 
+**Font usage rules — always apply explicitly:**
+- Always add `font-poppins` on every `h1`/`h2`/`h3` element. The global CSS sets Poppins on heading tags, but the class must still be explicit to prevent Tailwind utility ordering issues.
+- Always pair with the correct weight: `font-semibold` (600) for display/section headings, `font-medium` (500) for sub-headings. **Never use `font-light` (300) on headings** — it is not in the brand weight spec and visually breaks the design.
+- Always add `font-inter` on `p`, `blockquote`, labels, and UI text elements.
+- CTAs and buttons: always add `font-inter font-semibold`.
+- Homepage reference: `animated-hero.tsx` uses `font-poppins font-semibold` on `h1` — match this pattern on all pages.
+
 **Writing style — em dashes (`—`) are forbidden in UI copy.**
 - Never use `—` in visible text (labels, descriptions, subtitles, CTAs, body copy).
 - Replace with: a period, a comma, a colon, or restructure the sentence.

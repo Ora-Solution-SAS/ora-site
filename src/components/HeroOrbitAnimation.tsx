@@ -255,9 +255,9 @@ export default function HeroOrbitAnimation({ dk }: { dk: boolean }) {
             {/* Bulle blanche — fond blanc pour fusionner avec le logo */}
             <Bubble size={116} bg="#ffffff" border="rgba(0,0,0,0.08)" shadowColor="rgba(59,122,247,0.18)" dk={dk}>
               <img
-                src="/logos/Logo_Ora.png" alt="Ora" draggable={false}
+                src="/logos/icon-color.png" alt="Ora" draggable={false}
                 style={{
-                  width: "66%", height: "66%", objectFit: "contain",
+                  width: "60%", height: "60%", objectFit: "contain",
                   transform: "translateZ(0)", backfaceVisibility: "hidden",
                 } as React.CSSProperties}
               />

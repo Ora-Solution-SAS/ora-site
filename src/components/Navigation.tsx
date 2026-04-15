@@ -12,7 +12,7 @@ import {
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 
-type Page = "home" | "for-business" | "ora-experience" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -64,6 +64,12 @@ const solutionsDevLinks: LinkItem[] = [
     description: "Page en cours — accès développeur",
     icon: FlaskConical,
     page: "for-business",
+  },
+  {
+    title: "Template solution",
+    description: "Template page solution métier — accès développeur",
+    icon: FlaskConical,
+    page: "solution-template",
   },
 ];
 

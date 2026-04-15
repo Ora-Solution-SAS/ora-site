@@ -1,6 +1,6 @@
 import { Footer } from "./ui/footer";
 
-type Page = "home" | "for-business" | "ora-experience" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "not-found";
 
 interface OraFooterProps {
   onNavigate: (page: Page) => void;
