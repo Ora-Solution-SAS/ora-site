@@ -243,7 +243,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 </NavigationMenuLink>
               </NavigationMenuItem>
 
-              {/* Ressources */}
+              {/* Ressources — masqué V1, à réactiver pour V2
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Ressources</NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -259,6 +259,7 @@ const Navigation: React.FC<NavigationProps> = ({
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
+              */}
 
               {/* Tarifs */}
               <NavigationMenuItem>
@@ -287,10 +288,11 @@ const Navigation: React.FC<NavigationProps> = ({
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Log in — desktop */}
+          {/* Log in — desktop — masqué V1, à réactiver pour V2
           <button className="hidden md:inline-flex items-center px-4 py-2 rounded-full text-[13.5px] font-medium font-inter text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150">
             Log in
           </button>
+          */}
 
           {/* Réserver un appel — desktop */}
           <button
@@ -335,10 +337,12 @@ const Navigation: React.FC<NavigationProps> = ({
               L'expérience Ora
             </button>
 
+            {/* Ressources mobile — masqué V1, à réactiver pour V2
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-3 pb-1">Ressources</p>
             {ressourcesLinks.map((item) => (
               <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
             ))}
+            */}
 
             <button
               onClick={() => { setMobileOpen(false); onNavigate("not-found"); }}
@@ -348,9 +352,11 @@ const Navigation: React.FC<NavigationProps> = ({
             </button>
 
             <div className="mt-4 flex flex-col gap-2">
+              {/* Log in mobile — masqué V1, à réactiver pour V2
               <button className="w-full py-3 rounded-xl text-[15px] font-medium font-inter text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/[0.12] hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-colors">
                 Log in
               </button>
+              */}
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
                 className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_14px_rgba(59,130,246,0.22)]"
