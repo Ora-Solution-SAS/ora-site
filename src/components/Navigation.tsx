@@ -12,7 +12,7 @@ import {
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -36,7 +36,7 @@ const solutionsLinks: LinkItem[] = [
     title: "Expertise-comptable",
     description: "Automatisez vos travaux comptables récurrents",
     icon: Briefcase,
-    page: "not-found",
+    page: "solution-expertise-comptable",
   },
   {
     title: "Audit",
