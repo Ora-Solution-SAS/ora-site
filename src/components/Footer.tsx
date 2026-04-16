@@ -1,4 +1,5 @@
 import { Footer } from "./ui/footer";
+import { useLang } from "@/lib/i18n";
 
 type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "not-found";
 
@@ -9,6 +10,7 @@ interface OraFooterProps {
 }
 
 const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
+  const { t } = useLang();
   const logoSrc =
     theme === "dark"
       ? "/logos/logo-color-light.png"
@@ -22,31 +24,34 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
         title: "Ora",
         onClick: () => onNavigate("home"),
       }}
-      tagline="Automatisez vos workflows Excel. Gagnez du temps, réduisez les erreurs, concentrez-vous sur ce qui compte vraiment."
+      tagline={t({
+        fr: "Automatisez vos workflows Excel. Gagnez du temps, réduisez les erreurs, concentrez-vous sur ce qui compte vraiment.",
+        en: "Automate your Excel workflows. Save time, reduce errors, focus on what actually matters.",
+      })}
       menuItems={[
         {
-          title: "Produit",
+          title: t({ fr: "Produit", en: "Product" }),
           links: [
-            { text: "Accueil", onClick: () => onNavigate("home") },
-            { text: "L'expérience Ora", onClick: () => onNavigate("ora-experience") },
+            { text: t({ fr: "Accueil", en: "Home" }), onClick: () => onNavigate("home") },
+            { text: t({ fr: "L'expérience Ora", en: "The Ora experience" }), onClick: () => onNavigate("ora-experience") },
             {
-              text: "Solutions entreprise",
+              text: t({ fr: "Solutions entreprise", en: "Enterprise solutions" }),
               onClick: () => onNavigate("for-business"),
             },
-            { text: "Tarifs", onClick: () => onNavigate("not-found") },
-            { text: "Réserver un appel", onClick: onBookCall },
+            { text: t({ fr: "Tarifs", en: "Pricing" }), onClick: () => onNavigate("not-found") },
+            { text: t({ fr: "Réserver un appel", en: "Book a call" }), onClick: onBookCall },
           ],
         },
         {
-          title: "Ressources",
+          title: t({ fr: "Ressources", en: "Resources" }),
           links: [
-            { text: "Documentation", url: "#" },
-            { text: "Support", url: "#" },
-            { text: "Blog", onClick: () => onNavigate("not-found") },
+            { text: t({ fr: "Documentation", en: "Documentation" }), url: "#" },
+            { text: t({ fr: "Support", en: "Support" }), url: "#" },
+            { text: t({ fr: "Blog", en: "Blog" }), onClick: () => onNavigate("not-found") },
           ],
         },
         {
-          title: "Réseaux",
+          title: t({ fr: "Réseaux", en: "Social" }),
           links: [
             { text: "LinkedIn", url: "#" },
             { text: "Twitter / X", url: "#" },
@@ -55,9 +60,9 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
       ]}
       copyright={`© ${new Date().getFullYear()} Ora – Paris • Luxembourg`}
       bottomLinks={[
-        { text: "Mentions légales", url: "#" },
-        { text: "Politique de confidentialité", url: "#" },
-        { text: "CGU", url: "#" },
+        { text: t({ fr: "Mentions légales", en: "Legal notice" }), url: "#" },
+        { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), url: "#" },
+        { text: t({ fr: "CGU", en: "Terms of use" }), url: "#" },
       ]}
     />
   );

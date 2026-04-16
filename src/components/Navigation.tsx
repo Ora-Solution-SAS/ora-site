@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sun, Moon, FileText, HelpCircle, Briefcase, PieChart, TrendingUp, Building2, FlaskConical } from "lucide-react";
+import { Sun, Moon, Briefcase, PieChart, TrendingUp, Building2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
   NavigationMenu,
@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/navigation-menu";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
+import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -30,63 +31,6 @@ type LinkItem = {
   icon: React.ElementType;
   page: Page;
 };
-
-const solutionsLinks: LinkItem[] = [
-  {
-    title: "Expertise-comptable",
-    description: "Automatisez vos travaux comptables récurrents",
-    icon: Briefcase,
-    page: "solution-expertise-comptable",
-  },
-  {
-    title: "Audit",
-    description: "Accélérez vos missions d'audit avec Ora",
-    icon: PieChart,
-    page: "not-found",
-  },
-  {
-    title: "Fonds d'investissement",
-    description: "Simplifiez le suivi de vos portefeuilles",
-    icon: TrendingUp,
-    page: "not-found",
-  },
-  {
-    title: "Banque d'affaires",
-    description: "Optimisez vos analyses financières",
-    icon: Building2,
-    page: "not-found",
-  },
-];
-
-const solutionsDevLinks: LinkItem[] = [
-  {
-    title: "Pour les équipes",
-    description: "Page en cours — accès développeur",
-    icon: FlaskConical,
-    page: "for-business",
-  },
-  {
-    title: "Template solution",
-    description: "Template page solution métier — accès développeur",
-    icon: FlaskConical,
-    page: "solution-template",
-  },
-];
-
-const ressourcesLinks: LinkItem[] = [
-  {
-    title: "Documentation",
-    description: "Guides et références techniques",
-    icon: FileText,
-    page: "not-found",
-  },
-  {
-    title: "FAQ",
-    description: "Réponses aux questions fréquentes",
-    icon: HelpCircle,
-    page: "not-found",
-  },
-];
 
 // ── DropdownItem ─────────────────────────────────────────────────────────────
 
@@ -128,6 +72,34 @@ const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t, lang, setLang } = useLang();
+
+  const solutionsLinks: LinkItem[] = [
+    {
+      title: t({ fr: "Expertise-comptable", en: "Accounting firms" }),
+      description: t({ fr: "Automatisez vos travaux comptables récurrents", en: "Automate your recurring accounting work" }),
+      icon: Briefcase,
+      page: "solution-expertise-comptable",
+    },
+    {
+      title: t({ fr: "Audit", en: "Audit" }),
+      description: t({ fr: "Accélérez vos missions d'audit avec Ora", en: "Speed up your audit engagements with Ora" }),
+      icon: PieChart,
+      page: "solution-audit",
+    },
+    {
+      title: t({ fr: "Fonds d'investissement", en: "Investment funds" }),
+      description: t({ fr: "Simplifiez le suivi de vos portefeuilles", en: "Simplify portfolio monitoring" }),
+      icon: TrendingUp,
+      page: "solution-fonds-investissement",
+    },
+    {
+      title: t({ fr: "Banque d'affaires", en: "Investment banking" }),
+      description: t({ fr: "Optimisez vos analyses financières", en: "Optimize your financial analyses" }),
+      icon: Building2,
+      page: "solution-banque-affaires",
+    },
+  ];
 
   useEffect(() => {
     let rafId = 0;
@@ -151,22 +123,6 @@ const Navigation: React.FC<NavigationProps> = ({
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
-
-  const scrollTo = (id: string) => {
-    setMobileOpen(false);
-    if (currentPage !== "home") {
-      onNavigate("home");
-      setTimeout(() => {
-        const lenis = (window as any).__lenis;
-        if (lenis) lenis.scrollTo(`#${id}`);
-        else document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-      }, 80);
-    } else {
-      const lenis = (window as any).__lenis;
-      if (lenis) lenis.scrollTo(`#${id}`);
-      else document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-    }
-  };
 
   return (
     <header
@@ -193,7 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({
               }
             }}
             className="flex-shrink-0 mr-4"
-            aria-label="Ora — Accueil"
+            aria-label={t({ fr: "Ora, Accueil", en: "Ora, Home" })}
           >
             <img
               src={theme === "dark" ? "/logos/logo-color-light.png" : "/logos/logo-color-dark.png"}
@@ -208,7 +164,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
               {/* Solutions */}
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Solutions</NavigationMenuTrigger>
+                <NavigationMenuTrigger>{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="w-72 p-2">
                     {solutionsLinks.map((item) => (
@@ -219,20 +175,6 @@ const Navigation: React.FC<NavigationProps> = ({
                         onClose={() => {}}
                       />
                     ))}
-                    {/* DEV A CONSERVER */}
-                    <div className="mt-2 pt-2 border-t border-gray-200/60 dark:border-white/[0.08]">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pb-1">
-                        Dev — à conserver
-                      </p>
-                      {solutionsDevLinks.map((item) => (
-                        <DropdownItem
-                          key={item.title}
-                          item={item}
-                          onNavigate={onNavigate}
-                          onClose={() => {}}
-                        />
-                      ))}
-                    </div>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -244,28 +186,10 @@ const Navigation: React.FC<NavigationProps> = ({
                     onClick={() => onNavigate("ora-experience")}
                     className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
                   >
-                    L'expérience Ora
+                    {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
                   </button>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
-              {/* Ressources — masqué V1, à réactiver pour V2
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Ressources</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="w-64 p-2">
-                    {ressourcesLinks.map((item) => (
-                      <DropdownItem
-                        key={item.title}
-                        item={item}
-                        onNavigate={onNavigate}
-                        onClose={() => {}}
-                      />
-                    ))}
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              */}
 
               {/* Tarifs */}
               <NavigationMenuItem>
@@ -274,7 +198,19 @@ const Navigation: React.FC<NavigationProps> = ({
                     onClick={() => onNavigate("not-found")}
                     className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
                   >
-                    Tarifs
+                    {t({ fr: "Tarifs", en: "Pricing" })}
+                  </button>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+
+              {/* Confidentialité */}
+              <NavigationMenuItem>
+                <NavigationMenuLink asChild>
+                  <button
+                    onClick={() => onNavigate("confidentialite")}
+                    className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
+                  >
+                    {t({ fr: "Confidentialité", en: "Privacy" })}
                   </button>
                 </NavigationMenuLink>
               </NavigationMenuItem>
@@ -283,29 +219,35 @@ const Navigation: React.FC<NavigationProps> = ({
           </NavigationMenu>
         </div>
 
-        {/* ── Right: theme toggle + Log in + CTA + mobile hamburger ── */}
+        {/* ── Right: language + theme + CTA + mobile hamburger ── */}
         <div className="flex items-center gap-2">
+          {/* Language toggle */}
+          <button
+            onClick={() => setLang(lang === "fr" ? "en" : "fr")}
+            className="h-9 px-3 rounded-full flex items-center justify-center text-[12px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors"
+            aria-label={t({ fr: "Changer de langue", en: "Change language" })}
+            title={lang === "fr" ? "Switch to English" : "Passer en français"}
+          >
+            <span className={cn("transition-opacity", lang === "fr" ? "text-gray-900 dark:text-white" : "opacity-60")}>FR</span>
+            <span className="mx-1 opacity-40">/</span>
+            <span className={cn("transition-opacity", lang === "en" ? "text-gray-900 dark:text-white" : "opacity-60")}>EN</span>
+          </button>
+
           {/* Theme toggle */}
           <button
             onClick={onToggleTheme}
             className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors"
-            aria-label="Basculer le thème"
+            aria-label={t({ fr: "Basculer le thème", en: "Toggle theme" })}
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-
-          {/* Log in — desktop — masqué V1, à réactiver pour V2
-          <button className="hidden md:inline-flex items-center px-4 py-2 rounded-full text-[13.5px] font-medium font-inter text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150">
-            Log in
-          </button>
-          */}
 
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
             className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
           >
-            Réserver un appel
+            {t({ fr: "Réserver un appel", en: "Book a call" })}
           </button>
 
           {/* Mobile hamburger */}
@@ -325,12 +267,8 @@ const Navigation: React.FC<NavigationProps> = ({
         <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#fcfbf7]/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
           <div className="px-6 py-4 flex flex-col gap-1">
 
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">Solutions</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>
             {solutionsLinks.map((item) => (
-              <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
-            ))}
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-3 pb-1 opacity-60">Dev — à conserver</p>
-            {solutionsDevLinks.map((item) => (
               <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
             ))}
 
@@ -340,34 +278,29 @@ const Navigation: React.FC<NavigationProps> = ({
               onClick={() => { setMobileOpen(false); onNavigate("ora-experience"); }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full"
             >
-              L'expérience Ora
+              {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
             </button>
-
-            {/* Ressources mobile — masqué V1, à réactiver pour V2
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-3 pb-1">Ressources</p>
-            {ressourcesLinks.map((item) => (
-              <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
-            ))}
-            */}
 
             <button
               onClick={() => { setMobileOpen(false); onNavigate("not-found"); }}
               className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full mt-1"
             >
-              Tarifs
+              {t({ fr: "Tarifs", en: "Pricing" })}
+            </button>
+
+            <button
+              onClick={() => { setMobileOpen(false); onNavigate("confidentialite"); }}
+              className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full"
+            >
+              {t({ fr: "Confidentialité", en: "Privacy" })}
             </button>
 
             <div className="mt-4 flex flex-col gap-2">
-              {/* Log in mobile — masqué V1, à réactiver pour V2
-              <button className="w-full py-3 rounded-xl text-[15px] font-medium font-inter text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-white/[0.12] hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-colors">
-                Log in
-              </button>
-              */}
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
                 className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_14px_rgba(59,130,246,0.22)]"
               >
-                Réserver un appel
+                {t({ fr: "Réserver un appel", en: "Book a call" })}
               </button>
             </div>
           </div>

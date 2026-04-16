@@ -1,14 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLang } from "@/lib/i18n";
 
 export function AnimatedHeroTitle() {
+  const { lang, t } = useLang();
   const [titleNumber, setTitleNumber] = useState(0);
-  const titles = useMemo(() => [
-    "reportings manuels.",
-    "consolidations fastidieuses.",
-    "retraitements Excel.",
-    "dashboards à la main.",
-  ], []);
+
+  const titles = useMemo(
+    () =>
+      lang === "fr"
+        ? [
+            "reportings manuels.",
+            "consolidations fastidieuses.",
+            "retraitements Excel.",
+            "dashboards à la main.",
+          ]
+        : [
+            "manual reporting.",
+            "tedious consolidations.",
+            "Excel cleanup work.",
+            "hand-built dashboards.",
+          ],
+    [lang],
+  );
+
+  // Reset index whenever the list changes so we never render out-of-range.
+  useEffect(() => {
+    setTitleNumber(0);
+  }, [titles]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -19,11 +38,11 @@ export function AnimatedHeroTitle() {
 
   return (
     <h1 className="hero-stagger hero-d1 font-poppins text-[clamp(2.6rem,6.5vw,4.8rem)] font-semibold leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center">
-      <span className="block">Plus jamais de</span>
+      <span className="block">{t({ fr: "Plus jamais de", en: "No more" })}</span>
       <span className="block relative pb-3" style={{ clipPath: "inset(0 -9999px)" }}>
         <AnimatePresence mode="wait">
           <motion.span
-            key={titleNumber}
+            key={`${lang}-${titleNumber}`}
             className="inline-block text-brand-gradient whitespace-nowrap"
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}

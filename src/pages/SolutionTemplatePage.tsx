@@ -17,78 +17,7 @@ import {
   ArrowRight, BarChart3, FileText, Mail, Zap,
   Star, CheckCircle, Clock, RefreshCcw,
 } from "lucide-react";
-
-/* ── Page identity — à personnaliser par métier ──────────────────── */
-const METIER_BADGE  = "Ora pour la Finance";           // badge dans la bulle hero
-const METIER_NAME   = "la Finance & le Contrôle de gestion"; // pour la section 2
-const HERO_TITLE_L1 = "Vos cycles financiers,";
-const HERO_TITLE_L2 = "automatisés par Ora.";
-
-/* ── Solutions métier — à personnaliser ──────────────────────────── */
-const solutions = [
-  {
-    icon: BarChart3,
-    title: "Reporting automatisé",
-    desc: "Générez vos tableaux de bord financiers en quelques secondes. Ora agrège vos sources Excel, met à jour vos KPIs et diffuse vos rapports automatiquement.",
-  },
-  {
-    icon: FileText,
-    title: "Clôtures accélérées",
-    desc: "Réduisez votre cycle de clôture de plusieurs jours à quelques heures. Ora automatise les écritures récurrentes et les rapprochements internes.",
-  },
-  {
-    icon: Mail,
-    title: "Diffusion automatique",
-    desc: "Planifiez l'envoi de vos reportings par e-mail, à la bonne personne, au bon moment. Zéro oubli, zéro pièce jointe incorrecte.",
-  },
-  {
-    icon: Zap,
-    title: "Alertes intelligentes",
-    desc: "Recevez une alerte proactive dès qu'un indicateur franchit un seuil critique. Ora surveille vos données 24h/24.",
-  },
-  {
-    icon: Clock,
-    title: "Gain de temps mesurable",
-    desc: "En moyenne, nos clients récupèrent 5 heures par semaine dès le premier mois. Un ROI immédiat, sans changer vos outils.",
-  },
-  {
-    icon: RefreshCcw,
-    title: "Synchronisation en temps réel",
-    desc: "Vos fichiers Excel, Google Sheets et vos e-mails sont synchronisés en continu. Vos données sont toujours à jour.",
-  },
-];
-
-/* ── Testimonials — à personnaliser ──────────────────────────────── */
-const testimonials = [
-  {
-    quote: "Avant Ora, mes clôtures mensuelles me prenaient 3 jours entiers. Aujourd'hui, c'est 4 heures. Mes équipes peuvent enfin se concentrer sur l'analyse.",
-    name: "Marie Durand",
-    role: "Directrice Administrative et Financière",
-    company: "Groupe Lemaire",
-    stars: 5,
-  },
-  {
-    quote: "Fini les erreurs de copier-coller. Nos reportings sont générés et envoyés automatiquement chaque lundi matin. Un gain de temps considérable pour toute l'équipe.",
-    name: "Thomas Petit",
-    role: "Contrôleur de gestion",
-    company: "Nexio SAS",
-    stars: 5,
-  },
-  {
-    quote: "L'intégration avec Excel était mon critère numéro un. Ora s'est connecté à nos fichiers existants en moins d'une semaine. Le résultat est bluffant.",
-    name: "Sophie Martin",
-    role: "Responsable Comptable",
-    company: "Atelier Créatif",
-    stars: 5,
-  },
-];
-
-/* ── Stat pills hero ─────────────────────────────────────────────── */
-const heroStats = [
-  { value: "5h+",     label: "récupérées / semaine" },
-  { value: "0",       label: "erreur de saisie" },
-  { value: "< 1 sem", label: "pour démarrer" },
-];
+import { useLang } from "@/lib/i18n";
 
 /* ── CSS local ───────────────────────────────────────────────────── */
 const pageCSS = `
@@ -139,6 +68,7 @@ const pageCSS = `
    À remplacer par une illustration adaptée à chaque métier.
 ════════════════════════════════════════════════════════════════════ */
 function MetierIllustration({ dk }: { dk: boolean }) {
+  const { t } = useLang();
   const panelFill   = dk ? "rgba(255,255,255,0.028)" : "rgba(255,255,255,0.95)";
   const gridStroke  = dk ? "rgba(255,255,255,0.055)" : "rgba(0,0,0,0.05)";
   const textMuted   = dk ? "rgba(255,255,255,0.30)" : "rgba(0,0,0,0.28)";
@@ -280,7 +210,14 @@ function MetierIllustration({ dk }: { dk: boolean }) {
         fill="#3b82f6" filter="url(#fi-glow-s)" />
 
       {/* ── Labels mois (axe X) ── */}
-      {["Jan", "Fév", "Mar", "Avr", "Mai", "Juin"].map((m, i) => (
+      {[
+        t({ fr: "Jan", en: "Jan" }),
+        t({ fr: "Fév", en: "Feb" }),
+        t({ fr: "Mar", en: "Mar" }),
+        t({ fr: "Avr", en: "Apr" }),
+        t({ fr: "Mai", en: "May" }),
+        t({ fr: "Juin", en: "Jun" }),
+      ].map((m, i) => (
         <text key={m} x={46 + i * 48} y="254"
           fontSize="8" fill={textMuted}
           textAnchor="middle" fontFamily="Inter, sans-serif">
@@ -304,7 +241,7 @@ function MetierIllustration({ dk }: { dk: boolean }) {
       </text>
       <text x="354" y="86" fontSize="8.5" fill={textMuted}
         textAnchor="middle" fontFamily="Inter, sans-serif">
-        productivité
+        {t({ fr: "productivité", en: "productivity" })}
       </text>
       {/* Connecteur vers le point culminant */}
       <line x1="311" y1="74" x2="295" y2="79"
@@ -321,11 +258,11 @@ function MetierIllustration({ dk }: { dk: boolean }) {
       <text x="78" y="291" fontSize="15" fill="#0d9488"
         textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="700"
         filter="url(#fi-glow)">
-        5h / sem
+        {t({ fr: "5h / sem", en: "5h / week" })}
       </text>
       <text x="78" y="307" fontSize="8.5" fill={textMuted}
         textAnchor="middle" fontFamily="Inter, sans-serif">
-        récupérées
+        {t({ fr: "récupérées", en: "saved" })}
       </text>
 
       {/* ═══════════════════════════════════════
@@ -339,7 +276,7 @@ function MetierIllustration({ dk }: { dk: boolean }) {
       ))}
       <text x="240" y="352" fontSize="7.5" fill={textMuted}
         textAnchor="middle" fontFamily="Inter, sans-serif">
-        Heures économisées / semaine
+        {t({ fr: "Heures économisées / semaine", en: "Hours saved per week" })}
       </text>
 
       {/* ═══════════════════════════════════════
@@ -362,7 +299,7 @@ function MetierIllustration({ dk }: { dk: boolean }) {
       </text>
       <text x="392" y="312" fontSize="7.5" fill={textMuted}
         textAnchor="middle" fontFamily="Inter, sans-serif">
-        automatisé
+        {t({ fr: "automatisé", en: "automated" })}
       </text>
 
       {/* ── Points décoratifs ── */}
@@ -384,8 +321,108 @@ interface SolutionTemplatePageProps {
    PAGE PRINCIPALE
 ════════════════════════════════════════════════════════════════════ */
 export default function SolutionTemplatePage({ theme, openBooking }: SolutionTemplatePageProps) {
+  const { t } = useLang();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
+
+  /* ── Page identity — à personnaliser par métier ──────────────────── */
+  const METIER_BADGE  = t({ fr: "Ora pour la Finance", en: "Ora for Finance" });
+  const METIER_NAME   = t({ fr: "la Finance & le Contrôle de gestion", en: "Finance and Management Control" });
+  const HERO_TITLE_L1 = t({ fr: "Vos cycles financiers,", en: "Your financial cycles," });
+  const HERO_TITLE_L2 = t({ fr: "automatisés par Ora.", en: "automated by Ora." });
+
+  /* ── Solutions métier — à personnaliser ──────────────────────────── */
+  const solutions = [
+    {
+      icon: BarChart3,
+      title: t({ fr: "Reporting automatisé", en: "Automated reporting" }),
+      desc: t({
+        fr: "Générez vos tableaux de bord financiers en quelques secondes. Ora agrège vos sources Excel, met à jour vos KPIs et diffuse vos rapports automatiquement.",
+        en: "Generate your financial dashboards in seconds. Ora pulls from your Excel sources, refreshes your KPIs, and sends your reports automatically.",
+      }),
+    },
+    {
+      icon: FileText,
+      title: t({ fr: "Clôtures accélérées", en: "Faster closings" }),
+      desc: t({
+        fr: "Réduisez votre cycle de clôture de plusieurs jours à quelques heures. Ora automatise les écritures récurrentes et les rapprochements internes.",
+        en: "Cut your closing cycle from days to hours. Ora handles recurring entries and internal reconciliations on its own.",
+      }),
+    },
+    {
+      icon: Mail,
+      title: t({ fr: "Diffusion automatique", en: "Automatic delivery" }),
+      desc: t({
+        fr: "Planifiez l'envoi de vos reportings par e-mail, à la bonne personne, au bon moment. Zéro oubli, zéro pièce jointe incorrecte.",
+        en: "Schedule your reports to reach the right person at the right time by email. No missed sends, no wrong attachments.",
+      }),
+    },
+    {
+      icon: Zap,
+      title: t({ fr: "Alertes intelligentes", en: "Smart alerts" }),
+      desc: t({
+        fr: "Recevez une alerte proactive dès qu'un indicateur franchit un seuil critique. Ora surveille vos données 24h/24.",
+        en: "Get a proactive alert the moment a metric crosses a critical threshold. Ora watches your data around the clock.",
+      }),
+    },
+    {
+      icon: Clock,
+      title: t({ fr: "Gain de temps mesurable", en: "Measurable time savings" }),
+      desc: t({
+        fr: "En moyenne, nos clients récupèrent 5 heures par semaine dès le premier mois. Un ROI immédiat, sans changer vos outils.",
+        en: "On average, our clients reclaim 5 hours a week from month one. Immediate ROI, without changing your tools.",
+      }),
+    },
+    {
+      icon: RefreshCcw,
+      title: t({ fr: "Synchronisation en temps réel", en: "Real-time sync" }),
+      desc: t({
+        fr: "Vos fichiers Excel, Google Sheets et vos e-mails sont synchronisés en continu. Vos données sont toujours à jour.",
+        en: "Your Excel files, Google Sheets, and emails stay in sync continuously. Your data is always up to date.",
+      }),
+    },
+  ];
+
+  /* ── Testimonials — à personnaliser ──────────────────────────────── */
+  const testimonials = [
+    {
+      quote: t({
+        fr: "Avant Ora, mes clôtures mensuelles me prenaient 3 jours entiers. Aujourd'hui, c'est 4 heures. Mes équipes peuvent enfin se concentrer sur l'analyse.",
+        en: "Before Ora, my monthly closings took 3 full days. Now it's 4 hours. My teams can finally focus on analysis.",
+      }),
+      name: "Marie Durand",
+      role: t({ fr: "Directrice Administrative et Financière", en: "Chief Financial Officer" }),
+      company: "Groupe Lemaire",
+      stars: 5,
+    },
+    {
+      quote: t({
+        fr: "Fini les erreurs de copier-coller. Nos reportings sont générés et envoyés automatiquement chaque lundi matin. Un gain de temps considérable pour toute l'équipe.",
+        en: "No more copy-paste errors. Our reports are generated and sent automatically every Monday morning. A huge time saver for the whole team.",
+      }),
+      name: "Thomas Petit",
+      role: t({ fr: "Contrôleur de gestion", en: "Management Controller" }),
+      company: "Nexio SAS",
+      stars: 5,
+    },
+    {
+      quote: t({
+        fr: "L'intégration avec Excel était mon critère numéro un. Ora s'est connecté à nos fichiers existants en moins d'une semaine. Le résultat est bluffant.",
+        en: "Excel integration was my number one requirement. Ora connected to our existing files in less than a week. The result is stunning.",
+      }),
+      name: "Sophie Martin",
+      role: t({ fr: "Responsable Comptable", en: "Head of Accounting" }),
+      company: "Atelier Créatif",
+      stars: 5,
+    },
+  ];
+
+  /* ── Stat pills hero ─────────────────────────────────────────────── */
+  const heroStats = [
+    { value: "5h+",     label: t({ fr: "récupérées / semaine", en: "saved per week" }) },
+    { value: "0",       label: t({ fr: "erreur de saisie", en: "data entry errors" }) },
+    { value: t({ fr: "< 1 sem", en: "< 1 week" }), label: t({ fr: "pour démarrer", en: "to get started" }) },
+  ];
 
   /* Mount */
   useEffect(() => {
@@ -486,9 +523,10 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                   textSecondary,
                 ].join(" ")}
               >
-                Ora s'intègre silencieusement à vos outils Excel, e-mails et fichiers.
-                Vos reportings, consolidations et alertes tournent seuls pendant que
-                vous vous concentrez sur ce qui compte vraiment.
+                {t({
+                  fr: "Ora s'intègre silencieusement à vos outils Excel, e-mails et fichiers. Vos reportings, consolidations et alertes tournent seuls pendant que vous vous concentrez sur ce qui compte vraiment.",
+                  en: "Ora plugs silently into your Excel, email, and file tools. Your reports, consolidations, and alerts run on their own while you focus on what really matters.",
+                })}
               </p>
 
               {/* CTA */}
@@ -504,7 +542,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                     "hover:shadow-[0_1px_3px_rgba(0,0,0,0.10),0_10px_32px_rgba(37,99,235,0.44)]",
                   ].join(" ")}
                 >
-                  Réserver un appel découverte
+                  {t({ fr: "Réserver un appel découverte", en: "Book a discovery call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:translate-x-[3px] transition-all duration-150" />
                 </button>
               </div>
@@ -554,11 +592,18 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 textPrimary,
               ].join(" ")}
             >
-              Ce qu'Ora fait pour vous
+              {t({ fr: "Ce qu'Ora fait pour vous", en: "What Ora does for you" })}
             </h2>
             <p className={["font-inter mt-4 text-[1.05rem] leading-relaxed", textSecondary].join(" ")}>
-              Des automatisations concrètes, adaptées aux enjeux du métier de{" "}
-              {METIER_NAME}. Opérationnelles en moins d'une semaine.
+              {t({
+                fr: "Des automatisations concrètes, adaptées aux enjeux du métier de ",
+                en: "Concrete automations, tailored to the challenges of ",
+              })}
+              {METIER_NAME}
+              {t({
+                fr: ". Opérationnelles en moins d'une semaine.",
+                en: ". Up and running in under a week.",
+              })}
             </p>
           </div>
 
@@ -618,7 +663,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 dk ? "text-blue-400" : "text-blue-600",
               ].join(" ")}
             >
-              Témoignages
+              {t({ fr: "Témoignages", en: "Testimonials" })}
             </p>
             <h2
               className={[
@@ -626,9 +671,9 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 textPrimary,
               ].join(" ")}
             >
-              Vrais professionnels.
+              {t({ fr: "Vrais professionnels.", en: "Real professionals." })}
               <br />
-              Vrais résultats.
+              {t({ fr: "Vrais résultats.", en: "Real results." })}
             </h2>
           </div>
 
@@ -702,12 +747,14 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 textPrimary,
               ].join(" ")}
             >
-              Prêt à transformer votre quotidien ?
+              {t({ fr: "Prêt à transformer votre quotidien ?", en: "Ready to transform your day to day?" })}
             </h2>
 
             <p className={["font-inter mt-4 text-[1.05rem] leading-relaxed", textSecondary].join(" ")}>
-              30 minutes, sans engagement. On vous montre ce qu'Ora peut automatiser
-              dans votre contexte dès la première semaine.
+              {t({
+                fr: "30 minutes, sans engagement. On vous montre ce qu'Ora peut automatiser dans votre contexte dès la première semaine.",
+                en: "30 minutes, no strings attached. We show you what Ora can automate in your context from week one.",
+              })}
             </p>
 
             <button
@@ -721,12 +768,16 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.42)]",
               ].join(" ")}
             >
-              Réserver un appel gratuit
+              {t({ fr: "Réserver un appel gratuit", en: "Book a free call" })}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
 
             <div className="mt-8 flex flex-wrap justify-center gap-6">
-              {["Sans engagement", "Démarrage en moins d'une semaine", "Support dédié inclus"].map((label) => (
+              {[
+                t({ fr: "Sans engagement", en: "No commitment" }),
+                t({ fr: "Démarrage en moins d'une semaine", en: "Up and running in under a week" }),
+                t({ fr: "Support dédié inclus", en: "Dedicated support included" }),
+              ].map((label) => (
                 <span
                   key={label}
                   className={["font-inter flex items-center gap-1.5 text-[13px]", textSecondary].join(" ")}

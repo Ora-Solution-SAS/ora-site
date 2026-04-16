@@ -12,78 +12,7 @@ import {
   ArrowRight, RefreshCcw, Clock, FileText,
   BarChart3, Zap, Star, CheckCircle, Folder,
 } from "lucide-react";
-
-/* ── Page identity ───────────────────────────────────────────────── */
-const METIER_BADGE  = "Ora pour les Experts-Comptables";
-const METIER_NAME   = "l'Expertise Comptable";
-const HERO_TITLE_L1 = "Votre cabinet,";
-const HERO_TITLE_L2 = "libéré du superflu.";
-
-/* ── Solutions métier ────────────────────────────────────────────── */
-const solutions = [
-  {
-    icon: RefreshCcw,
-    title: "Rapprochements automatisés",
-    desc: "Vos rapprochements bancaires et intercomptes sont traités en quelques minutes. Ora croise vos relevés avec vos écritures et signale chaque écart sans intervention manuelle.",
-  },
-  {
-    icon: Clock,
-    title: "Clôtures accélérées",
-    desc: "Réduisez votre cycle de clôture de plusieurs jours à quelques heures. Ora automatise les écritures récurrentes, les relances de pièces et la consolidation.",
-  },
-  {
-    icon: FileText,
-    title: "Liasses fiscales préparées",
-    desc: "Préparez vos déclarations TVA et liasses fiscales directement depuis vos fichiers Excel. Moins d'erreurs, moins de ressaisie, plus de sérénité en période de dépôt.",
-  },
-  {
-    icon: BarChart3,
-    title: "Reporting client automatisé",
-    desc: "Générez et envoyez automatiquement les tableaux de bord de vos clients chaque mois. Le bon rapport, à la bonne personne, au bon moment.",
-  },
-  {
-    icon: Zap,
-    title: "Détection des anomalies",
-    desc: "Ora surveille vos fichiers et vous alerte dès qu'une écriture est douteuse, un solde anormal ou un seuil critique franchi. Anticipez au lieu de subir.",
-  },
-  {
-    icon: Folder,
-    title: "Dossiers de révision simplifiés",
-    desc: "Constituez et mettez à jour vos dossiers de révision sans travail de mise en forme. Ora structure, classe et vérifie pour vous, mission après mission.",
-  },
-];
-
-/* ── Testimonials ────────────────────────────────────────────────── */
-const testimonials = [
-  {
-    quote: "Nos rapprochements bancaires prenaient une journée entière chaque mois. Avec Ora, c'est vingt minutes. Un vrai soulagement pour toute l'équipe.",
-    name: "Julie Bernard",
-    role: "Expert-comptable associée",
-    company: "BDC & Associés",
-    stars: 5,
-  },
-  {
-    quote: "La préparation des liasses, c'était le cauchemar de fin d'exercice. Ora a automatisé 80% de la saisie. On se concentre enfin sur le conseil à valeur ajoutée.",
-    name: "Pierre Moreau",
-    role: "Directeur de cabinet",
-    company: "Moreau Expertise",
-    stars: 5,
-  },
-  {
-    quote: "En trois jours, on a connecté Ora à nos fichiers Excel existants. Nos clients reçoivent maintenant leur tableau de bord automatiquement chaque semaine.",
-    name: "Camille Rousseau",
-    role: "Responsable de mission",
-    company: "Expertise & Conseil",
-    stars: 5,
-  },
-];
-
-/* ── Stat pills hero ─────────────────────────────────────────────── */
-const heroStats = [
-  { value: "5h+",      label: "récupérées / semaine" },
-  { value: "0",        label: "saisie manuelle" },
-  { value: "< 1 sem",  label: "pour démarrer" },
-];
+import { useLang } from "@/lib/i18n";
 
 /* ── CSS local ───────────────────────────────────────────────────── */
 const pageCSS = `
@@ -340,8 +269,108 @@ interface Props {
    PAGE PRINCIPALE
 ════════════════════════════════════════════════════════════════════ */
 export default function SolutionExpertiseComptablePage({ theme, openBooking, onNavigate }: Props) {
+  const { t } = useLang();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
+
+  /* ── Page identity ───────────────────────────────────────────────── */
+  const METIER_BADGE  = t({ fr: "Ora pour les Experts-Comptables", en: "Ora for Accounting Firms" });
+  const METIER_NAME   = t({ fr: "l'Expertise Comptable", en: "accounting firms" });
+  const HERO_TITLE_L1 = t({ fr: "Votre cabinet,", en: "Your firm," });
+  const HERO_TITLE_L2 = t({ fr: "libéré du superflu.", en: "freed from the clutter." });
+
+  /* ── Solutions métier ────────────────────────────────────────────── */
+  const solutions = [
+    {
+      icon: RefreshCcw,
+      title: t({ fr: "Rapprochements automatisés", en: "Automated reconciliations" }),
+      desc: t({
+        fr: "Vos rapprochements bancaires et intercomptes sont traités en quelques minutes. Ora croise vos relevés avec vos écritures et signale chaque écart sans intervention manuelle.",
+        en: "Your bank and inter-account reconciliations are processed in minutes. Ora cross-checks your statements with your accounting entries and flags every discrepancy with no manual work.",
+      }),
+    },
+    {
+      icon: Clock,
+      title: t({ fr: "Clôtures accélérées", en: "Faster closings" }),
+      desc: t({
+        fr: "Réduisez votre cycle de clôture de plusieurs jours à quelques heures. Ora automatise les écritures récurrentes, les relances de pièces et la consolidation.",
+        en: "Cut your closing cycle from days to hours. Ora automates recurring entries, document follow-ups and consolidation.",
+      }),
+    },
+    {
+      icon: FileText,
+      title: t({ fr: "Liasses fiscales préparées", en: "Tax return packages prepared" }),
+      desc: t({
+        fr: "Préparez vos déclarations TVA et liasses fiscales directement depuis vos fichiers Excel. Moins d'erreurs, moins de ressaisie, plus de sérénité en période de dépôt.",
+        en: "Prepare your VAT returns and tax bundles straight from your Excel files. Fewer errors, less re-keying, more peace of mind at filing time.",
+      }),
+    },
+    {
+      icon: BarChart3,
+      title: t({ fr: "Reporting client automatisé", en: "Automated client reporting" }),
+      desc: t({
+        fr: "Générez et envoyez automatiquement les tableaux de bord de vos clients chaque mois. Le bon rapport, à la bonne personne, au bon moment.",
+        en: "Automatically generate and send your clients' dashboards every month. The right report, to the right person, at the right time.",
+      }),
+    },
+    {
+      icon: Zap,
+      title: t({ fr: "Détection des anomalies", en: "Anomaly detection" }),
+      desc: t({
+        fr: "Ora surveille vos fichiers et vous alerte dès qu'une écriture est douteuse, un solde anormal ou un seuil critique franchi. Anticipez au lieu de subir.",
+        en: "Ora watches your files and alerts you as soon as an entry looks off, a balance is abnormal or a critical threshold is crossed. Stay ahead instead of catching up.",
+      }),
+    },
+    {
+      icon: Folder,
+      title: t({ fr: "Dossiers de révision simplifiés", en: "Simplified review files" }),
+      desc: t({
+        fr: "Constituez et mettez à jour vos dossiers de révision sans travail de mise en forme. Ora structure, classe et vérifie pour vous, mission après mission.",
+        en: "Build and update your review files without any formatting work. Ora structures, sorts and checks for you, mission after mission.",
+      }),
+    },
+  ];
+
+  /* ── Testimonials ────────────────────────────────────────────────── */
+  const testimonials = [
+    {
+      quote: t({
+        fr: "Nos rapprochements bancaires prenaient une journée entière chaque mois. Avec Ora, c'est vingt minutes. Un vrai soulagement pour toute l'équipe.",
+        en: "Our bank reconciliations used to take a full day every month. With Ora, it's twenty minutes. A real relief for the whole team.",
+      }),
+      name: "Julie Bernard",
+      role: t({ fr: "Expert-comptable associée", en: "Partner Chartered Accountant" }),
+      company: "BDC & Associés",
+      stars: 5,
+    },
+    {
+      quote: t({
+        fr: "La préparation des liasses, c'était le cauchemar de fin d'exercice. Ora a automatisé 80% de la saisie. On se concentre enfin sur le conseil à valeur ajoutée.",
+        en: "Preparing tax bundles used to be the year-end nightmare. Ora has automated 80% of the data entry. We can finally focus on high-value advisory work.",
+      }),
+      name: "Pierre Moreau",
+      role: t({ fr: "Directeur de cabinet", en: "Firm Director" }),
+      company: "Moreau Expertise",
+      stars: 5,
+    },
+    {
+      quote: t({
+        fr: "En trois jours, on a connecté Ora à nos fichiers Excel existants. Nos clients reçoivent maintenant leur tableau de bord automatiquement chaque semaine.",
+        en: "In three days, we connected Ora to our existing Excel files. Our clients now receive their dashboard automatically every week.",
+      }),
+      name: "Camille Rousseau",
+      role: t({ fr: "Responsable de mission", en: "Engagement Manager" }),
+      company: "Expertise & Conseil",
+      stars: 5,
+    },
+  ];
+
+  /* ── Stat pills hero ─────────────────────────────────────────────── */
+  const heroStats = [
+    { value: t({ fr: "5h+", en: "5h+" }),           label: t({ fr: "récupérées / semaine", en: "saved / week" }) },
+    { value: t({ fr: "0", en: "0" }),               label: t({ fr: "saisie manuelle", en: "manual data entry" }) },
+    { value: t({ fr: "< 1 sem", en: "< 1 wk" }),    label: t({ fr: "pour démarrer", en: "to get started" }) },
+  ];
 
   /* Mount */
   useEffect(() => {
@@ -442,9 +471,10 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                   textSecondary,
                 ].join(" ")}
               >
-                Ora automatise vos rapprochements, clôtures et liasses fiscales
-                directement depuis Excel. Vos collaborateurs se concentrent sur
-                ce qui compte : le conseil à valeur ajoutée.
+                {t({
+                  fr: "Ora automatise vos rapprochements, clôtures et liasses fiscales directement depuis Excel. Vos collaborateurs se concentrent sur ce qui compte : le conseil à valeur ajoutée.",
+                  en: "Ora automates your reconciliations, closings and tax bundles directly from Excel. Your team focuses on what matters: high-value advisory work.",
+                })}
               </p>
 
               {/* CTA */}
@@ -460,7 +490,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                     "hover:shadow-[0_1px_3px_rgba(0,0,0,0.10),0_10px_32px_rgba(37,99,235,0.44)]",
                   ].join(" ")}
                 >
-                  Réserver un appel découverte
+                  {t({ fr: "Réserver un appel découverte", en: "Book a discovery call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:translate-x-[3px] transition-all duration-150" />
                 </button>
               </div>
@@ -509,11 +539,18 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 textPrimary,
               ].join(" ")}
             >
-              Ce qu'Ora fait pour vous
+              {t({ fr: "Ce qu'Ora fait pour vous", en: "What Ora does for you" })}
             </h2>
             <p className={["font-inter mt-4 text-[1.05rem] leading-relaxed", textSecondary].join(" ")}>
-              Des automatisations concrètes, adaptées aux enjeux de{" "}
-              {METIER_NAME}. Opérationnelles en moins d'une semaine.
+              {t({
+                fr: "Des automatisations concrètes, adaptées aux enjeux de ",
+                en: "Concrete automations, built for the needs of ",
+              })}
+              {METIER_NAME}
+              {t({
+                fr: ". Opérationnelles en moins d'une semaine.",
+                en: ". Up and running in less than a week.",
+              })}
             </p>
           </div>
 
@@ -563,8 +600,10 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
             ].join(" ")}
           >
             <p className={["font-inter text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}>
-              Ora se branche directement sur vos fichiers Excel existants.
-              Aucune migration, aucune refonte de processus.
+              {t({
+                fr: "Ora se branche directement sur vos fichiers Excel existants. Aucune migration, aucune refonte de processus.",
+                en: "Ora plugs straight into your existing Excel files. No migration, no process overhaul.",
+              })}
             </p>
             <button
               onClick={() => onNavigate("ora-experience")}
@@ -575,7 +614,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 dk ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700",
               ].join(" ")}
             >
-              L'expérience Ora
+              {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -599,7 +638,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 dk ? "text-blue-400" : "text-blue-600",
               ].join(" ")}
             >
-              Témoignages
+              {t({ fr: "Témoignages", en: "Testimonials" })}
             </p>
             <h2
               className={[
@@ -607,14 +646,14 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 textPrimary,
               ].join(" ")}
             >
-              Vrais professionnels.
+              {t({ fr: "Vrais professionnels.", en: "Real professionals." })}
               <br />
-              Vrais résultats.
+              {t({ fr: "Vrais résultats.", en: "Real results." })}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
+            {testimonials.map((testi, i) => (
               <div
                 key={i}
                 className={[
@@ -624,7 +663,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 data-delay={String(i * 100)}
               >
                 <div className="flex gap-0.5">
-                  {Array.from({ length: t.stars }).map((_, s) => (
+                  {Array.from({ length: testi.stars }).map((_, s) => (
                     <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
@@ -632,7 +671,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 <blockquote
                   className={["font-inter text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}
                 >
-                  &ldquo;{t.quote}&rdquo;
+                  &ldquo;{testi.quote}&rdquo;
                 </blockquote>
 
                 <div className="flex items-center gap-3 pt-2 border-t border-inherit">
@@ -643,14 +682,14 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                       dk ? "bg-blue-500/15 text-blue-400" : "bg-blue-100 text-blue-600",
                     ].join(" ")}
                   >
-                    {t.name.charAt(0)}
+                    {testi.name.charAt(0)}
                   </div>
                   <div>
                     <p className={["font-inter text-[13px] font-semibold", textPrimary].join(" ")}>
-                      {t.name}
+                      {testi.name}
                     </p>
                     <p className={["font-inter text-[12px]", textSecondary].join(" ")}>
-                      {t.role} · {t.company}
+                      {testi.role} · {testi.company}
                     </p>
                   </div>
                 </div>
@@ -683,12 +722,14 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 textPrimary,
               ].join(" ")}
             >
-              Prêt à transformer votre cabinet ?
+              {t({ fr: "Prêt à transformer votre cabinet ?", en: "Ready to transform your firm?" })}
             </h2>
 
             <p className={["font-inter mt-4 text-[1.05rem] leading-relaxed", textSecondary].join(" ")}>
-              30 minutes, sans engagement. On vous montre ce qu'Ora peut automatiser
-              dans votre cabinet dès la première semaine.
+              {t({
+                fr: "30 minutes, sans engagement. On vous montre ce qu'Ora peut automatiser dans votre cabinet dès la première semaine.",
+                en: "30 minutes, no commitment. We show you what Ora can automate in your firm from the very first week.",
+              })}
             </p>
 
             <button
@@ -702,12 +743,16 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking, onN
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.42)]",
               ].join(" ")}
             >
-              Réserver un appel gratuit
+              {t({ fr: "Réserver un appel gratuit", en: "Book a free call" })}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
 
             <div className="mt-8 flex flex-wrap justify-center gap-6">
-              {["Sans engagement", "Démarrage en moins d'une semaine", "Support dédié inclus"].map((label) => (
+              {[
+                t({ fr: "Sans engagement", en: "No commitment" }),
+                t({ fr: "Démarrage en moins d'une semaine", en: "Up and running in less than a week" }),
+                t({ fr: "Support dédié inclus", en: "Dedicated support included" }),
+              ].map((label) => (
                 <span
                   key={label}
                   className={["font-inter flex items-center gap-1.5 text-[13px]", textSecondary].join(" ")}

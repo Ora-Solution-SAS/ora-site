@@ -5,6 +5,10 @@ import ForBusinessPage from "./pages/ForBusinessPage";
 import OraExperiencePage from "./pages/OraExperiencePage";
 import SolutionTemplatePage from "./pages/SolutionTemplatePage";
 import SolutionExpertiseComptablePage from "./pages/SolutionExpertiseComptablePage";
+import SolutionAuditPage from "./pages/SolutionAuditPage";
+import SolutionFondsInvestissementPage from "./pages/SolutionFondsInvestissementPage";
+import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
+import ConfidentialitePage from "./pages/ConfidentialitePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -462,6 +466,7 @@ import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
 import Hero from "./components/Hero";
+import { useLang } from "./lib/i18n";
 import {
   Clock,
   Shield,
@@ -583,7 +588,43 @@ const FeatureRow = ({
   );
 };
 
+// === URL-based routing helpers ===
+type Page =
+  | "home"
+  | "for-business"
+  | "ora-experience"
+  | "solution-template"
+  | "solution-expertise-comptable"
+  | "solution-audit"
+  | "solution-fonds-investissement"
+  | "solution-banque-affaires"
+  | "confidentialite"
+  | "not-found";
+
+const PAGE_TO_PATH: Record<Page, string> = {
+  "home": "/",
+  "for-business": "/for-business",
+  "ora-experience": "/ora-experience",
+  "solution-template": "/solution-template",
+  "solution-expertise-comptable": "/solution-expertise-comptable",
+  "solution-audit": "/solution-audit",
+  "solution-fonds-investissement": "/solution-fonds-investissement",
+  "solution-banque-affaires": "/solution-banque-affaires",
+  "confidentialite": "/confidentialite",
+  "not-found": "/not-found",
+};
+
+const PATH_TO_PAGE: Record<string, Page> = Object.fromEntries(
+  (Object.entries(PAGE_TO_PATH) as [Page, string][]).map(([p, path]) => [path, p])
+);
+
+function getPageFromPath(pathname: string): Page {
+  return PATH_TO_PAGE[pathname] ?? "not-found";
+}
+
 const App = () => {
+  const { t, lang } = useLang();
+
   // Smooth scroll with inertia (Lenis)
   useEffect(() => {
     const lenis = new Lenis({
@@ -638,10 +679,24 @@ const App = () => {
 
 
 
-  const [page, setPage] = useState<"home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "not-found">("home");
+  const [page, setPage] = useState<Page>(() => getPageFromPath(window.location.pathname));
   const [notFoundKey, setNotFoundKey] = useState(0);
 
-  const navigateTo = (target: "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "not-found") => {
+  // Handle browser back / forward
+  useEffect(() => {
+    const onPopState = () => {
+      const newPage = getPageFromPath(window.location.pathname);
+      if (newPage === "not-found") setNotFoundKey((k) => k + 1);
+      setPage(newPage);
+      const lenis = (window as any).__lenis;
+      if (lenis) lenis.scrollTo(0, { immediate: true });
+      else window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const navigateTo = (target: Page) => {
     if (target === "not-found") {
       setNotFoundKey((k) => k + 1);
       setPage("not-found");
@@ -649,6 +704,7 @@ const App = () => {
       if (target === page) return;
       setPage(target);
     }
+    window.history.pushState({}, "", PAGE_TO_PATH[target]);
     const lenis = (window as any).__lenis;
     if (lenis) lenis.scrollTo(0, { immediate: true });
     else window.scrollTo({ top: 0 });
@@ -802,6 +858,14 @@ const App = () => {
         <SolutionTemplatePage theme={theme} openBooking={openBooking} />
       ) : page === "solution-expertise-comptable" ? (
         <SolutionExpertiseComptablePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "solution-audit" ? (
+        <SolutionAuditPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "solution-fonds-investissement" ? (
+        <SolutionFondsInvestissementPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "solution-banque-affaires" ? (
+        <SolutionBanqueAffairesPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "confidentialite" ? (
+        <ConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : (
       <>
 
@@ -816,37 +880,58 @@ const App = () => {
         <div className="features-heading text-center mb-20 md:mb-28">
           <FadeInOnScroll direction="up">
             <h2 className="font-poppins text-4xl md:text-[3.75rem] font-bold tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
-              Découvrez{" "}
+              {t({ fr: "Découvrez", en: "Meet" })}{" "}
               <span className="text-brand-gradient">Ora.</span>
             </h2>
           </FadeInOnScroll>
           <FadeInOnScroll direction="up" delay={180}>
             <p className="mt-5 text-[clamp(1rem,2vw,1.125rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
-              Des automatisations concrètes, adaptées à vos données et à vos processus métier.
+              {t({
+                fr: "Des automatisations concrètes, adaptées à vos données et à vos processus métier.",
+                en: "Concrete automations, tailored to your data and your business processes.",
+              })}
             </p>
           </FadeInOnScroll>
         </div>
         <div className="max-w-6xl mx-auto space-y-36 md:space-y-52">
           {[
             {
-              tag: "Reporting",
-              title: "Des rapports mensuels générés en quelques secondes",
-              desc: "Ora collecte vos données, les nettoie, applique votre logique et génère des rapports impeccables, prêts à partager. Fini les soirées à formater des tableaux avant les réunions.",
+              tag: t({ fr: "Reporting", en: "Reporting" }),
+              title: t({
+                fr: "Des rapports mensuels générés en quelques secondes",
+                en: "Monthly reports generated in seconds",
+              }),
+              desc: t({
+                fr: "Ora collecte vos données, les nettoie, applique votre logique et génère des rapports impeccables, prêts à partager. Fini les soirées à formater des tableaux avant les réunions.",
+                en: "Ora pulls in your data, cleans it up, applies your logic and produces flawless, ready-to-share reports. No more late nights formatting spreadsheets before meetings.",
+              }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
               video: "/Montlhy_Repor.mov",
             },
             {
-              tag: "Réconciliation",
-              title: "Réconciliez des milliers de lignes sans effort",
-              desc: "Relevés bancaires, factures, exports CRM... Ora croise vos sources, détecte les écarts et produit un fichier de réconciliation propre à chaque fois.",
+              tag: t({ fr: "Réconciliation", en: "Reconciliation" }),
+              title: t({
+                fr: "Réconciliez des milliers de lignes sans effort",
+                en: "Reconcile thousands of rows, effortlessly",
+              }),
+              desc: t({
+                fr: "Relevés bancaires, factures, exports CRM... Ora croise vos sources, détecte les écarts et produit un fichier de réconciliation propre à chaque fois.",
+                en: "Bank statements, invoices, CRM exports... Ora cross-checks your sources, flags every discrepancy and delivers a clean reconciliation file every single time.",
+              }),
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
             },
             {
-              tag: "Traitement de données",
-              title: "Données brutes en entrée, résultats structurés en sortie",
-              desc: "CSV, PDF, emails... quelle que soit la source, Ora extrait, normalise et redirige vos données au bon endroit. Votre équipe analyse les résultats, pas les lignes.",
+              tag: t({ fr: "Traitement de données", en: "Data processing" }),
+              title: t({
+                fr: "Données brutes en entrée, résultats structurés en sortie",
+                en: "Raw data in, structured results out",
+              }),
+              desc: t({
+                fr: "CSV, PDF, emails... quelle que soit la source, Ora extrait, normalise et redirige vos données au bon endroit. Votre équipe analyse les résultats, pas les lignes.",
+                en: "CSV, PDF, emails... whatever the source, Ora extracts, normalizes and routes your data to the right place. Your team analyzes the results, not the rows.",
+              }),
               icon: Zap,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
             },
@@ -897,7 +982,7 @@ const App = () => {
                               <path d="M8 5v14l11-7z" />
                             </svg>
                           </div>
-                          <span className="text-xs font-medium text-gray-400 dark:text-gray-500">Voir la démo</span>
+                          <span className="text-xs font-medium text-gray-400 dark:text-gray-500">{t({ fr: "Voir la démo", en: "Watch the demo" })}</span>
                         </div>
                         <div
                           className="absolute inset-0 opacity-60 dark:opacity-30"
@@ -919,10 +1004,13 @@ const App = () => {
           <FadeInOnScroll>
             <div className="text-center mb-16">
               <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
-                L'expérience <span className="text-brand-gradient">Ora.</span>
+                {t({ fr: "L'expérience", en: "The" })} <span className="text-brand-gradient">{t({ fr: "Ora.", en: "Ora experience." })}</span>
               </h2>
               <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-500 dark:text-gray-400">
-                Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.
+                {t({
+                  fr: "Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.",
+                  en: "Up and running in under a week. We set everything up for you, without disrupting your current workflow.",
+                })}
               </p>
             </div>
           </FadeInOnScroll>
@@ -932,20 +1020,38 @@ const App = () => {
               {
                 num: "01",
                 icon: Database,
-                title: "Ora s'intègre à Excel",
-                desc: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.",
+                title: t({
+                  fr: "Ora s'intègre à Excel",
+                  en: "Ora plugs into Excel",
+                }),
+                desc: t({
+                  fr: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.",
+                  en: "Ora runs as an extension inside your existing Excel. Your files stay exactly the same. Ora handles the automations in the background.",
+                }),
               },
               {
                 num: "02",
                 icon: GitMerge,
-                title: "Des automatisations sur mesure",
-                desc: "Nous configurons vos premiers workflows avec vous. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.",
+                title: t({
+                  fr: "Des automatisations sur mesure",
+                  en: "Automations tailored to you",
+                }),
+                desc: t({
+                  fr: "Nous configurons vos premiers workflows avec vous. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.",
+                  en: "We set up your first workflows with you. And when your needs evolve, you can request new automations at any time, no waiting.",
+                }),
               },
               {
                 num: "03",
                 icon: CheckCircle2,
-                title: "Laissez faire Ora, reprenez le contrôle",
-                desc: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin.",
+                title: t({
+                  fr: "Laissez faire Ora, reprenez le contrôle",
+                  en: "Let Ora run it, take back control",
+                }),
+                desc: t({
+                  fr: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin.",
+                  en: "Ora takes care of the production. Reports, reconciliations, automated sends: everything is ready when you need it.",
+                }),
               },
             ].map((step, i) => {
               const Icon = step.icon;
@@ -957,7 +1063,7 @@ const App = () => {
                         <Icon className="w-4 h-4 text-blue-500" />
                       </div>
                       <span className="text-[11px] font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
-                        Étape {step.num}
+                        {t({ fr: "Étape", en: "Step" })} {step.num}
                       </span>
                     </div>
                     <h3 className="font-poppins font-bold tracking-tight text-[1rem] leading-snug mb-2 text-[#111827] dark:text-white">
@@ -978,9 +1084,74 @@ const App = () => {
                 onClick={() => navigateTo("ora-experience")}
                 className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
               >
-                Découvrir l'expérience Ora
+                {t({ fr: "Découvrir l'expérience Ora", en: "Discover the Ora experience" })}
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+            </div>
+          </FadeInOnScroll>
+        </div>
+      </section>
+
+      {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
+      <section className="py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-14 items-center">
+          {/* Left */}
+          <FadeInOnScroll direction="left">
+            <div>
+              <div
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] mb-6 border"
+                style={{
+                  borderColor: theme === "dark" ? "rgba(13,148,136,0.3)" : "rgba(13,148,136,0.25)",
+                  background: theme === "dark" ? "rgba(13,148,136,0.1)" : "rgba(13,148,136,0.07)",
+                  color: theme === "dark" ? "#2dd4bf" : "#0d9488",
+                }}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {t({ fr: "Confidentialité", en: "Privacy" })}
+              </div>
+              <h2 className="font-poppins font-semibold text-3xl md:text-4xl tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-4">
+                {t({
+                  fr: "Vos données ne quittent jamais votre environnement.",
+                  en: "Your data never leaves your environment.",
+                })}
+              </h2>
+              <p className="font-inter text-base leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-md">
+                {t({
+                  fr: "Ora s'appuie sur l'IA pour concevoir vos automatisations rapidement. Mais une fois déployé, le logiciel tourne uniquement sur votre machine. Aucune donnée n'est transmise à l'extérieur.",
+                  en: "Ora relies on AI to design your automations quickly. But once deployed, the software runs entirely on your machine. No data is ever sent outside.",
+                })}
+              </p>
+              <button
+                onClick={() => navigateTo("confidentialite")}
+                className="inline-flex items-center gap-2 text-[14px] font-semibold font-inter text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-150"
+              >
+                {t({ fr: "En savoir plus sur notre approche", en: "Learn more about our approach" })}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </FadeInOnScroll>
+
+          {/* Right */}
+          <FadeInOnScroll direction="right" delay={100}>
+            <div className="flex flex-col gap-4">
+              {[
+                { icon: ShieldCheck, label: t({ fr: "Aucun envoi de données vers le cloud", en: "Zero data sent to the cloud" }) },
+                { icon: CheckCircle2, label: t({ fr: "Compatible avec vos obligations RGPD", en: "Compatible with your GDPR obligations" }) },
+                { icon: Zap, label: t({ fr: "Déploiement rapide, sécurité par construction", en: "Fast deployment, security by design" }) },
+              ].map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-4 p-4 rounded-[16px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <span className="font-inter font-medium text-[14px] text-[#111827] dark:text-white">{item.label}</span>
+                  </div>
+                );
+              })}
             </div>
           </FadeInOnScroll>
         </div>
@@ -997,22 +1168,28 @@ const App = () => {
               {/* Left — pitch */}
               <div>
                 <div className="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] mb-5 bg-blue-100 text-blue-700 border border-blue-200">
-                  Appel découverte
+                  {t({ fr: "Appel découverte", en: "Discovery call" })}
                 </div>
                 <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-4xl leading-[1.12] text-[#111827] mb-4">
-                  30 minutes pour tout changer.
+                  {t({
+                    fr: "30 minutes pour tout changer.",
+                    en: "30 minutes to change everything.",
+                  })}
                 </h2>
                 <p className="text-base leading-relaxed text-gray-600 mb-8">
-                  Un appel simple, sans jargon. Vous nous décrivez votre quotidien, on identifie ce qu'Ora peut automatiser. Vous repartez avec un plan concret.
+                  {t({
+                    fr: "Un appel simple, sans jargon. Vous nous décrivez votre quotidien, on identifie ce qu'Ora peut automatiser. Vous repartez avec un plan concret.",
+                    en: "A simple call, no jargon. You walk us through your day-to-day, we identify what Ora can automate. You walk away with a concrete plan.",
+                  })}
                 </p>
                 <button
                   onClick={openBooking}
                   className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
                 >
-                  Réserver mon appel
+                  {t({ fr: "Réserver mon appel", en: "Book my call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
-                <p className="mt-3 text-[12px] text-gray-400">Gratuit · Sans engagement</p>
+                <p className="mt-3 text-[12px] text-gray-400">{t({ fr: "Gratuit · Sans engagement", en: "Free · No commitment" })}</p>
               </div>
 
               {/* Right — what to expect */}
@@ -1020,18 +1197,30 @@ const App = () => {
                 {[
                   {
                     icon: Clock,
-                    title: "30 minutes chrono",
-                    desc: "Un format court et structuré, pensé pour aller à l'essentiel.",
+                    title: t({ fr: "30 minutes chrono", en: "30 minutes, tops" }),
+                    desc: t({
+                      fr: "Un format court et structuré, pensé pour aller à l'essentiel.",
+                      en: "Short and structured, designed to cut straight to the point.",
+                    }),
                   },
                   {
                     icon: Zap,
-                    title: "Identification de vos automatisations",
-                    desc: "On passe en revue vos tâches répétitives et on repère ce qu'Ora peut prendre en charge immédiatement.",
+                    title: t({
+                      fr: "Identification de vos automatisations",
+                      en: "Spotting your automations",
+                    }),
+                    desc: t({
+                      fr: "On passe en revue vos tâches répétitives et on repère ce qu'Ora peut prendre en charge immédiatement.",
+                      en: "We walk through your repetitive tasks and pinpoint what Ora can take off your plate right away.",
+                    }),
                   },
                   {
                     icon: CheckCircle2,
-                    title: "Un plan sur mesure",
-                    desc: "Vous repartez avec une proposition concrète, adaptée à votre métier et vos outils actuels.",
+                    title: t({ fr: "Un plan sur mesure", en: "A tailored plan" }),
+                    desc: t({
+                      fr: "Vous repartez avec une proposition concrète, adaptée à votre métier et vos outils actuels.",
+                      en: "You leave with a concrete proposal, built around your industry and the tools you already use.",
+                    }),
                   },
                 ].map((item, i) => {
                   const Icon = item.icon;
@@ -1066,7 +1255,7 @@ const App = () => {
           {!bookingReady && (
             <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#fcfbf7] dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
               <OraLogoSpinner gradientId="g-booking" size={72} />
-              <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">Chargement du calendrier...</p>
+              <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">{t({ fr: "Chargement du calendrier...", en: "Loading calendar..." })}</p>
             </div>
           )}
 
@@ -1087,10 +1276,13 @@ const App = () => {
                   <div>
                     <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
                     <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
-                      Réservez un appel découverte
+                      {t({ fr: "Réservez un appel découverte", en: "Book a discovery call" })}
                     </h3>
                     <p className="mt-3 text-white/75 text-sm leading-relaxed">
-                      Dites-nous ce que vous souhaitez automatiser. Nous analyserons vos processus et reviendrons avec les prochaines étapes.
+                      {t({
+                        fr: "Dites-nous ce que vous souhaitez automatiser. Nous analyserons vos processus et reviendrons avec les prochaines étapes.",
+                        en: "Tell us what you'd like to automate. We'll review your processes and come back with next steps.",
+                      })}
                     </p>
                   </div>
 
@@ -1099,19 +1291,19 @@ const App = () => {
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
                         <Clock className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-white/90">30 min · Gratuit · Sans engagement</span>
+                      <span className="text-sm text-white/90">{t({ fr: "30 min · Gratuit · Sans engagement", en: "30 min · Free · No commitment" })}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
                         <CheckCircle2 className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-white/90">Plan d'automatisation sur mesure</span>
+                      <span className="text-sm text-white/90">{t({ fr: "Plan d'automatisation sur mesure", en: "Tailored automation plan" })}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
                         <Shield className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm text-white/90">Vos données restent privées</span>
+                      <span className="text-sm text-white/90">{t({ fr: "Vos données restent privées", en: "Your data stays private" })}</span>
                     </div>
                   </div>
                 </div>
@@ -1125,7 +1317,7 @@ const App = () => {
                       config={{
                         layout: "month_view" as const,
                         theme: theme === "dark" ? "dark" : "light",
-                        lang: "fr",
+                        lang: lang,
                       }}
                     />
                   ) : (
@@ -1134,10 +1326,13 @@ const App = () => {
                         <Clock className="w-7 h-7 text-blue-500" />
                       </div>
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Réservation bientôt disponible
+                        {t({ fr: "Réservation bientôt disponible", en: "Booking coming soon" })}
                       </h4>
                       <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-                        Notre système de prise de rendez-vous est en cours de configuration.
+                        {t({
+                          fr: "Notre système de prise de rendez-vous est en cours de configuration.",
+                          en: "Our scheduling system is being set up right now.",
+                        })}
                       </p>
                     </div>
                   )}

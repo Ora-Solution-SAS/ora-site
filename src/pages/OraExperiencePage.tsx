@@ -3,6 +3,7 @@ import {
   ArrowRight, Clock, FileSpreadsheet, Mail, GitMerge, Zap,
   CheckCircle2, BarChart3, RefreshCcw, FileText, Database,
 } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 interface OraExperiencePageProps {
   theme: "light" | "dark";
@@ -65,64 +66,64 @@ const pageCSS = `
 .xp-step-dot { animation: xpStepGlow 3s ease-in-out infinite; }
 `;
 
-// ── Data ────────────────────────────────────────────────────────────────────
-
-const painPoints = [
-  { icon: Clock,           label: "3 à 5 heures perdues chaque semaine sur la mise à jour de rapports Excel" },
-  { icon: RefreshCcw,      label: "Copier-coller manuel entre fichiers, e-mails et tableaux de bord" },
-  { icon: FileSpreadsheet, label: "Formules cassées, versions multiples, erreurs humaines coûteuses" },
-  { icon: Mail,            label: "Envoi de rapports manuels avec risque d'oubli ou de mauvaise pièce jointe" },
-];
-
-const steps = [
-  {
-    num: "01",
-    title: "Ora s'intègre à Excel",
-    desc: "Ora fonctionne comme une extension directement dans votre Excel existant. Pas de migration, pas de nouvel outil à apprendre. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.",
-    icon: Database,
-  },
-  {
-    num: "02",
-    title: "Des automatisations sur mesure",
-    desc: "Nous configurons vos premiers workflows avec vous, adaptés à vos besoins exacts. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.",
-    icon: GitMerge,
-  },
-  {
-    num: "03",
-    title: "Laissez faire Ora, reprenez le contrôle",
-    desc: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin. Vous validez les résultats, vous ne les fabriquez plus.",
-    icon: CheckCircle2,
-  },
-];
-
-// 3 exemples représentatifs, suffisamment généraux
-const examples = [
-  {
-    icon: BarChart3,
-    tag: "Reporting",
-    title: "Rapports mensuels générés automatiquement",
-    desc: "Ora collecte, nettoie et structure vos données, puis génère et envoie vos rapports aux bons destinataires, au bon moment.",
-  },
-  {
-    icon: GitMerge,
-    tag: "Réconciliation",
-    title: "Rapprochements sans erreur",
-    desc: "Factures, relevés bancaires, exports CRM : Ora croise vos sources, détecte les écarts et produit un fichier propre à chaque fois.",
-  },
-  {
-    icon: FileText,
-    tag: "Traitement de données",
-    title: "CSV, PDF, e-mails : tout devient exploitable",
-    desc: "Quelle que soit la source, Ora extrait, normalise et route vos données exactement là où elles doivent aller.",
-  },
-];
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function OraExperiencePage({ theme, openBooking, onNavigate }: OraExperiencePageProps) {
+  const { t } = useLang();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
   const lineRef = useRef<HTMLDivElement>(null);
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const painPoints = [
+    { icon: Clock,           label: t({ fr: "3 à 5 heures perdues chaque semaine sur la mise à jour de rapports Excel", en: "3 to 5 hours lost each week updating Excel reports" }) },
+    { icon: RefreshCcw,      label: t({ fr: "Copier-coller manuel entre fichiers, e-mails et tableaux de bord", en: "Manual copy-paste between files, emails and dashboards" }) },
+    { icon: FileSpreadsheet, label: t({ fr: "Formules cassées, versions multiples, erreurs humaines coûteuses", en: "Broken formulas, multiple versions, costly human errors" }) },
+    { icon: Mail,            label: t({ fr: "Envoi de rapports manuels avec risque d'oubli ou de mauvaise pièce jointe", en: "Manual report sending with risk of oversight or wrong attachment" }) },
+  ];
+
+  const steps = [
+    {
+      num: "01",
+      title: t({ fr: "Ora s'intègre à Excel", en: "Ora integrates with Excel" }),
+      desc: t({ fr: "Ora fonctionne comme une extension directement dans votre Excel existant. Pas de migration, pas de nouvel outil à apprendre. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.", en: "Ora works as an extension directly inside your existing Excel. No migration, no new tool to learn. Your files stay the same, Ora handles automation in the background." }),
+      icon: Database,
+    },
+    {
+      num: "02",
+      title: t({ fr: "Des automatisations sur mesure", en: "Tailored automations" }),
+      desc: t({ fr: "Nous configurons vos premiers workflows avec vous, adaptés à vos besoins exacts. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.", en: "We configure your first workflows with you, tailored to your exact needs. And if your needs evolve, you can request new automations at any time, without delay." }),
+      icon: GitMerge,
+    },
+    {
+      num: "03",
+      title: t({ fr: "Laissez faire Ora, reprenez le contrôle", en: "Let Ora run, take back control" }),
+      desc: t({ fr: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin. Vous validez les résultats, vous ne les fabriquez plus.", en: "Ora handles production. Reports, reconciliations, automatic dispatch: everything is ready when you need it. You validate results, you no longer produce them." }),
+      icon: CheckCircle2,
+    },
+  ];
+
+  // 3 exemples représentatifs, suffisamment généraux
+  const examples = [
+    {
+      icon: BarChart3,
+      tag: t({ fr: "Reporting", en: "Reporting" }),
+      title: t({ fr: "Rapports mensuels générés automatiquement", en: "Monthly reports generated automatically" }),
+      desc: t({ fr: "Ora collecte, nettoie et structure vos données, puis génère et envoie vos rapports aux bons destinataires, au bon moment.", en: "Ora collects, cleans and structures your data, then generates and sends your reports to the right recipients at the right time." }),
+    },
+    {
+      icon: GitMerge,
+      tag: t({ fr: "Réconciliation", en: "Reconciliation" }),
+      title: t({ fr: "Rapprochements sans erreur", en: "Error-free reconciliations" }),
+      desc: t({ fr: "Factures, relevés bancaires, exports CRM : Ora croise vos sources, détecte les écarts et produit un fichier propre à chaque fois.", en: "Invoices, bank statements, CRM exports: Ora cross-checks your sources, detects discrepancies and delivers a clean file every time." }),
+    },
+    {
+      icon: FileText,
+      tag: t({ fr: "Traitement de données", en: "Data processing" }),
+      title: t({ fr: "CSV, PDF, e-mails : tout devient exploitable", en: "CSV, PDF, emails: everything becomes usable" }),
+      desc: t({ fr: "Quelle que soit la source, Ora extrait, normalise et route vos données exactement là où elles doivent aller.", en: "Whatever the source, Ora extracts, normalizes and routes your data exactly where it needs to go." }),
+    },
+  ];
 
   // Entrance animation trigger
   useEffect(() => {
@@ -172,8 +173,6 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
   const bg         = dk ? "#111827" : "#fcfbf7";
   const bgContrast = dk ? "#0f172a" : "#ffffff";
   const border     = dk ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
-  const textMain   = dk ? "#ffffff" : "#111827";
-  const textMuted  = dk ? "#9ca3af" : "#6b7280";
   const cardBg     = dk ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)";
 
   return (
@@ -220,7 +219,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               className="w-1.5 h-1.5 rounded-full bg-current"
               style={{ boxShadow: "0 0 6px currentColor" }}
             />
-            L'expérience Ora
+            {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
           </div>
 
           {/* H1 — Poppins bold, tight tracking, same pattern as homepage */}
@@ -229,9 +228,9 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               dk ? "text-white" : "text-[#111827]"
             }`}
           >
-            Vos workflows Excel,{" "}
+            {t({ fr: "Vos workflows Excel,", en: "Your Excel workflows," })}{" "}
             <br className="hidden sm:block" />
-            <span className="xp-animated-gradient">automatisés pour vous.</span>
+            <span className="xp-animated-gradient">{t({ fr: "automatisés pour vous.", en: "automated for you." })}</span>
           </h1>
 
           {/* Subheadline */}
@@ -240,7 +239,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               dk ? "text-gray-400" : "text-gray-500"
             }`}
           >
-            Ora automatise vos tâches Excel répétitives et vous redonne du temps pour l'essentiel.
+            {t({ fr: "Ora automatise vos tâches Excel répétitives et vous redonne du temps pour l'essentiel.", en: "Ora automates your repetitive Excel tasks and gives you back time for what matters." })}
           </p>
 
           {/* CTA */}
@@ -249,11 +248,11 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               onClick={openBooking}
               className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_8px_rgba(0,0,0,0.1),0_8px_24px_rgba(37,99,235,0.35)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.1),0_12px_32px_rgba(37,99,235,0.45)]"
             >
-              Réserver un appel gratuit
+              {t({ fr: "Réserver un appel gratuit", en: "Book a free call" })}
               <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
             <span className={`text-[13px] ${dk ? "text-gray-500" : "text-gray-400"}`}>
-              30 min · Sans engagement
+              {t({ fr: "30 min · Sans engagement", en: "30 min · No commitment" })}
             </span>
           </div>
 
@@ -265,9 +264,9 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
             style={{ fontSize: 13 }}
           >
             {[
-              ["5h+", "économisées / semaine"],
-              ["0",   "erreur humaine"],
-              ["< 1 sem.", "pour déployer"],
+              ["5h+", t({ fr: "économisées / semaine", en: "saved / week" })],
+              ["0",   t({ fr: "erreur humaine", en: "human errors" })],
+              [t({ fr: "< 1 sem.", en: "< 1 week" }), t({ fr: "pour déployer", en: "to deploy" })],
             ].map(([val, label]) => (
               <div key={val} className="flex flex-col items-center gap-1">
                 <span
@@ -297,7 +296,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                 border: `1px solid ${dk ? "rgba(239,68,68,0.2)" : "#fecaca"}`,
               }}
             >
-              Le problème
+              {t({ fr: "Le problème", en: "The problem" })}
             </div>
             <h2
               className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
@@ -305,11 +304,11 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="100"
             >
-              Chaque semaine, vos équipes{" "}
+              {t({ fr: "Chaque semaine, vos équipes", en: "Every week, your teams" })}{" "}
               <br />
-              perdent des heures sur des tâches{" "}
+              {t({ fr: "perdent des heures sur des tâches", en: "lose hours on tasks" })}{" "}
               <br />
-              qui devraient être automatiques.
+              {t({ fr: "qui devraient être automatiques.", en: "that should be automatic." })}
             </h2>
           </div>
 
@@ -359,7 +358,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                 <ArrowRight className="w-4 h-4 text-white rotate-90" />
               </div>
               <span className="text-xs font-semibold tracking-widest uppercase text-blue-500">
-                Avec Ora
+                {t({ fr: "Avec Ora", en: "With Ora" })}
               </span>
             </div>
           </div>
@@ -380,7 +379,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                   : "bg-blue-50 text-blue-600 border border-blue-100"
               }`}
             >
-              Comment ça marche
+              {t({ fr: "Comment ça marche", en: "How it works" })}
             </div>
             <h2
               className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
@@ -388,7 +387,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="100"
             >
-              Opérationnel en moins d'une semaine.
+              {t({ fr: "Opérationnel en moins d'une semaine.", en: "Up and running in less than a week." })}
             </h2>
             <p
               className={`xp-reveal mt-4 mx-auto text-base leading-relaxed max-w-md ${
@@ -396,7 +395,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="200"
             >
-              Nous configurons tout pour vous, sans toucher à votre organisation actuelle.
+              {t({ fr: "Nous configurons tout pour vous, sans toucher à votre organisation actuelle.", en: "We set everything up for you, without touching your current organization." })}
             </p>
           </div>
 
@@ -436,7 +435,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                             : "bg-blue-50 text-blue-600"
                         }`}
                       >
-                        Étape {step.num}
+                        {t({ fr: "Étape", en: "Step" })} {step.num}
                       </div>
                       <h3
                         className={`font-poppins font-bold tracking-tight text-xl md:text-2xl leading-snug mb-3 ${
@@ -500,7 +499,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                   : "bg-teal-50 text-teal-700 border border-teal-100"
               }`}
             >
-              Ce qu'Ora automatise
+              {t({ fr: "Ce qu'Ora automatise", en: "What Ora automates" })}
             </div>
             <h2
               className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
@@ -508,7 +507,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="80"
             >
-              Concret, dès la première semaine.
+              {t({ fr: "Concret, dès la première semaine.", en: "Concrete, from the first week." })}
             </h2>
             <p
               className={`xp-reveal mt-4 mx-auto text-base leading-relaxed max-w-md ${
@@ -516,7 +515,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="160"
             >
-              Les cas d'usage d'Ora varient selon votre métier. Voici quelques exemples.
+              {t({ fr: "Les cas d'usage d'Ora varient selon votre métier. Voici quelques exemples.", en: "Ora use cases vary by industry. Here are a few examples." })}
             </p>
           </div>
 
@@ -577,7 +576,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                   : "text-blue-600 hover:text-blue-700"
               }`}
             >
-              Voir les cas d'usage par secteur d'activité
+              {t({ fr: "Voir les cas d'usage par secteur d'activité", en: "See use cases by industry" })}
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-[3px] transition-transform" />
             </button>
           </div>
@@ -635,24 +634,23 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                   dk ? "text-white" : "text-[#111827]"
                 }`}
               >
-                Prêt à reprendre votre temps ?
+                {t({ fr: "Prêt à reprendre votre temps ?", en: "Ready to reclaim your time?" })}
               </h2>
 
               <p className={`text-base leading-relaxed mb-8 max-w-sm mx-auto ${dk ? "text-gray-400" : "text-gray-500"}`}>
-                En 30 minutes, nous cartographions ce qu'Ora peut automatiser dans votre
-                quotidien. Vous repartez avec un plan concret.
+                {t({ fr: "En 30 minutes, nous cartographions ce qu'Ora peut automatiser dans votre quotidien. Vous repartez avec un plan concret.", en: "In 30 minutes, we map out what Ora can automate in your daily work. You leave with a concrete plan." })}
               </p>
 
               <button
                 onClick={openBooking}
                 className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
               >
-                Réserver un appel découverte
+                {t({ fr: "Réserver un appel découverte", en: "Book a discovery call" })}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
               </button>
 
               <p className={`mt-4 text-[12px] ${dk ? "text-gray-600" : "text-gray-400"}`}>
-                Gratuit · 30 minutes · Sans engagement
+                {t({ fr: "Gratuit · 30 minutes · Sans engagement", en: "Free · 30 minutes · No commitment" })}
               </p>
             </div>
           </div>

@@ -1,39 +1,12 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Zap, Shield, Clock, Users } from "lucide-react";
 import HeroOrbitAnimation from "../components/HeroOrbitAnimation";
+import { useLang } from "@/lib/i18n";
 
 interface ForBusinessPageProps {
   theme: "light" | "dark";
   openBooking: () => void;
 }
-
-const integrations = [
-  "Microsoft Excel", "Google Sheets", "Gmail", "Outlook",
-  "PDF Documents", "Notion", "Google Drive", "Apple Mail",
-];
-
-const benefits = [
-  {
-    icon: Zap,
-    title: "Connect every tool your team already uses",
-    desc: "Ora integrates with Excel, Google Workspace, email clients, PDFs, and more — no ripping and replacing your existing stack.",
-  },
-  {
-    icon: Clock,
-    title: "Deploy automations in days, not months",
-    desc: "We build, configure, and ship your custom automations. You're in production fast, with measurable ROI from week one.",
-  },
-  {
-    icon: Shield,
-    title: "Enterprise-grade security",
-    desc: "SOC 2 compliant infrastructure. Your data is encrypted in transit and at rest. We never train models on your data.",
-  },
-  {
-    icon: Users,
-    title: "Dedicated support & guaranteed SLA",
-    desc: "A dedicated automation engineer on call. Response guaranteed within 4 hours. We succeed when you succeed.",
-  },
-];
 
 const pageCSS = `
 @keyframes bizFadeUp {
@@ -57,8 +30,61 @@ const pageCSS = `
 `;
 
 export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageProps) {
+  const { t } = useLang();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
+
+  const integrations = [
+    "Microsoft Excel", "Google Sheets", "Gmail", "Outlook",
+    "PDF Documents", "Notion", "Google Drive", "Apple Mail",
+  ];
+
+  const benefits = [
+    {
+      icon: Zap,
+      title: t({
+        fr: "Connectez tous les outils que votre équipe utilise déjà",
+        en: "Connect every tool your team already uses",
+      }),
+      desc: t({
+        fr: "Ora s'intègre avec Excel, Google Workspace, les clients email, les PDF et plus encore. Pas besoin de remplacer votre stack existante.",
+        en: "Ora integrates with Excel, Google Workspace, email clients, PDFs, and more. No ripping and replacing your existing stack.",
+      }),
+    },
+    {
+      icon: Clock,
+      title: t({
+        fr: "Déployez vos automatisations en jours, pas en mois",
+        en: "Deploy automations in days, not months",
+      }),
+      desc: t({
+        fr: "Nous construisons, configurons et livrons vos automatisations sur mesure. Vous passez en production rapidement, avec un ROI mesurable dès la première semaine.",
+        en: "We build, configure, and ship your custom automations. You're in production fast, with measurable ROI from week one.",
+      }),
+    },
+    {
+      icon: Shield,
+      title: t({
+        fr: "Sécurité de niveau entreprise",
+        en: "Enterprise-grade security",
+      }),
+      desc: t({
+        fr: "Infrastructure conforme SOC 2. Vos données sont chiffrées en transit et au repos. Nous n'entraînons jamais de modèles sur vos données.",
+        en: "SOC 2 compliant infrastructure. Your data is encrypted in transit and at rest. We never train models on your data.",
+      }),
+    },
+    {
+      icon: Users,
+      title: t({
+        fr: "Support dédié et SLA garanti",
+        en: "Dedicated support & guaranteed SLA",
+      }),
+      desc: t({
+        fr: "Un ingénieur automatisation dédié à votre disposition. Réponse garantie sous 4 heures. Nous réussissons quand vous réussissez.",
+        en: "A dedicated automation engineer on call. Response guaranteed within 4 hours. We succeed when you succeed.",
+      }),
+    },
+  ];
 
   useEffect(() => {
     requestAnimationFrame(() => setReady(true));
@@ -120,7 +146,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     : "bg-blue-50 text-blue-600 border border-blue-100"
                 }`}
               >
-                Solution
+                {t({ fr: "Solution", en: "Solution" })}
               </div>
 
               <h1
@@ -128,7 +154,10 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                   dk ? "text-white" : "text-black"
                 }`}
               >
-                One AI layer across your entire business stack
+                {t({
+                  fr: "Une couche d'IA sur toute votre stack métier",
+                  en: "One AI layer across your entire business stack",
+                })}
               </h1>
 
               <p
@@ -136,9 +165,10 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                   dk ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                Ora connects to every tool your team already relies on — Excel,
-                Google Workspace, email, PDFs — and silently automates the
-                repetitive work that drains time and introduces errors.
+                {t({
+                  fr: "Ora se connecte à tous les outils sur lesquels votre équipe s'appuie déjà, Excel, Google Workspace, emails, PDF, et automatise silencieusement les tâches répétitives qui font perdre du temps et génèrent des erreurs.",
+                  en: "Ora connects to every tool your team already relies on, Excel, Google Workspace, email, PDFs, and silently automates the repetitive work that drains time and introduces errors.",
+                })}
               </p>
 
               <div className="biz-stagger biz-d4 mt-9 flex flex-wrap gap-3">
@@ -153,7 +183,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     "hover:from-blue-500 hover:via-blue-400 hover:to-blue-500",
                   ].join(" ")}
                 >
-                  Book a discovery call
+                  {t({ fr: "Réserver un appel découverte", en: "Book a discovery call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:translate-x-[3px] transition-all duration-150" />
                 </button>
               </div>
@@ -213,10 +243,16 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 dk ? "text-white" : "text-black"
               }`}
             >
-              Built for teams that move fast
+              {t({
+                fr: "Conçu pour les équipes qui avancent vite",
+                en: "Built for teams that move fast",
+              })}
             </h2>
             <p className={`mt-4 text-lg max-w-md mx-auto ${dk ? "text-gray-400" : "text-gray-500"}`}>
-              Enterprise-ready from day one. No setup headaches, no migration risk.
+              {t({
+                fr: "Prêt pour l'entreprise dès le premier jour. Pas de casse-tête d'installation, pas de risque de migration.",
+                en: "Enterprise-ready from day one. No setup headaches, no migration risk.",
+              })}
             </p>
           </div>
 
@@ -284,11 +320,16 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 dk ? "text-white" : "text-black"
               }`}
             >
-              Ready to eliminate manual work?
+              {t({
+                fr: "Prêt à éliminer le travail manuel ?",
+                en: "Ready to eliminate manual work?",
+              })}
             </h2>
             <p className={`mt-4 text-lg ${dk ? "text-gray-400" : "text-gray-500"}`}>
-              Talk to us. 30 minutes, no commitment. We'll map out what Ora can
-              automate in your stack within the first week.
+              {t({
+                fr: "Parlons-en. 30 minutes, sans engagement. Nous identifierons ce qu'Ora peut automatiser dans votre stack dès la première semaine.",
+                en: "Talk to us. 30 minutes, no commitment. We'll map out what Ora can automate in your stack within the first week.",
+              })}
             </p>
             <button
               onClick={openBooking}
@@ -300,7 +341,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]",
               ].join(" ")}
             >
-              Book a free discovery call
+              {t({ fr: "Réserver un appel découverte gratuit", en: "Book a free discovery call" })}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
           </div>

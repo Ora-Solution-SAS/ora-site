@@ -3,6 +3,7 @@ import { ArrowRight, Play, RefreshCw } from "lucide-react";
 import { LogosSlider } from "./LogosSlider";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useMotionValue, useTransform, motion } from "framer-motion";
+import { useLang } from "@/lib/i18n";
 
 /* ── CSS ─────────────────────────────────────────────────────── */
 const heroCSS = `
@@ -90,7 +91,8 @@ function getPageOffsetTop(el: HTMLElement): number {
 
 /* ── Component ───────────────────────────────────────────────── */
 const Hero = forwardRef<HTMLElement, HeroProps>(
-  ({ scrollToSection, openBooking }, ref) => {
+  ({ scrollToSection: _scrollToSection, openBooking }, ref) => {
+    const { t } = useLang();
 
     /* ── Mount animation ── */
     const [heroReady, setHeroReady] = useState(false);
@@ -458,7 +460,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               <AnimatedHeroTitle />
 
               <p className="hero-stagger hero-d2 mt-6 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
-                Ora crée des automatisations sur-mesure pour traiter vos données, afin que votre équipe se concentre sur ce qui compte vraiment.
+                {t({
+                  fr: "Ora crée des automatisations sur-mesure pour traiter vos données, afin que votre équipe se concentre sur ce qui compte vraiment.",
+                  en: "Ora builds tailored automations that handle your data, so your team can focus on what actually matters.",
+                })}
               </p>
 
               <div className="hero-stagger hero-d3 mt-9 flex flex-wrap items-center justify-center gap-3.5">
@@ -466,7 +471,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   onClick={openBooking}
                   className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
-                  Réserver un appel
+                  {t({ fr: "Réserver un appel", en: "Book a call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
                 <button
@@ -476,7 +481,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   }}
                   className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.06] hover:border-gray-400 dark:hover:border-white/30 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
                 >
-                  Voir la démo
+                  {t({ fr: "Voir la démo", en: "Watch the demo" })}
                 </button>
               </div>
             </div>
@@ -523,12 +528,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                       {isFreePlaying ? (
                         <>
                           <RefreshCw className="w-3.5 h-3.5" />
-                          Relancer
+                          {t({ fr: "Relancer", en: "Replay" })}
                         </>
                       ) : (
                         <>
                           <Play className="w-3.5 h-3.5 fill-current" />
-                          Lancer
+                          {t({ fr: "Lancer", en: "Play" })}
                         </>
                       )}
                     </button>
@@ -561,7 +566,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   letterSpacing: "-0.025em",
                 }}
               >
-                Votre temps est votre actif le plus précieux.
+                {t({
+                  fr: "Votre temps est votre actif le plus précieux.",
+                  en: "Your time is your most valuable asset.",
+                })}
               </motion.p>
 
               {/* Ligne 2 */}
@@ -575,7 +583,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   letterSpacing: "-0.025em",
                 }}
               >
-                Cessez de le gaspiller sur Excel.
+                {t({
+                  fr: "Cessez de le gaspiller sur Excel.",
+                  en: "Stop wasting it on Excel.",
+                })}
               </motion.p>
 
               {/* Ligne 3 — grandit puis l'overlay fixe prend le relais pour rejoindre le H2 */}
@@ -590,7 +601,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   letterSpacing: l3Track,
                 }}
               >
-                <span className="text-[#111827] dark:text-white">Découvrez </span>
+                <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
                 <span className="text-brand-gradient">Ora.</span>
               </motion.p>
 
@@ -611,7 +622,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             whiteSpace: "nowrap",
           }}
         >
-          <span className="text-[#111827] dark:text-white">Découvrez </span>
+          <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
           <span className="text-brand-gradient">Ora.</span>
         </div>
 
