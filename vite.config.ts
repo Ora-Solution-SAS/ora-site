@@ -10,4 +10,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    // Serve index.html for all routes so browser refresh works on any page
+    historyApiFallback: true,
+  },
+  preview: {
+    // Same fallback for `vite preview`
+    historyApiFallback: true,
+  },
 })
