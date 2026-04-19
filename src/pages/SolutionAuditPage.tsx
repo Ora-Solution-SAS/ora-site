@@ -9,8 +9,8 @@
 
 import { useState, useEffect } from "react";
 import {
-  ArrowRight, Search, Shield, ClipboardCheck,
-  AlertTriangle, GitCommit, CheckCircle, Star,
+  ArrowRight, Shield, CheckCircle, Star,
+  Search, Zap, FileSpreadsheet, Palette, Send, Eye,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -300,33 +300,33 @@ export default function SolutionAuditPage({ theme, openBooking, onNavigate }: Pr
   const solutions = [
     {
       icon: Search,
-      title: t({ fr: "Détection automatique des anomalies", en: "Automatic anomaly detection" }),
-      desc: t({ fr: "Ora parcourt vos fichiers et isole chaque valeur aberrante, doublon ou incohérence. Ce qui prenait des heures de revue manuelle est signalé en quelques secondes.", en: "Ora scans your files and isolates every outlier, duplicate or inconsistency. What used to take hours of manual review is flagged in seconds." }),
-    },
-    {
-      icon: ClipboardCheck,
-      title: t({ fr: "Piste d'audit horodatée", en: "Timestamped audit trail" }),
-      desc: t({ fr: "Chaque transformation, correction ou consolidation est tracée automatiquement avec date, source et opération. Votre dossier est toujours prêt pour une revue externe.", en: "Every transformation, correction or consolidation is tracked automatically with date, source and operation. Your file is always ready for external review." }),
-    },
-    {
-      icon: Shield,
-      title: t({ fr: "Contrôle de conformité des données", en: "Data compliance checks" }),
-      desc: t({ fr: "Définissez vos règles métier une fois, Ora les applique à chaque cycle. Seuils, formats, plages de valeurs : toute déviation est immédiatement signalée.", en: "Set your business rules once, Ora applies them every audit cycle. Thresholds, formats, value ranges: any deviation is flagged instantly." }),
-    },
-    {
-      icon: GitCommit,
-      title: t({ fr: "Réconciliation inter-sources", en: "Cross-source reconciliation" }),
-      desc: t({ fr: "Croisez automatiquement vos balances, relevés et exports systèmes. Ora identifie les écarts et vous présente uniquement ce qui nécessite votre attention.", en: "Automatically cross-check your balances, statements and system exports. Ora identifies gaps and surfaces only what needs your attention." }),
-    },
-    {
-      icon: AlertTriangle,
       title: t({ fr: "Revue par sondage accélérée", en: "Faster sample testing" }),
-      desc: t({ fr: "Extrayez et analysez vos échantillons d'audit en quelques clics. Ora structure les données, calcule les indicateurs et formate le dossier de travail.", en: "Extract and analyze your audit samples in a few clicks. Ora structures the data, computes the indicators and formats the working papers." }),
+      desc: t({ fr: "Extrayez, structurez et analysez vos sondages d'audit en quelques clics. Ora prépare l'échantillon, calcule les indicateurs et formate le dossier de travail.", en: "Extract, structure and analyse your audit samples in a few clicks. Ora prepares the sample, computes the indicators and formats the working papers." }),
     },
     {
-      icon: CheckCircle,
-      title: t({ fr: "Validation et clôture de dossier", en: "File validation and closing" }),
-      desc: t({ fr: "Consolidez les points ouverts, les réponses client et les conclusions dans un rapport structuré. Moins de temps sur le formatage, plus de temps sur le jugement.", en: "Consolidate open points, client responses and conclusions into a structured report. Less time on formatting, more time on judgment." }),
+      icon: Zap,
+      title: t({ fr: "Suppression des sélections manuelles", en: "No more manual selections" }),
+      desc: t({ fr: "Fini les copier-coller et les filtres à reconfigurer à chaque mission. Ora extrait et prépare automatiquement les données selon vos critères, sans intervention manuelle.", en: "No more copy-paste and filters to reset on every engagement. Ora extracts and prepares data automatically based on your criteria, without manual intervention." }),
+    },
+    {
+      icon: FileSpreadsheet,
+      title: t({ fr: "Balances comparatives et TFT dans vos fichiers", en: "Comparative balances and cash flow in your files" }),
+      desc: t({ fr: "Balances comparatives, tableaux de flux de trésorerie : Ora les génère directement dans vos fichiers de travail existants. Aucun fichier supplémentaire, aucun onglet à maintenir manuellement.", en: "Comparative balances, cash flow statements: Ora generates them directly in your existing working files. No extra file, no tab to maintain manually." }),
+    },
+    {
+      icon: Palette,
+      title: t({ fr: "Documents aux couleurs du cabinet", en: "Documents in your firm's brand" }),
+      desc: t({ fr: "Tous les documents produits par Ora respectent automatiquement la charte graphique de votre cabinet. Livrables professionnels, sans mise en forme manuelle.", en: "Every document produced by Ora automatically matches your firm's brand identity. Professional deliverables, without manual formatting." }),
+    },
+    {
+      icon: Send,
+      title: t({ fr: "Tableaux prêts à envoyer, envoi mail inclus", en: "Send-ready tables with built-in email" }),
+      desc: t({ fr: "Vos tableaux sont immédiatement mis en forme pour envoi client. L'envoi par mail est intégré directement : plus de mauvaise pièce jointe, plus de retraitement avant livraison.", en: "Your tables are instantly formatted for client delivery. Email sending is built in: no wrong attachment, no rework before sending." }),
+    },
+    {
+      icon: Eye,
+      title: t({ fr: "Vue manager sur l'avancée du dossier", en: "Manager view on file progress" }),
+      desc: t({ fr: "Suivez l'avancée de chaque fichier en temps réel. Commentaires, modifications effectuées, statut par section. La supervision du dossier est fluide et centralisée.", en: "Track every file's progress in real time. Comments, edits made, status by section. File oversight is seamless and centralised." }),
     },
   ];
 
@@ -371,14 +371,6 @@ export default function SolutionAuditPage({ theme, openBooking, onNavigate }: Pr
     {
       title: t({ fr: "Traçabilité totale", en: "Full traceability" }),
       desc: t({ fr: "Toutes les opérations sont enregistrées avec source, date et opérateur. Votre piste d'audit est constituée en temps réel, sans effort supplémentaire.", en: "Every operation is logged with source, date and operator. Your audit trail is built in real time, with no extra effort." }),
-    },
-    {
-      title: t({ fr: "Cohérence inter-périodes", en: "Cross-period consistency" }),
-      desc: t({ fr: "Ora compare automatiquement vos données d'une période à l'autre et signale toute variation significative qui mérite examen.", en: "Ora automatically compares your data from one period to the next and flags any significant variation worth reviewing." }),
-    },
-    {
-      title: t({ fr: "Règles métier paramétrables", en: "Custom business rules" }),
-      desc: t({ fr: "Définissez vos seuils d'acceptabilité, formats attendus et contrôles clés. Ora les applique à chaque traitement, sans exception.", en: "Define your acceptance thresholds, expected formats and key controls. Ora applies them to every run, with no exceptions." }),
     },
   ];
 
@@ -714,38 +706,6 @@ export default function SolutionAuditPage({ theme, openBooking, onNavigate }: Pr
             ))}
           </div>
 
-          {/* Bannière chiffre clé */}
-          <div
-            className={[
-              "mt-10 px-8 py-8 rounded-[24px] border flex flex-col sm:flex-row sm:items-center gap-6",
-              dk
-                ? "bg-gradient-to-r from-blue-500/10 to-teal-500/10 border-white/[0.08]"
-                : "bg-gradient-to-r from-blue-50 to-teal-50 border-blue-100/60",
-            ].join(" ")}
-          >
-            <div className="flex-1">
-              <p className={["font-inter text-[15px] leading-relaxed", textSecondary].join(" ")}>
-                {t({ fr: "Les équipes d'audit utilisant Ora réduisent en moyenne de ", en: "Audit teams using Ora cut on average " })}
-                <span className={["font-semibold", dk ? "text-white" : "text-gray-900"].join(" ")}>
-                  {t({ fr: "60% le temps passé", en: "60% of the time spent" })}
-                </span>{" "}
-                {t({ fr: "sur les vérifications manuelles et les tâches de réconciliation.", en: "on manual checks and reconciliation tasks." })}
-              </p>
-            </div>
-            <button
-              onClick={openBooking}
-              className={[
-                "font-inter text-[14px] font-semibold whitespace-nowrap",
-                "flex items-center gap-1.5 shrink-0",
-                "hover:gap-2.5 transition-all duration-150",
-                dk ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700",
-              ].join(" ")}
-            >
-              {t({ fr: "Voir comment", en: "See how" })}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
         </div>
       </section>
 
@@ -854,8 +814,8 @@ export default function SolutionAuditPage({ theme, openBooking, onNavigate }: Pr
 
             <p className={["font-inter mt-4 text-[1.05rem] leading-relaxed", textSecondary].join(" ")}>
               {t({
-                fr: "30 minutes, sans engagement. On vous montre ce qu'Ora peut vérifier et tracer automatiquement dans vos missions dès la première semaine.",
-                en: "30 minutes, no strings attached. We show you what Ora can verify and track automatically on your engagements from week one.",
+                fr: "30 minutes, sans engagement. On vous montre ce qu'Ora peut changer dans vos missions dès la première semaine.",
+                en: "30 minutes, no strings attached. We show you what Ora can change in your engagements from week one.",
               })}
             </p>
 

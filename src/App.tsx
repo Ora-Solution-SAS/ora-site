@@ -9,6 +9,7 @@ import SolutionAuditPage from "./pages/SolutionAuditPage";
 import SolutionFondsInvestissementPage from "./pages/SolutionFondsInvestissementPage";
 import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
+import PricingPage from "./pages/PricingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -599,6 +600,7 @@ type Page =
   | "solution-fonds-investissement"
   | "solution-banque-affaires"
   | "confidentialite"
+  | "pricing"
   | "not-found";
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -611,6 +613,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "solution-fonds-investissement": "/solution-fonds-investissement",
   "solution-banque-affaires": "/solution-banque-affaires",
   "confidentialite": "/confidentialite",
+  "pricing": "/pricing",
   "not-found": "/not-found",
 };
 
@@ -866,6 +869,8 @@ const App = () => {
         <SolutionBanqueAffairesPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "confidentialite" ? (
         <ConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "pricing" ? (
+        <PricingPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : (
       <>
 
@@ -896,43 +901,43 @@ const App = () => {
         <div className="max-w-6xl mx-auto space-y-36 md:space-y-52">
           {[
             {
-              tag: t({ fr: "Reporting", en: "Reporting" }),
+              tag: t({ fr: "Automatisation", en: "Automation" }),
               title: t({
-                fr: "Des rapports mensuels générés en quelques secondes",
-                en: "Monthly reports generated in seconds",
+                fr: "Automatisez ce qui vous fait perdre du temps",
+                en: "Automate what's eating your time",
               }),
               desc: t({
-                fr: "Ora collecte vos données, les nettoie, applique votre logique et génère des rapports impeccables, prêts à partager. Fini les soirées à formater des tableaux avant les réunions.",
-                en: "Ora pulls in your data, cleans it up, applies your logic and produces flawless, ready-to-share reports. No more late nights formatting spreadsheets before meetings.",
+                fr: "Vos tâches Excel répétitives, exécutées en un clic. Concentrez-vous sur l'analyse, plus sur la saisie.",
+                en: "Your repetitive Excel tasks, executed in one click. Focus on analysis, not data entry.",
               }),
-              icon: TrendingUp,
+              icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
               video: "/Montlhy_Repor.mov",
             },
             {
-              tag: t({ fr: "Réconciliation", en: "Reconciliation" }),
+              tag: t({ fr: "Sur-mesure", en: "Tailored" }),
               title: t({
-                fr: "Réconciliez des milliers de lignes sans effort",
-                en: "Reconcile thousands of rows, effortlessly",
+                fr: "Conçu pour votre métier, pas pour tout le monde",
+                en: "Built for your business, not for everyone",
               }),
               desc: t({
-                fr: "Relevés bancaires, factures, exports CRM... Ora croise vos sources, détecte les écarts et produit un fichier de réconciliation propre à chaque fois.",
-                en: "Bank statements, invoices, CRM exports... Ora cross-checks your sources, flags every discrepancy and delivers a clean reconciliation file every single time.",
+                fr: "Vous nous décrivez votre workflow, on l'automatise à l'identique, le tout livré en quelques jours. Pas de template générique, pas de mois d'attente.",
+                en: "You describe your workflow, we automate it exactly as it is, delivered in days. No generic templates, no months of waiting.",
               }),
-              icon: ShieldCheck,
+              icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
             },
             {
-              tag: t({ fr: "Traitement de données", en: "Data processing" }),
+              tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
               title: t({
-                fr: "Données brutes en entrée, résultats structurés en sortie",
-                en: "Raw data in, structured results out",
+                fr: "Vos données restent chez vous",
+                en: "Your data stays with you",
               }),
               desc: t({
-                fr: "CSV, PDF, emails... quelle que soit la source, Ora extrait, normalise et redirige vos données au bon endroit. Votre équipe analyse les résultats, pas les lignes.",
-                en: "CSV, PDF, emails... whatever the source, Ora extracts, normalizes and routes your data to the right place. Your team analyzes the results, not the rows.",
+                fr: "Aucun serveur, aucun cloud, aucun transfert, tout tourne sur votre machine. Une architecture locale pensée pour les données sensibles.",
+                en: "No server, no cloud, no transfer, everything runs on your machine. A local architecture designed for sensitive data.",
               }),
-              icon: Zap,
+              icon: ShieldCheck,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
             },
           ].map((item, idx) => {
@@ -996,6 +1001,18 @@ const App = () => {
             );
           })}
         </div>
+
+        <FadeInOnScroll delay={200}>
+          <div className="flex justify-center mt-16">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("ora:open-solutions"))}
+              className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
+            >
+              {t({ fr: "Découvrir les applications métier", en: "Explore industry applications" })}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </FadeInOnScroll>
       </section>
 
       {/* ── L'EXPÉRIENCE ORA ────────────────────────────────────────── */}
@@ -1025,8 +1042,8 @@ const App = () => {
                   en: "Ora plugs into Excel",
                 }),
                 desc: t({
-                  fr: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations en arrière-plan.",
-                  en: "Ora runs as an extension inside your existing Excel. Your files stay exactly the same. Ora handles the automations in the background.",
+                  fr: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations.",
+                  en: "Ora runs as an extension inside your existing Excel. Your files stay exactly the same. Ora handles the automations.",
                 }),
               },
               {
@@ -1045,8 +1062,8 @@ const App = () => {
                 num: "03",
                 icon: CheckCircle2,
                 title: t({
-                  fr: "Laissez faire Ora, reprenez le contrôle",
-                  en: "Let Ora run it, take back control",
+                  fr: "Utilisez Ora, reprenez le contrôle",
+                  en: "Use Ora, take back control",
                 }),
                 desc: t({
                   fr: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin.",

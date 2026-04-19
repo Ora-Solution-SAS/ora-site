@@ -13,7 +13,7 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -72,7 +72,14 @@ const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [menuValue, setMenuValue] = useState("");
   const { t, lang, setLang } = useLang();
+
+  useEffect(() => {
+    const handler = () => setMenuValue("solutions");
+    window.addEventListener("ora:open-solutions", handler);
+    return () => window.removeEventListener("ora:open-solutions", handler);
+  }, []);
 
   const solutionsLinks: LinkItem[] = [
     {
@@ -159,11 +166,11 @@ const Navigation: React.FC<NavigationProps> = ({
           </button>
 
           {/* Desktop nav */}
-          <NavigationMenu className="hidden md:flex">
+          <NavigationMenu className="hidden md:flex" value={menuValue} onValueChange={setMenuValue}>
             <NavigationMenuList>
 
               {/* Solutions */}
-              <NavigationMenuItem>
+              <NavigationMenuItem value="solutions">
                 <NavigationMenuTrigger>{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="w-72 p-2">
@@ -195,7 +202,7 @@ const Navigation: React.FC<NavigationProps> = ({
               <NavigationMenuItem>
                 <NavigationMenuLink asChild>
                   <button
-                    onClick={() => onNavigate("not-found")}
+                    onClick={() => onNavigate("pricing")}
                     className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
                   >
                     {t({ fr: "Tarifs", en: "Pricing" })}
@@ -282,7 +289,7 @@ const Navigation: React.FC<NavigationProps> = ({
             </button>
 
             <button
-              onClick={() => { setMobileOpen(false); onNavigate("not-found"); }}
+              onClick={() => { setMobileOpen(false); onNavigate("pricing"); }}
               className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full mt-1"
             >
               {t({ fr: "Tarifs", en: "Pricing" })}

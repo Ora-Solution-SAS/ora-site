@@ -454,7 +454,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           </div>
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
-          <div className="relative z-10 pt-28 md:pt-32 lg:pt-36 pb-0">
+          <div className="relative z-10 pt-28 md:pt-32 lg:pt-36 pb-16 md:pb-24">
             <div className="max-w-5xl mx-auto px-6 lg:px-10 text-center">
 
               <AnimatedHeroTitle />
@@ -543,10 +543,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             </div>
           </div>
 
-          {/* ── Logos slider ── */}
-          <div className="hero-stagger hero-d5 mx-auto max-w-6xl px-6 lg:px-10">
+          {/* ── Logos slider — masqué en V1, à réactiver avec les premiers clients ── */}
+          {/* <div className="hero-stagger hero-d5 mx-auto max-w-6xl px-6 lg:px-10">
             <LogosSlider />
-          </div>
+          </div> */}
 
           {/* ═══ SECTION 2A — texte piloté par scroll-lock ═══ */}
           <div

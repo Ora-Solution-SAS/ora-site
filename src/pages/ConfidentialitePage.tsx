@@ -147,7 +147,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
       icon: Zap,
       title: t({ fr: "Réactivité sans compromis sur la sécurité", en: "Speed without compromising security" }),
       desc: t({
-        fr: "L'IA accélère notre travail de conception, mais elle n'intervient jamais dans l'exécution de vos automatisations. Vitesse et sécurité ne sont pas incompatibles.",
+        fr: "L'IA accélère notre travail de conception, mais elle n'intervient jamais dans l'exécution de vos automatisations. Avec Ora, vitesse et sécurité ne sont pas incompatibles.",
         en: "AI speeds up our design work, but never steps into the execution of your automations. Speed and security are not at odds.",
       }),
     },
@@ -246,7 +246,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
           {/* Subtitle */}
           <p className="cf-stagger cf-d3 font-inter text-lg leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-10">
             {t({
-              fr: "Ora utilise l'IA pour concevoir vos automatisations rapidement. Mais le logiciel qui tourne chez vous n'envoie rien nulle part. Vos données financières restent dans votre environnement, sans exception.",
+              fr: "Ora utilise l'IA pour concevoir vos automatisations rapidement. Mais le logiciel qui tourne chez vous n'envoie aucune donnée vers l'extérieur. Vos données financières restent dans votre environnement, sans exception.",
               en: "Ora uses AI to design your automations quickly. But the software that runs on your side sends nothing anywhere. Your financial data stays in your environment, no exceptions.",
             })}
           </p>
@@ -362,7 +362,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
             </h2>
             <p className="mt-4 font-inter text-base leading-relaxed text-gray-500 dark:text-gray-400 max-w-xl mx-auto">
               {t({
-                fr: "Les outils IA grand public traitent vos données sur leurs serveurs. Ora a été conçu pour que ce cas de figure n'existe pas.",
+                fr: "Les outils IA grand public traitent vos données sur leurs serveurs. Ora est architecturé différemment : vos données ne quittent jamais votre machine.",
                 en: "Consumer AI tools process your data on their servers. Ora was designed so that scenario simply doesn't exist.",
               })}
             </p>
@@ -426,7 +426,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
               </h2>
               <p className="font-inter text-base leading-relaxed text-gray-600 mb-8">
                 {t({
-                  fr: "Nous expliquons en détail comment Ora fonctionne dans votre environnement. Aucune donnée ne sort de votre infrastructure. Discutons-en.",
+                  fr: "Nous vous expliquons en détail comment Ora fonctionne dans votre environnement et comment nous pouvons vous aider à automatiser le quotidien de vos équipes.",
                   en: "We explain in detail how Ora runs inside your environment. No data leaves your infrastructure. Let's talk it through.",
                 })}
               </p>

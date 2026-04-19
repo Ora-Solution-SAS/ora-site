@@ -108,19 +108,19 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
     {
       icon: BarChart3,
       tag: t({ fr: "Reporting", en: "Reporting" }),
-      title: t({ fr: "Rapports mensuels générés automatiquement", en: "Monthly reports generated automatically" }),
+      title: t({ fr: "Reporting automatique", en: "Automated reporting" }),
       desc: t({ fr: "Ora collecte, nettoie et structure vos données, puis génère et envoie vos rapports aux bons destinataires, au bon moment.", en: "Ora collects, cleans and structures your data, then generates and sends your reports to the right recipients at the right time." }),
     },
     {
       icon: GitMerge,
-      tag: t({ fr: "Réconciliation", en: "Reconciliation" }),
-      title: t({ fr: "Rapprochements sans erreur", en: "Error-free reconciliations" }),
-      desc: t({ fr: "Factures, relevés bancaires, exports CRM : Ora croise vos sources, détecte les écarts et produit un fichier propre à chaque fois.", en: "Invoices, bank statements, CRM exports: Ora cross-checks your sources, detects discrepancies and delivers a clean file every time." }),
+      tag: t({ fr: "Collaboration", en: "Collaboration" }),
+      title: t({ fr: "Suivi d'équipe en temps réel", en: "Real-time team tracking" }),
+      desc: t({ fr: "Ora donne aux managers une vue claire sur l'avancement des travaux de l'équipe, pour piloter et collaborer efficacement.", en: "Ora gives managers a clear view of their team's progress, enabling effective oversight and collaboration." }),
     },
     {
       icon: FileText,
       tag: t({ fr: "Traitement de données", en: "Data processing" }),
-      title: t({ fr: "CSV, PDF, e-mails : tout devient exploitable", en: "CSV, PDF, emails: everything becomes usable" }),
+      title: t({ fr: "CSV, PDF : tout devient exploitable", en: "CSV, PDF: everything becomes usable" }),
       desc: t({ fr: "Quelle que soit la source, Ora extrait, normalise et route vos données exactement là où elles doivent aller.", en: "Whatever the source, Ora extracts, normalizes and routes your data exactly where it needs to go." }),
     },
   ];
@@ -507,7 +507,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               }`}
               data-delay="80"
             >
-              {t({ fr: "Concret, dès la première semaine.", en: "Concrete, from the first week." })}
+              {t({ fr: "Concret, dès le départ.", en: "Concrete, from day one." })}
             </h2>
             <p
               className={`xp-reveal mt-4 mx-auto text-base leading-relaxed max-w-md ${

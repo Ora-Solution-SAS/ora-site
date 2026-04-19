@@ -87,9 +87,9 @@ const Footer = ({
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-16 flex flex-col justify-between gap-4 border-t border-gray-200 dark:border-gray-800 pt-8 md:flex-row md:items-center">
+        <div className="mt-10 flex flex-col justify-between gap-3 border-t border-gray-200 dark:border-gray-800 pt-5 md:flex-row md:items-center">
           {copyright && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">{copyright}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{copyright}</p>
           )}
           {bottomLinks.length > 0 && (
             <ul className="flex flex-wrap gap-4">
@@ -98,14 +98,14 @@ const Footer = ({
                   {link.onClick ? (
                     <button
                       onClick={link.onClick}
-                      className="text-sm text-gray-500 dark:text-gray-400 underline hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                     >
                       {link.text}
                     </button>
                   ) : (
                     <a
                       href={link.url ?? "#"}
-                      className="text-sm text-gray-500 dark:text-gray-400 underline hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                      className="text-xs text-gray-400 dark:text-gray-500 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                     >
                       {link.text}
                     </a>
