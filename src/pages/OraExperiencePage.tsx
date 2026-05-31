@@ -4,6 +4,7 @@ import {
   CheckCircle2, BarChart3, RefreshCcw, FileText, Database,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import OraJourney from "@/components/OraJourney";
 
 interface OraExperiencePageProps {
   theme: "light" | "dark";
@@ -64,6 +65,19 @@ const pageCSS = `
   50%       { box-shadow: 0 0 0 8px rgba(59,130,246,0.12); }
 }
 .xp-step-dot { animation: xpStepGlow 3s ease-in-out infinite; }
+
+/* Final CTA — subtle grid fading at the edges */
+.xp-cta-grid {
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, #000 25%, transparent 78%);
+}
+
+/* Final CTA — floating decorative cards */
+@keyframes xpFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+.xp-float { animation: xpFloat 7s ease-in-out infinite; }
 `;
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -222,9 +236,9 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
             {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
           </div>
 
-          {/* H1 — Poppins bold, tight tracking, same pattern as homepage */}
+          {/* H1 — Poppins light (Monday-style thin display), tight tracking. */}
           <h1
-            className={`xp-stagger xp-d2 font-poppins font-bold tracking-[-0.04em] leading-[1.06] text-5xl md:text-7xl ${
+            className={`xp-stagger xp-d2 font-poppins font-light tracking-[-0.04em] leading-[1.06] text-5xl md:text-7xl ${
               dk ? "text-white" : "text-[#111827]"
             }`}
           >
@@ -281,6 +295,12 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
         </div>
       </section>
 
+      {/* ── 1.5 L'EXPÉDITION ORA (Audit · Déploiement · Suivi) ─────────── *
+       *  Cinematic, scroll-driven story of the 3 journey phases.          *
+       *  Self-contained cosmic-dark interlude — see OraJourney.tsx.       *
+       * ───────────────────────────────────────────────────────────────── */}
+      <OraJourney theme={theme} openBooking={openBooking} />
+
       {/* ── 2. LE PROBLÈME ──────────────────────────────────────────────── */}
       <section
         className="py-24 md:py-32 px-6"
@@ -299,7 +319,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               {t({ fr: "Le problème", en: "The problem" })}
             </div>
             <h2
-              className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
+              className={`xp-reveal font-poppins font-light tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
                 dk ? "text-white" : "text-[#111827]"
               }`}
               data-delay="100"
@@ -382,7 +402,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               {t({ fr: "Comment ça marche", en: "How it works" })}
             </div>
             <h2
-              className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
+              className={`xp-reveal font-poppins font-light tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
                 dk ? "text-white" : "text-[#111827]"
               }`}
               data-delay="100"
@@ -438,7 +458,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                         {t({ fr: "Étape", en: "Step" })} {step.num}
                       </div>
                       <h3
-                        className={`font-poppins font-bold tracking-tight text-xl md:text-2xl leading-snug mb-3 ${
+                        className={`font-poppins font-light tracking-tight text-xl md:text-2xl leading-snug mb-3 ${
                           dk ? "text-white" : "text-[#111827]"
                         }`}
                       >
@@ -502,7 +522,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               {t({ fr: "Ce qu'Ora automatise", en: "What Ora automates" })}
             </div>
             <h2
-              className={`xp-reveal font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
+              className={`xp-reveal font-poppins font-light tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] ${
                 dk ? "text-white" : "text-[#111827]"
               }`}
               data-delay="80"
@@ -552,7 +572,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
                     {ex.tag}
                   </div>
                   <h3
-                    className={`font-poppins font-bold tracking-tight text-[1rem] leading-snug mb-2 ${
+                    className={`font-poppins font-light tracking-tight text-[1rem] leading-snug mb-2 ${
                       dk ? "text-white" : "text-[#111827]"
                     }`}
                   >
@@ -583,77 +603,128 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
         </div>
       </section>
 
-      {/* ── 5. CTA FINAL ────────────────────────────────────────────────── */}
+      {/* ── 5. CTA FINAL (Monday-style) ─────────────────────────────────── *
+       *  Large, airy closing section: thin two-line headline (2nd line in   *
+       *  brand gradient), dual CTA, subtle grid + floating decorative cards. *
+       * ───────────────────────────────────────────────────────────────── */}
       <section
-        className="py-24 md:py-32 px-6"
+        className="relative overflow-hidden px-6 py-32 md:py-44 min-h-[88vh] flex items-center"
         style={{ background: bgContrast }}
       >
-        <div className="max-w-2xl mx-auto text-center">
-          <div
-            className="xp-reveal rounded-[32px] px-8 py-16 md:px-14 md:py-20 relative overflow-hidden border"
-            style={{
-              background: dk
-                ? "rgba(59,130,246,0.04)"
-                : "linear-gradient(135deg, #eff6ff, #f0fdfa)",
-              borderColor: dk ? "rgba(59,130,246,0.15)" : "#bfdbfe",
-            }}
-          >
-            {/* Background blobs */}
-            <div
-              className="absolute -top-20 -right-20 w-60 h-60 rounded-full pointer-events-none"
-              style={{
-                background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
-                filter: "blur(28px)",
-              }}
-              aria-hidden
-            />
-            <div
-              className="absolute -bottom-20 -left-20 w-60 h-60 rounded-full pointer-events-none"
-              style={{
-                background: "radial-gradient(circle, rgba(13,148,136,0.08) 0%, transparent 70%)",
-                filter: "blur(28px)",
-              }}
-              aria-hidden
-            />
+        {/* Subtle grid, fading at the edges */}
+        <div
+          className="xp-cta-grid absolute inset-0 pointer-events-none"
+          aria-hidden
+          style={{
+            backgroundImage: `linear-gradient(to right, ${
+              dk ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)"
+            } 1px, transparent 1px), linear-gradient(to bottom, ${
+              dk ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)"
+            } 1px, transparent 1px)`,
+            backgroundSize: "56px 56px",
+          }}
+        />
 
-            <div className="relative z-10">
+        {/* Ambient glow */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
+          aria-hidden
+          style={{
+            background: dk
+              ? "radial-gradient(ellipse, rgba(59,130,246,0.10) 0%, transparent 70%)"
+              : "radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 70%)",
+            filter: "blur(50px)",
+          }}
+        />
+
+        {/* Floating decorative cards — desktop only */}
+        <div className="absolute inset-0 hidden lg:block pointer-events-none" aria-hidden>
+          {[
+            { pos: "top-[15%] left-[7%]",     delay: "0s",   icon: Zap,             label: t({ fr: "Workflow lancé", en: "Workflow started" }) },
+            { pos: "top-[20%] right-[8%]",    delay: "1.4s", icon: BarChart3,       label: t({ fr: "Rapport généré", en: "Report generated" }) },
+            { pos: "bottom-[18%] left-[11%]", delay: "2.1s", icon: FileSpreadsheet, label: t({ fr: "Excel mis à jour", en: "Excel updated" }) },
+            { pos: "bottom-[15%] right-[10%]",delay: "0.7s", icon: Mail,            label: t({ fr: "Envoi automatique", en: "Auto-sent" }) },
+          ].map((c) => {
+            const CardIcon = c.icon;
+            return (
               <div
-                className="w-13 h-13 rounded-2xl flex items-center justify-center mx-auto mb-6"
-                style={{
-                  background: "linear-gradient(135deg, #3b82f6, #0d9488)",
-                  boxShadow: "0 8px 24px rgba(59,130,246,0.35)",
-                  width: 52,
-                  height: 52,
-                }}
-              >
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-
-              <h2
-                className={`font-poppins font-bold tracking-[-0.03em] text-3xl md:text-4xl leading-[1.12] mb-4 ${
-                  dk ? "text-white" : "text-[#111827]"
+                key={c.pos}
+                className={`xp-float absolute ${c.pos} rounded-2xl border shadow-lg px-4 py-3 flex items-center gap-3 ${
+                  dk ? "bg-white/[0.05] border-white/10" : "bg-white border-gray-200/70"
                 }`}
+                style={{ animationDelay: c.delay }}
               >
-                {t({ fr: "Prêt à reprendre votre temps ?", en: "Ready to reclaim your time?" })}
-              </h2>
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    dk ? "bg-gradient-to-br from-blue-500/25 to-teal-500/25" : "bg-gradient-to-br from-blue-100 to-teal-100"
+                  }`}
+                >
+                  <CardIcon className={`w-4 h-4 ${dk ? "text-blue-300" : "text-blue-600"}`} strokeWidth={2} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className={`text-[11px] font-inter font-semibold tracking-tight ${dk ? "text-gray-200" : "text-gray-700"}`}>
+                    {c.label}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-10 rounded-full bg-gradient-to-r from-[#3b82f6] to-[#0d9488]" />
+                    <div className={`h-1.5 w-6 rounded-full ${dk ? "bg-white/10" : "bg-gray-200"}`} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-              <p className={`text-base leading-relaxed mb-8 max-w-sm mx-auto ${dk ? "text-gray-400" : "text-gray-500"}`}>
-                {t({ fr: "En 30 minutes, nous cartographions ce qu'Ora peut automatiser dans votre quotidien. Vous repartez avec un plan concret.", en: "In 30 minutes, we map out what Ora can automate in your daily work. You leave with a concrete plan." })}
-              </p>
+        {/* Center content */}
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <h2
+            className={`xp-reveal font-poppins font-light tracking-[-0.04em] leading-[1.06] text-4xl md:text-6xl ${
+              dk ? "text-white" : "text-[#111827]"
+            }`}
+          >
+            <span className="block">
+              {t({ fr: "Prêt à reprendre votre temps avec", en: "Ready to reclaim your time with" })}
+            </span>
+            <span className="block xp-animated-gradient">
+              {t({ fr: "vos workflows Excel automatisés ?", en: "your Excel workflows automated?" })}
+            </span>
+          </h2>
 
-              <button
-                onClick={openBooking}
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
-              >
-                {t({ fr: "Réserver un appel découverte", en: "Book a discovery call" })}
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
-              </button>
+          <p
+            className={`xp-reveal mt-7 mx-auto font-inter text-base md:text-lg leading-[1.7] max-w-xl ${
+              dk ? "text-gray-400" : "text-gray-500"
+            }`}
+            data-delay="120"
+          >
+            {t({
+              fr: "En 30 minutes, nous cartographions ce qu'Ora peut automatiser dans votre quotidien. Vous repartez avec un plan concret.",
+              en: "In 30 minutes, we map out what Ora can automate in your daily work. You leave with a concrete plan.",
+            })}
+          </p>
 
-              <p className={`mt-4 text-[12px] ${dk ? "text-gray-600" : "text-gray-400"}`}>
-                {t({ fr: "Gratuit · 30 minutes · Sans engagement", en: "Free · 30 minutes · No commitment" })}
-              </p>
-            </div>
+          <div className="xp-reveal mt-10 flex items-center justify-center gap-3 flex-wrap" data-delay="220">
+            <button
+              onClick={openBooking}
+              className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
+            >
+              {t({ fr: "Réserver un appel", en: "Get started" })}
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
+            </button>
+            <button
+              onClick={() => onNavigate?.("for-business")}
+              className={`inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold border transition-all duration-150 hover:-translate-y-px active:translate-y-0 ${
+                dk
+                  ? "border-white/15 text-white hover:bg-white/[0.06]"
+                  : "border-gray-300 text-[#111827] hover:bg-gray-50"
+              }`}
+            >
+              {t({ fr: "Voir nos solutions", en: "View solutions" })}
+            </button>
           </div>
+
+          <p className={`xp-reveal mt-5 text-[12px] ${dk ? "text-gray-600" : "text-gray-400"}`} data-delay="300">
+            {t({ fr: "Gratuit · 30 minutes · Sans engagement", en: "Free · 30 minutes · No commitment" })}
+          </p>
         </div>
       </section>
 

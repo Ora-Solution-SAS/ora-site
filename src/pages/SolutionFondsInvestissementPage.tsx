@@ -266,7 +266,7 @@ interface Props {
 /* ════════════════════════════════════════════════════════════════════
    PAGE PRINCIPALE
 ════════════════════════════════════════════════════════════════════ */
-export default function SolutionFondsInvestissementPage({ theme, openBooking, onNavigate }: Props) {
+export default function SolutionFondsInvestissementPage({ theme, openBooking }: Props) {
   const { t } = useLang();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
@@ -541,12 +541,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking, on
             <p className={["font-inter text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}>
               {t({ fr: "Ora se branche directement sur vos fichiers Excel existants. Aucune migration, aucune refonte de processus.", en: "Ora plugs directly into your existing Excel files. No migration, no process overhaul." })}
             </p>
-            <button
-              onClick={() => onNavigate("ora-experience")}
-              className={["font-inter text-[14px] font-semibold whitespace-nowrap flex items-center gap-1.5 shrink-0 hover:gap-2.5 transition-all duration-150", dk ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-700"].join(" ")}
-            >
-              {t({ fr: "L'expérience Ora", en: "The Ora experience" })} <ArrowRight className="w-3.5 h-3.5" />
-            </button>
+            {/* "L'expérience Ora" link hidden until that page goes live. */}
           </div>
         </div>
       </section>

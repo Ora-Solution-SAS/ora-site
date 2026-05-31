@@ -1,6 +1,5 @@
-import { forwardRef, useRef, useEffect, useState, useCallback } from "react";
-import { ArrowRight, Play, RefreshCw } from "lucide-react";
-import { LogosSlider } from "./LogosSlider";
+import { forwardRef, useRef, useEffect, useState } from "react";
+import { ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useMotionValue, useTransform, motion } from "framer-motion";
 import { useLang } from "@/lib/i18n";
@@ -91,112 +90,85 @@ function getPageOffsetTop(el: HTMLElement): number {
 
 /* ── Component ───────────────────────────────────────────────── */
 const Hero = forwardRef<HTMLElement, HeroProps>(
-  ({ scrollToSection: _scrollToSection, openBooking }, ref) => {
+  ({ scrollToSection, openBooking }, ref) => {
     const { t } = useLang();
 
     /* ── Mount animation ── */
     const [heroReady, setHeroReady] = useState(false);
     useEffect(() => { requestAnimationFrame(() => setHeroReady(true)); }, []);
 
-    /* ── Play button state ── */
-    const [showPlayBtn,   setShowPlayBtn]   = useState(false);
-    const [isFreePlaying, setIsFreePlaying] = useState(false); // true while free-play video is running
+    /* ────────────────────────────────────────────────────────────── *
+     *  Hero video — autoplay with user controls
+     *  ──────────────────────────────────────────────────────────── *
+     *  We try to autoplay WITH sound first. If the browser blocks it
+     *  (most cases, due to autoplay policy), we fall back to muted
+     *  and update the UI so the top-right button reflects the state.
+     *  Two gates can pause the video:
+     *    • isVisible        — is the video ≥30% in viewport?
+     *    • isManuallyPaused — did the user click to pause? */
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isMuted, setIsMuted] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const [isManuallyPaused, setIsManuallyPaused] = useState(false);
 
-    /* ── Video preview refs ── */
-    const videoRef           = useRef<HTMLVideoElement>(null);
-    const frameRef           = useRef<HTMLDivElement>(null); // the browser frame wrapper
-    const isPreviewLocked    = useRef(false);  // scroll is locked; video is playing
-    const isSnappingRef      = useRef(false);  // snap animation in progress
-    const hasPreviewFiredRef = useRef(false);  // snap triggered at least once (no re-trigger)
-    const isFreePlayRef      = useRef(false);  // video playing via play-button (no lock)
-
-
-    /* ─────────────────────────────────────────────────────────── *
-     *  unlockPreview — release video scroll-lock                  *
-     *  showBtn=true  → force-skip path, reveal the play button    *
-     * ─────────────────────────────────────────────────────────── */
-    const unlockPreview = useCallback((showBtn = false) => {
-      if (!isPreviewLocked.current) return;
-      isPreviewLocked.current = false;
-      isFreePlayRef.current = false;
-      videoRef.current?.pause();
-      (window as any).__lenis?.start();
-      setIsFreePlaying(false);
-      if (showBtn) setShowPlayBtn(true);
+    // Track visibility
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+      const observer = new IntersectionObserver(
+        ([entry]) =>
+          setIsVisible(entry.isIntersecting && entry.intersectionRatio >= 0.3),
+        { threshold: [0, 0.3, 0.6, 1] },
+      );
+      observer.observe(video);
+      return () => observer.disconnect();
     }, []);
 
-    /* ─────────────────────────────────────────────────────────── *
-     *  handleVideoEnded — called by <video onEnded>               *
-     * ─────────────────────────────────────────────────────────── */
-    const handleVideoEnded = useCallback(() => {
-      if (isPreviewLocked.current) {
-        // Natural end of locked playback — unlock and show "Lancer" button
-        unlockPreview(true);
-      } else if (isFreePlayRef.current) {
-        // Natural end of free-play — stop playing state, show "Lancer" again
-        isFreePlayRef.current = false;
-        setIsFreePlaying(false);
-        setShowPlayBtn(true);
-      }
-    }, [unlockPreview]);
+    // Coordination — try to autoplay with sound. If the browser
+    // blocks it, fall back to muted and sync the UI state.
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
 
-    /* ─────────────────────────────────────────────────────────── *
-     *  snapAndLock                                                 *
-     *  1. Smooth-scroll (via Lenis) to centre the browser frame   *
-     *  2. Once done → lenis.stop() + play video                   *
-     *                                                              *
-     *  Called ONLY from the wheel handler, never from an          *
-     *  IntersectionObserver, so Lenis is guaranteed to be ready.  *
-     * ─────────────────────────────────────────────────────────── */
-    const snapAndLock = useCallback(() => {
-      const el = frameRef.current;
-      if (!el) return;
+      const shouldPlay = isVisible && !isManuallyPaused;
 
-      const rect          = el.getBoundingClientRect();
-      const elTop         = window.scrollY + rect.top;
-      const elHeight      = rect.height;
-      const vh            = window.innerHeight;
-
-      // Read the actual nav height so the frame is centred in the space
-      // between the bottom of the navigation bar and the bottom of the viewport.
-      const navEl     = document.querySelector("nav") as HTMLElement | null;
-      const navHeight = navEl ? navEl.getBoundingClientRect().height : 72;
-      const available = vh - navHeight;              // usable vertical space
-      const padding   = Math.max(0, (available - elHeight) / 2); // equal top & bottom margin
-      const targetScrollY = Math.max(0, elTop - navHeight - padding);
-
-      isSnappingRef.current = true;
-
-      const lenis = (window as any).__lenis;
-
-      // Guard against double-execution (onComplete + setTimeout race)
-      let done = false;
-      const doLock = () => {
-        if (done) return;
-        done = true;
-        isSnappingRef.current = false;
-        isPreviewLocked.current = true;
-        lenis?.stop();
-        const v = videoRef.current;
-        if (v) { v.currentTime = 0; v.play().catch(() => {}); }
-      };
-
-      if (lenis) {
-        lenis.scrollTo(targetScrollY, {
-          duration: 0.7,
-          easing: (t: number) => 1 - Math.pow(1 - t, 3),
-          lock: true,       // Lenis blocks user wheel input during the animation
-          onComplete: doLock,
+      if (shouldPlay && video.paused) {
+        video.muted = isMuted;
+        video.play().catch(() => {
+          // Autoplay-with-sound blocked → retry muted
+          if (!video.muted) {
+            video.muted = true;
+            setIsMuted(true);
+            video.play().catch(() => {});
+          }
         });
-      } else {
-        // Lenis not available — native smooth scroll
-        window.scrollTo({ top: targetScrollY, behavior: "smooth" });
+      } else if (!shouldPlay && !video.paused) {
+        video.pause();
       }
+    // isMuted is intentionally excluded — toggleMute handles user-driven
+    // mute changes directly on the element (no re-render needed).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isVisible, isManuallyPaused]);
 
-      // Fallback: fire doLock after animation duration + generous buffer
-      setTimeout(doLock, 900);
-    }, []);
+    const togglePlayPause = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (video.paused) {
+        setIsManuallyPaused(false);
+        video.play().catch(() => {});
+      } else {
+        setIsManuallyPaused(true);
+        video.pause();
+      }
+    };
 
+    const toggleMute = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      const next = !video.muted;
+      video.muted = next;
+      setIsMuted(next);
+    };
 
     /* ── Text scroll-lock ── */
     const revealProgress        = useMotionValue(0);
@@ -212,20 +184,23 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const overlayEndY   = useRef(0);
     const overlayActive = useRef(false);
 
-    /* Line reveal — opacity + y */
-    const l1o = useTransform(revealProgress, [0,    0.22], [0, 1]);
-    const l1y = useTransform(revealProgress, [0,    0.22], [28, 0]);
-    const l2o = useTransform(revealProgress, [0.20, 0.44], [0, 1]);
-    const l2y = useTransform(revealProgress, [0.20, 0.44], [28, 0]);
-    /* fade-in 0.42→0.62, maintenu, fade-out 0.71→0.72 (l'overlay fixe prend le relais) */
-    const l3o = useTransform(revealProgress, [0.42, 0.62, 0.71, 0.72], [0, 1, 1, 0]);
+    /* Line reveal — opacity + y.
+       Adjusted timings: lines 1 & 2 reveal faster, "Découvrez Ora." appears
+       earlier AND reaches peak size by 0.55. The exit phase starts
+       immediately at 0.55 (no hold) so the descent feels continuous. */
+    const l1o = useTransform(revealProgress, [0,    0.16], [0, 1]);
+    const l1y = useTransform(revealProgress, [0,    0.16], [28, 0]);
+    const l2o = useTransform(revealProgress, [0.14, 0.30], [0, 1]);
+    const l2y = useTransform(revealProgress, [0.14, 0.30], [28, 0]);
+    /* fade-in 0.28→0.42, immediate fade-out 0.55→0.56 (overlay takes over) */
+    const l3o = useTransform(revealProgress, [0.28, 0.42, 0.55, 0.56], [0, 1, 1, 0]);
 
-    /* "Découvrez Ora." : grows → then exits downward out of the section */
-    const l3Size    = useTransform(revealProgress, [0.60, 0.92], ["1.75rem", "3.75rem"]);
-    const l3Leading = useTransform(revealProgress, [0.60, 0.92], [1.5, 1.12]);
-    const l3Track   = useTransform(revealProgress, [0.60, 0.92], ["-0.025em", "-0.04em"]);
+    /* "Découvrez Ora." : grows → hits peak by 0.55 → overlay descends */
+    const l3Size    = useTransform(revealProgress, [0.40, 0.55], ["1.75rem", "3.75rem"]);
+    const l3Leading = useTransform(revealProgress, [0.40, 0.55], [1.5, 1.12]);
+    const l3Track   = useTransform(revealProgress, [0.40, 0.55], ["-0.025em", "-0.04em"]);
     /* slide-in uniquement — la sortie est gérée par l'overlay fixe */
-    const l3TotalY = useTransform(revealProgress, [0.42, 0.62], [28, 0]);
+    const l3TotalY = useTransform(revealProgress, [0.28, 0.42], [28, 0]);
 
     /* ─────────────────────────────────────────────────────────── *
      *  IntersectionObserver — text scroll-lock section            *
@@ -247,17 +222,21 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     }, []);
 
     /* ─────────────────────────────────────────────────────────── *
-     *  Wheel + touch handlers                                      *
+     *  Wheel + touch handlers — text reveal only                  *
      *                                                              *
-     *  Priority order:                                             *
-     *   1. isSnappingRef   → block input, Lenis animates          *
-     *   2. isPreviewLocked → block; hard scroll skips             *
-     *   3. ratio ≥ 0.8 & first time → trigger snap               *
-     *   4. isLockedRef     → drive text reveal progress           *
+     *  The video preview no longer snap-locks. Scrolling past it  *
+     *  is completely free. The only scroll-lock left drives the   *
+     *  text reveal section ("Votre temps est votre actif…").      *
      * ─────────────────────────────────────────────────────────── */
     useEffect(() => {
-      const FAST_SKIP = 60;
-      const SPEED     = 3200;
+      const SPEED      = 4800;
+      const EXIT_START = 0.55;
+      const EXIT_BOOST = 2;
+      /* Lerp factor per frame — smooths the discrete wheel/touch input into
+         a continuous, jank-free motion (lower = smoother, higher = snappier). */
+      const EASE       = 0.18;
+      /* Below this gap we snap to target and stop the rAF loop. */
+      const EPS        = 0.0008;
 
       const unlockText = () => {
         isLockedRef.current = false;
@@ -272,16 +251,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         document.body.classList.remove("hero-text-exiting");
       };
 
-      const driveText = (delta: number) => {
-        if (hasTextCompletedRef.current) {
-          revealProgress.set(1);
-          unlockText();
-          return;
-        }
-        const next = revealProgress.get() + delta;
-
-        /* ── Phase de sortie (>0.71) : overlay fixe + scroll viewport ── */
-        if (next > 0.71) {
+      /* Applies a concrete progress value: drives the MotionValue and, in the
+         exit phase, moves the viewport + overlay. Called AT MOST once per frame
+         from the rAF tick, so font-size / scrollTo writes never stack up within
+         a single frame (the root cause of the previous stutter). */
+      const applyProgress = (next: number) => {
+        /* ── Phase de sortie (>0.55) : overlay fixe + scroll viewport ── */
+        if (next > EXIT_START) {
           /* Initialisation : une seule fois au début de la phase */
           if (exitScrollStartRef.current === null) {
             exitScrollStartRef.current = window.scrollY;
@@ -315,7 +291,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             document.body.classList.add("hero-text-exiting");
           }
 
-          const ratio = Math.min(Math.max((next - 0.71) / (1.0 - 0.71), 0), 1);
+          const ratio = Math.min(Math.max((next - EXIT_START) / (1.0 - EXIT_START), 0), 1);
 
           /* Scroll viewport vers #features */
           if (exitScrollStartRef.current !== null && exitScrollTargetRef.current !== null) {
@@ -326,17 +302,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             });
           }
 
-          /* Déplace l'overlay fixe + adapte la taille de police */
+          /* Déplace l'overlay fixe. l3Size atteint 3.75rem à EXIT_START,
+             donc à l'entrée de l'overlay la taille est déjà au max. */
           if (overlayRef.current && overlayActive.current) {
             const ov = overlayRef.current;
             ov.style.top = `${overlayStartY.current + (overlayEndY.current - overlayStartY.current) * ratio}px`;
-            /* Même courbe que l3Size (0.60→0.92 : 1.75rem→3.75rem) */
-            if (next < 0.92) {
-              const t = Math.min(Math.max((next - 0.60) / 0.32, 0), 1);
-              ov.style.fontSize = `${1.75 + t * 2}rem`;
-            } else {
-              ov.style.fontSize = "3.75rem";
-            }
+            ov.style.fontSize = "3.75rem";
           }
         }
 
@@ -362,56 +333,61 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         revealProgress.set(next);
       };
 
+      /* Target progress fed by raw input; the rAF loop eases current → target. */
+      let target = revealProgress.get();
+      let rafId  = 0;
+      let running = false;
+
+      const tick = () => {
+        const current = revealProgress.get();
+        const diff = target - current;
+        let next: number;
+        if (Math.abs(diff) <= EPS) {
+          next = target;                 // settle exactly
+        } else {
+          next = current + diff * EASE;   // ease toward target
+        }
+        applyProgress(next);
+
+        // Keep ticking while still locked and not yet settled.
+        if (isLockedRef.current && Math.abs(target - revealProgress.get()) > EPS) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          running = false;
+        }
+      };
+
+      const ensureRunning = () => {
+        if (hasTextCompletedRef.current) { unlockText(); return; }
+        if (!running) {
+          running = true;
+          rafId = requestAnimationFrame(tick);
+        }
+      };
+
+      const addInput = (rawDelta: number) => {
+        // Boost the exit phase so the descent stays brisk.
+        const boost = revealProgress.get() >= EXIT_START ? EXIT_BOOST : 1;
+        target = Math.min(Math.max(target + rawDelta * boost, 0), 1);
+        ensureRunning();
+      };
+
       const handleWheel = (e: WheelEvent) => {
-        // ① Snap in progress
-        if (isSnappingRef.current) {
-          e.preventDefault();
-          return;
-        }
-        // ② Video lock
-        if (isPreviewLocked.current) {
-          e.preventDefault();
-          if (e.deltaY > FAST_SKIP) unlockPreview(true);
-          return;
-        }
-        // ③ Snap trigger
-        if (!hasPreviewFiredRef.current && e.deltaY > 0) {
-          const el = frameRef.current;
-          if (el) {
-            const { top, bottom, height } = el.getBoundingClientRect();
-            const vh = window.innerHeight;
-            const visible = Math.min(bottom, vh) - Math.max(top, 0);
-            if (visible / height >= 0.8) {
-              e.preventDefault();
-              hasPreviewFiredRef.current = true;
-              snapAndLock();
-              return;
-            }
-          }
-        }
-        // ④ Text reveal
-        if (isLockedRef.current) {
-          e.preventDefault();
-          driveText(e.deltaY / SPEED);
-        }
+        if (!isLockedRef.current) return;
+        e.preventDefault();
+        addInput(e.deltaY / SPEED);
       };
 
       let lastTouchY = 0;
       const handleTouchStart = (e: TouchEvent) => {
-        if (!isSnappingRef.current && !isPreviewLocked.current && !isLockedRef.current) return;
+        if (!isLockedRef.current) return;
         lastTouchY = e.touches[0].clientY;
       };
       const handleTouchMove = (e: TouchEvent) => {
-        if (isSnappingRef.current) { e.preventDefault(); return; }
-        if (!isPreviewLocked.current && !isLockedRef.current) return;
+        if (!isLockedRef.current) return;
         e.preventDefault();
         const y = e.touches[0].clientY;
-        const delta = lastTouchY - y;
-        if (isPreviewLocked.current) {
-          if (delta > 30) unlockPreview(true);
-        } else {
-          driveText(delta / SPEED);
-        }
+        addInput((lastTouchY - y) / SPEED);
         lastTouchY = y;
       };
 
@@ -419,20 +395,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       window.addEventListener("touchstart", handleTouchStart, { passive: true  });
       window.addEventListener("touchmove",  handleTouchMove,  { passive: false });
       return () => {
+        if (rafId) cancelAnimationFrame(rafId);
         window.removeEventListener("wheel",      handleWheel);
         window.removeEventListener("touchstart", handleTouchStart);
         window.removeEventListener("touchmove",  handleTouchMove);
       };
-    }, [revealProgress, unlockPreview, snapAndLock]);
-
-    /* ── Play-button click handler (works for both "Lancer" and "Relancer") ── */
-    const handlePlayClick = useCallback(() => {
-      isFreePlayRef.current = true;
-      setIsFreePlaying(true);  // button switches to "Relancer"
-      setShowPlayBtn(true);    // keep button visible while playing
-      const v = videoRef.current;
-      if (v) { v.currentTime = 0; v.play().catch(() => {}); }
-    }, []);
+    }, [revealProgress]);
 
     /* ══════════════════════════════════════════════════════════ */
     return (
@@ -475,10 +443,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
                 <button
-                  onClick={() => {
-                    hasPreviewFiredRef.current = true; // prevent wheel handler from double-triggering
-                    snapAndLock();
-                  }}
+                  onClick={() => scrollToSection("demo-preview")}
                   className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.06] hover:border-gray-400 dark:hover:border-white/30 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
                 >
                   {t({ fr: "Voir la démo", en: "Watch the demo" })}
@@ -487,14 +452,17 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             </div>
 
             {/* ── Browser frame ──────────────────────────────────
-                - Static placeholder on page load (no autoplay)
-                - Snap-lock triggers when 80 % visible on scroll
-                - Play button appears after a force-skip          */}
+                Autoplays muted+loop, no scroll lock. The user can
+                scroll past freely. The "Voir la démo" button above
+                just smooth-scrolls to this section.               */}
             <div
-              ref={frameRef}
               id="demo-preview"
               className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-6xl px-6 lg:px-10"
             >
+              {/* Browser frame — clean visible chrome. The video area is
+                  covered by a white overlay until the user scrolls; when
+                  they do, the overlay slides upward and fades out while
+                  the video gently rises into view + starts playing. */}
               <div className="browser-frame">
                 <div className="browser-chrome">
                   <div className="browser-dots">
@@ -506,38 +474,38 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   <div style={{ width: 56 }} />
                 </div>
 
-                {/* Video + optional play button */}
-                <div className="relative">
+                <div className="relative overflow-hidden">
                   <video
                     ref={videoRef}
-                    src="/demo-main1-safari.mp4"
-                    muted
+                    src="/ora-1.mp4"
+                    muted={isMuted}
+                    loop
                     playsInline
-                    preload="metadata"
-                    className="w-full aspect-[16/9] object-cover block"
-                    onLoadedMetadata={(e) => { e.currentTarget.playbackRate = 0.7; }}
-                    onEnded={handleVideoEnded}
+                    preload="auto"
+                    onClick={togglePlayPause}
+                    className="w-full aspect-[16/9] object-cover block cursor-pointer"
+                    onLoadedMetadata={(e) => {
+                      e.currentTarget.playbackRate = 1.0;
+                      // Pre-seek so the first frame is ready the instant the
+                      // white overlay clears (no flash of black).
+                      e.currentTarget.currentTime = 0.1;
+                    }}
                   />
 
-                  {/* Play / Relancer button — visible after a force-skip */}
-                  {showPlayBtn && (
-                    <button
-                      onClick={handlePlayClick}
-                      className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 dark:bg-black/60 backdrop-blur-sm text-gray-800 dark:text-white text-[13px] font-medium font-inter shadow-lg hover:shadow-xl hover:-translate-y-px transition-all duration-150"
-                    >
-                      {isFreePlaying ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5" />
-                          {t({ fr: "Relancer", en: "Replay" })}
-                        </>
-                      ) : (
-                        <>
-                          <Play className="w-3.5 h-3.5 fill-current" />
-                          {t({ fr: "Lancer", en: "Play" })}
-                        </>
-                      )}
-                    </button>
-                  )}
+                  {/* Mute / unmute toggle — top right */}
+                  <button
+                    type="button"
+                    onClick={toggleMute}
+                    aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
+                    aria-pressed={!isMuted}
+                    className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-4 h-4" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -592,7 +560,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               {/* Ligne 3 — grandit puis l'overlay fixe prend le relais pour rejoindre le H2 */}
               <motion.p
                 ref={l3Ref}
-                className="font-poppins font-bold"
+                className="font-poppins font-medium"
                 style={{
                   opacity: l3o,
                   y: l3TotalY,
@@ -613,7 +581,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         {/* ── Overlay fixe : "Découvrez Ora." en vol vers le titre de #features ── */}
         <div
           ref={overlayRef}
-          className="fixed left-1/2 z-[200] pointer-events-none font-poppins font-bold"
+          className="fixed left-1/2 z-[200] pointer-events-none font-poppins font-medium"
           style={{
             display: "none",
             transform: "translateX(-50%)",

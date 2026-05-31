@@ -5,7 +5,6 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
@@ -136,7 +135,7 @@ const Navigation: React.FC<NavigationProps> = ({
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-300",
         scrolled
-          ? "bg-[#fcfbf7]/90 dark:bg-[#111827]/90 backdrop-blur-xl border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+          ? "bg-[#fcfbf7]/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
           : "bg-transparent"
       )}
     >
@@ -186,41 +185,9 @@ const Navigation: React.FC<NavigationProps> = ({
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
-              {/* L'expérience Ora — plain link, no dropdown */}
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <button
-                    onClick={() => onNavigate("ora-experience")}
-                    className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
-                  >
-                    {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
-                  </button>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-              {/* Tarifs */}
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <button
-                    onClick={() => onNavigate("pricing")}
-                    className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
-                  >
-                    {t({ fr: "Tarifs", en: "Pricing" })}
-                  </button>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-              {/* Confidentialité */}
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <button
-                    onClick={() => onNavigate("confidentialite")}
-                    className="inline-flex h-9 items-center justify-center rounded-md px-3.5 py-2 text-[13.5px] font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/60 dark:hover:bg-white/[0.06] transition-colors"
-                  >
-                    {t({ fr: "Confidentialité", en: "Privacy" })}
-                  </button>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+              {/* NOTE: "L'expérience Ora", "Tarifs" and "Confidentialité"
+                  links are temporarily hidden until those pages go live.
+                  Re-add the NavigationMenuItem blocks here to restore them. */}
 
             </NavigationMenuList>
           </NavigationMenu>
@@ -279,28 +246,8 @@ const Navigation: React.FC<NavigationProps> = ({
               <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
             ))}
 
-            <div className="my-2 border-t border-gray-200/60 dark:border-white/[0.08]" />
-
-            <button
-              onClick={() => { setMobileOpen(false); onNavigate("ora-experience"); }}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full"
-            >
-              {t({ fr: "L'expérience Ora", en: "The Ora experience" })}
-            </button>
-
-            <button
-              onClick={() => { setMobileOpen(false); onNavigate("pricing"); }}
-              className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full mt-1"
-            >
-              {t({ fr: "Tarifs", en: "Pricing" })}
-            </button>
-
-            <button
-              onClick={() => { setMobileOpen(false); onNavigate("confidentialite"); }}
-              className="flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-[13px] font-medium text-gray-900 dark:text-white text-left w-full"
-            >
-              {t({ fr: "Confidentialité", en: "Privacy" })}
-            </button>
+            {/* NOTE: "L'expérience Ora", "Tarifs" and "Confidentialité"
+                links are temporarily hidden until those pages go live. */}
 
             <div className="mt-4 flex flex-col gap-2">
               <button

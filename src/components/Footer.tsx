@@ -33,8 +33,7 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
           title: t({ fr: "Produit", en: "Product" }),
           links: [
             { text: t({ fr: "Accueil", en: "Home" }), onClick: () => onNavigate("home") },
-            { text: t({ fr: "L'expérience Ora", en: "The Ora experience" }), onClick: () => onNavigate("ora-experience") },
-{ text: t({ fr: "Tarifs", en: "Pricing" }), onClick: () => onNavigate("pricing") },
+            // "L'expérience Ora" and "Tarifs" temporarily hidden until live.
             { text: t({ fr: "Réserver un appel", en: "Book a call" }), onClick: onBookCall },
           ],
         },

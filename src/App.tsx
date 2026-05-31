@@ -12,6 +12,11 @@ import ConfidentialitePage from "./pages/ConfidentialitePage";
 import PricingPage from "./pages/PricingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import OraLogoSpinner from "./components/OraLogoSpinner";
+import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
+import QualifierResult from "./components/QualifierResult";
+import FeaturesScrolly from "./components/FeaturesScrolly";
+import OraExperienceCarousel from "./components/OraExperienceCarousel";
+import AtlasShowcase from "./components/AtlasShowcase";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
 /* === Booking loading screen fade-out === */
@@ -461,6 +466,22 @@ cal-inline-widget [data-testid="loader"],
 cal-inline-widget .cal-loading {
   display: none !important;
 }
+
+/* Final CTA — subtle grid fading at the edges */
+.cta-grid {
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, #000 25%, transparent 78%);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 50%, #000 25%, transparent 78%);
+}
+
+/* Final CTA — floating decorative cards */
+@keyframes ctaFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+.cta-float { animation: ctaFloat 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .cta-float { animation: none; }
+}
 `;
 import Cal from "@calcom/embed-react";
 import { Card } from "./components/ui/card";
@@ -477,8 +498,13 @@ import {
   TrendingUp,
   ShieldCheck,
   ArrowRight,
-  Database,
-  GitMerge,
+  FileSpreadsheet,
+  Mail,
+  BarChart3,
+  Laptop,
+  Cloud,
+  BadgeCheck,
+  Check,
 } from "lucide-react";
 
 // ← Replace with your Cal.com username/event-slug once your account is set up
@@ -553,42 +579,6 @@ const FadeInOnScroll = ({
 };
 
 
-// === Feature row: animates in dark mode, always visible in light mode ===
-const FeatureRow = ({
-  children,
-  isReversed,
-}: {
-  children: ReactNode;
-  isReversed: boolean;
-}) => {
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add("feat-visible");
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div
-      ref={ref}
-      className={`feat-row grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center${isReversed ? " feat-row-reversed" : ""}`}
-    >
-      {children}
-    </div>
-  );
-};
-
 // === URL-based routing helpers ===
 type Page =
   | "home"
@@ -621,8 +611,14 @@ const PATH_TO_PAGE: Record<string, Page> = Object.fromEntries(
   (Object.entries(PAGE_TO_PATH) as [Page, string][]).map(([p, path]) => [path, p])
 );
 
+// Pages temporarily hidden until they go live. Direct URL access to any of
+// these resolves to the 404 page, and their nav/footer links are removed.
+// To re-enable a page, delete it from this set and restore its links.
+const HIDDEN_PAGES = new Set<Page>(["ora-experience", "pricing", "confidentialite"]);
+
 function getPageFromPath(pathname: string): Page {
-  return PATH_TO_PAGE[pathname] ?? "not-found";
+  const page = PATH_TO_PAGE[pathname] ?? "not-found";
+  return HIDDEN_PAGES.has(page) ? "not-found" : page;
 }
 
 const App = () => {
@@ -660,16 +656,53 @@ const App = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingReady, setBookingReady] = useState(false);
   const [bookingFading, setBookingFading] = useState(false);
+  // 3-phase booking funnel:
+  //  - "qualifier" : 3-question Preply-style mini-flow
+  //  - "result"    : quantified loss + "with Ora" comparison (the aha moment)
+  //  - "calendar"  : Cal.com embed with pre-filled notes
+  type BookingPhase = "qualifier" | "result" | "calendar";
+  const [bookingPhase, setBookingPhase] = useState<BookingPhase>("qualifier");
+  const [qualifierAnswers, setQualifierAnswers] = useState<QualifierAnswers | null>(null);
 
   const openBooking = () => {
     setIsBookingOpen(true);
+    // Reset funnel state so each opening starts fresh
+    setBookingPhase("qualifier");
+    setQualifierAnswers(null);
+    setBookingReady(false);
+    setBookingFading(false);
+  };
+
+  // Called when the user finishes the 3-question qualifier → show result screen.
+  const handleQualifierComplete = (answers: QualifierAnswers) => {
+    setQualifierAnswers(answers);
+    setBookingPhase("result");
+  };
+
+  // Called when the user clicks "Réserver mon créneau" on the result screen
+  // → transition to Cal.com with a brief loading screen.
+  const handleResultContinue = () => {
+    setBookingPhase("calendar");
     setBookingReady(false);
     setBookingFading(false);
     setTimeout(() => {
       setBookingFading(true);
-      setTimeout(() => setBookingReady(true), 600);
-    }, 1400);
+      setTimeout(() => setBookingReady(true), 500);
+    }, 900);
   };
+
+  // Allow stepping back from the result screen to the last qualifier question.
+  const handleResultBack = () => {
+    setBookingPhase("qualifier");
+  };
+
+  // Build the Cal.com "Additional notes" string from the qualifier answers,
+  // so the team arrives at the call with full context.
+  const bookingNotes = qualifierAnswers
+    ? lang === "fr"
+      ? `Format souhaité : ${qualifierAnswers.format.label}\nMétier : ${qualifierAnswers.sector.label}\nTâche prioritaire : ${qualifierAnswers.pain.label}\nVolume hebdo : ${qualifierAnswers.hours.label}`
+      : `Preferred format: ${qualifierAnswers.format.label}\nField: ${qualifierAnswers.sector.label}\nMain task: ${qualifierAnswers.pain.label}\nWeekly volume: ${qualifierAnswers.hours.label}`
+    : "";
   // Smooth scroll helper used by CTA buttons
   const scrollToSection = (id: string) => {
     const lenis = (window as any).__lenis;
@@ -692,25 +725,40 @@ const App = () => {
       if (newPage === "not-found") setNotFoundKey((k) => k + 1);
       setPage(newPage);
       const lenis = (window as any).__lenis;
-      if (lenis) lenis.scrollTo(0, { immediate: true });
-      else window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      if (lenis) {
+        // Ensure Lenis isn't left stopped by Hero's scroll-lock state machine
+        lenis.start();
+        lenis.scrollTo(0, { immediate: true });
+      } else {
+        window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+      }
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   const navigateTo = (target: Page) => {
-    if (target === "not-found") {
+    // Hidden pages always resolve to 404, even if a stray link points to them.
+    if (target === "not-found" || HIDDEN_PAGES.has(target)) {
       setNotFoundKey((k) => k + 1);
       setPage("not-found");
-    } else {
-      if (target === page) return;
-      setPage(target);
+      window.history.pushState({}, "", PAGE_TO_PATH["not-found"]);
+      const lenis = (window as any).__lenis;
+      if (lenis) { lenis.start(); lenis.scrollTo(0, { immediate: true }); }
+      else window.scrollTo({ top: 0 });
+      return;
     }
+    if (target === page) return;
+    setPage(target);
     window.history.pushState({}, "", PAGE_TO_PATH[target]);
     const lenis = (window as any).__lenis;
-    if (lenis) lenis.scrollTo(0, { immediate: true });
-    else window.scrollTo({ top: 0 });
+    if (lenis) {
+      // Ensure Lenis isn't left stopped by Hero's scroll-lock state machine
+      lenis.start();
+      lenis.scrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo({ top: 0 });
+    }
   };
 
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -746,40 +794,6 @@ const App = () => {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
-  // Spotlight mouse tracking (RAF-throttled to avoid layout thrashing)
-  useEffect(() => {
-    const spotlight = document.getElementById("cursor-spotlight");
-    if (!spotlight) return;
-
-    let rafId = 0;
-    let mx = 0;
-    let my = 0;
-
-    const tick = () => {
-      rafId = 0;
-      spotlight.style.transform = `translate3d(${mx}px,${my}px,0)`;
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      mx = e.clientX;
-      my = e.clientY;
-      spotlight.style.opacity = "1";
-      if (!rafId) rafId = requestAnimationFrame(tick);
-    };
-
-    const handleMouseLeave = () => {
-      spotlight.style.opacity = "0";
-    };
-
-    window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mouseleave", handleMouseLeave);
-
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
 
   // Benefits phase swap (problem -> solution) — rAF throttled
   const benefitsPhaseRef = useRef<"problem" | "solution">("problem");
@@ -837,9 +851,6 @@ const App = () => {
     >
       <style>{bubbleStyles}</style>
 
-      {/* Spotlight */}
-      <div id="cursor-spotlight" className="cursor-spotlight" />
-
       <Navigation
         theme={theme}
         onToggleTheme={() => {
@@ -881,10 +892,10 @@ const App = () => {
       />
 
       {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative -mt-16 pt-24 md:pt-32 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
+      <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         <div className="features-heading text-center mb-20 md:mb-28">
           <FadeInOnScroll direction="up">
-            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-bold tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
+            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-medium tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               {t({ fr: "Découvrez", en: "Meet" })}{" "}
               <span className="text-brand-gradient">Ora.</span>
             </h2>
@@ -898,8 +909,8 @@ const App = () => {
             </p>
           </FadeInOnScroll>
         </div>
-        <div className="max-w-6xl mx-auto space-y-36 md:space-y-52">
-          {[
+        <FeaturesScrolly
+          features={[
             {
               tag: t({ fr: "Automatisation", en: "Automation" }),
               title: t({
@@ -912,7 +923,7 @@ const App = () => {
               }),
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
-              video: "/Montlhy_Repor.mov",
+              image: "/feature-automate.png",
             },
             {
               tag: t({ fr: "Sur-mesure", en: "Tailored" }),
@@ -926,6 +937,7 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+              image: "/feature-tailored.png",
             },
             {
               tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
@@ -940,67 +952,8 @@ const App = () => {
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
             },
-          ].map((item, idx) => {
-            const Icon = item.icon;
-            const isReversed = idx % 2 !== 0;
-
-            return (
-              <FeatureRow key={idx} isReversed={isReversed}>
-                {/* Text side */}
-                <div className={isReversed ? "lg:order-2" : ""}>
-                  <div className="feat-child flex items-center gap-2.5 mb-5" style={{ "--feat-delay": "0ms" } as React.CSSProperties}>
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/[0.08] flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span className="text-xs font-semibold uppercase tracking-[0.15em] text-blue-500 dark:text-blue-400">
-                      {item.tag}
-                    </span>
-                  </div>
-                  <h3 className="feat-child text-2xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-[1.15]" style={{ "--feat-delay": "90ms" } as React.CSSProperties}>
-                    {item.title}
-                  </h3>
-                  <p className="feat-child mt-5 text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 max-w-lg" style={{ "--feat-delay": "170ms" } as React.CSSProperties}>
-                    {item.desc}
-                  </p>
-                </div>
-
-                {/* Video side */}
-                <div className={`feat-child${isReversed ? " lg:order-1" : ""}`} style={{ "--feat-delay": "60ms" } as React.CSSProperties}>
-                  <div
-                    className="rounded-[24px] overflow-hidden border border-gray-200/60 dark:border-white/[0.06]"
-                    style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.03)" }}
-                  >
-                    {(item as typeof item & { video?: string }).video ? (
-                      <video
-                        src={(item as typeof item & { video?: string }).video}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full aspect-[16/10] object-cover"
-                      />
-                    ) : (
-                      <div className="relative w-full aspect-[16/10] bg-gray-100 dark:bg-white/[0.03] flex items-center justify-center">
-                        <div className="relative z-10 flex flex-col items-center gap-3">
-                          <div className="w-16 h-16 rounded-full bg-white dark:bg-white/10 shadow-lg flex items-center justify-center cursor-pointer">
-                            <svg className="w-6 h-6 text-blue-500 dark:text-blue-400 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                          </div>
-                          <span className="text-xs font-medium text-gray-400 dark:text-gray-500">{t({ fr: "Voir la démo", en: "Watch the demo" })}</span>
-                        </div>
-                        <div
-                          className="absolute inset-0 opacity-60 dark:opacity-30"
-                          style={{ background: item.grad }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </FeatureRow>
-            );
-          })}
-        </div>
+          ]}
+        />
 
         <FadeInOnScroll delay={200}>
           <div className="flex justify-center mt-16">
@@ -1015,15 +968,25 @@ const App = () => {
         </FadeInOnScroll>
       </section>
 
+      {/* ── ATLAS SHOWCASE ──────────────────────────────────────────── */}
+      <AtlasShowcase />
+
       {/* ── L'EXPÉRIENCE ORA ────────────────────────────────────────── */}
-      <section className="py-24 md:py-36 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]">
-        <div className="max-w-5xl mx-auto">
+      {/* Permanently dark section bg, but the carousel inside keeps its
+          light-mode look so the bright pastel cards stay vivid against
+          the dark background. Heading / subtitle / link colors are
+          hardcoded here so they read against the dark bg. */}
+      <section className="py-24 md:py-36 px-6 md:px-12 bg-black overflow-x-hidden">
+        {/* Heading + footer stay in max-w-6xl (text reads better narrower).
+            The carousel itself breaks out to max-w-7xl so the 5 cards
+            have proper room — symmetrically centered, never offset. */}
+        <div className="max-w-6xl mx-auto">
           <FadeInOnScroll>
             <div className="text-center mb-16">
-              <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
+              <h2 className="font-poppins font-medium tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-white">
                 {t({ fr: "L'expérience", en: "The" })} <span className="text-brand-gradient">{t({ fr: "Ora.", en: "Ora experience." })}</span>
               </h2>
-              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-500 dark:text-gray-400">
+              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-300">
                 {t({
                   fr: "Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.",
                   en: "Up and running in under a week. We set everything up for you, without disrupting your current workflow.",
@@ -1031,141 +994,116 @@ const App = () => {
               </p>
             </div>
           </FadeInOnScroll>
+        </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              {
-                num: "01",
-                icon: Database,
-                title: t({
-                  fr: "Ora s'intègre à Excel",
-                  en: "Ora plugs into Excel",
-                }),
-                desc: t({
-                  fr: "Ora fonctionne comme une extension dans votre Excel existant. Vos fichiers restent les mêmes, Ora gère les automatisations.",
-                  en: "Ora runs as an extension inside your existing Excel. Your files stay exactly the same. Ora handles the automations.",
-                }),
-              },
-              {
-                num: "02",
-                icon: GitMerge,
-                title: t({
-                  fr: "Des automatisations sur mesure",
-                  en: "Automations tailored to you",
-                }),
-                desc: t({
-                  fr: "Nous configurons vos premiers workflows avec vous. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.",
-                  en: "We set up your first workflows with you. And when your needs evolve, you can request new automations at any time, no waiting.",
-                }),
-              },
-              {
-                num: "03",
-                icon: CheckCircle2,
-                title: t({
-                  fr: "Utilisez Ora, reprenez le contrôle",
-                  en: "Use Ora, take back control",
-                }),
-                desc: t({
-                  fr: "Ora s'occupe de la production. Rapports, réconciliations, envois automatiques : tout est prêt quand vous en avez besoin.",
-                  en: "Ora takes care of the production. Reports, reconciliations, automated sends: everything is ready when you need it.",
-                }),
-              },
-            ].map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <FadeInOnScroll key={i} delay={i * 100}>
-                  <div className="p-6 rounded-[22px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] h-full">
-                    <div className="flex items-center gap-3 mb-5">
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <span className="text-[11px] font-semibold uppercase tracking-widest text-blue-500 dark:text-blue-400">
-                        {t({ fr: "Étape", en: "Step" })} {step.num}
-                      </span>
-                    </div>
-                    <h3 className="font-poppins font-bold tracking-tight text-[1rem] leading-snug mb-2 text-[#111827] dark:text-white">
-                      {step.title}
-                    </h3>
-                    <p className="text-[13.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                      {step.desc}
-                    </p>
-                  </div>
-                </FadeInOnScroll>
-              );
-            })}
-          </div>
-
-          <FadeInOnScroll delay={350}>
-            <div className="flex justify-center mt-10">
-              <button
-                onClick={() => navigateTo("ora-experience")}
-                className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
-              >
-                {t({ fr: "Découvrir l'expérience Ora", en: "Discover the Ora experience" })}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        {/* Carousel uses a much wider container so the 5 enlarged cards
+            have room to breathe and the parallax movement is visible. */}
+        <div className="max-w-screen-2xl mx-auto">
+          <FadeInOnScroll>
+            <OraExperienceCarousel />
           </FadeInOnScroll>
         </div>
+
+        {/* "Découvrir l'expérience Ora" link hidden until the page goes live. */}
       </section>
 
       {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
+      {/* Restructure : heading + paragraphe centrés en haut, puis les
+          3 cards en grand format dans une grille horizontale en dessous. */}
       <section className="py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-14 items-center">
-          {/* Left */}
-          <FadeInOnScroll direction="left">
-            <div>
+        <div className="max-w-6xl mx-auto">
+          {/* Heading + intro — centered above */}
+          <FadeInOnScroll>
+            <div className="text-center max-w-3xl mx-auto mb-14 md:mb-16">
               <div
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] mb-6 border"
                 style={{
-                  borderColor: theme === "dark" ? "rgba(13,148,136,0.3)" : "rgba(13,148,136,0.25)",
-                  background: theme === "dark" ? "rgba(13,148,136,0.1)" : "rgba(13,148,136,0.07)",
-                  color: theme === "dark" ? "#2dd4bf" : "#0d9488",
+                  borderColor: theme === "dark" ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.25)",
+                  background: theme === "dark" ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.07)",
+                  color: theme === "dark" ? "#34d399" : "#059669",
                 }}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 {t({ fr: "Confidentialité", en: "Privacy" })}
               </div>
-              <h2 className="font-poppins font-semibold text-3xl md:text-4xl tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-4">
+              <h2 className="font-poppins font-semibold text-3xl md:text-5xl tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-5">
                 {t({
                   fr: "Vos données ne quittent jamais votre environnement.",
                   en: "Your data never leaves your environment.",
                 })}
               </h2>
-              <p className="font-inter text-base leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-md">
+              <p className="font-inter text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
                 {t({
-                  fr: "Ora s'appuie sur l'IA pour concevoir vos automatisations rapidement. Mais une fois déployé, le logiciel tourne uniquement sur votre machine. Aucune donnée n'est transmise à l'extérieur.",
-                  en: "Ora relies on AI to design your automations quickly. But once deployed, the software runs entirely on your machine. No data is ever sent outside.",
+                  fr: "Vos fichiers sensibles sont traités en local et ne sont jamais téléversés. Seul l'accès à votre compte passe par le cloud.",
+                  en: "Your sensitive files are processed locally and never uploaded. Only account access runs in the cloud.",
                 })}
               </p>
-              <button
-                onClick={() => navigateTo("confidentialite")}
-                className="inline-flex items-center gap-2 text-[14px] font-semibold font-inter text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-150"
-              >
-                {t({ fr: "En savoir plus sur notre approche", en: "Learn more about our approach" })}
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              {/* "En savoir plus" link to the privacy page hidden until it goes live. */}
             </div>
           </FadeInOnScroll>
 
-          {/* Right */}
-          <FadeInOnScroll direction="right" delay={100}>
-            <div className="flex flex-col gap-4">
+          {/* 3 large trust cards — Monday-style, green-accented */}
+          <FadeInOnScroll delay={100}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
               {[
-                { icon: ShieldCheck, label: t({ fr: "Aucun envoi de données vers le cloud", en: "Zero data sent to the cloud" }) },
-                { icon: CheckCircle2, label: t({ fr: "Compatible avec vos obligations RGPD", en: "Compatible with your GDPR obligations" }) },
-                { icon: Zap, label: t({ fr: "Déploiement rapide, sécurité par construction", en: "Fast deployment, security by design" }) },
+                {
+                  icon: Laptop,
+                  title: t({ fr: "Vos fichiers restent sur votre machine", en: "Your files stay on your machine" }),
+                  desc: t({
+                    fr: "Vos données métier et financières sont traitées entièrement sur votre appareil. Les fichiers sur lesquels vous travaillez ne sont jamais téléversés vers nos serveurs.",
+                    en: "Your business and financial data is processed entirely on your device. The files you work on are never uploaded to our servers.",
+                  }),
+                  chips: [t({ fr: "100 % local", en: "100% local" }), t({ fr: "Aucun téléversement", en: "No upload" })],
+                },
+                {
+                  icon: Cloud,
+                  title: t({ fr: "Le cloud pour l'accès, jamais pour vos données", en: "Cloud only for access, never for data" }),
+                  desc: t({
+                    fr: "L'authentification et la gestion des utilisateurs s'appuient sur Supabase, un hébergeur cloud sécurisé et conforme au RGPD. Seules vos informations de connexion et de compte y sont stockées, jamais vos documents.",
+                    en: "Authentication and user management run on Supabase, a secure, GDPR-compliant cloud provider. Only login and account information is stored there, never your documents.",
+                  }),
+                  chips: ["Supabase", t({ fr: "RGPD", en: "GDPR" })],
+                },
+                {
+                  icon: BadgeCheck,
+                  title: t({ fr: "Conforme RGPD par conception", en: "GDPR compliant by design" }),
+                  desc: t({
+                    fr: "Aucune donnée client ne quitte votre environnement, vos obligations réglementaires restent donc simples. Les accès sont contrôlés par utilisateur et par équipe.",
+                    en: "No client data leaves your environment, so your regulatory obligations stay simple. Access is controlled per user and per team.",
+                  }),
+                  chips: [t({ fr: "Par utilisateur", en: "Per user" }), t({ fr: "Par équipe", en: "Per team" })],
+                },
               ].map((item, i) => {
                 const Icon = item.icon;
                 return (
                   <div
                     key={i}
-                    className="flex items-center gap-4 p-4 rounded-[16px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03]"
+                    className="group flex flex-col p-8 md:p-9 rounded-[28px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] min-h-[320px] md:min-h-[360px] transition-all duration-200 hover:border-emerald-400/50 hover:shadow-[0_16px_44px_-16px_rgba(16,185,129,0.25)] dark:hover:bg-white/[0.05]"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-500/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    {/* Green icon chip */}
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/15 dark:to-teal-500/15 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20">
+                      <Icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
                     </div>
-                    <span className="font-inter font-medium text-[14px] text-[#111827] dark:text-white">{item.label}</span>
+
+                    <h3 className="mt-6 font-poppins font-semibold text-xl md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white leading-snug">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400 flex-1">
+                      {item.desc}
+                    </p>
+
+                    {/* Green trust chips */}
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {item.chips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20"
+                        >
+                          <Check className="w-3 h-3" strokeWidth={3} />
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 );
               })}
@@ -1174,87 +1112,122 @@ const App = () => {
         </div>
       </section>
 
-      {/* ── CTA FINAL ────────────────────────────────────────────────── */}
-      <section className="py-24 md:py-32 px-6 md:px-12 bg-white dark:bg-[#111827]">
-        <div className="max-w-4xl mx-auto">
-          <FadeInOnScroll>
-            <div
-              className="rounded-[32px] border border-blue-100 dark:border-blue-500/15 px-8 md:px-16 py-16 md:py-20 grid md:grid-cols-2 gap-12 items-center"
-              style={{ background: "linear-gradient(135deg, #eff6ff 0%, #f0fdfa 100%)" }}
-            >
-              {/* Left — pitch */}
-              <div>
-                <div className="inline-block px-3.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-[0.15em] mb-5 bg-blue-100 text-blue-700 border border-blue-200">
-                  {t({ fr: "Appel découverte", en: "Discovery call" })}
-                </div>
-                <h2 className="font-poppins font-bold tracking-[-0.03em] text-3xl md:text-4xl leading-[1.12] text-[#111827] mb-4">
-                  {t({
-                    fr: "30 minutes pour tout changer.",
-                    en: "30 minutes to change everything.",
-                  })}
-                </h2>
-                <p className="text-base leading-relaxed text-gray-600 mb-8">
-                  {t({
-                    fr: "Un appel simple, sans jargon. Vous nous décrivez votre quotidien, on identifie ce qu'Ora peut automatiser. Vous repartez avec un plan concret.",
-                    en: "A simple call, no jargon. You walk us through your day-to-day, we identify what Ora can automate. You walk away with a concrete plan.",
-                  })}
-                </p>
-                <button
-                  onClick={openBooking}
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
-                >
-                  {t({ fr: "Réserver mon appel", en: "Book my call" })}
-                  <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
-                </button>
-                <p className="mt-3 text-[12px] text-gray-400">{t({ fr: "Gratuit · Sans engagement", en: "Free · No commitment" })}</p>
-              </div>
+      {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
+       *  Closing section : thin two-line headline (2nd line brand        *
+       *  gradient), dual CTA, subtle grid + floating decorative cards.    *
+       * ───────────────────────────────────────────────────────────────── */}
+      <section className="relative overflow-hidden px-6 md:px-12 py-24 md:py-32 min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
+        {/* Subtle grid, fading at the edges */}
+        <div
+          className="cta-grid absolute inset-0 pointer-events-none"
+          aria-hidden
+          style={{
+            backgroundImage: `linear-gradient(to right, ${
+              theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)"
+            } 1px, transparent 1px), linear-gradient(to bottom, ${
+              theme === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.045)"
+            } 1px, transparent 1px)`,
+            backgroundSize: "56px 56px",
+          }}
+        />
 
-              {/* Right — what to expect */}
-              <div className="flex flex-col gap-5">
-                {[
-                  {
-                    icon: Clock,
-                    title: t({ fr: "30 minutes chrono", en: "30 minutes, tops" }),
-                    desc: t({
-                      fr: "Un format court et structuré, pensé pour aller à l'essentiel.",
-                      en: "Short and structured, designed to cut straight to the point.",
-                    }),
-                  },
-                  {
-                    icon: Zap,
-                    title: t({
-                      fr: "Identification de vos automatisations",
-                      en: "Spotting your automations",
-                    }),
-                    desc: t({
-                      fr: "On passe en revue vos tâches répétitives et on repère ce qu'Ora peut prendre en charge immédiatement.",
-                      en: "We walk through your repetitive tasks and pinpoint what Ora can take off your plate right away.",
-                    }),
-                  },
-                  {
-                    icon: CheckCircle2,
-                    title: t({ fr: "Un plan sur mesure", en: "A tailored plan" }),
-                    desc: t({
-                      fr: "Vous repartez avec une proposition concrète, adaptée à votre métier et vos outils actuels.",
-                      en: "You leave with a concrete proposal, built around your industry and the tools you already use.",
-                    }),
-                  },
-                ].map((item, i) => {
-                  const Icon = item.icon;
-                  return (
-                    <div key={i} className="flex items-start gap-4">
-                      <div className="w-9 h-9 rounded-xl bg-white/70 border border-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <Icon className="w-4 h-4 text-blue-500" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[14px] text-[#111827] mb-0.5">{item.title}</p>
-                        <p className="text-[13px] leading-relaxed text-gray-500">{item.desc}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+        {/* Ambient glow — pure radial gradient (no blur filter, which is
+            expensive to repaint while scrolling and caused jank). */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[760px] h-[560px] rounded-full pointer-events-none"
+          aria-hidden
+          style={{
+            background:
+              theme === "dark"
+                ? "radial-gradient(ellipse, rgba(59,130,246,0.10) 0%, transparent 72%)"
+                : "radial-gradient(ellipse, rgba(59,130,246,0.07) 0%, transparent 72%)",
+          }}
+        />
+
+        {/* Floating decorative cards — desktop only */}
+        <div className="absolute inset-0 hidden lg:block pointer-events-none" aria-hidden>
+          {[
+            { pos: "top-[14%] left-[6%]",      delay: "0s",   icon: Zap,             label: t({ fr: "Workflow lancé", en: "Workflow started" }) },
+            { pos: "top-[18%] right-[7%]",     delay: "1.4s", icon: BarChart3,       label: t({ fr: "Rapport généré", en: "Report generated" }) },
+            { pos: "bottom-[16%] left-[10%]",  delay: "2.1s", icon: FileSpreadsheet, label: t({ fr: "Excel mis à jour", en: "Excel updated" }) },
+            { pos: "bottom-[14%] right-[9%]",  delay: "0.7s", icon: Mail,            label: t({ fr: "Envoi automatique", en: "Auto-sent" }) },
+          ].map((c) => {
+            const CardIcon = c.icon;
+            return (
+              <div
+                key={c.pos}
+                className={`cta-float absolute ${c.pos} rounded-2xl border shadow-lg px-4 py-3 flex items-center gap-3 ${
+                  theme === "dark" ? "bg-white/[0.05] border-white/10" : "bg-white border-gray-200/70"
+                }`}
+                style={{ animationDelay: c.delay, willChange: "transform" }}
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    theme === "dark"
+                      ? "bg-gradient-to-br from-blue-500/25 to-teal-500/25"
+                      : "bg-gradient-to-br from-blue-100 to-teal-100"
+                  }`}
+                >
+                  <CardIcon className={`w-4 h-4 ${theme === "dark" ? "text-blue-300" : "text-blue-600"}`} strokeWidth={2} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className={`text-[11px] font-inter font-semibold tracking-tight ${theme === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                    {c.label}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-10 rounded-full bg-gradient-to-r from-[#3b82f6] to-[#0d9488]" />
+                    <div className={`h-1.5 w-6 rounded-full ${theme === "dark" ? "bg-white/10" : "bg-gray-200"}`} />
+                  </div>
+                </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Center content */}
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <FadeInOnScroll>
+            <h2 className="font-poppins font-light tracking-[-0.04em] leading-[1.06] text-4xl md:text-6xl text-[#111827] dark:text-white">
+              <span className="block">
+                {t({ fr: "Prenez une longueur d'avance sur", en: "Move faster than the competition with" })}
+              </span>
+              <span className="block text-brand-gradient">
+                {t({ fr: "vos concurrents grâce à l'automatisation.", en: "automated Excel workflows." })}
+              </span>
+            </h2>
+          </FadeInOnScroll>
+
+          <FadeInOnScroll delay={120}>
+            <p className="mt-7 mx-auto font-inter text-base md:text-lg leading-[1.7] max-w-xl text-gray-500 dark:text-gray-400">
+              {t({
+                fr: "Un appel simple, sans jargon. Vous nous décrivez votre quotidien, on identifie ce qu'Ora peut automatiser. Vous repartez avec un plan concret.",
+                en: "A simple call, no jargon. You walk us through your day-to-day, we identify what Ora can automate. You leave with a concrete plan.",
+              })}
+            </p>
+          </FadeInOnScroll>
+
+          <FadeInOnScroll delay={220}>
+            <div className="mt-10 flex items-center justify-center gap-3 flex-wrap">
+              <button
+                onClick={openBooking}
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
+              >
+                {t({ fr: "Réserver mon appel", en: "Get started" })}
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
+              </button>
+              <button
+                onClick={() => navigateTo("for-business")}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold border transition-all duration-150 hover:-translate-y-px active:translate-y-0 border-gray-300 text-[#111827] hover:bg-gray-50 dark:border-white/15 dark:text-white dark:hover:bg-white/[0.06]"
+              >
+                {t({ fr: "Voir nos solutions", en: "View solutions" })}
+              </button>
             </div>
+          </FadeInOnScroll>
+
+          <FadeInOnScroll delay={300}>
+            <p className="mt-5 text-[12px] text-gray-400 dark:text-gray-600">
+              {t({ fr: "Gratuit · 30 minutes · Sans engagement", en: "Free · 30 minutes · No commitment" })}
+            </p>
           </FadeInOnScroll>
         </div>
       </section>
@@ -1268,38 +1241,44 @@ const App = () => {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl px-4"
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
-          {/* Loading screen with animated logo */}
-          {!bookingReady && (
-            <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-[#fcfbf7] dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
-              <OraLogoSpinner gradientId="g-booking" size={72} />
-              <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">{t({ fr: "Chargement du calendrier...", en: "Loading calendar..." })}</p>
-            </div>
-          )}
-
-          <div className={`relative w-full max-w-3xl transition-all duration-500 ${bookingReady ? "opacity-100 scale-100" : "opacity-0 scale-95"}`}>
+          <div className="relative w-full max-w-3xl">
             <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-[#111827]">
               {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsBookingOpen(false)}
-                className="absolute right-5 top-5 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                className="absolute right-5 top-5 z-20 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-5">
-                {/* LEFT — Brand panel */}
+                {/* LEFT — Brand panel (copy adapts across all 3 phases) */}
                 <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden min-h-[220px] md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
                   <div>
                     <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
                     <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
-                      {t({ fr: "Réservez un appel découverte", en: "Book a discovery call" })}
+                      {bookingPhase === "qualifier"
+                        ? t({ fr: "Préparons votre appel.", en: "Let's prep your call." })
+                        : bookingPhase === "result"
+                          ? t({ fr: "Votre estimation.", en: "Your estimate." })
+                          : t({ fr: "Choisissez votre créneau", en: "Pick your time slot" })}
                     </h3>
                     <p className="mt-3 text-white/75 text-sm leading-relaxed">
-                      {t({
-                        fr: "Dites-nous ce que vous souhaitez automatiser. Nous analyserons vos processus et reviendrons avec les prochaines étapes.",
-                        en: "Tell us what you'd like to automate. We'll review your processes and come back with next steps.",
-                      })}
+                      {bookingPhase === "qualifier"
+                        ? t({
+                            fr: "3 questions rapides pour qu'on arrive avec un plan concret, pas un pitch générique.",
+                            en: "3 quick questions so we arrive with a concrete plan, not a generic pitch.",
+                          })
+                        : bookingPhase === "result"
+                          ? t({
+                              fr: "Voici ce que cette tâche coûte à votre équipe chaque année, et ce qu'Ora pourrait changer.",
+                              en: "Here's what this task costs your team every year, and what Ora could change.",
+                            })
+                          : t({
+                              fr: "On a votre contexte. Choisissez le moment qui vous convient. On arrive avec un plan adapté à votre métier.",
+                              en: "We've got your context. Pick a time that works. We'll arrive with a plan tailored to your field.",
+                            })}
                     </p>
                   </div>
 
@@ -1325,33 +1304,67 @@ const App = () => {
                   </div>
                 </div>
 
-                {/* RIGHT — Cal.com embed */}
-                <div className="md:col-span-3 relative p-2 md:p-3 overflow-y-auto" style={{ maxHeight: "80vh" }}>
-                  {CAL_LINK ? (
-                    <Cal
-                      calLink={CAL_LINK}
-                      style={{ width: "100%", height: "100%", overflow: "auto" }}
-                      config={{
-                        layout: "month_view" as const,
-                        theme: theme === "dark" ? "dark" : "light",
-                        lang: lang,
-                      }}
+                {/* RIGHT — 3 phases: qualifier → result → calendar */}
+                <div className="md:col-span-3 relative">
+                  {bookingPhase === "qualifier" && (
+                    <QualifierFlow onComplete={handleQualifierComplete} />
+                  )}
+
+                  {bookingPhase === "result" && qualifierAnswers && (
+                    <QualifierResult
+                      answers={qualifierAnswers}
+                      onContinue={handleResultContinue}
+                      onBack={handleResultBack}
                     />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-6">
-                      <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mb-4">
-                        <Clock className="w-7 h-7 text-blue-500" />
+                  )}
+
+                  {bookingPhase === "calendar" && (
+                    <>
+                      {/* Short loading transition between result and calendar */}
+                      {!bookingReady && (
+                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
+                          <OraLogoSpinner gradientId="g-booking" size={64} />
+                          <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
+                            {t({ fr: "Préparation de votre créneau...", en: "Preparing your slot..." })}
+                          </p>
+                        </div>
+                      )}
+
+                      <div
+                        className={`p-2 md:p-3 overflow-y-auto transition-opacity duration-500 ${bookingReady ? "opacity-100" : "opacity-0"}`}
+                        style={{ maxHeight: "80vh" }}
+                      >
+                        {CAL_LINK ? (
+                          <Cal
+                            calLink={CAL_LINK}
+                            style={{ width: "100%", height: "100%", overflow: "auto" }}
+                            config={{
+                              layout: "month_view" as const,
+                              theme: theme === "dark" ? "dark" : "light",
+                              lang: lang,
+                              // Pre-fill the Cal.com "Additional notes" field with the
+                              // qualifier answers so the team has full context upfront.
+                              notes: bookingNotes,
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-6">
+                            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mb-4">
+                              <Clock className="w-7 h-7 text-blue-500" />
+                            </div>
+                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {t({ fr: "Réservation bientôt disponible", en: "Booking coming soon" })}
+                            </h4>
+                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
+                              {t({
+                                fr: "Notre système de prise de rendez-vous est en cours de configuration.",
+                                en: "Our scheduling system is being set up right now.",
+                              })}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {t({ fr: "Réservation bientôt disponible", en: "Booking coming soon" })}
-                      </h4>
-                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-                        {t({
-                          fr: "Notre système de prise de rendez-vous est en cours de configuration.",
-                          en: "Our scheduling system is being set up right now.",
-                        })}
-                      </p>
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
