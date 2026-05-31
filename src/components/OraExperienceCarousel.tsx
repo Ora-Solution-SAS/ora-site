@@ -323,8 +323,8 @@ type CardData = {
   visual: ReactNode;
 };
 
-// Dark color shared by every card when inactive.
-const INACTIVE_BG = "#0a0a0a";
+// Color shared by every card when inactive — the Ora audit cobalt blue.
+const INACTIVE_BG = "#3457E8";
 
 // ─────────────────────────────────────────────────────────
 //  AccordionCard — the single card component.
