@@ -140,7 +140,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     <section
       ref={outerRef}
       // Tall on desktop so the scene pins while the 3 anims play; auto on mobile.
-      style={{ background: dk ? "#0f172a" : "#fcfbf7", height: pinned ? "300vh" : "auto" }}
+      style={{ background: dk ? "#0f172a" : "#ffffff", height: pinned ? "300vh" : "auto" }}
     >
       <div
         className={`${pinned ? "sticky top-0 min-h-screen flex flex-col justify-center" : ""} px-6 md:px-12 py-20 md:py-0`}
@@ -241,7 +241,7 @@ function PrivacyCard({
   return (
     <div className="flex flex-col items-center">
       {/* Animated icon — sits ABOVE the card, horizontally centered. */}
-      <div className="h-20 md:h-24 flex items-end justify-center mb-5 md:mb-6">
+      <div className="h-24 md:h-28 flex items-end justify-center mb-5 md:mb-6">
         <IconStage kind={kind} lp={lp} dk={dk} />
       </div>
 
@@ -300,7 +300,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   if (kind === "lock") {
     return (
-      <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
+      <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
         <g transform="translate(24, 26)">
           {/* shackle — lifts when open, seats (down) as it locks */}
           <motion.path
@@ -326,7 +326,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   if (kind === "cloud") {
     return (
-      <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
+      <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
         {/* a single, clean cloud — drifts down + fades in, centered */}
         <motion.path
           d="M16 32 a8 8 0 0 1 1 -15.2 a9.5 9.5 0 0 1 18 2.6 a7 7 0 0 1 -1.2 12.6 Z"
@@ -343,7 +343,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   // CHECK
   return (
-    <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
+    <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
       <motion.circle
         cx="24" cy="24" r="16"
         fill="none"
