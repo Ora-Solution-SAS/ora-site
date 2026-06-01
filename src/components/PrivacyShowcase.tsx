@@ -180,7 +180,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
           </motion.div>
 
           {/* ── 3 cards, each topped by its animated icon ─────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-start">
             {cards.map((card) => (
               <PrivacyCard key={card.kind} {...card} dk={dk} />
             ))}
@@ -239,34 +239,37 @@ function PrivacyCard({
   );
 
   return (
-    <motion.div
-      style={{ opacity: cardOpacity, borderColor }}
-      className="flex flex-col p-8 md:p-9 rounded-[28px] border bg-white dark:bg-white/[0.03] min-h-[300px] md:min-h-[340px]"
-    >
-      {/* Animated icon stage */}
-      <div className="h-20 flex items-center justify-start mb-2">
+    <div className="flex flex-col items-center">
+      {/* Animated icon — sits ABOVE the card, horizontally centered. */}
+      <div className="h-16 md:h-20 flex items-end justify-center mb-5 md:mb-6">
         <IconStage kind={kind} lp={lp} dk={dk} />
       </div>
 
-      <h3 className="font-poppins font-semibold text-xl md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white leading-snug">
-        {title}
-      </h3>
-      <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400 flex-1">
-        {desc}
-      </p>
+      {/* Card */}
+      <motion.div
+        style={{ opacity: cardOpacity, borderColor }}
+        className="w-full flex flex-col p-8 md:p-9 rounded-[28px] border bg-white dark:bg-white/[0.03] min-h-[280px] md:min-h-[320px]"
+      >
+        <h3 className="font-poppins font-semibold text-xl md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white leading-snug">
+          {title}
+        </h3>
+        <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400 flex-1">
+          {desc}
+        </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {chips.map((chip) => (
-          <span
-            key={chip}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20"
-          >
-            <Check className="w-3 h-3" strokeWidth={3} />
-            {chip}
-          </span>
-        ))}
-      </div>
-    </motion.div>
+        <div className="mt-6 flex flex-wrap gap-2">
+          {chips.map((chip) => (
+            <span
+              key={chip}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20"
+            >
+              <Check className="w-3 h-3" strokeWidth={3} />
+              {chip}
+            </span>
+          ))}
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -275,51 +278,47 @@ function PrivacyCard({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; dk: boolean }) {
+  // Minimalist, modern-SaaS: thin monochrome outline strokes, no filled
+  // bodies, no glow. One accent green, one muted line color.
   const green = dk ? "#34d399" : "#059669";
-  const steel = dk ? "#64748b" : "#94a3b8";
+  const muted = dk ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.32)";
+  const stroke = 2;
 
-  // ── LOCK ──
-  const shackleY = useTransform(lp, [0, 1], [-13, 0]);
-  const bodyScale = useTransform(lp, [0, 0.85, 1], [0.92, 1.06, 1]);
-  const lockGlow = useTransform(lp, [0.45, 1], [0, 0.9]);
+  // ── LOCK: shackle seats down as you scroll ──
+  const shackleY = useTransform(lp, [0, 1], [-7, 0]);
+  // colour shifts from muted (open) to green (locked)
+  const lockColor = useTransform(lp, [0.55, 1], [muted, green]);
 
-  // ── CLOUD ──
-  const cloudX = useTransform(lp, [0, 0.8], [42, 0]);
-  const cloudY = useTransform(lp, [0, 0.8], [-14, 0]);
+  // ── CLOUD: arrives + dashed tether draws in ──
+  const cloudX = useTransform(lp, [0, 0.8], [30, 0]);
   const cloudOpacity = useTransform(lp, [0, 0.5], [0, 1]);
-  const tetherOpacity = useTransform(lp, [0.4, 0.9], [0, 1]);
+  const tetherOpacity = useTransform(lp, [0.45, 0.95], [0, 1]);
 
-  // ── CHECK ──
-  const ringOffset = useTransform(lp, [0, 0.7], [1, 0]);
-  const tickOffset = useTransform(lp, [0.5, 1], [1, 0]);
-  const checkScale = useTransform(lp, [0.8, 1], [0.9, 1]);
-  const checkGlow = useTransform(lp, [0.5, 1], [0, 0.9]);
+  // ── CHECK: ring then tick draw in ──
+  const ringOffset = useTransform(lp, [0, 0.65], [1, 0]);
+  const tickOffset = useTransform(lp, [0.55, 1], [1, 0]);
 
   if (kind === "lock") {
     return (
-      <svg viewBox="0 0 80 80" className="w-[68px] h-[68px] overflow-visible" fill="none" aria-hidden>
-        <defs>
-          <linearGradient id="pv-lock-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#0d9488" />
-          </linearGradient>
-        </defs>
-        <g transform="translate(40, 42)">
-          <motion.circle cx="0" cy="6" r="34" fill="none" stroke={green} strokeWidth="1" style={{ opacity: lockGlow }} />
-          {/* shackle */}
+      <svg viewBox="0 0 48 48" className="w-12 h-12 md:w-14 md:h-14 overflow-visible" fill="none" aria-hidden>
+        <g transform="translate(24, 26)">
+          {/* shackle — lifts when open, seats (down) as it locks */}
           <motion.path
-            d="M-13 0 V -10 a13 13 0 0 1 26 0 V 0"
-            stroke={steel}
-            strokeWidth="6"
+            d="M-9 -2 V -9 a9 9 0 0 1 18 0 V -2"
+            stroke={muted}
+            strokeWidth={stroke}
             strokeLinecap="round"
             style={{ y: shackleY }}
           />
-          {/* body */}
-          <motion.g style={{ scale: bodyScale }}>
-            <rect x="-20" y="-1" width="40" height="33" rx="9" fill="url(#pv-lock-grad)" />
-            <circle cx="0" cy="13" r="4" fill={dk ? "#0f172a" : "#ffffff"} />
-            <rect x="-1.6" y="15" width="3.2" height="8" rx="1.6" fill={dk ? "#0f172a" : "#ffffff"} />
-          </motion.g>
+          {/* body outline (colour shifts to green when locked) */}
+          <motion.rect
+            x="-13" y="-2" width="26" height="20" rx="5"
+            fill="none"
+            strokeWidth={stroke}
+            style={{ stroke: lockColor }}
+          />
+          {/* keyhole dot */}
+          <motion.circle cx="0" cy="8" r="2.2" style={{ fill: lockColor }} />
         </g>
       </svg>
     );
@@ -327,34 +326,27 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   if (kind === "cloud") {
     return (
-      <svg viewBox="0 0 80 80" className="w-[72px] h-[68px] overflow-visible" fill="none" aria-hidden>
-        <defs>
-          <linearGradient id="pv-cloud-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={dk ? "#1e293b" : "#ffffff"} />
-            <stop offset="100%" stopColor={dk ? "#0f172a" : "#eef2ff"} />
-          </linearGradient>
-        </defs>
-        {/* device anchor + dashed tether (access only) */}
-        <rect x="10" y="52" width="20" height="14" rx="2.5" fill="none" stroke={steel} strokeWidth="2" />
+      <svg viewBox="0 0 48 48" className="w-14 h-12 md:w-16 md:h-14 overflow-visible" fill="none" aria-hidden>
+        {/* device anchor */}
+        <rect x="7" y="33" width="13" height="9" rx="2" fill="none" stroke={muted} strokeWidth={stroke} />
+        {/* dashed tether (access only) */}
         <motion.path
-          d="M28 54 C 42 48, 48 42, 52 30"
+          d="M18 34 C 27 30, 31 25, 33 18"
           stroke={green}
-          strokeWidth="1.5"
-          strokeDasharray="3 3"
+          strokeWidth="1.6"
+          strokeDasharray="2.5 3"
+          strokeLinecap="round"
           style={{ opacity: tetherOpacity }}
         />
-        <motion.g style={{ x: cloudX, y: cloudY, opacity: cloudOpacity }}>
-          <g transform="translate(40, 12)">
-            <path
-              d="M6 24 a10 10 0 0 1 1.6 -19 a12.5 12.5 0 0 1 23 3.3 a9 9 0 0 1 -1.6 15.7 Z"
-              fill="url(#pv-cloud-grad)"
-              stroke={dk ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.3)"}
-              strokeWidth="1.5"
-            />
-            {/* key glyph = access only */}
-            <circle cx="19" cy="14" r="2.8" fill="none" stroke={green} strokeWidth="1.5" />
-            <path d="M19 16.6 v5 M19 19.6 h2.6" stroke={green} strokeWidth="1.5" strokeLinecap="round" />
-          </g>
+        {/* cloud arrives */}
+        <motion.g style={{ x: cloudX, opacity: cloudOpacity }}>
+          <path
+            d="M27 24 a6.5 6.5 0 0 1 1 -12.4 a8 8 0 0 1 15 2.1 a5.8 5.8 0 0 1 -1 10.3 Z"
+            fill="none"
+            stroke={green}
+            strokeWidth={stroke}
+            strokeLinejoin="round"
+          />
         </motion.g>
       </svg>
     );
@@ -362,33 +354,29 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   // CHECK
   return (
-    <svg viewBox="0 0 80 80" className="w-[68px] h-[68px] overflow-visible" fill="none" aria-hidden>
-      <motion.g style={{ scale: checkScale }}>
-        <motion.circle cx="40" cy="40" r="26" fill={green} style={{ opacity: checkGlow }} />
-        <motion.circle
-          cx="40"
-          cy="40"
-          r="26"
-          fill="none"
-          stroke={green}
-          strokeWidth="3"
-          pathLength={1}
-          strokeDasharray="1"
-          strokeLinecap="round"
-          style={{ strokeDashoffset: ringOffset }}
-        />
-        <motion.path
-          d="M29 41 L37 49 L52 32"
-          fill="none"
-          stroke={dk ? "#ecfdf5" : "#065f46"}
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          pathLength={1}
-          strokeDasharray="1"
-          style={{ strokeDashoffset: tickOffset }}
-        />
-      </motion.g>
+    <svg viewBox="0 0 48 48" className="w-12 h-12 md:w-14 md:h-14 overflow-visible" fill="none" aria-hidden>
+      <motion.circle
+        cx="24" cy="24" r="16"
+        fill="none"
+        stroke={green}
+        strokeWidth={stroke}
+        pathLength={1}
+        strokeDasharray="1"
+        strokeLinecap="round"
+        transform="rotate(-90 24 24)"
+        style={{ strokeDashoffset: ringOffset }}
+      />
+      <motion.path
+        d="M17 24.5 L22 29.5 L31.5 19"
+        fill="none"
+        stroke={green}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        pathLength={1}
+        strokeDasharray="1"
+        style={{ strokeDashoffset: tickOffset }}
+      />
     </svg>
   );
 }
