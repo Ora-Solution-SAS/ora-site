@@ -185,7 +185,7 @@ export default function FeaturesScrolly({ features }: Props) {
     <div className="max-w-7xl mx-auto">
       {/* Asymmetric columns: the visual (right) gets more width than the text
           (left) so the demo videos read larger. */}
-      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-10 md:gap-16">
+      <div className="grid grid-cols-1 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-10 min-[560px]:gap-12 md:gap-16">
         {/* LEFT — stacked text blocks (with inline visual on mobile) */}
         <div className="flex flex-col">
           {features.map((feat, i) => (
@@ -197,7 +197,7 @@ export default function FeaturesScrolly({ features }: Props) {
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
                 {/* Mobile-only inline visual */}
-                <div className="md:hidden mt-8">
+                <div className="min-[560px]:hidden mt-8">
                   <Visual feature={feat} />
                 </div>
               </TextBlock>
@@ -205,7 +205,7 @@ export default function FeaturesScrolly({ features }: Props) {
           ))}
 
           {/* Pagination dots — desktop only */}
-          <div className="hidden md:flex items-center gap-2 mt-2 mb-8">
+          <div className="hidden min-[560px]:flex items-center gap-2 mt-2 mb-8">
             {features.map((_, i) => (
               <div
                 key={i}
@@ -227,7 +227,7 @@ export default function FeaturesScrolly({ features }: Props) {
             <AnimatePresence> (the browser doesn't have to re-init the <video>
             element each swap) and keeps the crossfade fully overlapped — so a
             fast scroll never shows a blank moment between videos. */}
-        <div className="hidden md:block relative">
+        <div className="hidden min-[560px]:block relative">
           <div className="sticky top-24 h-[calc(100vh-8rem)] max-h-[780px] flex items-center">
             <div
               className="relative w-full"
