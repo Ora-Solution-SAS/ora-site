@@ -17,6 +17,7 @@ import QualifierResult from "./components/QualifierResult";
 import FeaturesScrolly from "./components/FeaturesScrolly";
 import OraExperienceCarousel from "./components/OraExperienceCarousel";
 import AtlasShowcase from "./components/AtlasShowcase";
+import PrivacyShowcase from "./components/PrivacyShowcase";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
 /* === Booking loading screen fade-out === */
@@ -501,10 +502,6 @@ import {
   FileSpreadsheet,
   Mail,
   BarChart3,
-  Laptop,
-  Cloud,
-  BadgeCheck,
-  Check,
 } from "lucide-react";
 
 // ← Replace with your Cal.com username/event-slug once your account is set up
@@ -1008,109 +1005,9 @@ const App = () => {
       </section>
 
       {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
-      {/* Restructure : heading + paragraphe centrés en haut, puis les
-          3 cards en grand format dans une grille horizontale en dessous. */}
-      <section className="py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]">
-        <div className="max-w-6xl mx-auto">
-          {/* Heading + intro — centered above */}
-          <FadeInOnScroll>
-            <div className="text-center max-w-3xl mx-auto mb-14 md:mb-16">
-              <div
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] mb-6 border"
-                style={{
-                  borderColor: theme === "dark" ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.25)",
-                  background: theme === "dark" ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.07)",
-                  color: theme === "dark" ? "#34d399" : "#059669",
-                }}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                {t({ fr: "Confidentialité", en: "Privacy" })}
-              </div>
-              <h2 className="font-poppins font-semibold text-3xl md:text-5xl tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-5">
-                {t({
-                  fr: "Vos données ne quittent jamais votre environnement.",
-                  en: "Your data never leaves your environment.",
-                })}
-              </h2>
-              <p className="font-inter text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-                {t({
-                  fr: "Vos fichiers sensibles sont traités en local et ne sont jamais téléversés. Seul l'accès à votre compte passe par le cloud.",
-                  en: "Your sensitive files are processed locally and never uploaded. Only account access runs in the cloud.",
-                })}
-              </p>
-              {/* "En savoir plus" link to the privacy page hidden until it goes live. */}
-            </div>
-          </FadeInOnScroll>
-
-          {/* 3 large trust cards — Monday-style, green-accented */}
-          <FadeInOnScroll delay={100}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
-              {[
-                {
-                  icon: Laptop,
-                  title: t({ fr: "Vos fichiers restent sur votre machine", en: "Your files stay on your machine" }),
-                  desc: t({
-                    fr: "Vos données métier et financières sont traitées entièrement sur votre appareil. Les fichiers sur lesquels vous travaillez ne sont jamais téléversés vers nos serveurs.",
-                    en: "Your business and financial data is processed entirely on your device. The files you work on are never uploaded to our servers.",
-                  }),
-                  chips: [t({ fr: "100 % local", en: "100% local" }), t({ fr: "Aucun téléversement", en: "No upload" })],
-                },
-                {
-                  icon: Cloud,
-                  title: t({ fr: "Le cloud pour l'accès, jamais pour vos données", en: "Cloud only for access, never for data" }),
-                  desc: t({
-                    fr: "L'authentification et la gestion des utilisateurs s'appuient sur Supabase, un hébergeur cloud sécurisé et conforme au RGPD. Seules vos informations de connexion et de compte y sont stockées, jamais vos documents.",
-                    en: "Authentication and user management run on Supabase, a secure, GDPR-compliant cloud provider. Only login and account information is stored there, never your documents.",
-                  }),
-                  chips: ["Supabase", t({ fr: "RGPD", en: "GDPR" })],
-                },
-                {
-                  icon: BadgeCheck,
-                  title: t({ fr: "Conforme RGPD par conception", en: "GDPR compliant by design" }),
-                  desc: t({
-                    fr: "Aucune donnée client ne quitte votre environnement, vos obligations réglementaires restent donc simples. Les accès sont contrôlés par utilisateur et par équipe.",
-                    en: "No client data leaves your environment, so your regulatory obligations stay simple. Access is controlled per user and per team.",
-                  }),
-                  chips: [t({ fr: "Par utilisateur", en: "Per user" }), t({ fr: "Par équipe", en: "Per team" })],
-                },
-              ].map((item, i) => {
-                const Icon = item.icon;
-                return (
-                  <div
-                    key={i}
-                    className="group flex flex-col p-8 md:p-9 rounded-[28px] border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.03] min-h-[320px] md:min-h-[360px] transition-all duration-200 hover:border-emerald-400/50 hover:shadow-[0_16px_44px_-16px_rgba(16,185,129,0.25)] dark:hover:bg-white/[0.05]"
-                  >
-                    {/* Green icon chip */}
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-500/15 dark:to-teal-500/15 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20">
-                      <Icon className="w-6 h-6 text-emerald-600 dark:text-emerald-400" strokeWidth={1.75} />
-                    </div>
-
-                    <h3 className="mt-6 font-poppins font-semibold text-xl md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white leading-snug">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400 flex-1">
-                      {item.desc}
-                    </p>
-
-                    {/* Green trust chips */}
-                    <div className="mt-6 flex flex-wrap gap-2">
-                      {item.chips.map((chip) => (
-                        <span
-                          key={chip}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20"
-                        >
-                          <Check className="w-3 h-3" strokeWidth={3} />
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </FadeInOnScroll>
-        </div>
-      </section>
+      {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
+          3 trust cards. See PrivacyShowcase.tsx. */}
+      <PrivacyShowcase theme={theme} />
 
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
