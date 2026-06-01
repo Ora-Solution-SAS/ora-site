@@ -920,7 +920,7 @@ const App = () => {
               }),
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
-              image: "/feature-automate.png",
+              video: "/feature-automate.mp4",
             },
             {
               tag: t({ fr: "Sur-mesure", en: "Tailored" }),
