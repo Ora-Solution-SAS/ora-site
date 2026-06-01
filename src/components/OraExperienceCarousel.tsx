@@ -323,8 +323,11 @@ type CardData = {
   visual: ReactNode;
 };
 
-// Color shared by every card when inactive — the Ora audit cobalt blue.
-const INACTIVE_BG = "#3457E8";
+// Dark color shared by every card at rest (inactive).
+const INACTIVE_BG = "#0a0a0a";
+
+// Color every card animates to on hover/active — the Ora audit cobalt blue.
+const ACTIVE_BG = "#3457E8";
 
 // ─────────────────────────────────────────────────────────
 //  AccordionCard — the single card component.
@@ -542,7 +545,7 @@ export default function OraExperienceCarousel() {
         fr: "Audit offert + une automatisation offerte.",
         en: "Complimentary audit + a complimentary automation.",
       }),
-      activeColor: "#3457E8", // cobalt — trust / analytical
+      activeColor: ACTIVE_BG,
       inactiveImage: "/logos/engineering-illustration.png",
       inactiveImageBottom: "6%",
       visual: <AuditVisual />,
@@ -554,8 +557,7 @@ export default function OraExperienceCarousel() {
         fr: "Des automatisations conçues pour vous.",
         en: "Automations built for you, not for everyone.",
       }),
-      activeColor: "#52C760", // kelly green
-      darkText: true,
+      activeColor: ACTIVE_BG,
       inactiveImage: "/logos/tailored-illustration.png",
       inactiveImageBottom: "6%",
       visual: <FlowVisual />,
@@ -567,8 +569,7 @@ export default function OraExperienceCarousel() {
         fr: "Vos dossiers Excel, parfaitement structurés.",
         en: "Your Excel folders, perfectly structured.",
       }),
-      activeColor: "#F8A53A", // tangerine
-      darkText: true,
+      activeColor: ACTIVE_BG,
       inactiveImage: "/logos/organisation-illustration.png",
       // Sub-badge: signals this feature is powered by the Atlas product
       subBadge: {
@@ -584,7 +585,7 @@ export default function OraExperienceCarousel() {
         fr: "Tailored, fast, on demand.",
         en: "Tailored, fast, on demand.",
       }),
-      activeColor: "#9D2649", // burgundy — executive / decisive
+      activeColor: ACTIVE_BG,
       inactiveImage: "/logos/audit-illustration.png",
       inactiveImageBottom: "6%",
       visual: <EngineeringVisual />,
@@ -596,7 +597,7 @@ export default function OraExperienceCarousel() {
         fr: "Vos données restent chez vous.",
         en: "Your data stays with you.",
       }),
-      activeColor: "#7C3AED", // violet
+      activeColor: ACTIVE_BG,
       visual: <SecurityVisual />,
     },
   ];
