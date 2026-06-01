@@ -241,7 +241,7 @@ function PrivacyCard({
   return (
     <div className="flex flex-col items-center">
       {/* Animated icon — sits ABOVE the card, horizontally centered. */}
-      <div className="h-16 md:h-20 flex items-end justify-center mb-5 md:mb-6">
+      <div className="h-20 md:h-24 flex items-end justify-center mb-5 md:mb-6">
         <IconStage kind={kind} lp={lp} dk={dk} />
       </div>
 
@@ -289,10 +289,10 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
   // colour shifts from muted (open) to green (locked)
   const lockColor = useTransform(lp, [0.55, 1], [muted, green]);
 
-  // ── CLOUD: arrives + dashed tether draws in ──
-  const cloudX = useTransform(lp, [0, 0.8], [30, 0]);
-  const cloudOpacity = useTransform(lp, [0, 0.5], [0, 1]);
-  const tetherOpacity = useTransform(lp, [0.45, 0.95], [0, 1]);
+  // ── CLOUD: arrives (drifts down + fades in) ──
+  const cloudY = useTransform(lp, [0, 0.85], [-14, 0]);
+  const cloudScale = useTransform(lp, [0, 0.85, 1], [0.85, 1.04, 1]);
+  const cloudOpacity = useTransform(lp, [0, 0.55], [0, 1]);
 
   // ── CHECK: ring then tick draw in ──
   const ringOffset = useTransform(lp, [0, 0.65], [1, 0]);
@@ -300,7 +300,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   if (kind === "lock") {
     return (
-      <svg viewBox="0 0 48 48" className="w-12 h-12 md:w-14 md:h-14 overflow-visible" fill="none" aria-hidden>
+      <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
         <g transform="translate(24, 26)">
           {/* shackle — lifts when open, seats (down) as it locks */}
           <motion.path
@@ -326,35 +326,24 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
 
   if (kind === "cloud") {
     return (
-      <svg viewBox="0 0 48 48" className="w-14 h-12 md:w-16 md:h-14 overflow-visible" fill="none" aria-hidden>
-        {/* device anchor */}
-        <rect x="7" y="33" width="13" height="9" rx="2" fill="none" stroke={muted} strokeWidth={stroke} />
-        {/* dashed tether (access only) */}
+      <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
+        {/* a single, clean cloud — drifts down + fades in, centered */}
         <motion.path
-          d="M18 34 C 27 30, 31 25, 33 18"
+          d="M16 32 a8 8 0 0 1 1 -15.2 a9.5 9.5 0 0 1 18 2.6 a7 7 0 0 1 -1.2 12.6 Z"
+          fill="none"
           stroke={green}
-          strokeWidth="1.6"
-          strokeDasharray="2.5 3"
+          strokeWidth={stroke}
+          strokeLinejoin="round"
           strokeLinecap="round"
-          style={{ opacity: tetherOpacity }}
+          style={{ y: cloudY, scale: cloudScale, opacity: cloudOpacity }}
         />
-        {/* cloud arrives */}
-        <motion.g style={{ x: cloudX, opacity: cloudOpacity }}>
-          <path
-            d="M27 24 a6.5 6.5 0 0 1 1 -12.4 a8 8 0 0 1 15 2.1 a5.8 5.8 0 0 1 -1 10.3 Z"
-            fill="none"
-            stroke={green}
-            strokeWidth={stroke}
-            strokeLinejoin="round"
-          />
-        </motion.g>
       </svg>
     );
   }
 
   // CHECK
   return (
-    <svg viewBox="0 0 48 48" className="w-12 h-12 md:w-14 md:h-14 overflow-visible" fill="none" aria-hidden>
+    <svg viewBox="0 0 48 48" className="w-16 h-16 md:w-20 md:h-20 overflow-visible" fill="none" aria-hidden>
       <motion.circle
         cx="24" cy="24" r="16"
         fill="none"
