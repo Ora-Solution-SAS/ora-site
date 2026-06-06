@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { type LucideIcon } from "lucide-react";
-import { useLang } from "@/lib/i18n";
 
 /**
  * Bubble.io-style scrollytelling block.
@@ -36,7 +35,6 @@ type Props = {
 };
 
 function Visual({ feature }: { feature: ScrollyFeature }) {
-  const { t } = useLang();
   return (
     <div className="relative">
       {/* Main video card — the blue "depth layer" is now a soft blue glow
@@ -66,19 +64,10 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
             className="w-full aspect-[16/10] object-cover block"
           />
         ) : (
-          <div className="relative w-full aspect-[16/10] bg-gray-100 dark:bg-white/[0.03] flex items-center justify-center">
-            <div className="relative z-10 flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-white dark:bg-white/10 shadow-lg flex items-center justify-center cursor-pointer">
-                <svg className="w-6 h-6 text-blue-500 dark:text-blue-400 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
-              <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
-                {t({ fr: "Voir la démo", en: "Watch the demo" })}
-              </span>
-            </div>
+          // Empty placeholder — visual to be added later.
+          <div className="relative w-full aspect-[16/10] bg-gray-100 dark:bg-white/[0.03]">
             <div
-              className="absolute inset-0 opacity-60 dark:opacity-30"
+              className="absolute inset-0 opacity-50 dark:opacity-30"
               style={{ background: feature.grad }}
             />
           </div>

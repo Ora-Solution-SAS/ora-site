@@ -379,6 +379,10 @@ function AccordionCard({
       }`}
       style={{
         backgroundColor: isActive ? data.activeColor : INACTIVE_BG,
+        // Légère lueur bleue autour de chaque carte (inspirée du cadre Atlas)
+        // pour qu'elles ressortent mieux sur le fond noir.
+        boxShadow:
+          "0 18px 50px -12px rgba(56,189,248,0.30), 0 6px 22px -8px rgba(96,165,250,0.20)",
         willChange: "transform",
       }}
     >
@@ -391,25 +395,6 @@ function AccordionCard({
             "linear-gradient(to top, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 35%, transparent 100%)",
         }}
       />
-
-      {/* Optional preview image — shown when card is inactive (dark face),
-          fades out when the card becomes active and the mockup visual
-          takes over the bottom area. Sits between bg gradient and content. */}
-      {data.inactiveImage && (
-        <img
-          src={data.inactiveImage}
-          alt=""
-          aria-hidden
-          decoding="async"
-          loading="lazy"
-          className="ora-mockup-tr pointer-events-none select-none absolute inset-x-0 w-full object-contain object-bottom z-[5]"
-          style={{
-            opacity: isActive ? 0 : 1,
-            maxHeight: "78%",
-            bottom: data.inactiveImageBottom ?? "0",
-          }}
-        />
-      )}
 
       <div className="relative z-10 flex flex-col h-full p-6 md:p-7">
         {/* Brand mark + step tag */}
@@ -458,18 +443,14 @@ function AccordionCard({
           </div>
         )}
 
-        {/* Title — fixed moderate size in both states. Wraps naturally in
-            narrow inactive cards, reads well in expanded active card.
-            No JS animation = no reflow cost on hover. */}
+        {/* Title — fixed moderate size in both states. */}
         <h3
           className={`font-poppins font-light text-[1.35rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] ora-text-tr ${palette.title}`}
         >
           {data.title}
         </h3>
 
-        {/* Visual — ALWAYS mounted, opacity toggled via CSS. Avoids the
-            mount/unmount cost of AnimatePresence (which was the biggest
-            source of hover lag with the complex SVG mockups). */}
+        {/* Visual — ALWAYS mounted, opacity toggled via CSS. */}
         <div
           className="ora-mockup-tr mt-auto pt-6 flex items-center justify-center min-h-0 flex-1"
           style={{
@@ -736,7 +717,11 @@ export default function OraExperienceCarousel() {
             <div
               key={i}
               className="relative rounded-[24px] overflow-hidden p-6"
-              style={{ backgroundColor: card.activeColor }}
+              style={{
+                backgroundColor: card.activeColor,
+                boxShadow:
+                  "0 18px 50px -12px rgba(56,189,248,0.30), 0 6px 22px -8px rgba(96,165,250,0.20)",
+              }}
             >
               {/* Bottom white glow (same as desktop) */}
               <div

@@ -12,7 +12,7 @@ export default function NotFoundPage({ onNavigate }: NotFoundPageProps) {
   const { t } = useLang();
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#fcfbf7] dark:bg-[#111827]">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-[#ffffff] dark:bg-[#111827]">
       {/* Animated logo */}
       <OraLogoSpinner gradientId="g-404" />
 

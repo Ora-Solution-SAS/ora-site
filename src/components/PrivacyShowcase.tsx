@@ -14,7 +14,7 @@ import { useLang } from "@/lib/i18n";
  *
  * The section pins (position: sticky) for a tall scroll distance. As the user
  * scrolls down, three icon animations play ONE BY ONE above their cards:
- *   1. A padlock that locks (shackle seats + green glow)        → files stay local
+ *   1. A padlock that locks (shackle seats + blue accent)       → files stay local
  *   2. A cloud that arrives, tethered to the device (access only) → cloud for login
  *   3. A circle + checkmark that draws in (validated)            → GDPR compliant
  *
@@ -134,7 +134,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     },
   ];
 
-  const lockColor = dk ? "#34d399" : "#059669";
+  const lockColor = dk ? "#60a5fa" : "#2563eb";
 
   return (
     <section
@@ -157,8 +157,8 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
             <div
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] mb-6 border"
               style={{
-                borderColor: dk ? "rgba(16,185,129,0.3)" : "rgba(16,185,129,0.25)",
-                background: dk ? "rgba(16,185,129,0.1)" : "rgba(16,185,129,0.07)",
+                borderColor: dk ? "rgba(59,130,246,0.3)" : "rgba(59,130,246,0.25)",
+                background: dk ? "rgba(59,130,246,0.1)" : "rgba(59,130,246,0.07)",
                 color: lockColor,
               }}
             >
@@ -234,7 +234,7 @@ function PrivacyCard({
     [0.3, 0.9],
     [
       dk ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.08)",
-      dk ? "rgba(16,185,129,0.55)" : "rgba(16,185,129,0.5)",
+      dk ? "rgba(59,130,246,0.55)" : "rgba(59,130,246,0.5)",
     ],
   );
 
@@ -261,7 +261,7 @@ function PrivacyCard({
           {chips.map((chip) => (
             <span
               key={chip}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300 ring-1 ring-emerald-200/70 dark:ring-emerald-400/20"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 ring-1 ring-blue-200/70 dark:ring-blue-400/20"
             >
               <Check className="w-3 h-3" strokeWidth={3} />
               {chip}
@@ -279,15 +279,18 @@ function PrivacyCard({
 
 function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; dk: boolean }) {
   // Minimalist, modern-SaaS: thin monochrome outline strokes, no filled
-  // bodies, no glow. One accent green, one muted line color.
-  const green = dk ? "#34d399" : "#059669";
+  // bodies, no glow. One brand accent (blue), one muted line color.
+  const accent = dk ? "#60a5fa" : "#2563eb";
   const muted = dk ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.32)";
   const stroke = 2;
 
   // ── LOCK: shackle seats down as you scroll ──
   const shackleY = useTransform(lp, [0, 1], [-7, 0]);
-  // colour shifts from muted (open) to green (locked)
-  const lockColor = useTransform(lp, [0.55, 1], [muted, green]);
+  // colour shifts from muted (open) to brand blue (locked)
+  const lockColor = useTransform(lp, [0.55, 1], [muted, accent]);
+  // Fade the whole lock in (like the cloud / check) so it isn't already drawn
+  // at rest while the two other icons are still invisible.
+  const lockOpacity = useTransform(lp, [0, 0.22], [0, 1]);
 
   // ── CLOUD: arrives (drifts down + fades in) ──
   const cloudY = useTransform(lp, [0, 0.85], [-14, 0]);
@@ -301,7 +304,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
   if (kind === "lock") {
     return (
       <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
-        <g transform="translate(24, 26)">
+        <motion.g transform="translate(24, 26)" style={{ opacity: lockOpacity }}>
           {/* shackle — lifts when open, seats (down) as it locks */}
           <motion.path
             d="M-9 -2 V -9 a9 9 0 0 1 18 0 V -2"
@@ -310,7 +313,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
             strokeLinecap="round"
             style={{ y: shackleY }}
           />
-          {/* body outline (colour shifts to green when locked) */}
+          {/* body outline (colour shifts to brand blue when locked) */}
           <motion.rect
             x="-13" y="-2" width="26" height="20" rx="5"
             fill="none"
@@ -319,7 +322,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
           />
           {/* keyhole dot */}
           <motion.circle cx="0" cy="8" r="2.2" style={{ fill: lockColor }} />
-        </g>
+        </motion.g>
       </svg>
     );
   }
@@ -331,7 +334,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
         <motion.path
           d="M16 32 a8 8 0 0 1 1 -15.2 a9.5 9.5 0 0 1 18 2.6 a7 7 0 0 1 -1.2 12.6 Z"
           fill="none"
-          stroke={green}
+          stroke={accent}
           strokeWidth={stroke}
           strokeLinejoin="round"
           strokeLinecap="round"
@@ -347,7 +350,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
       <motion.circle
         cx="24" cy="24" r="16"
         fill="none"
-        stroke={green}
+        stroke={accent}
         strokeWidth={stroke}
         pathLength={1}
         strokeDasharray="1"
@@ -358,7 +361,7 @@ function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; 
       <motion.path
         d="M17 24.5 L22 29.5 L31.5 19"
         fill="none"
-        stroke={green}
+        stroke={accent}
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeLinejoin="round"

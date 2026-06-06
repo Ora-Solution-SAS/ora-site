@@ -402,7 +402,7 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
   }, []);
 
   /* ── Design tokens ─────────────────────────────────────────────── */
-  const bg             = dk ? "#111827" : "#fcfbf7";
+  const bg             = dk ? "#111827" : "#ffffff";
   const bgContrast     = dk ? "#0f172a" : "#ffffff";
   const textPrimary    = dk ? "text-white"    : "text-gray-900";
   const textSecondary  = dk ? "text-gray-400" : "text-gray-500";
