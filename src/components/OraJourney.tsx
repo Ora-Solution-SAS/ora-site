@@ -24,7 +24,7 @@ export default function OraJourney({ theme, openBooking }: OraJourneyProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fillRef = useRef<HTMLDivElement>(null);
 
-  const bg = dk ? "#111827" : "#fcfbf7";
+  const bg = dk ? "#111827" : "#ffffff";
   const railColor = dk ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.08)";
 
   // Trail draws as the timeline scrolls through the viewport.

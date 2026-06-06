@@ -15,6 +15,7 @@ import OraLogoSpinner from "./components/OraLogoSpinner";
 import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
 import QualifierResult from "./components/QualifierResult";
 import FeaturesScrolly from "./components/FeaturesScrolly";
+import ValueProps from "./components/ValueProps";
 import OraExperienceCarousel from "./components/OraExperienceCarousel";
 import AtlasShowcase from "./components/AtlasShowcase";
 import PrivacyShowcase from "./components/PrivacyShowcase";
@@ -842,7 +843,7 @@ const App = () => {
   return (
     <div
       className={`min-h-screen text-[#111827] dark:text-white transition-colors duration-300 ease-in-out ${theme === "light"
-        ? "bg-[#fcfbf7]"
+        ? "bg-[#ffffff]"
         : "bg-background"
         }`}
     >
@@ -892,7 +893,7 @@ const App = () => {
       <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         <div className="features-heading text-center mb-20 md:mb-28">
           <FadeInOnScroll direction="up">
-            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-medium tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
+            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-normal tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               {t({ fr: "Découvrez", en: "Meet" })}{" "}
               <span className="text-brand-gradient">Ora.</span>
             </h2>
@@ -906,6 +907,11 @@ const App = () => {
             </p>
           </FadeInOnScroll>
         </div>
+
+        {/* Value-props block — headline + benefit checklist + visual,
+            placed just below the "Meet Ora." heading. */}
+        <ValueProps />
+
         <FeaturesScrolly
           features={[
             {
@@ -920,7 +926,7 @@ const App = () => {
               }),
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
-              video: "/feature-automate-v2.mp4",
+              video: "/feature-automate-v3.mp4",
             },
             {
               tag: t({ fr: "Sur-mesure", en: "Tailored" }),
@@ -934,7 +940,6 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
-              image: "/feature-tailored.png",
             },
             {
               tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
@@ -948,6 +953,7 @@ const App = () => {
               }),
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
+              video: "/feature-secure.mp4",
             },
           ]}
         />
@@ -973,7 +979,7 @@ const App = () => {
           light-mode look so the bright pastel cards stay vivid against
           the dark background. Heading / subtitle / link colors are
           hardcoded here so they read against the dark bg. */}
-      <section className="py-24 md:py-36 px-6 md:px-12 bg-black overflow-x-hidden">
+      <section data-nav-dark className="py-24 md:py-36 px-6 md:px-12 bg-black overflow-x-hidden">
         {/* Heading + footer stay in max-w-6xl (text reads better narrower).
             The carousel itself breaks out to max-w-7xl so the 5 cards
             have proper room — symmetrically centered, never offset. */}
@@ -1013,7 +1019,7 @@ const App = () => {
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
        * ───────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 md:px-12 py-24 md:py-32 min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"

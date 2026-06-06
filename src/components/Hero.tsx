@@ -1,8 +1,78 @@
-import { forwardRef, useRef, useEffect, useState } from "react";
-import { ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { forwardRef, useRef, useEffect, useState, type ReactNode, type CSSProperties } from "react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
-import { useMotionValue, useTransform, motion } from "framer-motion";
+import { useMotionValue, useTransform, motion, type MotionValue } from "framer-motion";
 import { useLang } from "@/lib/i18n";
+
+/* ── Word-by-word scroll-reveal ──────────────────────────────────
+ *  A line whose words cascade in (blur + slide up), staggered, while
+ *  the user scrolls. Driven by the shared `progress` MotionValue so it
+ *  stays in lockstep with the scroll-lock. `range` = [in0, in1, out0, out1]:
+ *  words fade IN staggered across [in0, in1], then the whole line fades
+ *  OUT together across [out0, out1]. A keyword can be highlighted with the
+ *  brand gradient by matching its text in `gradientWords`. */
+function RevealWord({
+  progress, inStart, inEnd, outStart, outEnd, isGradient, children,
+}: {
+  progress: MotionValue<number>;
+  inStart: number; inEnd: number; outStart: number; outEnd: number;
+  isGradient: boolean; children: ReactNode;
+}) {
+  const opacity = useTransform(progress, [inStart, inEnd, outStart, outEnd], [0, 1, 1, 0]);
+  const y       = useTransform(progress, [inStart, inEnd], [26, 0]);
+  const blurPx  = useTransform(progress, [inStart, inEnd], [12, 0]);
+  const filter  = useTransform(blurPx, (b) => `blur(${b}px)`);
+  return (
+    <motion.span
+      className={`inline-block ${isGradient ? "text-brand-gradient" : ""}`}
+      style={{ opacity, y, filter, marginRight: "0.28em", willChange: "transform, opacity, filter" }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function RevealLine({
+  progress, range, text, gradientWords = [], className, style,
+}: {
+  progress: MotionValue<number>;
+  range: [number, number, number, number];
+  text: string;
+  gradientWords?: string[];
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const words = text.split(" ");
+  const [inS, inE, outS, outE] = range;
+  const span = inE - inS;
+  const total = words.length;
+  /* Each word's fade-in occupies a sub-window; windows overlap so the
+     cascade flows rather than stepping word-by-word. */
+  const per  = span * 0.55;
+  const step = total > 1 ? (span - per) / (total - 1) : 0;
+  const grad = gradientWords.map((g) => g.toLowerCase());
+  return (
+    <p className={className} style={style}>
+      {words.map((w, i) => {
+        const wInStart = inS + i * step;
+        const clean = w.replace(/[.,;:!?]/g, "").toLowerCase();
+        return (
+          <RevealWord
+            key={i}
+            progress={progress}
+            inStart={wInStart}
+            inEnd={wInStart + per}
+            outStart={outS}
+            outEnd={outE}
+            isGradient={grad.includes(clean)}
+          >
+            {w}
+          </RevealWord>
+        );
+      })}
+    </p>
+  );
+}
 
 /* ── CSS ─────────────────────────────────────────────────────── */
 const heroCSS = `
@@ -56,6 +126,33 @@ const heroCSS = `
 .browser-dot-red   { background: #ff5f57; }
 .browser-dot-amber { background: #febc2e; }
 .browser-dot-green { background: #28c840; }
+/* Living background for the scroll-reveal section — a slow drifting
+   blue/teal glow so the white space isn't dead behind the phrases. */
+@keyframes revealAuroraDrift {
+  0%   { transform: translate3d(-3%, -2%, 0) scale(1);    opacity: 0.8; }
+  50%  { transform: translate3d(3%, 2%, 0)  scale(1.08);  opacity: 1;   }
+  100% { transform: translate3d(-3%, -2%, 0) scale(1);    opacity: 0.8; }
+}
+.reveal-aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.reveal-aurora::before {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  background:
+    radial-gradient(38% 38% at 32% 36%, rgba(59,130,246,0.20), transparent 70%),
+    radial-gradient(42% 42% at 68% 64%, rgba(13,148,136,0.20), transparent 70%);
+  animation: revealAuroraDrift 16s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+.dark .reveal-aurora::before {
+  background:
+    radial-gradient(38% 38% at 32% 36%, rgba(59,130,246,0.28), transparent 70%),
+    radial-gradient(42% 42% at 68% 64%, rgba(45,212,191,0.26), transparent 70%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-aurora::before { animation: none; }
+}
+
 .browser-urlbar {
   flex: 1;
   height: 24px;
@@ -110,6 +207,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const [isMuted, setIsMuted] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const [isManuallyPaused, setIsManuallyPaused] = useState(false);
+    // The video plays once (no loop). When it finishes we surface a replay
+    // button instead of looping it back automatically.
+    const [hasEnded, setHasEnded] = useState(false);
 
     // Track visibility
     useEffect(() => {
@@ -130,7 +230,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       const video = videoRef.current;
       if (!video) return;
 
-      const shouldPlay = isVisible && !isManuallyPaused;
+      const shouldPlay = isVisible && !isManuallyPaused && !hasEnded;
 
       if (shouldPlay && video.paused) {
         video.muted = isMuted;
@@ -148,11 +248,26 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     // isMuted is intentionally excluded — toggleMute handles user-driven
     // mute changes directly on the element (no re-render needed).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isVisible, isManuallyPaused]);
+    }, [isVisible, isManuallyPaused, hasEnded]);
+
+    // Restart the video from the beginning (used by the replay button and by
+    // clicking the video once it has finished).
+    const replay = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.currentTime = 0;
+      setHasEnded(false);
+      setIsManuallyPaused(false);
+      video.play().catch(() => {});
+    };
 
     const togglePlayPause = () => {
       const video = videoRef.current;
       if (!video) return;
+      if (video.ended || hasEnded) {
+        replay();
+        return;
+      }
       if (video.paused) {
         setIsManuallyPaused(false);
         video.play().catch(() => {});
@@ -174,6 +289,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const revealProgress        = useMotionValue(0);
     const lockRef               = useRef<HTMLDivElement>(null);
     const isLockedRef           = useRef(false);
+    /* State mirror of isLockedRef — drives the on-screen "keep scrolling" hint
+       so the user understands the brief scroll capture is intentional. */
+    const [isLocked, setIsLocked] = useState(false);
     const hasTextCompletedRef   = useRef(false);
     /* overlay fixe pour la sortie du texte */
     const exitScrollStartRef    = useRef<number | null>(null);
@@ -184,23 +302,29 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const overlayEndY   = useRef(0);
     const overlayActive = useRef(false);
 
-    /* Line reveal — opacity + y.
-       Adjusted timings: lines 1 & 2 reveal faster, "Découvrez Ora." appears
-       earlier AND reaches peak size by 0.55. The exit phase starts
-       immediately at 0.55 (no hold) so the descent feels continuous. */
-    const l1o = useTransform(revealProgress, [0,    0.16], [0, 1]);
-    const l1y = useTransform(revealProgress, [0,    0.16], [28, 0]);
-    const l2o = useTransform(revealProgress, [0.14, 0.30], [0, 1]);
-    const l2y = useTransform(revealProgress, [0.14, 0.30], [28, 0]);
-    /* fade-in 0.28→0.42, immediate fade-out 0.55→0.56 (overlay takes over) */
-    const l3o = useTransform(revealProgress, [0.28, 0.42, 0.55, 0.56], [0, 1, 1, 0]);
+    /* Line reveal — diaporama : chaque phrase entre PUIS sort (fade + slide)
+       avant que la suivante n'arrive. Les trois sont superposées au centre,
+       donc une seule est visible à la fois (plus d'empilement).
+         • Ligne 1 : visible ~0.07 → 0.18, sort 0.18 → 0.25
+         • Ligne 2 : entre 0.27 → 0.34, sort 0.45 → 0.52
+         • Ligne 3 : entre 0.54 → 0.62, grandit, puis l'overlay prend le relais
+       Le "vol" de "Meet Ora." vers le titre Features démarre à EXIT_START (0.72). */
+    /* Lignes 1 & 2 : révélation mot par mot (voir <RevealLine>). Les fenêtres
+       [in0, in1, out0, out1] ne se chevauchent pas → une phrase à la fois. */
+    const LINE1_RANGE: [number, number, number, number] = [0.02, 0.22, 0.26, 0.32];
+    const LINE2_RANGE: [number, number, number, number] = [0.34, 0.50, 0.52, 0.58];
 
-    /* "Découvrez Ora." : grows → hits peak by 0.55 → overlay descends */
-    const l3Size    = useTransform(revealProgress, [0.40, 0.55], ["1.75rem", "3.75rem"]);
-    const l3Leading = useTransform(revealProgress, [0.40, 0.55], [1.5, 1.12]);
-    const l3Track   = useTransform(revealProgress, [0.40, 0.55], ["-0.025em", "-0.04em"]);
+    /* fade-in 0.54→0.62, immediate fade-out 0.72→0.73 (overlay takes over) */
+    const l3o = useTransform(revealProgress, [0.54, 0.62, 0.72, 0.73], [0, 1, 1, 0]);
+    const l3Blur = useTransform(revealProgress, [0.54, 0.62], [12, 0]);
+    const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
+
+    /* "Meet Ora." : grows → hits peak by EXIT_START (0.72) → overlay flies */
+    const l3Size    = useTransform(revealProgress, [0.56, 0.72], ["2.25rem", "3.75rem"]);
+    const l3Leading = useTransform(revealProgress, [0.56, 0.72], [1.5, 1.12]);
+    const l3Track   = useTransform(revealProgress, [0.56, 0.72], ["-0.025em", "-0.04em"]);
     /* slide-in uniquement — la sortie est gérée par l'overlay fixe */
-    const l3TotalY = useTransform(revealProgress, [0.28, 0.42], [28, 0]);
+    const l3TotalY = useTransform(revealProgress, [0.54, 0.62], [28, 0]);
 
     /* ─────────────────────────────────────────────────────────── *
      *  IntersectionObserver — text scroll-lock section            *
@@ -212,7 +336,15 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         ([entry]) => {
           if (entry.isIntersecting && !isLockedRef.current && !hasTextCompletedRef.current) {
             isLockedRef.current = true;
-            (window as any).__lenis?.stop();
+            setIsLocked(true);
+            const lenis = (window as any).__lenis;
+            lenis?.stop();
+            /* Recale la section pile en haut du viewport. Le seuil 0.9 fige le
+               scroll avec la section ~10% trop basse, ce qui décentre la phrase
+               (visible maintenant qu'une seule ligne est centrée à la fois). */
+            const top = el.getBoundingClientRect().top + window.scrollY;
+            if (lenis) lenis.scrollTo(top, { immediate: true, force: true });
+            else window.scrollTo(0, top);
           }
         },
         { threshold: 0.9 },
@@ -230,7 +362,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
      * ─────────────────────────────────────────────────────────── */
     useEffect(() => {
       const SPEED      = 4800;
-      const EXIT_START = 0.55;
+      const EXIT_START = 0.72;
       const EXIT_BOOST = 2;
       /* Lerp factor per frame — smooths the discrete wheel/touch input into
          a continuous, jank-free motion (lower = smoother, higher = snappier). */
@@ -240,6 +372,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
       const unlockText = () => {
         isLockedRef.current = false;
+        setIsLocked(false);
         (window as any).__lenis?.start();
       };
       /* Nettoie l'overlay et réinitialise les refs d'exit */
@@ -309,6 +442,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             ov.style.top = `${overlayStartY.current + (overlayEndY.current - overlayStartY.current) * ratio}px`;
             ov.style.fontSize = "3.75rem";
           }
+        } else if (overlayActive.current) {
+          /* On est repassé SOUS le seuil de sortie (l'utilisateur remonte) :
+             on masque l'overlay volant et on réinitialise la phase de sortie.
+             Sans ça, l'overlay fixe "Découvrez Ora." resterait affiché en même
+             temps que le texte en flux du même contenu → effet de dédoublement. */
+          cleanupExit();
         }
 
         if (next >= 1) {
@@ -414,7 +553,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         >
           {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-[#fcfbf7] dark:bg-[#111827]" />
+            <div className="absolute inset-0 bg-white dark:bg-[#111827]" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
             <div className="absolute top-1/2 -left-20 w-[600px] h-[600px] rounded-full"
@@ -437,14 +576,14 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               <div className="hero-stagger hero-d3 mt-9 flex flex-wrap items-center justify-center gap-3.5">
                 <button
                   onClick={openBooking}
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
                   {t({ fr: "Réserver un appel", en: "Book a call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
                 <button
                   onClick={() => scrollToSection("demo-preview")}
-                  className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.06] hover:border-gray-400 dark:hover:border-white/30 shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
+                  className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
                 >
                   {t({ fr: "Voir la démo", en: "Watch the demo" })}
                 </button>
@@ -452,7 +591,8 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
             </div>
 
             {/* ── Browser frame ──────────────────────────────────
-                Autoplays muted+loop, no scroll lock. The user can
+                Autoplays muted, plays once (no loop), no scroll lock.
+                When it finishes, a replay button appears. The user can
                 scroll past freely. The "Voir la démo" button above
                 just smooth-scrolls to this section.               */}
             <div
@@ -470,7 +610,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     <div className="browser-dot browser-dot-amber" />
                     <div className="browser-dot browser-dot-green" />
                   </div>
-                  <div className="browser-urlbar">app.ora.io</div>
+                  <div className="browser-urlbar">ora-solution.com</div>
                   <div style={{ width: 56 }} />
                 </div>
 
@@ -479,10 +619,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     ref={videoRef}
                     src="/ora-1.mp4"
                     muted={isMuted}
-                    loop
                     playsInline
                     preload="auto"
                     onClick={togglePlayPause}
+                    onEnded={() => setHasEnded(true)}
                     className="w-full aspect-[16/9] object-cover block cursor-pointer"
                     onLoadedMetadata={(e) => {
                       e.currentTarget.playbackRate = 1.0;
@@ -492,20 +632,38 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     }}
                   />
 
-                  {/* Mute / unmute toggle — top right */}
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
-                    aria-pressed={!isMuted}
-                    className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
-                  </button>
+                  {/* Mute / unmute toggle — top right (hidden once ended) */}
+                  {!hasEnded && (
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
+                      aria-pressed={!isMuted}
+                      className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
+
+                  {/* Replay overlay — shown when the video has played through.
+                      No auto-loop: the user explicitly chooses to replay. */}
+                  {hasEnded && (
+                    <button
+                      type="button"
+                      onClick={replay}
+                      aria-label={t({ fr: "Revoir la vidéo", en: "Replay the video" })}
+                      className="absolute inset-0 z-10 flex items-center justify-center bg-black/35 backdrop-blur-[1px] transition-opacity duration-200"
+                    >
+                      <span className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-black/65 text-white text-[15px] font-semibold font-inter shadow-lg ring-1 ring-white/20 hover:bg-black/80 transition-all duration-150">
+                        <RotateCcw className="w-4 h-4" />
+                        {t({ fr: "Revoir la vidéo", en: "Replay" })}
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -519,69 +677,93 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           {/* ═══ SECTION 2A — texte piloté par scroll-lock ═══ */}
           <div
             ref={lockRef}
-            className="relative z-[20] min-h-screen flex items-center justify-center bg-[#fcfbf7] dark:bg-[#111827]"
+            className="relative z-[20] min-h-screen flex items-center justify-center bg-white dark:bg-[#111827] overflow-hidden"
           >
-            <div className="w-full max-w-3xl mx-auto px-6 lg:px-10 text-center flex flex-col gap-7">
+            {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
+            <div className="reveal-aurora" aria-hidden />
 
-              {/* Ligne 1 */}
-              <motion.p
-                className="font-poppins font-medium text-[#111827] dark:text-white"
-                style={{
-                  opacity: l1o,
-                  y: l1y,
-                  fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)",
-                  lineHeight: 1.5,
-                  letterSpacing: "-0.025em",
-                }}
-              >
-                {t({
-                  fr: "Votre temps est votre actif le plus précieux.",
-                  en: "Your time is your most valuable asset.",
-                })}
-              </motion.p>
+            {/* Les 3 lignes sont superposées (absolute inset-0) et centrées :
+                une seule visible à la fois → effet diaporama, pas d'empilement. */}
+            <div className="relative z-10 w-full max-w-4xl mx-auto px-6 lg:px-10 text-center h-[42vh] min-h-[220px] flex items-center justify-center">
 
-              {/* Ligne 2 */}
-              <motion.p
-                className="font-poppins font-medium text-[#111827] dark:text-white"
-                style={{
-                  opacity: l2o,
-                  y: l2y,
-                  fontSize: "clamp(1.4rem, 2.5vw, 1.85rem)",
-                  lineHeight: 1.5,
-                  letterSpacing: "-0.025em",
-                }}
-              >
-                {t({
-                  fr: "Cessez de le gaspiller sur Excel.",
-                  en: "Stop wasting it on Excel.",
-                })}
-              </motion.p>
+              {/* Ligne 1 — révélation mot par mot */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <RevealLine
+                  progress={revealProgress}
+                  range={LINE1_RANGE}
+                  className="font-poppins font-normal text-[#111827] dark:text-white"
+                  style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.75rem)", lineHeight: 1.4, letterSpacing: "-0.025em" }}
+                  gradientWords={["temps", "time"]}
+                  text={t({
+                    fr: "Votre temps est votre actif le plus précieux.",
+                    en: "Your time is your most valuable asset.",
+                  })}
+                />
+              </div>
 
-              {/* Ligne 3 — grandit puis l'overlay fixe prend le relais pour rejoindre le H2 */}
-              <motion.p
-                ref={l3Ref}
-                className="font-poppins font-medium"
-                style={{
-                  opacity: l3o,
-                  y: l3TotalY,
-                  fontSize: l3Size,
-                  lineHeight: l3Leading,
-                  letterSpacing: l3Track,
-                }}
+              {/* Ligne 2 — révélation mot par mot */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <RevealLine
+                  progress={revealProgress}
+                  range={LINE2_RANGE}
+                  className="font-poppins font-normal text-[#111827] dark:text-white"
+                  style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.75rem)", lineHeight: 1.4, letterSpacing: "-0.025em" }}
+                  gradientWords={["Excel"]}
+                  text={t({
+                    fr: "Cessez de le gaspiller sur Excel.",
+                    en: "Stop wasting it on Excel.",
+                  })}
+                />
+              </div>
+
+              {/* Ligne 3 — grandit puis l'overlay fixe prend le relais pour rejoindre le H2.
+                  Le <p> reste inline-block (tight) pour que le calcul de vol soit exact. */}
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ opacity: l3o, y: l3TotalY, filter: l3Filter }}
               >
-                <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
-                <span className="text-brand-gradient">Ora.</span>
-              </motion.p>
+                <motion.p
+                  ref={l3Ref}
+                  className="inline-block font-poppins font-normal whitespace-nowrap"
+                  style={{ fontSize: l3Size, lineHeight: l3Leading, letterSpacing: l3Track }}
+                >
+                  <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
+                  <span className="text-brand-gradient">Ora.</span>
+                </motion.p>
+              </motion.div>
 
             </div>
           </div>
 
         </section>
 
+        {/* ── Indication de scroll pendant le verrouillage du texte ──────────
+            Pendant la révélation pilotée par scroll, la page capte brièvement
+            la molette. Ce repère discret (chevron qui rebondit + libellé) montre
+            que le défilement n'est pas bloqué : il suffit de continuer. */}
+        {isLocked && (
+          <motion.div
+            className="fixed bottom-7 left-1/2 z-[60] -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <span className="text-[12px] font-inter font-medium tracking-wide text-gray-400 dark:text-gray-500">
+              {t({ fr: "Continuez à faire défiler", en: "Keep scrolling" })}
+            </span>
+            <motion.div
+              animate={{ y: [0, 7, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            </motion.div>
+          </motion.div>
+        )}
+
         {/* ── Overlay fixe : "Découvrez Ora." en vol vers le titre de #features ── */}
         <div
           ref={overlayRef}
-          className="fixed left-1/2 z-[200] pointer-events-none font-poppins font-medium"
+          className="fixed left-1/2 z-[200] pointer-events-none font-poppins font-normal"
           style={{
             display: "none",
             transform: "translateX(-50%)",

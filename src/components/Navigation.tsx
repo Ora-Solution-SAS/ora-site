@@ -70,6 +70,9 @@ const Navigation: React.FC<NavigationProps> = ({
   onNavigate,
 }) => {
   const [scrolled, setScrolled] = useState(false);
+  // True when the banner overlaps a dark section (Atlas / Ora experience) —
+  // drives the immersive "black nav" appearance.
+  const [overDark, setOverDark] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menuValue, setMenuValue] = useState("");
   const { t, lang, setLang } = useLang();
@@ -109,18 +112,32 @@ const Navigation: React.FC<NavigationProps> = ({
 
   useEffect(() => {
     let rafId = 0;
+    // Mid-nav line (the bar is 68px tall) used to test which section sits
+    // under the banner.
+    const NAV_LINE = 34;
     const onScroll = () => {
       if (rafId) return;
       rafId = requestAnimationFrame(() => {
         rafId = 0;
         setScrolled(window.scrollY > 12);
+        // Immersion: when a section flagged [data-nav-dark] (the dark Atlas /
+        // Ora-experience areas) sits under the banner, switch the nav to a
+        // dark "on-black" look so it blends into the atmosphere.
+        let dark = false;
+        document.querySelectorAll<HTMLElement>("[data-nav-dark]").forEach((el) => {
+          const r = el.getBoundingClientRect();
+          if (r.top <= NAV_LINE && r.bottom >= NAV_LINE) dark = true;
+        });
+        setOverDark(dark);
       });
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
     };
   }, []);
 
@@ -134,8 +151,10 @@ const Navigation: React.FC<NavigationProps> = ({
     <header
       className={cn(
         "fixed top-0 inset-x-0 z-50 transition-all duration-300",
-        scrolled
-          ? "bg-[#fcfbf7]/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+        overDark
+          ? "bg-black/70 backdrop-blur-md border-b border-white/10"
+          : scrolled
+          ? "bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
           : "bg-transparent"
       )}
     >
@@ -158,7 +177,7 @@ const Navigation: React.FC<NavigationProps> = ({
             aria-label={t({ fr: "Ora, Accueil", en: "Ora, Home" })}
           >
             <img
-              src={theme === "dark" ? "/logos/logo-color-light.png" : "/logos/logo-color-dark.png"}
+              src={(theme === "dark" || overDark) ? "/logos/logo-color-light.png" : "/logos/logo-color-dark.png"}
               alt="Ora"
               className="h-9 w-auto"
             />
@@ -170,7 +189,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
               {/* Solutions */}
               <NavigationMenuItem value="solutions">
-                <NavigationMenuTrigger>{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
+                <NavigationMenuTrigger className={overDark ? "text-white/85 hover:text-white hover:bg-white/10" : undefined}>{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="w-72 p-2">
                     {solutionsLinks.map((item) => (
@@ -198,19 +217,29 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Language toggle */}
           <button
             onClick={() => setLang(lang === "fr" ? "en" : "fr")}
-            className="h-9 px-3 rounded-full flex items-center justify-center text-[12px] font-semibold tracking-wide text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors"
+            className={cn(
+              "h-9 px-3 rounded-full flex items-center justify-center text-[12px] font-semibold tracking-wide transition-colors",
+              overDark
+                ? "text-white/70 hover:text-white hover:bg-white/10"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
+            )}
             aria-label={t({ fr: "Changer de langue", en: "Change language" })}
             title={lang === "fr" ? "Switch to English" : "Passer en français"}
           >
-            <span className={cn("transition-opacity", lang === "fr" ? "text-gray-900 dark:text-white" : "opacity-60")}>FR</span>
+            <span className={cn("transition-opacity", lang === "fr" ? (overDark ? "text-white" : "text-gray-900 dark:text-white") : "opacity-60")}>FR</span>
             <span className="mx-1 opacity-40">/</span>
-            <span className={cn("transition-opacity", lang === "en" ? "text-gray-900 dark:text-white" : "opacity-60")}>EN</span>
+            <span className={cn("transition-opacity", lang === "en" ? (overDark ? "text-white" : "text-gray-900 dark:text-white") : "opacity-60")}>EN</span>
           </button>
 
           {/* Theme toggle */}
           <button
             onClick={onToggleTheme}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors"
+            className={cn(
+              "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+              overDark
+                ? "text-white/70 hover:text-white hover:bg-white/10"
+                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
+            )}
             aria-label={t({ fr: "Basculer le thème", en: "Toggle theme" })}
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -219,7 +248,7 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
-            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
           </button>
@@ -227,7 +256,12 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08] transition-colors"
+            className={cn(
+              "md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+              overDark
+                ? "text-white/80 hover:text-white hover:bg-white/10"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
+            )}
             aria-label="Menu"
             aria-expanded={mobileOpen}
           >
@@ -238,7 +272,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* ── Mobile menu ─────────────────────────────────── */}
       {mobileOpen && typeof window !== "undefined" && createPortal(
-        <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#fcfbf7]/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
+        <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
           <div className="px-6 py-4 flex flex-col gap-1">
 
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>
@@ -252,7 +286,7 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="mt-4 flex flex-col gap-2">
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
-                className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_14px_rgba(59,130,246,0.22)]"
+                className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_14px_rgba(59,130,246,0.22)] transition-colors duration-150"
               >
                 {t({ fr: "Réserver un appel", en: "Book a call" })}
               </button>

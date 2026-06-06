@@ -211,7 +211,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
   }, []);
 
   const dk = theme === "dark";
-  const bg = dk ? "#111827" : "#fcfbf7";
+  const bg = dk ? "#111827" : "#ffffff";
   const bgContrast = dk ? "#0f172a" : "#ffffff";
 
   return (

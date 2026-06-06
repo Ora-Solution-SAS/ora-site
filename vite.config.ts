@@ -7,6 +7,12 @@ import path from 'path'
 // so browser refresh on any path works without extra config.
 export default defineConfig({
   plugins: [react()],
+  // Bind on all interfaces (IPv4 + IPv6) so the dev server is reachable via
+  // both localhost and 127.0.0.1 from any local browser.
+  server: {
+    host: true,
+    port: 5173,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
