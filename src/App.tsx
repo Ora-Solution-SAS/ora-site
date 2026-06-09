@@ -18,6 +18,7 @@ import FeaturesScrolly from "./components/FeaturesScrolly";
 import ValueProps from "./components/ValueProps";
 import OraExperienceCarousel from "./components/OraExperienceCarousel";
 import AtlasShowcase from "./components/AtlasShowcase";
+import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
@@ -926,7 +927,9 @@ const App = () => {
               }),
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
-              video: "/feature-automate-v3.mp4",
+              video: "/ora_story3.mp4",
+              // 1280×640 source → 2:1 box so it fills with no black bars / no crop.
+              ratio: "2 / 1",
             },
             {
               tag: t({ fr: "Sur-mesure", en: "Tailored" }),
@@ -975,21 +978,20 @@ const App = () => {
       <AtlasShowcase />
 
       {/* ── L'EXPÉRIENCE ORA ────────────────────────────────────────── */}
-      {/* Permanently dark section bg, but the carousel inside keeps its
-          light-mode look so the bright pastel cards stay vivid against
-          the dark background. Heading / subtitle / link colors are
-          hardcoded here so they read against the dark bg. */}
-      <section data-nav-dark className="py-24 md:py-36 px-6 md:px-12 bg-black overflow-x-hidden">
+      {/* Light section: cards rest on a soft "bleu très clair" and turn
+          cobalt on hover, so the surrounding bg stays light (warm off-white
+          in light mode, #111827 in dark mode) instead of the old pure black. */}
+      <section className="py-24 md:py-36 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827] overflow-x-hidden">
         {/* Heading + footer stay in max-w-6xl (text reads better narrower).
             The carousel itself breaks out to max-w-7xl so the 5 cards
             have proper room — symmetrically centered, never offset. */}
         <div className="max-w-6xl mx-auto">
           <FadeInOnScroll>
             <div className="text-center mb-16">
-              <h2 className="font-poppins font-medium tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-white">
+              <h2 className="font-poppins font-medium tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
                 {t({ fr: "L'expérience", en: "The" })} <span className="text-brand-gradient">{t({ fr: "Ora.", en: "Ora experience." })}</span>
               </h2>
-              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-300">
+              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-500 dark:text-gray-400">
                 {t({
                   fr: "Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.",
                   en: "Up and running in under a week. We set everything up for you, without disrupting your current workflow.",
@@ -1009,6 +1011,11 @@ const App = () => {
 
         {/* "Découvrir l'expérience Ora" link hidden until the page goes live. */}
       </section>
+
+      {/* ── INDUSTRIES ───────────────────────────────────────────────── */}
+      {/* Pick a field → see concrete automation examples → jump to the
+          dedicated solution page. */}
+      <IndustrySelector theme={theme} onNavigate={navigateTo} />
 
       {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
       {/* Scroll-driven animated stage (padlock locks, cloud arrives) +

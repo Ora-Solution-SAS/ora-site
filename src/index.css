@@ -142,14 +142,11 @@
    font-family: "Inter", system-ui, -apple-system, sans-serif;
  }
 
- /* Brand gradient utilities */
+ /* Brand accent — solid blue (unified emphasis colour across the whole site).
+    Kept the class name for compatibility with existing usages; it now renders
+    a flat brand blue instead of a gradient for a cleaner, more consistent look. */
  .text-brand-gradient {
-   background: linear-gradient(to right, #3b82f6, #0d9488);
-   -webkit-background-clip: text;
-   -webkit-text-fill-color: transparent;
-   background-clip: text;
-   /* Prevent descenders (g, j, p…) from being clipped by the background-clip area */
-   padding-bottom: 0.15em;
+   color: #3b82f6;
  }
 
  .bg-brand-gradient {
@@ -230,7 +227,7 @@
    }
  }
 
- /* Titre statique #features masqué pendant l'animation de sortie du Hero */
+ /* Static #features heading hidden while the Hero "Meet Ora." overlay flies in */
  .features-heading {
    transition: opacity 0.35s ease;
  }

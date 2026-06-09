@@ -1,11 +1,10 @@
 import { useLang } from "@/lib/i18n";
 
 /**
- * Value-props block — headline statement with two highlighted phrases, a
- * two-column benefit checklist (rows separated by thin rules), and a visual
- * card on the right. Layout inspired by modern agency landing pages, adapted
- * to Ora's content. Rendered as a plain block so it nests inside the Features
- * section, just below the "Meet Ora." heading.
+ * Value-props block — a longer, lighter headline with two highlighted phrases,
+ * a two-column benefit checklist (rows separated by thin rules), and a product
+ * mockup floating on a soft panel to the right. Clean two-column composition
+ * (text ↔ image), inspired by modern agency landing pages.
  */
 export default function ValueProps() {
   const { t } = useLang();
@@ -25,10 +24,10 @@ export default function ValueProps() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[0.82fr_1.18fr] gap-12 lg:gap-16 items-start py-16 md:py-24">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-stretch py-16 md:py-24">
       {/* LEFT — headline + benefit checklist */}
       <div>
-        <h3 className="font-poppins font-medium text-[1.9rem] md:text-[2.6rem] leading-[1.18] tracking-[-0.03em] text-[#111827] dark:text-white">
+        <h3 className="font-poppins font-normal text-[1.7rem] md:text-[2.15rem] leading-[1.22] tracking-[-0.02em] text-[#111827] dark:text-white">
           {t({ fr: "Nous pensons qu'une ", en: "We believe " })}
           <span className="text-[#3b82f6]">
             {t({ fr: "automatisation puissante", en: "powerful automation" })}
@@ -42,13 +41,13 @@ export default function ValueProps() {
           </span>
         </h3>
 
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
           {columns.map((col, ci) => (
             <ul key={ci} className="flex flex-col">
               {col.map((item) => (
                 <li
                   key={item}
-                  className="font-inter text-[15px] md:text-base text-gray-700 dark:text-gray-300 py-4 border-b border-gray-200 dark:border-white/10"
+                  className="font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-200 dark:border-white/10"
                 >
                   {item}
                 </li>
@@ -58,21 +57,23 @@ export default function ValueProps() {
         </div>
       </div>
 
-      {/* RIGHT — product mockup (Excel + Ora automations). */}
+      {/* RIGHT — mockup, height matched EXACTLY to the left column (top + bottom
+          aligned). object-cover trims a little blue top/bottom if needed. On
+          mobile (single column) it falls back to its natural height. */}
       <div
-        className="relative rounded-[28px] overflow-hidden w-full"
+        className="relative w-full rounded-[24px] overflow-hidden aspect-[4/3] lg:aspect-auto"
         style={{
           boxShadow:
-            "0 24px 70px -20px rgba(59,130,246,0.30), 0 8px 30px -10px rgba(13,148,136,0.18)",
+            "0 24px 70px -22px rgba(59,130,246,0.28), 0 8px 30px -12px rgba(13,148,136,0.15)",
         }}
       >
         <img
-          src="/value-automation-v3.png"
+          src="/value-automation-v11.png"
           alt={t({
             fr: "Interface Ora : automatisations Excel disponibles",
             en: "Ora interface: available Excel automations",
           })}
-          className="w-full h-auto block"
+          className="absolute inset-0 w-full h-full object-cover object-center"
           loading="lazy"
           decoding="async"
         />

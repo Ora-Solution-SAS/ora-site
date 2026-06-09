@@ -295,6 +295,46 @@ export default function AtlasShowcase() {
             </div>
           </div>
         </motion.div>
+
+        {/* Explanatory paragraph below the main mockup — gives Atlas more
+            context than the headline alone. */}
+        <motion.div
+          className="max-w-3xl mx-auto mt-20 md:mt-28 text-center"
+          variants={fadeInUp}
+        >
+          <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
+            {t({
+              fr: "Tous vos fichiers, enfin sous contrôle",
+              en: "Every file, finally under control",
+            })}
+          </h3>
+          <p className="mt-5 font-inter text-[15px] md:text-base leading-[1.75] text-gray-300">
+            {t({
+              fr: "Atlas cartographie l'ensemble de vos fichiers Excel en une carte vivante. Chaque dossier devient une planète, chaque rapport une étoile. Vous retrouvez n'importe quel fichier en quelques secondes, vous suivez l'avancement de vos équipes en temps réel, et vous gardez une vue d'ensemble claire sur toute votre activité, sans jamais quitter votre environnement de travail.",
+              en: "Atlas maps every one of your Excel files into a single living map. Each folder becomes a planet, each report a star. Find any file in seconds, follow your teams' progress in real time, and keep a clear bird's-eye view of your whole operation, without ever leaving your working environment.",
+            })}
+          </p>
+        </motion.div>
+
+        {/* Placeholder for the Atlas detail visual the client will provide.
+            TODO(client image): replace this block with the supplied image /
+            image layout, e.g. <img src="/atlas-detail.png" ... />. */}
+        <motion.div
+          className="max-w-4xl mx-auto mt-10 md:mt-12"
+          variants={fadeInUp}
+        >
+          <div
+            className="rounded-3xl border border-dashed border-white/15 flex items-center justify-center aspect-[16/7]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(186,230,253,0.06), rgba(147,197,253,0.04))",
+            }}
+          >
+            <span className="font-inter text-[13px] text-white/35">
+              {t({ fr: "Visuel Atlas à venir", en: "Atlas visual coming soon" })}
+            </span>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   );
