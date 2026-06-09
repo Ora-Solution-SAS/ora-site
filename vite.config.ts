@@ -11,7 +11,9 @@ export default defineConfig({
   // both localhost and 127.0.0.1 from any local browser.
   server: {
     host: true,
-    port: 5173,
+    // Honor the PORT env var when set (e.g. by the preview harness); fall
+    // back to 5173 for a normal `npm run dev`.
+    port: Number(process.env.PORT) || 5173,
   },
   resolve: {
     alias: {

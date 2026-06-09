@@ -28,7 +28,14 @@ export type ScrollyFeature = {
   image?: string;
   /** CSS gradient for the placeholder (when no video/image). */
   grad: string;
+  /** Optional CSS aspect-ratio for this feature's visual box (e.g. "2 / 1").
+   *  Lets a video with a non-standard ratio fill its frame with no black
+   *  letterbox bars and no side-cropping. Defaults to "16 / 10". */
+  ratio?: string;
 };
+
+/** Default aspect ratio for a feature visual box when none is specified. */
+const DEFAULT_RATIO = "16 / 10";
 
 type Props = {
   features: ScrollyFeature[];
@@ -55,17 +62,22 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
             loop
             muted
             playsInline
-            className="w-full aspect-[16/10] object-cover block"
+            className="w-full object-cover block"
+            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
           />
         ) : feature.image ? (
           <img
             src={feature.image}
             alt={feature.title}
-            className="w-full aspect-[16/10] object-cover block"
+            className="w-full object-cover block"
+            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
           />
         ) : (
           // Empty placeholder — visual to be added later.
-          <div className="relative w-full aspect-[16/10] bg-gray-100 dark:bg-white/[0.03]">
+          <div
+            className="relative w-full bg-gray-100 dark:bg-white/[0.03]"
+            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
+          >
             <div
               className="absolute inset-0 opacity-50 dark:opacity-30"
               style={{ background: feature.grad }}
@@ -220,7 +232,10 @@ export default function FeaturesScrolly({ features }: Props) {
           <div className="sticky top-24 h-[calc(100vh-8rem)] max-h-[780px] flex items-center">
             <div
               className="relative w-full"
-              style={{ aspectRatio: "16 / 10" }}
+              style={{
+                aspectRatio: features[activeIdx]?.ratio ?? DEFAULT_RATIO,
+                transition: "aspect-ratio 450ms cubic-bezier(0.22, 1, 0.36, 1)",
+              }}
             >
               {features.map((feat, i) => {
                 const isActive = i === activeIdx;

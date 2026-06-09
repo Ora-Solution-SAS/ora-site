@@ -323,8 +323,10 @@ type CardData = {
   visual: ReactNode;
 };
 
-// Dark color shared by every card at rest (inactive).
-const INACTIVE_BG = "#0a0a0a";
+// Very light blue shared by every card at rest (inactive). Cards no longer
+// sit on black — they rest on a soft "bleu très clair" and only turn cobalt
+// on hover/active.
+const INACTIVE_BG = "#e8f1ff";
 
 // Color every card animates to on hover/active — the Ora audit cobalt blue.
 const ACTIVE_BG = "#3457E8";
@@ -346,14 +348,15 @@ function AccordionCard({
   /** CSS class that applies the ambient horizontal drift keyframe animation. */
   driftClass: string;
 }) {
-  // When inactive, force the "light" palette (white text on dark bg).
-  // When active, follow the card's darkText flag.
-  const useDarkText = isActive && data.darkText;
-  const palette = useDarkText
+  // Cards rest on a very light blue and animate to cobalt on hover/active.
+  //   - At rest (light blue)  → dark text + dark icon.
+  //   - Active (cobalt blue)  → white text + light icon.
+  const onLight = !isActive;
+  const palette = onLight
     ? {
         logo: "/logos/icon-dark.png",
         wordmark: "text-gray-900",
-        suffix: "text-gray-700",
+        suffix: "text-gray-600",
         tag: "text-gray-500",
         title: "text-gray-900",
       }
@@ -375,14 +378,14 @@ function AccordionCard({
       onMouseEnter={onActivate}
       onFocus={onActivate}
       className={`ora-card-tr relative rounded-[28px] overflow-hidden text-left h-[640px] min-w-0 cursor-pointer ${driftClass} ${
-        isActive ? "" : "ring-1 ring-white/[0.06]"
+        isActive ? "" : "ring-1 ring-[#3457E8]/15"
       }`}
       style={{
         backgroundColor: isActive ? data.activeColor : INACTIVE_BG,
-        // Légère lueur bleue autour de chaque carte (inspirée du cadre Atlas)
-        // pour qu'elles ressortent mieux sur le fond noir.
+        // Ombre douce et teintée cobalt — assez subtile pour les cartes
+        // claires au repos, sans halo agressif comme sur l'ancien fond noir.
         boxShadow:
-          "0 18px 50px -12px rgba(56,189,248,0.30), 0 6px 22px -8px rgba(96,165,250,0.20)",
+          "0 14px 40px -16px rgba(52,87,232,0.25), 0 4px 14px -8px rgba(52,87,232,0.12)",
         willChange: "transform",
       }}
     >
@@ -431,7 +434,7 @@ function AccordionCard({
         {data.subBadge && (
           <div
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border self-start mb-4 ora-text-tr ${
-              useDarkText
+              onLight
                 ? "border-gray-900/15 bg-gray-900/[0.06] text-gray-700"
                 : "border-white/15 bg-white/[0.08] text-white/85"
             }`}
