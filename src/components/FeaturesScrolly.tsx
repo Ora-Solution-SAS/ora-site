@@ -32,6 +32,10 @@ export type ScrollyFeature = {
    *  Lets a video with a non-standard ratio fill its frame with no black
    *  letterbox bars and no side-cropping. Defaults to "16 / 10". */
   ratio?: string;
+  /** Optional CSS object-position for the media (e.g. "left", "center").
+   *  Useful when the box is narrower than the source: anchors which side
+   *  stays in view while object-cover trims the rest. Defaults to "center". */
+  objectPosition?: string;
 };
 
 /** Default aspect ratio for a feature visual box when none is specified. */
@@ -63,14 +67,20 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
             muted
             playsInline
             className="w-full object-cover block"
-            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
+            style={{
+              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
+              objectPosition: feature.objectPosition ?? "center",
+            }}
           />
         ) : feature.image ? (
           <img
             src={feature.image}
             alt={feature.title}
             className="w-full object-cover block"
-            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
+            style={{
+              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
+              objectPosition: feature.objectPosition ?? "center",
+            }}
           />
         ) : (
           // Empty placeholder — visual to be added later.

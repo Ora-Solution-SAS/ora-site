@@ -944,8 +944,12 @@ const App = () => {
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
               video: "/ora_engineering.mp4",
-              // 1280×640 source → 2:1 box so it fills with no black bars / no crop.
-              ratio: "2 / 1",
+              // 1280×640 source, but the app window sits on the left with empty
+              // blue space on the right. Use a narrower 16:9 box + left anchor so
+              // the window fills the frame and the dead blue is trimmed (the
+              // window stays fully visible).
+              ratio: "16 / 9",
+              objectPosition: "left",
             },
             {
               tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
