@@ -943,6 +943,9 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+              video: "/ora_engineering.mp4",
+              // 1280×640 source → 2:1 box so it fills with no black bars / no crop.
+              ratio: "2 / 1",
             },
             {
               tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
