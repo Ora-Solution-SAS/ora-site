@@ -37,7 +37,7 @@ export function AnimatedHeroTitle() {
   }, [titleNumber, titles]);
 
   return (
-    <h1 className="hero-stagger hero-d1 font-poppins text-[clamp(2.2rem,5.5vw,4rem)] font-normal leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center">
+    <h1 className="hero-stagger hero-d1 font-poppins text-[clamp(1.4rem,6vw,2.2rem)] md:text-[clamp(2.2rem,5.5vw,4rem)] font-normal leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center">
       <span className="block">{t({ fr: "Plus jamais de", en: "No more" })}</span>
       <span className="block relative pb-3" style={{ clipPath: "inset(0 -9999px)" }}>
         <AnimatePresence mode="wait">

@@ -10,7 +10,9 @@ import SolutionFondsInvestissementPage from "./pages/SolutionFondsInvestissement
 import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import PricingPage from "./pages/PricingPage";
+import MentionsLegalesPage from "./pages/MentionsLegalesPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
 import QualifierResult from "./components/QualifierResult";
@@ -510,6 +512,9 @@ import {
 // Example: "raphael-gaugain/discovery-call"
 const CAL_LINK = "raphael-gaugain-cfjl0b/discovery-call";
 
+// Direct booking / contact email shown as an alternative to the calendar.
+const BOOKING_EMAIL = "raphael.gaugain@ora-solution.com";
+
 // === Scroll Fade-In Wrapper ===
 type FadeInOnScrollProps = {
   children: ReactNode;
@@ -590,6 +595,7 @@ type Page =
   | "solution-banque-affaires"
   | "confidentialite"
   | "pricing"
+  | "mentions-legales"
   | "not-found";
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -603,6 +609,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "solution-banque-affaires": "/solution-banque-affaires",
   "confidentialite": "/confidentialite",
   "pricing": "/pricing",
+  "mentions-legales": "/mentions-legales",
   "not-found": "/not-found",
 };
 
@@ -760,6 +767,53 @@ const App = () => {
     }
   };
 
+  // ── Nav ribbon → homepage sections (animated scroll, no hard redirect) ────
+  // Two events flow in:
+  //   • `ora:goto-industry` {id}  — Solutions menu: select a branch + scroll to
+  //     the IndustrySelector (it owns the animated scroll on `ora:select-industry`).
+  //   • `ora:goto-section`  {id}  — any other nav link: animated scroll to a
+  //     section by element id.
+  // If we're not on the homepage, we switch to it first and replay once mounted.
+  const pendingNavRef = useRef<{ kind: "industry" | "section"; id: string } | null>(null);
+
+  const fireNav = (kind: "industry" | "section", id: string) => {
+    if (kind === "industry") {
+      window.dispatchEvent(new CustomEvent("ora:select-industry", { detail: { id } }));
+    } else {
+      animatedScrollToId(id);
+    }
+  };
+
+  useEffect(() => {
+    const route = (kind: "industry" | "section", id?: string) => {
+      if (!id) return;
+      if (page === "home") fireNav(kind, id);
+      else {
+        pendingNavRef.current = { kind, id };
+        navigateTo("home");
+      }
+    };
+    const onIndustry = (e: Event) => route("industry", (e as CustomEvent).detail?.id);
+    const onSection = (e: Event) => route("section", (e as CustomEvent).detail?.id);
+    window.addEventListener("ora:goto-industry", onIndustry);
+    window.addEventListener("ora:goto-section", onSection);
+    return () => {
+      window.removeEventListener("ora:goto-industry", onIndustry);
+      window.removeEventListener("ora:goto-section", onSection);
+    };
+  }, [page]);
+
+  // Once the homepage is back and mounted, replay a pending nav action.
+  useEffect(() => {
+    if (page !== "home" || !pendingNavRef.current) return;
+    const { kind, id } = pendingNavRef.current;
+    pendingNavRef.current = null;
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => fireNav(kind, id)),
+    );
+    return () => cancelAnimationFrame(raf);
+  }, [page]);
+
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") return "light";
     const stored = window.localStorage.getItem("ora-theme-v2");
@@ -881,6 +935,8 @@ const App = () => {
         <ConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "pricing" ? (
         <PricingPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "mentions-legales" ? (
+        <MentionsLegalesPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : (
       <>
 
@@ -1278,6 +1334,21 @@ const App = () => {
                             </p>
                           </div>
                         )}
+
+                        {/* Direct-email alternative to the calendar */}
+                        <div className="mt-2 pt-3 border-t border-gray-100 dark:border-white/10 text-center">
+                          <p className="text-[13px] leading-relaxed text-gray-500 dark:text-gray-400 font-inter">
+                            {t({ fr: "Vous préférez écrire ? Contactez-nous à ", en: "Prefer to write? Reach us at " })}
+                            <a
+                              href={`mailto:${BOOKING_EMAIL}?subject=${encodeURIComponent(
+                                t({ fr: "Demande de rendez-vous Ora", en: "Ora call request" }),
+                              )}`}
+                              className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                            >
+                              {BOOKING_EMAIL}
+                            </a>
+                          </p>
+                        </div>
                       </div>
                     </>
                   )}

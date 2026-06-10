@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { animatedScrollToId } from "@/lib/scrollTo";
 
 /**
  * Industry selector — lets the visitor pick their field (accounting,
@@ -36,6 +37,11 @@ type SolutionPage =
   | "solution-audit"
   | "solution-fonds-investissement"
   | "solution-banque-affaires";
+
+// Branch order — must match the `industries` array below. Used to resolve the
+// id sent by the "Solutions" nav menu (via the `ora:select-industry` event)
+// into the active tab index.
+const INDUSTRY_ORDER = ["comptable", "audit", "fonds", "banque"];
 
 type Example = { icon: LucideIcon; label: string };
 
@@ -60,6 +66,20 @@ export default function IndustrySelector({
   const { t } = useLang();
   const [activeIdx, setActiveIdx] = useState(0);
   const dk = theme === "dark";
+
+  // Triggered by the "Solutions" nav menu: select the requested branch and
+  // scroll here with the shared accelerating animation (slow start, faster and
+  // faster).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const id = (e as CustomEvent).detail?.id as string | undefined;
+      const idx = id ? INDUSTRY_ORDER.indexOf(id) : -1;
+      if (idx >= 0) setActiveIdx(idx);
+      animatedScrollToId("industries");
+    };
+    window.addEventListener("ora:select-industry", handler);
+    return () => window.removeEventListener("ora:select-industry", handler);
+  }, []);
 
   const industries: Industry[] = [
     {

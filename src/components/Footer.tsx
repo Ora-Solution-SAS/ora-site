@@ -1,7 +1,7 @@
 import { Footer } from "./ui/footer";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "not-found";
 
 interface OraFooterProps {
   onNavigate: (page: Page) => void;
@@ -49,7 +49,7 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
       ]}
       copyright={`© ${new Date().getFullYear()} Ora`}
       bottomLinks={[
-        { text: t({ fr: "Mentions légales", en: "Legal notice" }), url: "#" },
+        { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => onNavigate("mentions-legales") },
         { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), url: "#" },
         { text: t({ fr: "CGU", en: "Terms of use" }), url: "#" },
       ]}

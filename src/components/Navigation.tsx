@@ -7,12 +7,13 @@ import {
   NavigationMenuItem,
   NavigationMenuList,
   NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -33,6 +34,16 @@ type LinkItem = {
 
 // ── DropdownItem ─────────────────────────────────────────────────────────────
 
+// Maps each Solutions page to its branch in the homepage "Built for your
+// industry" selector. Clicking a Solutions item scrolls to that selector and
+// activates the matching branch instead of routing to a separate page.
+const PAGE_TO_INDUSTRY: Partial<Record<Page, string>> = {
+  "solution-expertise-comptable": "comptable",
+  "solution-audit": "audit",
+  "solution-fonds-investissement": "fonds",
+  "solution-banque-affaires": "banque",
+};
+
 function DropdownItem({
   item,
   onNavigate,
@@ -43,10 +54,24 @@ function DropdownItem({
   onClose: () => void;
 }) {
   const { title, description, icon: Icon, page } = item;
+  const industryId = PAGE_TO_INDUSTRY[page];
+
+  const handleClick = () => {
+    onClose();
+    if (industryId) {
+      // Scroll to the "Built for your industry" section + select this branch.
+      window.dispatchEvent(
+        new CustomEvent("ora:goto-industry", { detail: { id: industryId } }),
+      );
+    } else {
+      // Fallback: any future non-industry item still routes normally.
+      onNavigate(page);
+    }
+  };
 
   return (
     <button
-      onClick={() => { onClose(); onNavigate(page); }}
+      onClick={handleClick}
       className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors w-full text-left"
     >
       <div className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-gray-100/80 dark:bg-white/[0.06] border border-gray-200/60 dark:border-white/[0.08]">
@@ -109,6 +134,20 @@ const Navigation: React.FC<NavigationProps> = ({
       page: "solution-banque-affaires",
     },
   ];
+
+  // Ribbon links that scroll to a homepage section with the shared accelerating
+  // animation (handled by App via the `ora:goto-section` event).
+  const sectionLinks: { label: string; id: string }[] = [
+    { label: t({ fr: "Fonctionnalités", en: "Features" }), id: "features" },
+    { label: t({ fr: "Atlas", en: "Atlas" }), id: "atlas" },
+    { label: t({ fr: "Sécurité", en: "Security" }), id: "securite" },
+  ];
+
+  const goToSection = (id: string) => {
+    setMenuValue("");
+    setMobileOpen(false);
+    window.dispatchEvent(new CustomEvent("ora:goto-section", { detail: { id } }));
+  };
 
   useEffect(() => {
     let rafId = 0;
@@ -204,6 +243,22 @@ const Navigation: React.FC<NavigationProps> = ({
                 </NavigationMenuContent>
               </NavigationMenuItem>
 
+              {/* Section links — animated scroll to a homepage section. */}
+              {sectionLinks.map((s) => (
+                <NavigationMenuItem key={s.id}>
+                  <button
+                    type="button"
+                    onClick={() => goToSection(s.id)}
+                    className={cn(
+                      navigationMenuTriggerStyle(),
+                      overDark && "text-white/85 hover:text-white hover:bg-white/10",
+                    )}
+                  >
+                    {s.label}
+                  </button>
+                </NavigationMenuItem>
+              ))}
+
               {/* NOTE: "L'expérience Ora", "Tarifs" and "Confidentialité"
                   links are temporarily hidden until those pages go live.
                   Re-add the NavigationMenuItem blocks here to restore them. */}
@@ -278,6 +333,18 @@ const Navigation: React.FC<NavigationProps> = ({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>
             {solutionsLinks.map((item) => (
               <DropdownItem key={item.title} item={item} onNavigate={onNavigate} onClose={() => setMobileOpen(false)} />
+            ))}
+
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-4 pb-1">{t({ fr: "Explorer", en: "Explore" })}</p>
+            {sectionLinks.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => goToSection(s.id)}
+                className="flex items-center px-3 py-2.5 rounded-lg text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-left"
+              >
+                {s.label}
+              </button>
             ))}
 
             {/* NOTE: "L'expérience Ora", "Tarifs" and "Confidentialité"

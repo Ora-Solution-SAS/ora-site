@@ -1,4 +1,4 @@
-import { forwardRef, useRef, useEffect, useState, type ReactNode, type CSSProperties } from "react";
+import { forwardRef, useRef, useEffect, useLayoutEffect, useState, type ReactNode, type CSSProperties } from "react";
 import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useMotionValue, useTransform, motion, type MotionValue } from "framer-motion";
@@ -292,6 +292,11 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     /* State mirror of isLockedRef — drives the on-screen "keep scrolling" hint
        so the user understands the brief scroll capture is intentional. */
     const [isLocked, setIsLocked] = useState(false);
+    /* Once the reveal animation has fully played, we collapse the (now empty)
+       scroll-lock section to height 0. Otherwise, scrolling back up shows a
+       tall blank gap with the aurora glow between the hero video and the
+       #features "Découvrez Ora." heading. */
+    const [textDone, setTextDone] = useState(false);
     const hasTextCompletedRef   = useRef(false);
     /* overlay fixe pour la sortie du texte */
     const exitScrollStartRef    = useRef<number | null>(null);
@@ -334,7 +339,15 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       if (!el) return;
       const obs = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting && !isLockedRef.current && !hasTextCompletedRef.current) {
+          // `__oraSuppressHeroLock` is set while a programmatic scroll (e.g. the
+          // "Solutions" menu animated scroll) travels through this section, so
+          // the lock doesn't capture it mid-flight.
+          if (
+            entry.isIntersecting &&
+            !isLockedRef.current &&
+            !hasTextCompletedRef.current &&
+            !(window as any).__oraSuppressHeroLock
+          ) {
             isLockedRef.current = true;
             setIsLocked(true);
             const lenis = (window as any).__lenis;
@@ -459,6 +472,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           }
           cleanupExit();
           unlockText();
+          /* Collapse the empty reveal section. A useLayoutEffect re-anchors the
+             scroll onto #features after the collapse so the viewport doesn't
+             jump. */
+          setTextDone(true);
           return;
         }
 
@@ -541,6 +558,19 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       };
     }, [revealProgress]);
 
+    /* When the reveal section collapses (textDone → true), the layout above
+       #features shrinks by ~100vh. Re-anchor the scroll onto #features in the
+       same frame (before paint) so the viewport stays put — no jump. */
+    useLayoutEffect(() => {
+      if (!textDone) return;
+      const featuresEl = document.getElementById("features");
+      if (!featuresEl) return;
+      const target = featuresEl.getBoundingClientRect().top + window.scrollY;
+      const lenis = (window as any).__lenis;
+      if (lenis) lenis.scrollTo(target, { immediate: true, force: true });
+      else window.scrollTo(0, target);
+    }, [textDone]);
+
     /* ══════════════════════════════════════════════════════════ */
     return (
       <>
@@ -597,7 +627,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-6xl px-6 lg:px-10"
+              className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-6xl px-3 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
@@ -677,7 +707,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           {/* ═══ SECTION 2A — texte piloté par scroll-lock ═══ */}
           <div
             ref={lockRef}
-            className="relative z-[20] min-h-screen flex items-center justify-center bg-white dark:bg-[#111827] overflow-hidden"
+            className={`relative z-[20] flex items-center justify-center bg-white dark:bg-[#111827] overflow-hidden ${
+              textDone ? "h-0 min-h-0 pointer-events-none" : "min-h-screen"
+            }`}
           >
             {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
             <div className="reveal-aurora" aria-hidden />

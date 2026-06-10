@@ -6,8 +6,20 @@ import {
   useSpring,
   type MotionValue,
 } from "framer-motion";
-import { Lock, Check } from "lucide-react";
+import { Lock, Check, ShieldCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+
+/** Small inline Swiss flag (red rounded square + white cross) — a reassuring
+ *  trust marker for "hosted in Switzerland". */
+function SwissFlag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <rect width="32" height="32" rx="7" fill="#D52B1E" />
+      <rect x="13.5" y="7" width="5" height="18" rx="1" fill="#fff" />
+      <rect x="7" y="13.5" width="18" height="5" rx="1" fill="#fff" />
+    </svg>
+  );
+}
 
 /**
  * Privacy section — pinned scrollytelling.
@@ -100,37 +112,46 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     lp: MotionValue<number>;
     title: string;
     desc: string;
-    chips: string[];
+    chips: { label: string; flag?: boolean }[];
   }[] = [
     {
       kind: "lock",
       lp: pinned ? lp0 : doneMV,
-      title: t({ fr: "Vos fichiers restent sur votre machine", en: "Your files stay on your machine" }),
+      title: t({ fr: "Traitées sur votre machine", en: "Processed on your machine" }),
       desc: t({
-        fr: "Vos données métier et financières sont traitées entièrement sur votre appareil. Les fichiers sur lesquels vous travaillez ne sont jamais téléversés vers nos serveurs.",
-        en: "Your business and financial data is processed entirely on your device. The files you work on are never uploaded to our servers.",
+        fr: "Les automatisations s'exécutent localement, sur votre appareil. Le traitement de vos fichiers se fait chez vous, nos serveurs ne servent qu'à stocker vos données chiffrées, jamais à les analyser.",
+        en: "Automations run locally, on your own device. Your files are processed on your side; our servers only store your encrypted data, they never analyze it.",
       }),
-      chips: [t({ fr: "100 % local", en: "100% local" }), t({ fr: "Aucun téléversement", en: "No upload" })],
+      chips: [
+        { label: t({ fr: "Calcul local", en: "Local compute" }) },
+        { label: t({ fr: "Déchiffré chez vous", en: "Decrypted on your side" }) },
+      ],
     },
     {
       kind: "cloud",
       lp: pinned ? lp1 : doneMV,
-      title: t({ fr: "Le cloud pour l'accès, jamais pour vos données", en: "Cloud only for access, never for data" }),
+      title: t({ fr: "Chiffrés avant de partir", en: "Encrypted before they leave" }),
       desc: t({
-        fr: "L'authentification et la gestion des utilisateurs s'appuient sur Supabase, un hébergeur cloud sécurisé et conforme au RGPD. Seules vos informations de connexion et de compte y sont stockées, jamais vos documents.",
-        en: "Authentication and user management run on Supabase, a secure, GDPR-compliant cloud provider. Only login and account information is stored there, never your documents.",
+        fr: "Vos données métier et financières sont chiffrées directement sur votre appareil, avant tout envoi. Seuls des blobs illisibles quittent votre machine, la clé qui les ouvre ne sort jamais de votre compte.",
+        en: "Your business and financial data is encrypted directly on your device, before anything is sent. Only unreadable blobs leave your machine, and the key that opens them never leaves your account.",
       }),
-      chips: ["Supabase", t({ fr: "RGPD", en: "GDPR" })],
+      chips: [
+        { label: t({ fr: "Chiffrement AES-256", en: "AES-256 encryption" }) },
+        { label: t({ fr: "Côté client", en: "Client-side" }) },
+      ],
     },
     {
       kind: "check",
       lp: pinned ? lp2 : doneMV,
-      title: t({ fr: "Conforme RGPD par conception", en: "GDPR compliant by design" }),
+      title: t({ fr: "Jamais utilisées pour entraîner des modèles", en: "Never used to train models" }),
       desc: t({
-        fr: "Aucune donnée client ne quitte votre environnement, vos obligations réglementaires restent donc simples. Les accès sont contrôlés par utilisateur et par équipe.",
-        en: "No client data leaves your environment, so your regulatory obligations stay simple. Access is controlled per user and per team.",
+        fr: "Aucun fichier client n'est utilisé pour entraîner des modèles d'IA. Vos données servent uniquement à votre travail. Stockées chiffrées en Suisse, chez un hébergeur conforme au RGPD, hors CLOUD Act américain.",
+        en: "No client file is ever used to train AI models. Your data serves only your work. Stored encrypted in Switzerland, with a GDPR-compliant host, outside the US CLOUD Act.",
       }),
-      chips: [t({ fr: "Par utilisateur", en: "Per user" }), t({ fr: "Par équipe", en: "Per team" })],
+      chips: [
+        { label: t({ fr: "Aucun entraînement IA", en: "No AI training" }) },
+        { label: t({ fr: "Hébergé en Suisse", en: "Hosted in Switzerland" }), flag: true },
+      ],
     },
   ];
 
@@ -138,6 +159,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
 
   return (
     <section
+      id="securite"
       ref={outerRef}
       // Tall on desktop so the scene pins while the 3 anims play; auto on mobile.
       style={{ background: dk ? "#0f172a" : "#ffffff", height: pinned ? "300vh" : "auto" }}
@@ -167,23 +189,45 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
             </div>
             <h2 className="font-poppins font-semibold text-3xl md:text-5xl tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-5">
               {t({
-                fr: "Vos données ne quittent jamais votre environnement.",
-                en: "Your data never leaves your environment.",
+                fr: "Vos données vous appartiennent.",
+                en: "Your data belongs to you.",
               })}
             </h2>
             <p className="font-inter text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
               {t({
-                fr: "Vos fichiers sensibles sont traités en local et ne sont jamais téléversés. Seul l'accès à votre compte passe par le cloud.",
-                en: "Your sensitive files are processed locally and never uploaded. Only account access runs in the cloud.",
+                fr: "Vos fichiers sont chiffrés sur votre appareil avant d'être stockés en Suisse. Sur nos serveurs, ils n'existent que sous forme de données illisibles.",
+                en: "Your files are encrypted on your device before being stored in Switzerland. On our servers, they exist only as unreadable data.",
               })}
             </p>
           </motion.div>
 
           {/* ── 3 cards, each topped by its animated icon ─────────────── */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-start">
+          {/* items-stretch + h-full inside each card → all three cards share
+              the height of the tallest one. */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
             {cards.map((card) => (
               <PrivacyCard key={card.kind} {...card} dk={dk} />
             ))}
+          </div>
+
+          {/* ── Trust strip — quick reassurance markers under the cards ──── */}
+          <div className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 font-inter text-[13px] font-medium text-gray-500 dark:text-gray-400">
+            <span className="inline-flex items-center gap-2">
+              <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              {t({ fr: "Chiffrement de bout en bout", en: "End-to-end encryption" })}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <SwissFlag className="w-4 h-4" />
+              {t({ fr: "Données hébergées en Suisse", en: "Data hosted in Switzerland" })}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+              {t({ fr: "Conforme RGPD", en: "GDPR compliant" })}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
+              {t({ fr: "Hors CLOUD Act", en: "Outside the CLOUD Act" })}
+            </span>
           </div>
 
           {/* ── Phase dots (desktop pinned only) ──────────────────────── */}
@@ -224,7 +268,7 @@ function PrivacyCard({
   lp: MotionValue<number>;
   title: string;
   desc: string;
-  chips: string[];
+  chips: { label: string; flag?: boolean }[];
   dk: boolean;
 }) {
   // Card dims until its own animation begins, then lifts to full presence.
@@ -239,16 +283,16 @@ function PrivacyCard({
   );
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center h-full">
       {/* Animated icon — sits ABOVE the card, horizontally centered. */}
       <div className="h-24 md:h-28 flex items-end justify-center mb-5 md:mb-6">
         <IconStage kind={kind} lp={lp} dk={dk} />
       </div>
 
-      {/* Card */}
+      {/* Card — flex-1 so every card fills the equal grid-row height. */}
       <motion.div
         style={{ opacity: cardOpacity, borderColor }}
-        className="w-full flex flex-col p-8 md:p-9 rounded-[28px] border bg-white dark:bg-white/[0.03] min-h-[280px] md:min-h-[320px]"
+        className="w-full flex-1 flex flex-col p-8 md:p-9 rounded-[28px] border bg-white dark:bg-white/[0.03] min-h-[280px] md:min-h-[320px]"
       >
         <h3 className="font-poppins font-semibold text-xl md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white leading-snug">
           {title}
@@ -260,11 +304,15 @@ function PrivacyCard({
         <div className="mt-6 flex flex-wrap gap-2">
           {chips.map((chip) => (
             <span
-              key={chip}
+              key={chip.label}
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300 ring-1 ring-blue-200/70 dark:ring-blue-400/20"
             >
-              <Check className="w-3 h-3" strokeWidth={3} />
-              {chip}
+              {chip.flag ? (
+                <SwissFlag className="w-3.5 h-3.5" />
+              ) : (
+                <Check className="w-3 h-3 text-emerald-500" strokeWidth={3} />
+              )}
+              {chip.label}
             </span>
           ))}
         </div>

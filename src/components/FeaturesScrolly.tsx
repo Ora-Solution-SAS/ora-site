@@ -45,7 +45,37 @@ type Props = {
   features: ScrollyFeature[];
 };
 
-function Visual({ feature }: { feature: ScrollyFeature }) {
+function Visual({ feature, active = true }: { feature: ScrollyFeature; active?: boolean }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const inViewRef = useRef(false);
+
+  // Play each video from frame 0 only once it is scrolled into view (and, in the
+  // desktop sticky layout, only when it is the active block). Otherwise the
+  // looping videos would already be mid-clip by the time the user reaches them,
+  // so they'd never catch the clip begin.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !feature.video) return;
+    const sync = () => {
+      const shouldPlay = inViewRef.current && active;
+      if (shouldPlay) {
+        if (el.paused) {
+          try { el.currentTime = 0; } catch { /* metadata not ready yet */ }
+          void el.play().catch(() => {});
+        }
+      } else if (!el.paused) {
+        el.pause();
+      }
+    };
+    const io = new IntersectionObserver(
+      ([entry]) => { inViewRef.current = entry.isIntersecting; sync(); },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    sync();
+    return () => io.disconnect();
+  }, [active, feature.video]);
+
   return (
     <div className="relative">
       {/* Colored "depth panel" behind the card — a soft blue→teal gradient
@@ -58,7 +88,7 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
           diffuse look without any filter cost. */}
       <div
         aria-hidden
-        className="absolute -inset-x-8 -bottom-10 -top-4 rounded-[40px] pointer-events-none -z-10 opacity-80 dark:opacity-55"
+        className="absolute -inset-x-3 sm:-inset-x-8 -bottom-10 -top-4 rounded-[40px] pointer-events-none -z-10 opacity-80 dark:opacity-55"
         style={{
           background:
             "radial-gradient(115% 100% at 50% 95%, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.12) 32%, rgba(13,148,136,0.08) 55%, transparent 78%)",
@@ -75,11 +105,12 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
       >
         {feature.video ? (
           <video
+            ref={videoRef}
             src={feature.video}
-            autoPlay
             loop
             muted
             playsInline
+            preload="metadata"
             className="w-full object-cover block"
             style={{
               aspectRatio: feature.ratio ?? DEFAULT_RATIO,
@@ -275,7 +306,7 @@ export default function FeaturesScrolly({ features }: Props) {
                       zIndex: isActive ? 2 : 1,
                     }}
                   >
-                    <Visual feature={feat} />
+                    <Visual feature={feat} active={isActive} />
                   </motion.div>
                 );
               })}

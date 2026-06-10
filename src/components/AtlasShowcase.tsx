@@ -83,6 +83,7 @@ export default function AtlasShowcase() {
 
   return (
     <section
+      id="atlas"
       data-nav-dark
       className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
@@ -305,14 +306,14 @@ export default function AtlasShowcase() {
         >
           <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
             {t({
-              fr: "Tous vos fichiers, enfin sous contrôle",
-              en: "Every file, finally under control",
+              fr: "Reprenez le contrôle de tous vos fichiers",
+              en: "Take back control of every file",
             })}
           </h3>
           <p className="mt-5 font-inter text-[15px] md:text-base leading-[1.75] text-gray-300">
             {t({
-              fr: "Atlas cartographie l'ensemble de vos fichiers Excel en une carte vivante. Chaque dossier devient une planète, chaque rapport une étoile. Vous retrouvez n'importe quel fichier en quelques secondes, vous suivez l'avancement de vos équipes en temps réel, et vous gardez une vue d'ensemble claire sur toute votre activité, sans jamais quitter votre environnement de travail.",
-              en: "Atlas maps every one of your Excel files into a single living map. Each folder becomes a planet, each report a star. Find any file in seconds, follow your teams' progress in real time, and keep a clear bird's-eye view of your whole operation, without ever leaving your working environment.",
+              fr: "Fini les heures perdues à chercher le bon fichier ou la dernière version. Atlas transforme tout votre désordre Excel en une carte vivante et instantanément lisible : chaque dossier devient une planète, chaque rapport une étoile. Retrouvez n'importe quel fichier en quelques secondes, suivez l'avancement de vos équipes en temps réel et gardez une longueur d'avance sur toute votre activité, sans jamais quitter votre environnement de travail.",
+              en: "Stop losing hours hunting for the right file or the latest version. Atlas turns your Excel chaos into a living, instantly readable map: every folder becomes a planet, every report a star. Find any file in seconds, track your teams' progress in real time, and stay one step ahead of your whole operation, without ever leaving your working environment.",
             })}
           </p>
         </motion.div>
