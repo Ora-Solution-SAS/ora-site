@@ -928,8 +928,9 @@ const App = () => {
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
               video: "/ora_story3.mp4",
-              // 1280×640 source → 2:1 box so it fills with no black bars / no crop.
-              ratio: "2 / 1",
+              // 1280×854 source → 3:2 box (narrower than the old 2:1) so it
+              // fills with no black letterbox bars and no side-cropping.
+              ratio: "1280 / 854",
             },
             {
               tag: t({ fr: "Sur-mesure", en: "Tailored" }),
@@ -943,6 +944,10 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+              video: "/ora_engineering.mp4",
+              // 1280×854 source → 3:2 box so it fills with no black letterbox
+              // bars and no side-cropping.
+              ratio: "1280 / 854",
             },
             {
               tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),

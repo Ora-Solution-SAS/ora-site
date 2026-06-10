@@ -18,10 +18,12 @@ import {
   Inbox,
   ArrowRight,
   ChevronRight,
-  Crown,
   FileText,
   Maximize,
   Minus,
+  List,
+  LayoutGrid,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 
@@ -199,7 +201,7 @@ export function MockupHome() {
       activeNav="home"
       pageTitle="Accueil"
       pageSubtitle="Espace personnel"
-      height={680}
+      height={720}
     >
       <div className="px-8 py-8" style={{ maxWidth: 1100 }}>
         {/* Hero */}
@@ -326,21 +328,21 @@ export function MockupHome() {
               tint="bg-violet-100 text-violet-700"
               title="Acquisition NewCo"
               meta="8 fichiers · Deal PE"
-              badge={{ label: "🔒 Privé", className: "bg-slate-100 text-slate-700" }}
+              badge={{ icon: Lock, label: "Privé", className: "bg-slate-100 text-slate-700" }}
             />
             <ProjectMiniCard
               icon={FileSearch}
               tint="bg-emerald-100 text-emerald-700"
               title="Audit Bouygues 2026"
               meta="5 fichiers · Audit"
-              badge={{ label: "👥 Équipe", className: "bg-blue-50 text-blue-700" }}
+              badge={{ icon: Users, label: "Équipe", className: "bg-blue-50 text-blue-700" }}
             />
             <ProjectMiniCard
               icon={Layers}
               tint="bg-blue-100 text-blue-700"
               title="DD Datadog target"
               meta="12 fichiers · M&A target"
-              badge={{ label: "🏢 Entreprise", className: "bg-violet-50 text-violet-700" }}
+              badge={{ icon: Building2, label: "Entreprise", className: "bg-violet-50 text-violet-700" }}
             />
           </div>
         </div>
@@ -405,8 +407,9 @@ function ProjectMiniCard({
   tint: string;
   title: string;
   meta: string;
-  badge: { label: string; className: string };
+  badge: { label: string; className: string; icon: LucideIcon };
 }) {
+  const BadgeIcon = badge.icon;
   return (
     <div className="rounded-2xl border border-[#e6e9f0] bg-white p-4 flex items-center gap-3 relative">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${tint}`}>
@@ -416,7 +419,8 @@ function ProjectMiniCard({
         <div className="text-[13px] font-semibold text-[#0f172a] truncate">{title}</div>
         <div className="text-[11px] text-[#475569] mt-0.5">{meta}</div>
       </div>
-      <div className={`absolute top-3 right-3 ${badge.className} rounded-md px-1.5 py-0.5 text-[10px] font-semibold`}>
+      <div className={`absolute top-3 right-3 ${badge.className} rounded-md px-1.5 py-0.5 text-[10px] font-semibold flex items-center gap-1`}>
+        <BadgeIcon className="w-2.5 h-2.5" strokeWidth={2.5} />
         {badge.label}
       </div>
     </div>
@@ -442,9 +446,9 @@ export function MockupManager() {
       activeNav="manager"
       pageTitle="Vue manager"
       pageSubtitle="Vos équipes"
-      height={620}
+      height={720}
     >
-      <div className="px-8 py-8" style={{ maxWidth: 1000 }}>
+      <div className="px-8 py-10" style={{ maxWidth: 1000 }}>
         {/* Hero */}
         <div className="flex justify-between items-start gap-4">
           <div className="flex gap-3 items-start">
@@ -467,25 +471,22 @@ export function MockupManager() {
         </div>
 
         {/* VOS ÉQUIPES */}
-        <div className="mt-8">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-3">
+        <div className="mt-10">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#94a3b8] mb-4">
             Vos équipes
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-4">
             {TEAMS.map((team) => (
               <div
                 key={team.name}
-                className="rounded-2xl border border-[#e6e9f0] bg-white p-4 flex items-start gap-3 cursor-pointer hover:bg-[#f5f7ff]"
+                className="rounded-2xl border border-[#e6e9f0] bg-white p-5 flex items-start gap-3 cursor-pointer hover:bg-[#f5f7ff]"
               >
                 <div className="w-10 h-10 rounded-lg bg-[#eef2ff] text-[#4361ee] flex items-center justify-center flex-shrink-0">
                   <Users className="w-[18px] h-[18px]" strokeWidth={2.25} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <div className="text-[14px] font-semibold text-[#0f172a] truncate">
-                      {team.name}
-                    </div>
-                    {team.lead && <Crown className="w-3.5 h-3.5 text-[#d97706] fill-[#fbbf24] flex-shrink-0" />}
+                  <div className="text-[14px] font-semibold text-[#0f172a] truncate">
+                    {team.name}
                   </div>
                   <div className="text-[11.5px] text-[#475569] mt-0.5">
                     {team.members} membre{team.members > 1 ? "s" : ""} · {team.projects} projet{team.projects > 1 ? "s" : ""}
@@ -596,14 +597,14 @@ export function MockupGalaxy() {
 
         {/* Tabs Liste / Galaxy / Kanban */}
         <div className="flex gap-1.5 rounded-xl border border-[#e6e9f0] bg-white p-1 w-fit mb-4">
-          <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#475569]">
-            📋 Liste
+          <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#475569] flex items-center gap-1.5">
+            <List className="w-3.5 h-3.5" strokeWidth={2.25} /> Liste
           </div>
-          <div className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#eef2ff] text-[#4361ee]">
-            🌐 Galaxy
+          <div className="px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-[#eef2ff] text-[#4361ee] flex items-center gap-1.5">
+            <Globe className="w-3.5 h-3.5" strokeWidth={2.25} /> Galaxy
           </div>
-          <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#475569]">
-            📊 Kanban
+          <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-[#475569] flex items-center gap-1.5">
+            <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2.25} /> Kanban
           </div>
         </div>
 

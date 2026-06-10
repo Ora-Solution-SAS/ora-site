@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { MockupHome, MockupManager, MockupGalaxy } from "./AtlasMockups";
+import InViewVideo from "./InViewVideo";
 
 /**
  * Atlas showcase section — Monday.com "Un vrai impact" layout.
@@ -262,7 +263,7 @@ export default function AtlasShowcase() {
                   - `initial={false}` skips entrance animation on first paint. */}
               <div
                 className="overflow-x-auto -mx-1"
-                style={{ minHeight: 800 }}
+                style={{ minHeight: 720 }}
               >
                 <div
                   style={{
@@ -316,23 +317,26 @@ export default function AtlasShowcase() {
           </p>
         </motion.div>
 
-        {/* Placeholder for the Atlas detail visual the client will provide.
-            TODO(client image): replace this block with the supplied image /
-            image layout, e.g. <img src="/atlas-detail.png" ... />. */}
+        {/* Atlas detail visual — client-supplied demo video (2560×854 → 3:2).
+            Framed to match the section: sky-blue tinted border + soft glow,
+            ratio set to the source so it fills with no letterbox bars. */}
         <motion.div
           className="max-w-4xl mx-auto mt-10 md:mt-12"
           variants={fadeInUp}
         >
           <div
-            className="rounded-3xl border border-dashed border-white/15 flex items-center justify-center aspect-[16/7]"
+            className="rounded-3xl overflow-hidden border"
             style={{
-              background:
-                "linear-gradient(135deg, rgba(186,230,253,0.06), rgba(147,197,253,0.04))",
+              borderColor: "rgba(186,230,253,0.18)",
+              boxShadow:
+                "0 30px 80px rgba(56,189,248,0.18), 0 10px 40px rgba(96,165,250,0.12)",
             }}
           >
-            <span className="font-inter text-[13px] text-white/35">
-              {t({ fr: "Visuel Atlas à venir", en: "Atlas visual coming soon" })}
-            </span>
+            <InViewVideo
+              src="/ora_atlas.mp4"
+              className="w-full block object-cover"
+              style={{ aspectRatio: "2560 / 1708" }}
+            />
           </div>
         </motion.div>
       </motion.div>

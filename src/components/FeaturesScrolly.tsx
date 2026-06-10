@@ -32,6 +32,10 @@ export type ScrollyFeature = {
    *  Lets a video with a non-standard ratio fill its frame with no black
    *  letterbox bars and no side-cropping. Defaults to "16 / 10". */
   ratio?: string;
+  /** Optional CSS object-position for the media (e.g. "left", "center").
+   *  Useful when the box is narrower than the source: anchors which side
+   *  stays in view while object-cover trims the rest. Defaults to "center". */
+  objectPosition?: string;
 };
 
 /** Default aspect ratio for a feature visual box when none is specified. */
@@ -44,10 +48,24 @@ type Props = {
 function Visual({ feature }: { feature: ScrollyFeature }) {
   return (
     <div className="relative">
-      {/* Main video card — the blue "depth layer" is now a soft blue glow
-          shadow directly on the card itself, instead of a separate colored
-          block. Lighter, more diffuse, reads as an atmospheric shadow
-          rather than a solid frame. */}
+      {/* Colored "depth panel" behind the card — a soft blue→teal gradient
+          glow, slightly larger than the card and pushed down/back, that the
+          screen appears to rest on. Same idea as Bubble's mockups sitting on
+          a light-blue gradient backing: it adds depth without a hard frame.
+          NOTE: pure radial gradient, NO CSS blur filter — a blur() here is
+          repainted every frame inside the sticky scroll section and caused
+          scroll jank. The gradient's own transparent falloff gives the soft
+          diffuse look without any filter cost. */}
+      <div
+        aria-hidden
+        className="absolute -inset-x-8 -bottom-10 -top-4 rounded-[40px] pointer-events-none -z-10 opacity-80 dark:opacity-55"
+        style={{
+          background:
+            "radial-gradient(115% 100% at 50% 95%, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.12) 32%, rgba(13,148,136,0.08) 55%, transparent 78%)",
+        }}
+      />
+      {/* Main video card — the blue glow shadow on the card itself layers on
+          top of the panel above for a soft, diffuse atmospheric depth. */}
       <div
         className="relative w-full rounded-[24px] overflow-hidden border border-gray-200/60 dark:border-white/[0.06] bg-white dark:bg-white/[0.02]"
         style={{
@@ -63,14 +81,20 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
             muted
             playsInline
             className="w-full object-cover block"
-            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
+            style={{
+              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
+              objectPosition: feature.objectPosition ?? "center",
+            }}
           />
         ) : feature.image ? (
           <img
             src={feature.image}
             alt={feature.title}
             className="w-full object-cover block"
-            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
+            style={{
+              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
+              objectPosition: feature.objectPosition ?? "center",
+            }}
           />
         ) : (
           // Empty placeholder — visual to be added later.
