@@ -13,7 +13,7 @@ export default function ValueProps() {
   const columns: string[][] = [
     [
       t({ fr: "Gagnez des heures chaque semaine", en: "Save hours every week" }),
-      t({ fr: "Déployé en quelques jours", en: "Live in just days" }),
+      t({ fr: "Déployé en quelques heures", en: "Live in just hours" }),
       t({ fr: "Aucune IA, du vrai sur-mesure", en: "No AI, real design talent" }),
     ],
     [
@@ -27,7 +27,7 @@ export default function ValueProps() {
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
       {/* LEFT — headline + benefit checklist */}
       <div>
-        <h3 className="font-poppins font-normal text-[1.7rem] md:text-[2.15rem] leading-[1.22] tracking-[-0.02em] text-[#111827] dark:text-white">
+        <h3 className="font-poppins font-normal text-[1.5rem] md:text-[1.95rem] leading-[1.34] tracking-[-0.01em] text-[#111827] dark:text-white">
           {t({ fr: "Nous pensons qu'une ", en: "We believe " })}
           <span className="text-[#3b82f6]">
             {t({ fr: "automatisation puissante", en: "powerful automation" })}
@@ -37,7 +37,7 @@ export default function ValueProps() {
             en: " shouldn't take months. So we turn your Excel work into a one-click workflow, ",
           })}
           <span className="text-[#3b82f6]">
-            {t({ fr: "en quelques jours.", en: "in just days." })}
+            {t({ fr: "en quelques minutes.", en: "in just minutes." })}
           </span>
         </h3>
 
@@ -47,7 +47,7 @@ export default function ValueProps() {
               {col.map((item) => (
                 <li
                   key={item}
-                  className="font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-200 dark:border-white/10"
+                  className="font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-300 dark:border-white/25"
                 >
                   {item}
                 </li>
