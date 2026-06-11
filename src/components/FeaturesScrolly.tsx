@@ -238,7 +238,7 @@ export default function FeaturesScrolly({ features }: Props) {
   }, [features.length]);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="relative max-w-7xl mx-auto">
       {/* Asymmetric columns: the visual (right) gets more width than the text
           (left) so the demo videos read larger. */}
       <div className="grid grid-cols-1 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-10 min-[560px]:gap-12 md:gap-16">

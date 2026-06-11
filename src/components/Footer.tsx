@@ -16,6 +16,12 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
       ? "/logos/logo-color-light.png"
       : "/logos/logo-color-dark.png";
 
+  // The per-industry pages aren't finished: these links scroll to the
+  // homepage "Conçu pour votre métier" section with the matching branch
+  // selected (App handles the event, including from other pages).
+  const goToIndustry = (id: string) =>
+    window.dispatchEvent(new CustomEvent("ora:goto-industry", { detail: { id } }));
+
   return (
     <Footer
       logo={{
@@ -25,7 +31,7 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
         onClick: () => onNavigate("home"),
       }}
       tagline={t({
-        fr: "Automatisez vos workflows Excel. Gagnez du temps, réduisez les erreurs, concentrez-vous sur ce qui compte vraiment.",
+        fr: "Automatisez vos tâches Excel. Gagnez du temps, réduisez les erreurs, concentrez-vous sur ce qui compte vraiment.",
         en: "Automate your Excel workflows. Save time, reduce errors, focus on what actually matters.",
       })}
       menuItems={[
@@ -40,18 +46,20 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
         {
           title: t({ fr: "Solutions métier", en: "Industry solutions" }),
           links: [
-            { text: t({ fr: "Expertise Comptable", en: "Accounting" }), onClick: () => onNavigate("solution-expertise-comptable") },
-            { text: t({ fr: "Audit", en: "Audit" }), onClick: () => onNavigate("solution-audit") },
-            { text: t({ fr: "Fonds d'investissement", en: "Investment funds" }), onClick: () => onNavigate("solution-fonds-investissement") },
-            { text: t({ fr: "Banque d'affaires", en: "Investment banking" }), onClick: () => onNavigate("solution-banque-affaires") },
+            { text: t({ fr: "Expertise Comptable", en: "Accounting" }), onClick: () => goToIndustry("comptable") },
+            { text: t({ fr: "Audit", en: "Audit" }), onClick: () => goToIndustry("audit") },
+            { text: t({ fr: "Fonds d'investissement", en: "Investment funds" }), onClick: () => goToIndustry("fonds") },
+            { text: t({ fr: "Banque d'affaires", en: "Investment banking" }), onClick: () => goToIndustry("banque") },
           ],
         },
       ]}
       copyright={`© ${new Date().getFullYear()} Ora`}
       bottomLinks={[
-        { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => onNavigate("mentions-legales") },
-        { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), url: "#" },
-        { text: t({ fr: "CGU", en: "Terms of use" }), url: "#" },
+        // Legal pages not ready to be public yet — inert on purpose (no
+        // navigation). Re-wire to their pages when they go live.
+        { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => {} },
+        { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), onClick: () => {} },
+        { text: t({ fr: "CGU", en: "Terms of use" }), onClick: () => {} },
       ]}
     />
   );

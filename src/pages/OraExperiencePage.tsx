@@ -106,7 +106,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
     {
       num: "02",
       title: t({ fr: "Des automatisations sur mesure", en: "Tailored automations" }),
-      desc: t({ fr: "Nous configurons vos premiers workflows avec vous, adaptés à vos besoins exacts. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.", en: "We configure your first workflows with you, tailored to your exact needs. And if your needs evolve, you can request new automations at any time, without delay." }),
+      desc: t({ fr: "Nous configurons vos premières automatisations avec vous, adaptées à vos besoins exacts. Et si vos besoins évoluent, vous pouvez demander de nouvelles automatisations à tout moment, sans délai.", en: "We configure your first workflows with you, tailored to your exact needs. And if your needs evolve, you can request new automations at any time, without delay." }),
       icon: GitMerge,
     },
     {
@@ -242,7 +242,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               dk ? "text-white" : "text-[#111827]"
             }`}
           >
-            {t({ fr: "Vos workflows Excel,", en: "Your Excel workflows," })}{" "}
+            {t({ fr: "Vos tâches Excel,", en: "Your Excel workflows," })}{" "}
             <br className="hidden sm:block" />
             <span className="xp-animated-gradient">{t({ fr: "automatisés pour vous.", en: "automated for you." })}</span>
           </h1>
@@ -640,7 +640,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
         {/* Floating decorative cards — desktop only */}
         <div className="absolute inset-0 hidden lg:block pointer-events-none" aria-hidden>
           {[
-            { pos: "top-[15%] left-[7%]",     delay: "0s",   icon: Zap,             label: t({ fr: "Workflow lancé", en: "Workflow started" }) },
+            { pos: "top-[15%] left-[7%]",     delay: "0s",   icon: Zap,             label: t({ fr: "Automatisation lancée", en: "Workflow started" }) },
             { pos: "top-[20%] right-[8%]",    delay: "1.4s", icon: BarChart3,       label: t({ fr: "Rapport généré", en: "Report generated" }) },
             { pos: "bottom-[18%] left-[11%]", delay: "2.1s", icon: FileSpreadsheet, label: t({ fr: "Excel mis à jour", en: "Excel updated" }) },
             { pos: "bottom-[15%] right-[10%]",delay: "0.7s", icon: Mail,            label: t({ fr: "Envoi automatique", en: "Auto-sent" }) },
@@ -686,7 +686,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               {t({ fr: "Prêt à reprendre votre temps avec", en: "Ready to reclaim your time with" })}
             </span>
             <span className="block xp-animated-gradient">
-              {t({ fr: "vos workflows Excel automatisés ?", en: "your Excel workflows automated?" })}
+              {t({ fr: "vos tâches Excel automatisées ?", en: "your Excel workflows automated?" })}
             </span>
           </h2>
 

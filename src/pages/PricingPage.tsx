@@ -75,7 +75,7 @@ export default function PricingPage({ theme, openBooking }: Props) {
     {
       icon: Zap,
       title: t({ fr: "Automatisations de base", en: "Core automations" }),
-      desc: t({ fr: "Vos workflows clés configurés dès le démarrage. Rapports, réconciliations, consolidations : les tâches répétitives disparaissent dès la première semaine.", en: "Your key workflows set up from day one. Reports, reconciliations, consolidations: repetitive tasks disappear from week one." }),
+      desc: t({ fr: "Vos automatisations clés configurées dès le démarrage. Rapports, réconciliations, consolidations : les tâches répétitives disparaissent dès la première semaine.", en: "Your key workflows set up from day one. Reports, reconciliations, consolidations: repetitive tasks disappear from week one." }),
     },
     {
       icon: Monitor,

@@ -3,7 +3,6 @@ import {
   motion,
   useMotionValue,
   useSpring,
-  useTransform,
 } from "framer-motion";
 import {
   FileSpreadsheet,
@@ -145,7 +144,7 @@ function EngineeringVisual() {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
             <span className="text-[11px] text-gray-700 font-medium">
-              {t({ fr: "Workflow conçu", en: "Workflow designed" })}
+              {t({ fr: "Automatisation conçue", en: "Workflow designed" })}
             </span>
             <span className="ml-auto text-[9px] text-gray-400 font-medium">J2</span>
           </div>
@@ -225,7 +224,7 @@ function FlowVisual() {
       <div className="flex items-center gap-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] px-4 py-3 rounded-xl shadow-lg text-white w-full">
         <Zap className="w-3.5 h-3.5" />
         <span className="text-xs font-semibold">
-          {t({ fr: "Ora · workflow sur-mesure", en: "Ora · tailored workflow" })}
+          {t({ fr: "Ora · automatisation sur-mesure", en: "Ora · tailored workflow" })}
         </span>
       </div>
       <div className="w-px h-3 bg-gray-300" />
@@ -307,6 +306,11 @@ type CardData = {
   tag: string;
   brandSuffix: string;
   title: string;
+  /** One-sentence value pitch, always visible below the title. */
+  desc: string;
+  /** Three concrete benefits shown on the card's resting face — they fill the
+   *  formerly-empty bottom area and crossfade out when the mockup takes over. */
+  points: string[];
   /** The brand color the card animates to when active. */
   activeColor: string;
   /** When true, the active bg is light enough that text should be dark. */
@@ -359,6 +363,7 @@ function AccordionCard({
         suffix: "text-gray-600",
         tag: "text-gray-500",
         title: "text-gray-900",
+        desc: "text-gray-600",
       }
     : {
         logo: "/logos/icon-light.png",
@@ -366,6 +371,7 @@ function AccordionCard({
         suffix: "text-white/75",
         tag: "text-white/60",
         title: "text-white",
+        desc: "text-white/80",
       };
 
   return (
@@ -377,7 +383,7 @@ function AccordionCard({
       // the width animation — no JS measurement per frame.
       onMouseEnter={onActivate}
       onFocus={onActivate}
-      className={`ora-card-tr relative rounded-[28px] overflow-hidden text-left h-[640px] min-w-0 cursor-pointer ${driftClass} ${
+      className={`ora-card-tr relative rounded-[28px] overflow-hidden text-left h-[520px] min-w-0 cursor-pointer ${driftClass} ${
         isActive ? "" : "ring-1 ring-[#3457E8]/15"
       }`}
       style={{
@@ -448,21 +454,55 @@ function AccordionCard({
 
         {/* Title — fixed moderate size in both states. */}
         <h3
-          className={`font-poppins font-light text-[1.35rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] ora-text-tr ${palette.title}`}
+          className={`font-poppins font-medium text-[1.35rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] ora-text-tr ${palette.title}`}
         >
           {data.title}
         </h3>
 
-        {/* Visual — ALWAYS mounted, opacity toggled via CSS. */}
-        <div
-          className="ora-mockup-tr mt-auto pt-6 flex items-center justify-center min-h-0 flex-1"
-          style={{
-            opacity: isActive ? 1 : 0,
-            pointerEvents: isActive ? "auto" : "none",
-            willChange: "opacity",
-          }}
+        {/* Value pitch — always visible so the resting card already sells. */}
+        <p
+          className={`font-inter text-[13.5px] leading-[1.65] mt-3 ora-text-tr ${palette.desc}`}
         >
-          {data.visual}
+          {data.desc}
+        </p>
+
+        {/* Bottom slot — benefits (resting face) ⇄ mockup (active face).
+            Both stacked in the same grid cell and crossfaded, so the card
+            never shows a large empty area. */}
+        <div className="mt-auto pt-6 grid flex-1 min-h-0">
+          {/* Benefit list — fills the resting card with concrete value. */}
+          <div
+            className="ora-points-tr flex flex-col gap-3 justify-end pb-1"
+            style={{
+              gridArea: "1 / 1",
+              opacity: isActive ? 0 : 1,
+              pointerEvents: "none",
+            }}
+          >
+            {data.points.map((point) => (
+              <div key={point} className="flex items-center gap-2.5">
+                <span className="w-[22px] h-[22px] rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-emerald-600" strokeWidth={3} />
+                </span>
+                <span className="font-inter font-medium text-[13px] text-gray-700 leading-snug">
+                  {point}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Visual — ALWAYS mounted, opacity toggled via CSS. */}
+          <div
+            className="ora-mockup-tr flex items-center justify-center min-h-0"
+            style={{
+              gridArea: "1 / 1",
+              opacity: isActive ? 1 : 0,
+              pointerEvents: isActive ? "auto" : "none",
+              willChange: "opacity",
+            }}
+          >
+            {data.visual}
+          </div>
         </div>
       </div>
     </button>
@@ -489,9 +529,12 @@ export default function OraExperienceCarousel() {
   //
   // Snappy spring (high stiffness, low mass) → the row catches up to
   // the cursor quickly. Less inertia drag → feels reactive, not lazy.
+  // The cursor position across the container maps to the FULL row overflow:
+  // cursor at the left edge → row at rest; cursor at the right edge → row
+  // shifted by its entire overflow, so the LAST card is fully revealed (the
+  // old fixed ±0.22 factor left it permanently half off-screen).
   const cursorX = useMotionValue(0);
-  const parallaxRaw = useTransform(cursorX, (val) => -val * 0.22);
-  const parallaxX = useSpring(parallaxRaw, {
+  const parallaxX = useSpring(cursorX, {
     stiffness: 180,
     damping: 20,
     mass: 0.4,
@@ -510,14 +553,17 @@ export default function OraExperienceCarousel() {
   }, []);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const center = rect.left + rect.width / 2;
-    cursorX.set(e.clientX - center);
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    // scrollWidth includes the overflowing cards on the right.
+    const overflow = Math.max(0, el.scrollWidth - rect.width);
+    const norm = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
+    cursorX.set(-norm * overflow);
   };
 
   const handleMouseLeave = () => {
-    // Smoothly return to center when cursor leaves the carousel
+    // Smoothly return to rest when the cursor leaves the carousel
     cursorX.set(0);
   };
 
@@ -529,6 +575,15 @@ export default function OraExperienceCarousel() {
         fr: "Audit offert + une automatisation offerte.",
         en: "Complimentary audit + a complimentary automation.",
       }),
+      desc: t({
+        fr: "On analyse vos fichiers et vos processus, et on vous montre exactement où vous perdez du temps.",
+        en: "We analyze your files and processes, and show you exactly where you lose time.",
+      }),
+      points: [
+        t({ fr: "Audit complet livré sous 48h", en: "Full audit delivered in 48h" }),
+        t({ fr: "Automatisations prioritaires identifiées", en: "Priority automations identified" }),
+        t({ fr: "Une automatisation offerte pour essayer", en: "One automation free to try" }),
+      ],
       activeColor: ACTIVE_BG,
       inactiveImage: "/logos/engineering-illustration.png",
       inactiveImageBottom: "6%",
@@ -541,6 +596,15 @@ export default function OraExperienceCarousel() {
         fr: "Des automatisations conçues pour vous.",
         en: "Automations built for you, not for everyone.",
       }),
+      desc: t({
+        fr: "Vous décrivez votre façon de travailler, on la reproduit à l'identique. Pas de template générique.",
+        en: "You describe your workflow, we replicate it exactly. No generic templates.",
+      }),
+      points: [
+        t({ fr: "Conçu autour de vos fichiers réels", en: "Built around your real files" }),
+        t({ fr: "Validé avec vous à chaque étape", en: "Validated with you at every step" }),
+        t({ fr: "Évolue avec votre métier", en: "Evolves with your business" }),
+      ],
       activeColor: ACTIVE_BG,
       inactiveImage: "/logos/tailored-illustration.png",
       inactiveImageBottom: "6%",
@@ -553,6 +617,15 @@ export default function OraExperienceCarousel() {
         fr: "Vos dossiers Excel, parfaitement structurés.",
         en: "Your Excel folders, perfectly structured.",
       }),
+      desc: t({
+        fr: "Atlas cartographie tous vos dossiers et retrouve n'importe quel fichier en quelques secondes.",
+        en: "Atlas maps all your folders and finds any file in seconds.",
+      }),
+      points: [
+        t({ fr: "Vue d'ensemble de toute votre activité", en: "Bird's-eye view of your whole operation" }),
+        t({ fr: "Recherche instantanée de fichiers", en: "Instant file search" }),
+        t({ fr: "Avancement des équipes en temps réel", en: "Team progress in real time" }),
+      ],
       activeColor: ACTIVE_BG,
       inactiveImage: "/logos/organisation-illustration.png",
       // Sub-badge: signals this feature is powered by the Atlas product
@@ -566,9 +639,18 @@ export default function OraExperienceCarousel() {
       tag: "04",
       brandSuffix: t({ fr: "engineering", en: "engineering" }),
       title: t({
-        fr: "Tailored, fast, on demand.",
+        fr: "Sur-mesure, rapide, à la demande.",
         en: "Tailored, fast, on demand.",
       }),
+      desc: t({
+        fr: "Une nouvelle demande ? Notre équipe la livre clé en main en quelques jours.",
+        en: "A new request? Our team delivers it turnkey in a few days.",
+      }),
+      points: [
+        t({ fr: "Besoin décrit en 5 minutes", en: "Need described in 5 minutes" }),
+        t({ fr: "Livraison en 3 à 5 jours", en: "Delivered in 3 to 5 days" }),
+        t({ fr: "Sans toucher à votre organisation", en: "Without disrupting your setup" }),
+      ],
       activeColor: ACTIVE_BG,
       inactiveImage: "/logos/audit-illustration.png",
       inactiveImageBottom: "6%",
@@ -581,6 +663,15 @@ export default function OraExperienceCarousel() {
         fr: "Vos données restent chez vous.",
         en: "Your data stays with you.",
       }),
+      desc: t({
+        fr: "Tout s'exécute sur votre machine. Vos fichiers sont chiffrés avant tout envoi.",
+        en: "Everything runs on your machine. Your files are encrypted before anything is sent.",
+      }),
+      points: [
+        t({ fr: "Calcul 100% local", en: "100% local compute" }),
+        t({ fr: "Chiffrement AES-256", en: "AES-256 encryption" }),
+        t({ fr: "Données hébergées en Suisse", en: "Data hosted in Switzerland" }),
+      ],
       activeColor: ACTIVE_BG,
       visual: <SecurityVisual />,
     },
@@ -643,6 +734,11 @@ export default function OraExperienceCarousel() {
              eliminates the "popping" sensation of two animations
              starting on the same frame. */
           transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1) 180ms;
+        }
+        .ora-points-tr {
+          /* Benefit list fades out quickly (no delay) so it clears the
+             stage before the mockup fades in on top of it. */
+          transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -759,10 +855,17 @@ export default function OraExperienceCarousel() {
                   </span>
                 </div>
                 <h3
-                  className={`font-poppins font-light text-2xl tracking-[-0.025em] leading-[1.15] mb-6 ${palette.title}`}
+                  className={`font-poppins font-medium text-2xl tracking-[-0.025em] leading-[1.15] ${palette.title}`}
                 >
                   {card.title}
                 </h3>
+                <p
+                  className={`font-inter text-[13.5px] leading-[1.65] mt-3 mb-6 ${
+                    useDarkText ? "text-gray-600" : "text-white/80"
+                  }`}
+                >
+                  {card.desc}
+                </p>
                 <div className="flex items-center justify-center">{card.visual}</div>
               </div>
             </div>

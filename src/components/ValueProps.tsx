@@ -9,22 +9,20 @@ import { useLang } from "@/lib/i18n";
 export default function ValueProps() {
   const { t } = useLang();
 
-  // Two columns of short benefits (3 each), separated by thin rules.
-  const columns: string[][] = [
-    [
-      t({ fr: "Gagnez des heures chaque semaine", en: "Save hours every week" }),
-      t({ fr: "Déployé en quelques heures", en: "Live in just hours" }),
-      t({ fr: "Aucune IA, du vrai sur-mesure", en: "No AI, real design talent" }),
-    ],
-    [
-      t({ fr: "Zéro saisie manuelle", en: "Zero manual entry" }),
-      t({ fr: "100% local et sécurisé", en: "100% local & secure" }),
-      t({ fr: "Conçu pour votre métier", en: "Built for your business" }),
-    ],
+  // Benefits in ROW order (left, right, left, right…): the grid auto-places
+  // them two per row, so each row shares one height and the separator rules
+  // of the two columns stay perfectly aligned even when a label wraps.
+  const benefits: string[] = [
+    t({ fr: "Gagnez des heures chaque semaine", en: "Save hours every week" }),
+    t({ fr: "Zéro saisie manuelle", en: "Zero manual entry" }),
+    t({ fr: "Déployé en quelques heures", en: "Live in just hours" }),
+    t({ fr: "100% local et sécurisé", en: "100% local & secure" }),
+    t({ fr: "Aucune IA, du vrai sur-mesure", en: "No AI, real design talent" }),
+    t({ fr: "Conçu pour votre métier", en: "Built for your business" }),
   ];
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
+    <div className="relative max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
       {/* LEFT — headline + benefit checklist */}
       <div>
         <h3 className="font-poppins font-normal text-[1.5rem] md:text-[1.95rem] leading-[1.34] tracking-[-0.01em] text-[#111827] dark:text-white">
@@ -33,7 +31,7 @@ export default function ValueProps() {
             {t({ fr: "automatisation puissante", en: "powerful automation" })}
           </span>
           {t({
-            fr: " ne devrait pas prendre des mois. On transforme vos tâches Excel en un workflow en un clic, ",
+            fr: " ne devrait pas prendre des mois. On transforme vos tâches Excel en automatisations en un clic, ",
             en: " shouldn't take months. So we turn your Excel work into a one-click workflow, ",
           })}
           <span className="text-[#3b82f6]">
@@ -42,17 +40,13 @@ export default function ValueProps() {
         </h3>
 
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
-          {columns.map((col, ci) => (
-            <ul key={ci} className="flex flex-col">
-              {col.map((item) => (
-                <li
-                  key={item}
-                  className="font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-300 dark:border-white/25"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
+          {benefits.map((item) => (
+            <div
+              key={item}
+              className="flex items-center font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-300 dark:border-white/25"
+            >
+              {item}
+            </div>
           ))}
         </div>
       </div>

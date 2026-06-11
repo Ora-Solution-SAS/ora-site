@@ -215,16 +215,16 @@ export default function AtlasShowcase() {
           {/* RIGHT — framed mockup viewer */}
           <div className="relative">
             {/* Luminous sky-blue halo behind the frame — Bubble.io look.
-                Bigger inset + higher center opacity + pure sky/blue color
-                (no teal mix) so it reads as a bright halo against the black
-                section bg rather than a muted dark gradient. */}
+                Pure radial gradient, NO blur filter: blurring this huge layer
+                forced an expensive repaint every scroll frame, which caused
+                the visible stutter when the dark Atlas section arrived. The
+                gradient's own falloff gives the same soft halo for free. */}
             <div
               aria-hidden
               className="absolute -inset-10 lg:-inset-24 -z-10 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.42) 0%, rgba(96,165,250,0.24) 35%, rgba(56,189,248,0.10) 60%, transparent 80%)",
-                filter: "blur(60px)",
+                  "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.38) 0%, rgba(96,165,250,0.22) 32%, rgba(56,189,248,0.10) 55%, rgba(56,189,248,0.03) 70%, transparent 82%)",
               }}
             />
 

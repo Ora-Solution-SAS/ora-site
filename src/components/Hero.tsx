@@ -470,11 +470,14 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           if (exitScrollTargetRef.current !== null) {
             window.scrollTo({ top: exitScrollTargetRef.current, behavior: "instant" as ScrollBehavior });
           }
-          cleanupExit();
+          /* IMPORTANT: no cleanupExit() here. The fixed overlay must keep
+             covering the heading spot while the empty reveal section
+             collapses and the scroll re-anchors (next React commit), and
+             while the real heading's FadeInOnScroll finishes. Hiding the
+             overlay now produced 1-2 frames where NEITHER the overlay NOR
+             the real heading was visible — the "phrase blinks" bug. The
+             textDone layout effect performs the seamless handoff. */
           unlockText();
-          /* Collapse the empty reveal section. A useLayoutEffect re-anchors the
-             scroll onto #features after the collapse so the viewport doesn't
-             jump. */
           setTextDone(true);
           return;
         }
@@ -560,15 +563,49 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
     /* When the reveal section collapses (textDone → true), the layout above
        #features shrinks by ~100vh. Re-anchor the scroll onto #features in the
-       same frame (before paint) so the viewport stays put — no jump. */
+       same frame (before paint) so the viewport stays put — no jump.
+
+       Then hand off from the fixed overlay to the real heading WITHOUT any
+       blink: the real heading fades in (FadeInOnScroll) UNDER the overlay,
+       which sits at the exact same position with identical typography. Only
+       once the heading is fully opaque do we hide the overlay. */
     useLayoutEffect(() => {
       if (!textDone) return;
       const featuresEl = document.getElementById("features");
-      if (!featuresEl) return;
-      const target = featuresEl.getBoundingClientRect().top + window.scrollY;
-      const lenis = (window as any).__lenis;
-      if (lenis) lenis.scrollTo(target, { immediate: true, force: true });
-      else window.scrollTo(0, target);
+      if (featuresEl) {
+        const target = featuresEl.getBoundingClientRect().top + window.scrollY;
+        const lenis = (window as any).__lenis;
+        if (lenis) lenis.scrollTo(target, { immediate: true, force: true });
+        else window.scrollTo(0, target);
+      }
+
+      const release = () => {
+        if (overlayRef.current) overlayRef.current.style.display = "none";
+        overlayActive.current = false;
+        exitScrollStartRef.current = null;
+        exitScrollTargetRef.current = null;
+      };
+
+      /* Un-hide .features-heading now (the overlay still covers the spot). */
+      document.body.classList.remove("hero-text-exiting");
+
+      const h2 = document.querySelector<HTMLElement>(
+        "#features .features-heading h2",
+      );
+      /* FadeInOnScroll wraps the h2 — wait for ITS opacity to reach 1. */
+      const fadeWrapper = h2?.parentElement ?? null;
+      const started = performance.now();
+      let raf = 0;
+      const waitForHeading = () => {
+        const opaque = fadeWrapper
+          ? parseFloat(getComputedStyle(fadeWrapper).opacity) >= 0.99
+          : true;
+        /* 1.2s cap — never leave the overlay stuck if the fade never fires. */
+        if (opaque || performance.now() - started > 1200) release();
+        else raf = requestAnimationFrame(waitForHeading);
+      };
+      raf = requestAnimationFrame(waitForHeading);
+      return () => cancelAnimationFrame(raf);
     }, [textDone]);
 
     /* ══════════════════════════════════════════════════════════ */
@@ -627,7 +664,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-6xl px-3 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when

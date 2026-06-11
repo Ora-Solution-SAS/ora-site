@@ -62,7 +62,7 @@ export default function OraJourney({ theme, openBooking }: OraJourneyProps) {
       kicker: t({ fr: "Le point de départ", en: "The starting point" }),
       title: t({ fr: "On cartographie votre terrain.", en: "We map your terrain." }),
       desc: t({
-        fr: "On analyse vos workflows Excel, on repère les tâches qui vous freinent et on chiffre le temps que vous allez récupérer.",
+        fr: "On analyse vos processus Excel, on repère les tâches qui vous freinent et on chiffre le temps que vous allez récupérer.",
         en: "We analyse your Excel workflows, spot the tasks slowing you down and quantify the time you will get back.",
       }),
     },
@@ -71,7 +71,7 @@ export default function OraJourney({ theme, openBooking }: OraJourneyProps) {
       kicker: t({ fr: "La mise en orbite", en: "Into orbit" }),
       title: t({ fr: "On déploie, on embarque vos équipes.", en: "We deploy, we bring your teams aboard." }),
       desc: t({
-        fr: "On installe Ora dans votre environnement, on configure vos premiers workflows et on forme votre équipe en quelques jours.",
+        fr: "On installe Ora dans votre environnement, on configure vos premières automatisations et on forme votre équipe en quelques jours.",
         en: "We install Ora in your environment, configure your first workflows and train your team in a matter of days.",
       }),
     },
@@ -80,7 +80,7 @@ export default function OraJourney({ theme, openBooking }: OraJourneyProps) {
       kicker: t({ fr: "Le voyage continue", en: "The voyage continues" }),
       title: t({ fr: "On reste à bord, à vos côtés.", en: "We stay aboard, beside you." }),
       desc: t({
-        fr: "On suit vos workflows en continu, on ajuste les automatisations quand vos besoins évoluent et on reste disponible.",
+        fr: "On suit vos automatisations en continu, on ajuste les automatisations quand vos besoins évoluent et on reste disponible.",
         en: "We monitor your workflows continuously, adjust automations as your needs evolve and stay available.",
       }),
     },
@@ -125,7 +125,7 @@ export default function OraJourney({ theme, openBooking }: OraJourneyProps) {
             }`}
           >
             {t({
-              fr: "Trois chapitres, du chaos de vos tableurs à des workflows qui tournent tout seuls.",
+              fr: "Trois chapitres, du chaos de vos tableurs à des automatisations qui tournent toutes seules.",
               en: "Three chapters, from spreadsheet chaos to workflows that run themselves.",
             })}
           </motion.p>

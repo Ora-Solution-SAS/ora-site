@@ -948,7 +948,23 @@ const App = () => {
 
       {/* FEATURES — alternating video + text rows */}
       <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
-        <div className="features-heading text-center mb-20 md:mb-28">
+        {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
+            (same perf rule as the experience section). The section is very
+            tall, so blobs are sprinkled along it. Every ellipse fades to
+            transparent BEFORE the edges (center ± 0.7×radius within 0-100%)
+            so no hard line forms against adjacent sections. Content wrappers
+            below are position:relative so they paint above this layer. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              theme === "dark"
+                ? "radial-gradient(55% 12% at 12% 10%, rgba(59,130,246,0.18) 0%, transparent 70%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.17) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.12) 0%, transparent 70%)"
+                : "radial-gradient(55% 12% at 12% 10%, rgba(59,130,246,0.16) 0%, transparent 70%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.11) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.11) 0%, transparent 70%)",
+          }}
+        />
+        <div className="features-heading relative text-center mb-20 md:mb-28">
           <FadeInOnScroll direction="up">
             <h2 className="font-poppins text-4xl md:text-[3.75rem] font-normal tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
               {t({ fr: "Découvrez", en: "Meet" })}{" "}
@@ -995,7 +1011,7 @@ const App = () => {
                 en: "Built for your business, not for everyone",
               }),
               desc: t({
-                fr: "Vous nous décrivez votre workflow, on l'automatise à l'identique, le tout livré en quelques jours. Pas de template générique, pas de mois d'attente.",
+                fr: "Vous nous décrivez votre processus, on l'automatise à l'identique, le tout livré en quelques jours. Pas de template générique, pas de mois d'attente.",
                 en: "You describe your workflow, we automate it exactly as it is, delivered in days. No generic templates, no months of waiting.",
               }),
               icon: TrendingUp,
@@ -1023,7 +1039,7 @@ const App = () => {
         />
 
         <FadeInOnScroll delay={200}>
-          <div className="flex justify-center mt-16">
+          <div className="relative flex justify-center mt-16">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("ora:open-solutions"))}
               className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
@@ -1042,11 +1058,29 @@ const App = () => {
       {/* Light section: cards rest on a soft "bleu très clair" and turn
           cobalt on hover, so the surrounding bg stays light (warm off-white
           in light mode, #111827 in dark mode) instead of the old pure black. */}
-      <section className="py-24 md:py-36 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827] overflow-x-hidden">
+      <section className="relative py-24 md:py-36 px-6 md:px-12 bg-white dark:bg-[#111827] overflow-x-hidden">
+        {/* Ambient blue/green/pink tints — pure radial gradients, NO blur
+            filter (a blur() would repaint while scrolling and jank, same rule
+            as FeaturesScrolly). They sit above the section bg but below the
+            content (both content wrappers are position:relative).
+            Geometry rule: every ellipse must fade to transparent BEFORE the
+            section edges (center ± 0.7×radius within 0-100%), otherwise the
+            edge slices the gradient and draws a hard line against the next
+            section. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              theme === "dark"
+                ? "radial-gradient(55% 38% at 14% 30%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 32% at 86% 68%, rgba(16,185,129,0.13) 0%, transparent 70%), radial-gradient(45% 30% at 80% 24%, rgba(236,72,153,0.10) 0%, transparent 70%)"
+                : "radial-gradient(55% 38% at 14% 30%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(50% 32% at 86% 68%, rgba(16,185,129,0.12) 0%, transparent 70%), radial-gradient(45% 30% at 80% 24%, rgba(236,72,153,0.09) 0%, transparent 70%)",
+          }}
+        />
         {/* Heading + footer stay in max-w-6xl (text reads better narrower).
             The carousel itself breaks out to max-w-7xl so the 5 cards
             have proper room — symmetrically centered, never offset. */}
-        <div className="max-w-6xl mx-auto">
+        <div className="relative max-w-6xl mx-auto">
           <FadeInOnScroll>
             <div className="text-center mb-16">
               <h2 className="font-poppins font-medium tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
@@ -1064,7 +1098,7 @@ const App = () => {
 
         {/* Carousel uses a much wider container so the 5 enlarged cards
             have room to breathe and the parallax movement is visible. */}
-        <div className="max-w-screen-2xl mx-auto">
+        <div className="relative max-w-screen-2xl mx-auto">
           <FadeInOnScroll>
             <OraExperienceCarousel />
           </FadeInOnScroll>
@@ -1076,7 +1110,7 @@ const App = () => {
       {/* ── INDUSTRIES ───────────────────────────────────────────────── */}
       {/* Pick a field → see concrete automation examples → jump to the
           dedicated solution page. */}
-      <IndustrySelector theme={theme} onNavigate={navigateTo} />
+      <IndustrySelector theme={theme} openBooking={openBooking} />
 
       {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
       {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
@@ -1118,7 +1152,7 @@ const App = () => {
         {/* Floating decorative cards — desktop only */}
         <div className="absolute inset-0 hidden lg:block pointer-events-none" aria-hidden>
           {[
-            { pos: "top-[14%] left-[6%]",      delay: "0s",   icon: Zap,             label: t({ fr: "Workflow lancé", en: "Workflow started" }) },
+            { pos: "top-[14%] left-[6%]",      delay: "0s",   icon: Zap,             label: t({ fr: "Automatisation lancée", en: "Workflow started" }) },
             { pos: "top-[18%] right-[7%]",     delay: "1.4s", icon: BarChart3,       label: t({ fr: "Rapport généré", en: "Report generated" }) },
             { pos: "bottom-[16%] left-[10%]",  delay: "2.1s", icon: FileSpreadsheet, label: t({ fr: "Excel mis à jour", en: "Excel updated" }) },
             { pos: "bottom-[14%] right-[9%]",  delay: "0.7s", icon: Mail,            label: t({ fr: "Envoi automatique", en: "Auto-sent" }) },

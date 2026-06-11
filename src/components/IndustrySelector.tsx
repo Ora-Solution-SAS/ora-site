@@ -6,12 +6,10 @@ import {
   PieChart,
   TrendingUp,
   Building2,
-  FileSpreadsheet,
-  Repeat,
-  Receipt,
   FileCheck,
   FileText,
   GitCompare,
+  Lock,
   BarChart3,
   Calculator,
   LineChart,
@@ -31,13 +29,6 @@ import { animatedScrollToId } from "@/lib/scrollTo";
  * Each panel ends with a CTA that routes to the matching solution page.
  */
 
-// Solution pages this selector can route to (subset of App's Page union).
-type SolutionPage =
-  | "solution-expertise-comptable"
-  | "solution-audit"
-  | "solution-fonds-investissement"
-  | "solution-banque-affaires";
-
 // Branch order — must match the `industries` array below. Used to resolve the
 // id sent by the "Solutions" nav menu (via the `ora:select-industry` event)
 // into the active tab index.
@@ -47,7 +38,6 @@ type Example = { icon: LucideIcon; label: string };
 
 type Industry = {
   id: string;
-  page: SolutionPage;
   icon: LucideIcon;
   /** Solid color for the circular icon badge. */
   iconBg: string;
@@ -58,10 +48,12 @@ type Industry = {
 
 export default function IndustrySelector({
   theme,
-  onNavigate,
+  openBooking,
 }: {
   theme: "light" | "dark";
-  onNavigate: (page: SolutionPage) => void;
+  // The per-industry solution pages aren't finished yet, so the CTA opens the
+  // booking flow directly instead of routing to them.
+  openBooking: () => void;
 }) {
   const { t } = useLang();
   const [activeIdx, setActiveIdx] = useState(0);
@@ -84,41 +76,39 @@ export default function IndustrySelector({
   const industries: Industry[] = [
     {
       id: "comptable",
-      page: "solution-expertise-comptable",
       icon: Briefcase,
       iconBg: "bg-blue-500",
       name: t({ fr: "Expertise comptable", en: "Accounting firms" }),
       tagline: t({
-        fr: "Automatisez vos travaux comptables récurrents.",
-        en: "Automate your recurring accounting work.",
+        fr: "Ora reprend là où votre logiciel comptable s'arrête : tous vos contrôles Excel, automatisés.",
+        en: "Ora picks up where your accounting software stops: all your Excel checks, automated.",
       }),
       examples: [
         {
-          icon: FileSpreadsheet,
+          icon: GitCompare,
           label: t({
-            fr: "Liasses fiscales générées depuis vos balances",
-            en: "Tax filings generated from your trial balances",
+            fr: "Balances contrôlées et écarts détectés en quelques secondes",
+            en: "Trial balances checked, discrepancies flagged in seconds",
           }),
         },
         {
-          icon: Repeat,
+          icon: FileCheck,
           label: t({
-            fr: "Rapprochements bancaires automatiques",
-            en: "Automatic bank reconciliations",
+            fr: "Extraction de données depuis vos PDF et mise à jour automatique de vos fichiers",
+            en: "Data extracted from your PDFs and your files updated automatically",
           }),
         },
         {
-          icon: Receipt,
+          icon: Lock,
           label: t({
-            fr: "TVA calculée et pré-remplie",
-            en: "VAT computed and pre-filled",
+            fr: "Dossiers clients chiffrés et stockés en Suisse",
+            en: "Client files encrypted and stored in Switzerland",
           }),
         },
       ],
     },
     {
       id: "audit",
-      page: "solution-audit",
       icon: PieChart,
       iconBg: "bg-emerald-500",
       name: t({ fr: "Audit", en: "Audit" }),
@@ -152,7 +142,6 @@ export default function IndustrySelector({
     },
     {
       id: "fonds",
-      page: "solution-fonds-investissement",
       icon: TrendingUp,
       iconBg: "bg-pink-500",
       name: t({ fr: "Fonds d'investissement", en: "Investment funds" }),
@@ -186,7 +175,6 @@ export default function IndustrySelector({
     },
     {
       id: "banque",
-      page: "solution-banque-affaires",
       icon: Building2,
       iconBg: "bg-amber-500",
       name: t({ fr: "Banque d'affaires", en: "Investment banking" }),
@@ -329,13 +317,13 @@ export default function IndustrySelector({
                   })}
                 </ul>
 
-                {/* CTA → dedicated solution page */}
+                {/* CTA → booking flow (the per-industry pages aren't live yet) */}
                 <button
                   type="button"
-                  onClick={() => onNavigate(active.page)}
+                  onClick={openBooking}
                   className="group mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.30)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]"
                 >
-                  {t({ fr: "Découvrir cette solution", en: "Explore this solution" })}
+                  {t({ fr: "Réserver un appel", en: "Book a call" })}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
               </motion.div>
