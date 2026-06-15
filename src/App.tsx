@@ -18,7 +18,6 @@ import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow
 import QualifierResult from "./components/QualifierResult";
 import FeaturesScrolly from "./components/FeaturesScrolly";
 import ValueProps from "./components/ValueProps";
-import OraExperienceCarousel from "./components/OraExperienceCarousel";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
@@ -1028,8 +1027,8 @@ const App = () => {
                 en: "Your data stays with you",
               }),
               desc: t({
-                fr: "Aucun serveur, aucun cloud, aucun transfert, tout tourne sur votre machine. Une architecture locale pensée pour les données sensibles.",
-                en: "No server, no cloud, no transfer, everything runs on your machine. A local architecture designed for sensitive data.",
+                fr: "Le traitement s'exécute en local, sur votre machine. Vos fichiers sont chiffrés sur votre appareil avant tout envoi, puis stockés en Suisse, illisibles sur nos serveurs.",
+                en: "Processing runs locally, on your machine. Your files are encrypted on your device before anything is sent, then stored in Switzerland, unreadable on our servers.",
               }),
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
@@ -1054,58 +1053,9 @@ const App = () => {
       {/* ── ATLAS SHOWCASE ──────────────────────────────────────────── */}
       <AtlasShowcase />
 
-      {/* ── L'EXPÉRIENCE ORA ────────────────────────────────────────── */}
-      {/* Light section: cards rest on a soft "bleu très clair" and turn
-          cobalt on hover, so the surrounding bg stays light (warm off-white
-          in light mode, #111827 in dark mode) instead of the old pure black. */}
-      <section className="relative py-24 md:py-36 px-6 md:px-12 bg-white dark:bg-[#111827] overflow-x-hidden">
-        {/* Ambient blue/green/pink tints — pure radial gradients, NO blur
-            filter (a blur() would repaint while scrolling and jank, same rule
-            as FeaturesScrolly). They sit above the section bg but below the
-            content (both content wrappers are position:relative).
-            Geometry rule: every ellipse must fade to transparent BEFORE the
-            section edges (center ± 0.7×radius within 0-100%), otherwise the
-            edge slices the gradient and draws a hard line against the next
-            section. */}
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              theme === "dark"
-                ? "radial-gradient(55% 38% at 14% 30%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 32% at 86% 68%, rgba(16,185,129,0.13) 0%, transparent 70%), radial-gradient(45% 30% at 80% 24%, rgba(236,72,153,0.10) 0%, transparent 70%)"
-                : "radial-gradient(55% 38% at 14% 30%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(50% 32% at 86% 68%, rgba(16,185,129,0.12) 0%, transparent 70%), radial-gradient(45% 30% at 80% 24%, rgba(236,72,153,0.09) 0%, transparent 70%)",
-          }}
-        />
-        {/* Heading + footer stay in max-w-6xl (text reads better narrower).
-            The carousel itself breaks out to max-w-7xl so the 5 cards
-            have proper room — symmetrically centered, never offset. */}
-        <div className="relative max-w-6xl mx-auto">
-          <FadeInOnScroll>
-            <div className="text-center mb-16">
-              <h2 className="font-poppins font-medium tracking-[-0.03em] text-3xl md:text-5xl leading-[1.12] text-[#111827] dark:text-white">
-                {t({ fr: "L'expérience", en: "The" })} <span className="text-brand-gradient">{t({ fr: "Ora.", en: "Ora experience." })}</span>
-              </h2>
-              <p className="mt-4 mx-auto text-base leading-relaxed max-w-lg text-gray-500 dark:text-gray-400">
-                {t({
-                  fr: "Opérationnel en moins d'une semaine. Nous configurons tout pour vous, sans toucher à votre organisation actuelle.",
-                  en: "Up and running in under a week. We set everything up for you, without disrupting your current workflow.",
-                })}
-              </p>
-            </div>
-          </FadeInOnScroll>
-        </div>
-
-        {/* Carousel uses a much wider container so the 5 enlarged cards
-            have room to breathe and the parallax movement is visible. */}
-        <div className="relative max-w-screen-2xl mx-auto">
-          <FadeInOnScroll>
-            <OraExperienceCarousel />
-          </FadeInOnScroll>
-        </div>
-
-        {/* "Découvrir l'expérience Ora" link hidden until the page goes live. */}
-      </section>
+      {/* L'expérience Ora (carousel) + l'offre « tout inclus » ont été
+          retirés pour l'instant. La section Industries prend leur place,
+          juste après Atlas, sur fond sombre. */}
 
       {/* ── INDUSTRIES ───────────────────────────────────────────────── */}
       {/* Pick a field → see concrete automation examples → jump to the

@@ -8,6 +8,12 @@ type Props = {
   resetOnEnter?: boolean;
   /** Fraction of the video that must be visible before it starts. Default 0.35. */
   threshold?: number;
+  /**
+   * Expands the observer's viewport so playback starts slightly BEFORE the
+   * video scrolls fully into view. A positive bottom value (default 20%) makes
+   * the video begin a touch early as the user approaches it.
+   */
+  rootMargin?: string;
 };
 
 /**
@@ -26,6 +32,7 @@ export default function InViewVideo({
   style,
   resetOnEnter = true,
   threshold = 0.35,
+  rootMargin = "0px 0px 20% 0px",
 }: Props) {
   const ref = useRef<HTMLVideoElement>(null);
 
@@ -50,12 +57,12 @@ export default function InViewVideo({
           el.pause();
         }
       },
-      { threshold },
+      { threshold, rootMargin },
     );
 
     io.observe(el);
     return () => io.disconnect();
-  }, [resetOnEnter, threshold]);
+  }, [resetOnEnter, threshold, rootMargin]);
 
   return (
     <video

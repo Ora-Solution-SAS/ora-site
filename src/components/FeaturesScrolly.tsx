@@ -45,36 +45,33 @@ type Props = {
   features: ScrollyFeature[];
 };
 
-function Visual({ feature, active = true }: { feature: ScrollyFeature; active?: boolean }) {
+function Visual({ feature }: { feature: ScrollyFeature }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const inViewRef = useRef(false);
 
-  // Play each video from frame 0 only once it is scrolled into view (and, in the
-  // desktop sticky layout, only when it is the active block). Otherwise the
-  // looping videos would already be mid-clip by the time the user reaches them,
-  // so they'd never catch the clip begin.
+  // Pre-roll: start each video as soon as the section approaches the viewport
+  // (big 800px head-start) and let it keep looping — playback is no longer reset
+  // to frame 0 nor gated on the "active" block. So by the time the user scrolls
+  // to a video the clip has already *slightly* started, instead of popping in
+  // cold. threshold 0 = a single intersecting pixel is enough to start.
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !feature.video) return;
     const sync = () => {
-      const shouldPlay = inViewRef.current && active;
-      if (shouldPlay) {
-        if (el.paused) {
-          try { el.currentTime = 0; } catch { /* metadata not ready yet */ }
-          void el.play().catch(() => {});
-        }
+      if (inViewRef.current) {
+        if (el.paused) void el.play().catch(() => {});
       } else if (!el.paused) {
         el.pause();
       }
     };
     const io = new IntersectionObserver(
       ([entry]) => { inViewRef.current = entry.isIntersecting; sync(); },
-      { threshold: 0.4 },
+      { threshold: 0, rootMargin: "800px 0px 800px 0px" },
     );
     io.observe(el);
     sync();
     return () => io.disconnect();
-  }, [active, feature.video]);
+  }, [feature.video]);
 
   return (
     <div className="relative">
@@ -110,7 +107,7 @@ function Visual({ feature, active = true }: { feature: ScrollyFeature; active?: 
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="auto"
             className="w-full object-cover block"
             style={{
               aspectRatio: feature.ratio ?? DEFAULT_RATIO,
@@ -202,7 +199,10 @@ export default function FeaturesScrolly({ features }: Props) {
     const compute = () => {
       raf = 0;
       const viewportH = window.innerHeight;
-      const triggerY = viewportH * 0.4;
+      // Trigger line a little below the reading focus (50% vs 40%) so each
+      // feature — and its video — becomes active slightly BEFORE it's centered,
+      // i.e. the clip starts a touch before the user fully scrolls to it.
+      const triggerY = viewportH * 0.5;
 
       let bestIdx = 0;
       let bestDistance = Infinity;
@@ -306,7 +306,7 @@ export default function FeaturesScrolly({ features }: Props) {
                       zIndex: isActive ? 2 : 1,
                     }}
                   >
-                    <Visual feature={feat} active={isActive} />
+                    <Visual feature={feat} />
                   </motion.div>
                 );
               })}

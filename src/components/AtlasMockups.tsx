@@ -24,8 +24,21 @@ import {
   List,
   LayoutGrid,
   Lock,
+  FolderPlus,
+  X,
+  Calendar,
+  Clock,
+  Link2,
+  Activity,
+  ExternalLink,
+  Check,
+  Moon,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
+
+import { useState, useRef, Fragment } from "react";
+import { motion } from "framer-motion";
 
 /**
  * ORA Atlas — 3 static "app screenshot" mockups for the landing page.
@@ -55,22 +68,25 @@ const NAV_ITEMS: { id: NavItemId; icon: LucideIcon; label: string }[] = [
   { id: "engineering", icon: Zap, label: "Engineering" },
 ];
 
-function Sidebar({ active }: { active: NavItemId }) {
+function Sidebar({ active, dark }: { active: NavItemId; dark?: boolean }) {
+  const c = dark
+    ? { bg: "#0f172a", text: "#f1f5f9", sub: "#64748b", item: "#94a3b8", activeBg: "#1e293b", activeText: "#93c5fd", accent: "#60a5fa" }
+    : { bg: "#f6f7fb", text: "#0f172a", sub: "#94a3b8", item: "#475569", activeBg: "#eef2ff", activeText: "#4361ee", accent: "#4361ee" };
   return (
-    <div className="w-[220px] bg-[#f6f7fb] p-4 flex flex-col flex-shrink-0">
+    <div className="w-[220px] p-4 flex flex-col flex-shrink-0" style={{ background: c.bg }}>
       {/* Brand */}
       <div className="flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-lg bg-[#4361ee] flex items-center justify-center text-white font-bold text-[15px]">
           O
         </div>
         <div>
-          <div className="text-[15px] font-bold leading-tight text-[#0f172a]">Ora</div>
-          <div className="text-[11px] text-[#94a3b8] leading-tight">Atlas</div>
+          <div className="text-[15px] font-bold leading-tight" style={{ color: c.text }}>Ora</div>
+          <div className="text-[11px] leading-tight" style={{ color: c.sub }}>Atlas</div>
         </div>
       </div>
 
       {/* NAVIGATION */}
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mt-6 mb-2">
+      <div className="text-[10px] font-bold uppercase tracking-wider mt-6 mb-2" style={{ color: c.sub }}>
         Navigation
       </div>
       <div className="flex flex-col gap-0.5">
@@ -80,14 +96,13 @@ function Sidebar({ active }: { active: NavItemId }) {
           return (
             <div
               key={item.id}
-              className={`relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium ${
-                isActive ? "bg-[#eef2ff] text-[#4361ee]" : "text-[#475569]"
-              }`}
+              className="relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.5px] font-medium"
+              style={{ background: isActive ? c.activeBg : "transparent", color: isActive ? c.activeText : c.item }}
             >
               <Icon className="w-4 h-4" strokeWidth={2} />
               <span>{item.label}</span>
               {isActive && (
-                <div className="absolute right-0 top-1 bottom-1 w-0.5 bg-[#4361ee] rounded-full" />
+                <div className="absolute right-0 top-1 bottom-1 w-0.5 rounded-full" style={{ background: c.accent }} />
               )}
             </div>
           );
@@ -95,31 +110,34 @@ function Sidebar({ active }: { active: NavItemId }) {
       </div>
 
       {/* COMPTE (pushed to bottom) */}
-      <div className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8] mt-auto mb-2">
+      <div className="text-[10px] font-bold uppercase tracking-wider mt-auto mb-2" style={{ color: c.sub }}>
         Compte
       </div>
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center gap-2.5 px-3 py-2 text-[13.5px] font-medium text-[#475569]">
+        <div className="flex items-center gap-2.5 px-3 py-2 text-[13.5px] font-medium" style={{ color: c.item }}>
           <Settings className="w-4 h-4" />
           <span>Paramètres</span>
         </div>
-        <div className="flex items-center gap-2.5 px-3 py-2 text-[13.5px] font-medium text-[#475569]">
+        <div className="flex items-center gap-2.5 px-3 py-2 text-[13.5px] font-medium" style={{ color: c.item }}>
           <LogOut className="w-4 h-4" />
           <span>Déconnexion</span>
         </div>
       </div>
-      <div className="text-[10px] text-[#94a3b8] mt-3 px-3">v0.1 · démo</div>
+      <div className="text-[10px] mt-3 px-3" style={{ color: c.sub }}>v0.1 · démo</div>
     </div>
   );
 }
 
-function Topbar({ title, subtitle }: { title: string; subtitle: string }) {
+function Topbar({ title, subtitle, dark }: { title: string; subtitle: string; dark?: boolean }) {
+  const c = dark
+    ? { bg: "#0f172a", border: "#1e293b", title: "#f1f5f9", sub: "#64748b", btnBorder: "#334155", btnText: "#94a3b8" }
+    : { bg: "#ffffff", border: "#eef0f5", title: "#0f172a", sub: "#94a3b8", btnBorder: "#e6e9f0", btnText: "#475569" };
   return (
-    <div className="h-14 bg-white border-b border-[#eef0f5] px-6 flex items-center justify-between flex-shrink-0">
+    <div className="h-14 px-6 flex items-center justify-between flex-shrink-0 border-b" style={{ background: c.bg, borderColor: c.border }}>
       {/* Breadcrumb */}
       <div className="text-[13.5px]">
-        <span className="font-semibold text-[#0f172a]">{title}</span>
-        <span className="text-[#94a3b8]"> · {subtitle}</span>
+        <span className="font-semibold" style={{ color: c.title }}>{title}</span>
+        <span style={{ color: c.sub }}> · {subtitle}</span>
       </div>
 
       {/* Actions */}
@@ -128,17 +146,17 @@ function Topbar({ title, subtitle }: { title: string; subtitle: string }) {
           <Layers className="w-3.5 h-3.5" />
           Mode extension
         </button>
-        <button className="h-8 px-3 rounded-lg border border-[#e6e9f0] text-[12px] font-medium text-[#475569] flex items-center gap-1.5">
+        <button className="h-8 px-3 rounded-lg border text-[12px] font-medium flex items-center gap-1.5" style={{ borderColor: c.btnBorder, color: c.btnText }}>
           <Maximize2 className="w-3.5 h-3.5" />
           Plein écran
         </button>
-        <button className="h-8 w-8 rounded-lg border border-[#e6e9f0] flex items-center justify-center text-[#475569]">
+        <button className="h-8 w-8 rounded-lg border flex items-center justify-center" style={{ borderColor: c.btnBorder, color: c.btnText }}>
           <MessageSquare className="w-3.5 h-3.5" />
         </button>
-        <button className="h-8 w-8 rounded-lg border border-[#e6e9f0] flex items-center justify-center text-[#475569]">
+        <button className="h-8 w-8 rounded-lg border flex items-center justify-center" style={{ borderColor: c.btnBorder, color: c.btnText }}>
           <Bell className="w-3.5 h-3.5" />
         </button>
-        <div className="bg-emerald-100 text-emerald-700 rounded-full px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1.5">
+        <div className="rounded-full px-2.5 py-1 text-[11px] font-semibold flex items-center gap-1.5" style={dark ? { background: "rgba(16,185,129,0.16)", color: "#6ee7b7" } : { background: "#d1fae5", color: "#047857" }}>
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           Synchronisé
         </div>
@@ -155,35 +173,37 @@ function WindowShell({
   pageTitle,
   pageSubtitle,
   height,
+  dark,
   children,
 }: {
   activeNav: NavItemId;
   pageTitle: string;
   pageSubtitle: string;
   height: number;
+  dark?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div
-      className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 bg-white"
-      style={{ width: 1020, height, fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif' }}
+      className={`rounded-2xl overflow-hidden shadow-2xl ring-1 ${dark ? "ring-white/10" : "ring-black/5"}`}
+      style={{ width: 1020, height, background: dark ? "#0b1120" : "#ffffff", fontFamily: '-apple-system, BlinkMacSystemFont, "Inter", sans-serif' }}
     >
       {/* macOS titlebar */}
-      <div className="h-9 bg-[#f6f7fb] border-b border-[#e6e9f0] flex items-center px-4 relative">
+      <div className="h-9 flex items-center px-4 relative border-b" style={{ background: dark ? "#0f172a" : "#f6f7fb", borderColor: dark ? "#1e293b" : "#e6e9f0" }}>
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
           <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
           <div className="w-3 h-3 rounded-full bg-[#28c840]" />
         </div>
-        <div className="absolute inset-0 flex items-center justify-center text-[12px] text-[#475569] font-medium pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center text-[12px] font-medium pointer-events-none" style={{ color: dark ? "#64748b" : "#475569" }}>
           ORA Atlas
         </div>
       </div>
 
       <div className="flex" style={{ height: height - 36 }}>
-        <Sidebar active={activeNav} />
-        <div className="flex-1 min-w-0 flex flex-col bg-white">
-          <Topbar title={pageTitle} subtitle={pageSubtitle} />
+        <Sidebar active={activeNav} dark={dark} />
+        <div className="flex-1 min-w-0 flex flex-col" style={{ background: dark ? "#0b1120" : "#ffffff" }}>
+          <Topbar title={pageTitle} subtitle={pageSubtitle} dark={dark} />
           <div className="flex-1 overflow-hidden">{children}</div>
         </div>
       </div>
@@ -716,6 +736,615 @@ export function MockupGalaxy() {
               </button>
             ))}
           </div>
+        </div>
+      </div>
+    </WindowShell>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
+//  INTERACTIVE Galaxy — same app screen, but visitors add their own
+//  folders directly in it (local sandbox, no backend).
+// ─────────────────────────────────────────────────────────────────
+
+type Person = { initials: string; color: string };
+
+type GFile = {
+  id: string;
+  label: string;            // file name without extension
+  format: NodeFormat;
+  x: number;                // logical position in a 1000×600 canvas space
+  y: number;
+  hub?: boolean;
+  size: string;
+  modified: string;
+  access: Person[];
+  activity: { who: string; action: string; when: string }[];
+};
+
+type GLink = { a: string; b: string };
+
+const GALAXY_TYPES: { format: NodeFormat; label: string }[] = [
+  { format: "xlsx", label: "Excel" },
+  { format: "pdf", label: "PDF" },
+  { format: "csv", label: "CSV" },
+];
+
+const GALAXY_EXT: Record<NodeFormat, string> = { xlsx: ".xlsx", pdf: ".pdf", csv: ".csv" };
+
+const PEOPLE: Record<"ML" | "TB" | "SR" | "V", Person> = {
+  ML: { initials: "ML", color: "#f59e0b" },
+  TB: { initials: "TB", color: "#8b5cf6" },
+  SR: { initials: "SR", color: "#ec4899" },
+  V: { initials: "V", color: "#4361ee" },
+};
+
+// Starting constellation: a central workbook linked to four related files.
+const INITIAL_FILES: GFile[] = [
+  {
+    id: "f0", label: "analyses_marges", format: "xlsx", x: 500, y: 300, hub: true,
+    size: "2,4 Mo", modified: "il y a 2 h",
+    access: [PEOPLE.ML, PEOPLE.TB, PEOPLE.V],
+    activity: [
+      { who: "Marie", action: "a modifié 3 cellules", when: "il y a 2 h" },
+      { who: "Thomas", action: "a consulté le fichier", when: "hier" },
+      { who: "Vous", action: "avez partagé l'accès", when: "lun." },
+    ],
+  },
+  {
+    id: "f1", label: "dashboard_KPIs", format: "xlsx", x: 800, y: 135,
+    size: "1,1 Mo", modified: "il y a 5 h",
+    access: [PEOPLE.ML, PEOPLE.V],
+    activity: [
+      { who: "Marie", action: "a mis à jour les graphiques", when: "il y a 5 h" },
+      { who: "Vous", action: "avez ouvert le fichier", when: "il y a 5 h" },
+    ],
+  },
+  {
+    id: "f2", label: "audit_provisions", format: "xlsx", x: 820, y: 440,
+    size: "880 Ko", modified: "hier",
+    access: [PEOPLE.TB, PEOPLE.V],
+    activity: [
+      { who: "Thomas", action: "a ajouté une note", when: "hier" },
+      { who: "Vous", action: "avez consulté", when: "hier" },
+    ],
+  },
+  {
+    id: "f3", label: "rapport_DD_v3", format: "pdf", x: 470, y: 515,
+    size: "3,2 Mo", modified: "il y a 3 j",
+    access: [PEOPLE.SR, PEOPLE.TB, PEOPLE.V],
+    activity: [
+      { who: "Sofia", action: "a exporté en PDF", when: "il y a 3 j" },
+      { who: "Thomas", action: "a laissé un commentaire", when: "il y a 3 j" },
+    ],
+  },
+  {
+    id: "f4", label: "clients_export", format: "csv", x: 175, y: 210,
+    size: "420 Ko", modified: "il y a 1 sem.",
+    access: [PEOPLE.V],
+    activity: [{ who: "Vous", action: "avez importé le fichier", when: "il y a 1 sem." }],
+  },
+];
+
+const INITIAL_LINKS: GLink[] = [
+  { a: "f0", b: "f1" },
+  { a: "f0", b: "f2" },
+  { a: "f0", b: "f3" },
+  { a: "f0", b: "f4" },
+];
+
+// Tiny faux preview rendered in the detail panel, themed per file type.
+function FilePreview({ format, dark }: { format: NodeFormat; dark?: boolean }) {
+  const c = dark
+    ? { gut: "#0f172a", gutText: "#64748b", head: "#14532d", headText: "#bbf7d0", cell: "#111827", cellAlt: "#0f172a", text: "#e2e8f0", border: "#334155", paper: "#0f172a", line: "#1e293b", lineHead: "#334155" }
+    : { gut: "#f1f3f7", gutText: "#94a3b8", head: "#e9f7ef", headText: "#15803d", cell: "#ffffff", cellAlt: "#fafbfd", text: "#0f172a", border: "#e2e8f0", paper: "#ffffff", line: "#e6e9f0", lineHead: "#cbd5e1" };
+
+  // PDF — a clean document card with a title bar and text lines.
+  if (format === "pdf") {
+    return (
+      <div className="rounded-md border p-3" style={{ borderColor: c.border, background: c.paper }}>
+        <div className="h-1.5 w-1/2 rounded mb-2.5" style={{ background: c.lineHead }} />
+        {[100, 92, 96, 70, 88, 58].map((w, i) => (
+          <div key={i} className="h-1 rounded mb-1.5" style={{ width: `${w}%`, background: c.line }} />
+        ))}
+      </div>
+    );
+  }
+
+  // xlsx / csv — a miniature spreadsheet with column letters and row numbers.
+  const { cols, rows } =
+    format === "csv"
+      ? {
+          cols: ["id", "nom", "segment", "ca"],
+          rows: [
+            ["1", "Acme", "PME", "128 k€"],
+            ["2", "Globex", "ETI", "540 k€"],
+            ["3", "Initech", "PME", "86 k€"],
+            ["4", "Umbrella", "GE", "1,2 M€"],
+          ],
+        }
+      : {
+          cols: ["Poste", "2023", "2024"],
+          rows: [
+            ["Marge brute", "41 %", "47 %"],
+            ["EBITDA", "2,1 M", "2,8 M"],
+            ["Trésorerie", "0,9 M", "1,3 M"],
+            ["Dette nette", "3,4 M", "2,9 M"],
+          ],
+        };
+
+  const grid = "16px " + cols.map((_, i) => (i === 0 ? "1.3fr" : "1fr")).join(" ");
+  const colHead = { background: c.gut, color: c.gutText, borderRight: `1px solid ${c.border}`, borderBottom: `1px solid ${c.border}` };
+
+  return (
+    <div className="rounded-md border overflow-hidden text-[8px]" style={{ borderColor: c.border }}>
+      <div className="grid" style={{ gridTemplateColumns: grid }}>
+        {/* Column-letter header: empty corner + A, B, C… */}
+        <div style={{ ...colHead }} />
+        {cols.map((_, i) => (
+          <div key={`L${i}`} className="text-center font-semibold py-0.5" style={{ ...colHead, borderRight: i < cols.length - 1 ? `1px solid ${c.border}` : "none" }}>
+            {String.fromCharCode(65 + i)}
+          </div>
+        ))}
+
+        {/* Row 1 = the spreadsheet's own header (green like Excel) */}
+        <div className="flex items-center justify-center font-semibold" style={{ background: c.gut, color: c.gutText, borderRight: `1px solid ${c.border}`, borderBottom: `1px solid ${c.border}` }}>1</div>
+        {cols.map((h, i) => (
+          <div key={`H${i}`} className="px-1.5 py-1 font-semibold truncate" style={{ background: c.head, color: c.headText, borderRight: i < cols.length - 1 ? `1px solid ${c.border}` : "none", borderBottom: `1px solid ${c.border}` }}>{h}</div>
+        ))}
+
+        {/* Data rows with row numbers in the gutter */}
+        {rows.map((row, r) => (
+          <Fragment key={r}>
+            <div className="flex items-center justify-center font-semibold" style={{ background: c.gut, color: c.gutText, borderRight: `1px solid ${c.border}`, borderBottom: r < rows.length - 1 ? `1px solid ${c.border}` : "none" }}>{r + 2}</div>
+            {row.map((cell, ci) => (
+              <div
+                key={ci}
+                className={`px-1.5 py-1 truncate ${ci === 0 ? "font-medium" : "text-right"}`}
+                style={{ background: r % 2 ? c.cellAlt : c.cell, color: c.text, borderRight: ci < row.length - 1 ? `1px solid ${c.border}` : "none", borderBottom: r < rows.length - 1 ? `1px solid ${c.border}` : "none" }}
+              >
+                {cell}
+              </div>
+            ))}
+          </Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function InteractiveGalaxy() {
+  const [files, setFiles] = useState<GFile[]>(INITIAL_FILES);
+  const [links, setLinks] = useState<GLink[]>(INITIAL_LINKS);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panelId, setPanelId] = useState<string | null>(null);
+  const [dark, setDark] = useState(false);
+  const [name, setName] = useState("");
+  const [format, setFormat] = useState<NodeFormat>("xlsx");
+  const [linkDrag, setLinkDrag] = useState<{ from: string; x: number; y: number } | null>(null);
+  const [openToast, setOpenToast] = useState(false);
+
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ mode: "move" | "link" | null; id: string | null; offX: number; offY: number; startX: number; startY: number }>({ mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0 });
+  const idRef = useRef(1);
+  const toastRef = useRef<number | null>(null);
+
+  const panelFile = files.find((f) => f.id === panelId) ?? null;
+
+  // Theme tokens for the galaxy content (the shell themes itself via `dark`).
+  const T = dark
+    ? {
+        sub: "#94a3b8", pageText: "#f1f5f9",
+        panelBg: "#111827", border: "#1f2937", section: "#1f2937",
+        toolBg: "#1e293b", toolBorder: "#334155", toolText: "#cbd5e1",
+        canvasColor: "#0b1120",
+        glow: "radial-gradient(ellipse at 50% 38%, rgba(96,165,250,0.12) 0%, transparent 60%)",
+        dot: "rgba(148,163,184,0.10)",
+        labelBg: "rgba(15,23,42,0.88)", labelText: "#e2e8f0", labelBorder: "rgba(148,163,184,0.20)",
+        nodeBg: "#1e293b",
+        ctrlBg: "#1e293b", ctrlBorder: "#334155", ctrlText: "#cbd5e1",
+        hintBg: "rgba(17,24,39,0.85)",
+        accent: "#93c5fd",
+      }
+    : {
+        sub: "#475569", pageText: "#0f172a",
+        panelBg: "#ffffff", border: "#e6e9f0", section: "#eef0f5",
+        toolBg: "#ffffff", toolBorder: "#e6e9f0", toolText: "#475569",
+        canvasColor: "#fbfcfe",
+        glow: "radial-gradient(ellipse at 50% 42%, rgba(67,97,238,0.05) 0%, transparent 55%)",
+        dot: "rgba(148,163,184,0.11)",
+        labelBg: "rgba(255,255,255,0.92)", labelText: "#0f172a", labelBorder: "rgba(15,23,42,0.06)",
+        nodeBg: "#ffffff",
+        ctrlBg: "#ffffff", ctrlBorder: "#e6e9f0", ctrlText: "#475569",
+        hintBg: "rgba(255,255,255,0.85)",
+        accent: "#4361ee",
+      };
+  const linkColor = (on: boolean) => (dark ? `rgba(96,165,250,${on ? 0.6 : 0.25})` : `rgba(67,97,238,${on ? 0.5 : 0.18})`);
+
+  const radiusOf = (f: GFile) => (f.hub ? 30 : 24);
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+  const toLogical = (clientX: number, clientY: number) => {
+    const r = canvasRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return { x: ((clientX - r.left) / r.width) * 1000, y: ((clientY - r.top) / r.height) * 600 };
+  };
+
+  // Hit-test in screen pixels so it stays accurate whatever the canvas ratio.
+  const nodeAt = (clientX: number, clientY: number, excludeId: string) => {
+    const r = canvasRef.current?.getBoundingClientRect();
+    if (!r) return null;
+    for (const f of files) {
+      if (f.id === excludeId) continue;
+      const px = r.left + (f.x / 1000) * r.width;
+      const py = r.top + (f.y / 600) * r.height;
+      if (Math.hypot(clientX - px, clientY - py) <= radiusOf(f) + 16) return f;
+    }
+    return null;
+  };
+
+  const reset = () => { drag.current = { mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0 }; };
+
+  // Drag a file around the canvas.
+  const onNodeDown = (e: React.PointerEvent, f: GFile) => {
+    e.stopPropagation();
+    const p = toLogical(e.clientX, e.clientY);
+    drag.current = { mode: "move", id: f.id, offX: p.x - f.x, offY: p.y - f.y, startX: e.clientX, startY: e.clientY };
+    try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
+  };
+  const onNodeMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (d.mode !== "move" || !d.id) return;
+    const p = toLogical(e.clientX, e.clientY);
+    const nx = clamp(p.x - d.offX, 60, 940);
+    const ny = clamp(p.y - d.offY, 70, 540);
+    setFiles((prev) => prev.map((ff) => (ff.id === d.id ? { ...ff, x: nx, y: ny } : ff)));
+  };
+  const onNodeUp = (e: React.PointerEvent, f: GFile) => {
+    const d = drag.current;
+    if (d.mode === "move" && d.id === f.id && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) <= 5) {
+      setSelectedId(f.id);
+    }
+    reset();
+  };
+
+  // Drag from a file's blue handle onto another file to create a link.
+  const onLinkDown = (e: React.PointerEvent, f: GFile) => {
+    e.stopPropagation();
+    drag.current = { mode: "link", id: f.id, offX: 0, offY: 0, startX: e.clientX, startY: e.clientY };
+    setLinkDrag({ from: f.id, x: f.x, y: f.y });
+    try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
+  };
+  const onLinkMove = (e: React.PointerEvent) => {
+    if (drag.current.mode !== "link") return;
+    const p = toLogical(e.clientX, e.clientY);
+    setLinkDrag((prev) => (prev ? { ...prev, x: p.x, y: p.y } : prev));
+  };
+  const onLinkUp = (e: React.PointerEvent, f: GFile) => {
+    if (drag.current.mode === "link") {
+      const target = nodeAt(e.clientX, e.clientY, f.id);
+      if (target) {
+        setLinks((prev) =>
+          prev.some((l) => (l.a === f.id && l.b === target.id) || (l.a === target.id && l.b === f.id))
+            ? prev
+            : [...prev, { a: f.id, b: target.id }]
+        );
+      }
+    }
+    setLinkDrag(null);
+    reset();
+  };
+
+  const addFile = () => {
+    if (files.length >= 8) return;
+    const label = (name.trim() || "nouveau_fichier").replace(/\s+/g, "_");
+    const id = `u${idRef.current++}`;
+    const angle = ((-90 + files.length * 137.5) * Math.PI) / 180;
+    const nf: GFile = {
+      id, label, format,
+      x: clamp(500 + Math.cos(angle) * 300, 90, 910),
+      y: clamp(300 + Math.sin(angle) * 180, 90, 520),
+      size: "—", modified: "à l'instant",
+      access: [PEOPLE.V],
+      activity: [{ who: "Vous", action: "avez créé ce fichier", when: "à l'instant" }],
+    };
+    setFiles((p) => [...p, nf]);
+    setLinks((p) => [...p, { a: "f0", b: id }]);
+    setSelectedId(id);
+    setName("");
+  };
+
+  const removeFile = (id: string) => {
+    setFiles((p) => p.filter((f) => f.id !== id));
+    setLinks((p) => p.filter((l) => l.a !== id && l.b !== id));
+    if (selectedId === id) setSelectedId(null);
+    if (panelId === id) setPanelId(null);
+  };
+
+  const openFile = () => {
+    setOpenToast(true);
+    if (toastRef.current) window.clearTimeout(toastRef.current);
+    toastRef.current = window.setTimeout(() => setOpenToast(false), 2200);
+  };
+
+  return (
+    <WindowShell activeNav="atlas" pageTitle="Atlas" pageSubtitle="Acquisition NewCo" height={720} dark={dark}>
+      <div className="px-6 py-5 flex flex-col" style={{ height: "100%" }}>
+        {/* Project header */}
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-11 h-11 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-5 h-5" strokeWidth={2.25} />
+          </div>
+          <div>
+            <h1 className="text-[24px] font-bold leading-tight" style={{ color: T.pageText }}>Acquisition NewCo</h1>
+            <div className="flex items-center gap-2 text-[12px] mt-1.5" style={{ color: T.sub }}>
+              <span className="rounded-full border px-2.5 py-0.5 text-[11px] font-semibold" style={{ borderColor: T.toolBorder, background: T.toolBg }}>Deal PE</span>
+              <span>· {files.length} fichiers</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Toolbar: tabs · night toggle · add control */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex gap-1.5 rounded-xl border p-1 w-fit" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
+            <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium flex items-center gap-1.5" style={{ color: T.toolText }}><List className="w-3.5 h-3.5" strokeWidth={2.25} /> Liste</div>
+            <div className="px-3 py-1.5 rounded-lg text-[12px] font-semibold flex items-center gap-1.5" style={{ background: dark ? "rgba(96,165,250,0.15)" : "#eef2ff", color: dark ? "#93c5fd" : "#4361ee" }}><Globe className="w-3.5 h-3.5" strokeWidth={2.25} /> Galaxy</div>
+            <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium flex items-center gap-1.5" style={{ color: T.toolText }}><LayoutGrid className="w-3.5 h-3.5" strokeWidth={2.25} /> Kanban</div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Night-mode toggle */}
+            <button
+              onClick={() => setDark((d) => !d)}
+              title={dark ? "Vue claire" : "Vue nuit"}
+              className="h-8 w-8 rounded-lg border flex items-center justify-center transition-colors"
+              style={{ borderColor: T.toolBorder, background: T.toolBg, color: dark ? "#fbbf24" : "#475569" }}
+            >
+              {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <div className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
+              <FolderPlus className="w-3.5 h-3.5" style={{ color: T.sub }} />
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") addFile(); }}
+                placeholder="Nom du fichier"
+                className="bg-transparent outline-none text-[12.5px] w-[110px]"
+                style={{ color: T.labelText }}
+              />
+            </div>
+            <div className="flex items-center gap-0.5 rounded-lg border p-0.5" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
+              {GALAXY_TYPES.map((o) => {
+                const active = format === o.format;
+                return (
+                  <button
+                    key={o.format}
+                    onClick={() => setFormat(o.format)}
+                    className="rounded-md px-2 py-1 text-[11px] font-semibold transition-colors"
+                    style={active ? { background: FORMAT_STYLE[o.format].color, color: "#fff" } : { color: T.toolText }}
+                  >
+                    {o.label}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={addFile}
+              disabled={files.length >= 8}
+              className="rounded-lg bg-[#4361ee] px-3 py-1.5 text-[12.5px] font-semibold text-white flex items-center gap-1.5 disabled:opacity-50 hover:bg-[#3451d1] transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" /> Ajouter
+            </button>
+          </div>
+        </div>
+
+        {/* Canvas + detail panel */}
+        <div className="flex-1 flex gap-3 min-h-0">
+          {/* Galaxy canvas — drag files, draw links, double-click for details */}
+          <div
+            ref={canvasRef}
+            className="relative rounded-2xl border overflow-hidden flex-1 min-w-0"
+            style={{
+              borderColor: T.toolBorder,
+              backgroundColor: T.canvasColor,
+              backgroundImage: `${T.glow}, radial-gradient(circle, ${T.dot} 0.9px, transparent 0.9px)`,
+              backgroundSize: "100% 100%, 30px 30px",
+            }}
+          >
+            {/* Links between files (+ the live link being drawn) */}
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none">
+              {links.map((l, i) => {
+                const a = files.find((f) => f.id === l.a);
+                const b = files.find((f) => f.id === l.b);
+                if (!a || !b) return null;
+                const on = selectedId === l.a || selectedId === l.b;
+                return <path key={i} d={bezierPath(a.x, a.y, b.x, b.y)} stroke={linkColor(on)} strokeWidth={on ? 2 : 1.5} fill="none" />;
+              })}
+              {linkDrag && (() => {
+                const from = files.find((f) => f.id === linkDrag.from);
+                return from ? <path d={bezierPath(from.x, from.y, linkDrag.x, linkDrag.y)} stroke={linkColor(true)} strokeWidth={2} strokeDasharray="5 4" fill="none" /> : null;
+              })()}
+            </svg>
+
+            {/* Files */}
+            {files.map((f) => {
+              const r = radiusOf(f);
+              const isSel = f.id === selectedId;
+              const fmt = FORMAT_STYLE[f.format];
+              const Icon = f.hub ? FileSpreadsheet : fmt.icon;
+              return (
+                <div
+                  key={f.id}
+                  className="absolute group"
+                  style={{ left: `${(f.x / 1000) * 100}%`, top: `${(f.y / 600) * 100}%`, transform: "translate(-50%, -50%)", zIndex: isSel ? 7 : 5 }}
+                >
+                  <div className="flex flex-col items-center">
+                    <div
+                      onPointerDown={(e) => onNodeDown(e, f)}
+                      onPointerMove={onNodeMove}
+                      onPointerUp={(e) => onNodeUp(e, f)}
+                      onDoubleClick={() => { setSelectedId(f.id); setPanelId(f.id); }}
+                      title="Double-cliquez pour les détails"
+                      className="relative rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing"
+                      style={{
+                        width: r * 2,
+                        height: r * 2,
+                        touchAction: "none",
+                        background: f.hub ? "linear-gradient(135deg, #4f6cf0 0%, #3451d1 100%)" : T.nodeBg,
+                        border: f.hub ? "none" : `1.5px solid ${fmt.color}`,
+                        boxShadow: isSel
+                          ? `0 0 0 4px ${dark ? "rgba(96,165,250,0.25)" : "rgba(67,97,238,0.18)"}, 0 10px 24px ${f.hub ? "rgba(67,97,238,0.35)" : fmt.color + "44"}`
+                          : f.hub
+                            ? "0 8px 22px rgba(67,97,238,0.30)"
+                            : `0 2px 6px ${fmt.color}22`,
+                      }}
+                    >
+                      <Icon style={{ width: r * 0.85, height: r * 0.85, color: f.hub ? "white" : fmt.color }} strokeWidth={2.25} />
+
+                      {/* Link handle — drag onto another file to connect */}
+                      <button
+                        onPointerDown={(e) => onLinkDown(e, f)}
+                        onPointerMove={onLinkMove}
+                        onPointerUp={(e) => onLinkUp(e, f)}
+                        title="Relier à un autre fichier"
+                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm cursor-crosshair"
+                        style={{ touchAction: "none", background: T.nodeBg, border: "1px solid #4361ee", color: "#4361ee" }}
+                      >
+                        <Link2 className="w-2.5 h-2.5" strokeWidth={2.5} />
+                      </button>
+
+                      {/* Remove (satellites only) */}
+                      {!f.hub && (
+                        <button
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={() => removeFile(f.id)}
+                          aria-label="Retirer"
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:text-[#ef4444]"
+                          style={{ background: T.nodeBg, border: `1px solid ${T.toolBorder}`, color: T.sub }}
+                        >
+                          <X className="w-3 h-3" strokeWidth={2.5} />
+                        </button>
+                      )}
+                    </div>
+                    <div
+                      className="font-medium text-center mt-2 px-2 py-0.5 rounded-md inline-block truncate pointer-events-none"
+                      style={{ fontSize: 10.5, maxWidth: 140, color: T.labelText, background: T.labelBg, border: `1px solid ${isSel ? (dark ? "rgba(96,165,250,0.55)" : "rgba(67,97,238,0.45)") : T.labelBorder}`, boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
+                    >
+                      {f.label}{GALAXY_EXT[f.format]}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Interaction hint */}
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] backdrop-blur-sm" style={{ zIndex: 6, background: T.hintBg, borderColor: T.toolBorder, color: T.sub }}>
+              <Sparkles className="w-3 h-3" style={{ color: T.accent }} />
+              Glissez · reliez via le point bleu · double-cliquez pour les détails
+            </div>
+
+            {/* Open-file demo toast */}
+            {openToast && (
+              <motion.div
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full text-white px-3.5 py-1.5 text-[11.5px] font-medium shadow-lg whitespace-nowrap"
+                style={{ zIndex: 10, background: dark ? "#1e293b" : "#0f172a" }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Check className="w-3.5 h-3.5 text-emerald-300" />
+                Ouverture du fichier · disponible dans l'app
+              </motion.div>
+            )}
+
+            {/* Zoom controls */}
+            <div className="absolute bottom-3 right-3 flex flex-col rounded-lg border overflow-hidden" style={{ zIndex: 6, background: T.ctrlBg, borderColor: T.ctrlBorder }}>
+              {[Plus, Minus, Maximize].map((Icon, i) => (
+                <button key={i} className="w-7 h-7 flex items-center justify-center border-b last:border-b-0" style={{ color: T.ctrlText, borderColor: T.ctrlBorder }}>
+                  <Icon className="w-3.5 h-3.5" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Detail panel — opens on double-click, closeable */}
+          {panelFile && (
+              <motion.div
+                key="panel"
+                className="w-[250px] flex-shrink-0"
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="w-full h-full rounded-2xl border flex flex-col overflow-hidden" style={{ background: T.panelBg, borderColor: T.border }}>
+                  <div className="flex-1 overflow-y-auto">
+                    {/* File header + close */}
+                    <div className="p-4 border-b" style={{ borderColor: T.section }}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${FORMAT_STYLE[panelFile.format].color}${dark ? "26" : "14"}` }}>
+                          {(() => { const I = FORMAT_STYLE[panelFile.format].icon; return <I className="w-5 h-5" style={{ color: FORMAT_STYLE[panelFile.format].color }} strokeWidth={2.25} />; })()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[13px] font-semibold truncate" style={{ color: T.labelText }}>{panelFile.label}{GALAXY_EXT[panelFile.format]}</div>
+                          <div className="text-[11px] mt-0.5" style={{ color: T.sub }}>{panelFile.format.toUpperCase()} · {panelFile.size}</div>
+                        </div>
+                        <button onClick={() => setPanelId(null)} aria-label="Fermer" title="Fermer" className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 hover:opacity-100 opacity-70 transition-opacity" style={{ color: T.sub }}>
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3 mt-3 text-[11px]" style={{ color: T.sub }}>
+                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {panelFile.modified}</span>
+                        <span className="flex items-center gap-1"><Link2 className="w-3 h-3" /> {links.filter((l) => l.a === panelFile.id || l.b === panelFile.id).length} liens</span>
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="p-4 border-b" style={{ borderColor: T.section }}>
+                      <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: T.sub }}>Aperçu</div>
+                      <FilePreview format={panelFile.format} dark={dark} />
+                    </div>
+
+                    {/* Access */}
+                    <div className="p-4 border-b" style={{ borderColor: T.section }}>
+                      <div className="flex items-center justify-between mb-2.5">
+                        <div className="text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: T.sub }}><Lock className="w-3 h-3" /> Qui a accès</div>
+                        <button className="text-[10.5px] font-semibold hover:underline" style={{ color: T.accent }}>Gérer</button>
+                      </div>
+                      <div className="flex items-center">
+                        {panelFile.access.map((p, i) => (
+                          <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[9px] font-bold" style={{ background: p.color, marginLeft: i ? -8 : 0, boxShadow: `0 0 0 2px ${T.panelBg}` }}>
+                            {p.initials.slice(0, 2)}
+                          </div>
+                        ))}
+                        <span className="text-[11px] ml-2.5" style={{ color: T.sub }}>{panelFile.access.length} {panelFile.access.length > 1 ? "personnes" : "personne"}</span>
+                      </div>
+                    </div>
+
+                    {/* Activity / tracking record */}
+                    <div className="p-4">
+                      <div className="text-[10px] font-bold uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: T.sub }}><Activity className="w-3 h-3" /> Historique</div>
+                      <div className="flex flex-col gap-3">
+                        {panelFile.activity.map((ev, i) => (
+                          <div key={i} className="flex gap-2.5">
+                            <div className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: T.accent }} />
+                            <div className="min-w-0">
+                              <div className="text-[11.5px] leading-snug" style={{ color: T.labelText }}><span className="font-semibold">{ev.who}</span> {ev.action}</div>
+                              <div className="text-[10.5px] flex items-center gap-1 mt-0.5" style={{ color: T.sub }}><Clock className="w-2.5 h-2.5" /> {ev.when}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Open file (demo affordance) */}
+                  <div className="p-3 border-t" style={{ borderColor: T.section }}>
+                    <button onClick={openFile} className="w-full rounded-lg bg-[#4361ee] hover:bg-[#3451d1] transition-colors text-white text-[12.5px] font-semibold py-2.5 flex items-center justify-center gap-2">
+                      <ExternalLink className="w-4 h-4" /> Ouvrir le fichier
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+          )}
         </div>
       </div>
     </WindowShell>
