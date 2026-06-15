@@ -1,5 +1,5 @@
-import { forwardRef, useRef, useEffect, useLayoutEffect, useState, type ReactNode, type CSSProperties } from "react";
-import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown } from "lucide-react";
+import { forwardRef, useRef, useEffect, useLayoutEffect, useState, type ReactNode, type CSSProperties, type FormEvent } from "react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useMotionValue, useTransform, motion, type MotionValue } from "framer-motion";
 import { useLang } from "@/lib/i18n";
@@ -84,6 +84,7 @@ const heroCSS = `
 .hero-ready .hero-stagger {
   animation: heroFadeUp 0.9s cubic-bezier(.22,1,.36,1) forwards;
 }
+.hero-d0 { animation-delay:   0ms; }
 .hero-d1 { animation-delay:  60ms; }
 .hero-d2 { animation-delay: 180ms; }
 .hero-d3 { animation-delay: 310ms; }
@@ -185,6 +186,197 @@ function getPageOffsetTop(el: HTMLElement): number {
   return top;
 }
 
+/* ── Hero trust-row assets ───────────────────────────────────────
+ *  "Fonctionne avec" integration logos, shown as an overlapping circle
+ *  stack (Excel in front). google-sheets.png / google-docs.png are not
+ *  in public/logos/ yet — until they are added, their circle hides itself
+ *  via the <img> onError handler (no broken-image icon). */
+const INTEGRATIONS = [
+  { name: "Excel", src: "/logos/excel-new.png" },
+  { name: "PDF", src: "/logos/pdf.avif" },
+  { name: "Apple Numbers", src: "/logos/numbers.svg" },
+  { name: "Google Sheets", src: "/logos/google-sheets.png" },
+  { name: "Google Docs", src: "/logos/google-docs.png" },
+];
+
+/* Small CSS Swiss flag (red rounded square + white cross). No asset needed,
+   stays crisp at any size. Used in the "Hébergement Suisse" trust signal. */
+function SwissFlag() {
+  return (
+    <span aria-hidden className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d52b1e] ring-1 ring-black/5 shadow-sm">
+      <span className="absolute left-1/2 top-1/2 h-4 w-[5px] -translate-x-1/2 -translate-y-1/2 rounded-[1px] bg-white" />
+      <span className="absolute left-1/2 top-1/2 h-[5px] w-4 -translate-x-1/2 -translate-y-1/2 rounded-[1px] bg-white" />
+    </span>
+  );
+}
+
+/* One logo in the "Fonctionne avec" stack. If its image is missing (file not
+   added yet), it falls back to a visible neutral circle so the slot stays in
+   view — drop the real logo into public/logos/ and it upgrades automatically. */
+function IntegrationCircle({
+  name, src, front, style,
+}: { name: string; src: string; front: boolean; style?: CSSProperties }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span
+      title={name}
+      style={style}
+      className={`relative flex items-center justify-center rounded-full bg-white dark:bg-[#1a2332] ${
+        front
+          ? "h-14 w-14 ring-1 ring-gray-200 dark:ring-white/15 shadow-lg"
+          : "h-10 w-10 ring-1 ring-gray-200/70 dark:ring-white/10 shadow-sm"
+      }`}
+    >
+      {failed ? (
+        <FileText aria-hidden className={`text-gray-300 dark:text-gray-600 ${front ? "h-6 w-6" : "h-4 w-4"}`} />
+      ) : (
+        <img
+          src={src}
+          alt={name}
+          onError={() => setFailed(true)}
+          className={`object-contain ${front ? "h-7 w-7" : "h-5 w-5"}`}
+        />
+      )}
+    </span>
+  );
+}
+
+/* Web3Forms public access key for the hero callback form. Free key from
+   https://web3forms.com — leads land in the inbox tied to that key. Either
+   set VITE_WEB3FORMS_KEY in a .env file, or replace the placeholder below. */
+const WEB3FORMS_ACCESS_KEY =
+  (import.meta.env as Record<string, string | undefined>).VITE_WEB3FORMS_KEY ||
+  "YOUR_WEB3FORMS_ACCESS_KEY";
+
+/* Availability badge → click opens a quick callback capture (email or phone,
+   delivered via Web3Forms) plus a direct "book a meeting" path to Cal.com. */
+function CallbackBadge({ openBooking }: { openBooking: () => void }) {
+  const { t } = useLang();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">("idle");
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Close the panel on outside click or Escape.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    const contact = value.trim();
+    if (!contact || status === "sending") return;
+    setStatus("sending");
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          access_key: WEB3FORMS_ACCESS_KEY,
+          subject: "Nouvelle demande de rappel — site Ora",
+          from_name: "Site Ora",
+          contact,
+          message: `Demande de rappel rapide. Coordonnées : ${contact}`,
+        }),
+      });
+      const data = await res.json().catch(() => ({ success: false }));
+      setStatus(data.success ? "ok" : "error");
+      if (data.success) setValue("");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  return (
+    // z-50 lifts the badge + its panel above the animated title spans, whose
+    // transforms create stacking contexts that would otherwise paint over the
+    // panel (the title text was showing through it).
+    <div ref={wrapRef} className="relative z-50">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-white/[0.04] px-3.5 py-1.5 text-[13px] font-inter font-medium text-gray-700 dark:text-gray-300 backdrop-blur-sm transition-colors hover:border-gray-300 dark:hover:border-white/20"
+      >
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+        {t({ fr: "On vous rappelle en moins d'1 heure", en: "We call you back within the hour" })}
+        <ChevronDown className={`h-3.5 w-3.5 opacity-60 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute left-1/2 top-full z-50 mt-3 w-[300px] -translate-x-1/2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f172a] p-4 text-left shadow-xl">
+          {status === "ok" ? (
+            <div className="py-2 text-center">
+              <p className="font-poppins font-semibold text-sm text-gray-900 dark:text-white">
+                {t({ fr: "C'est noté, on vous rappelle vite.", en: "Got it, we'll call you shortly." })}
+              </p>
+              <p className="font-inter mt-1 text-[13px] text-gray-500 dark:text-gray-400">
+                {t({ fr: "En général en moins d'une heure.", en: "Usually within the hour." })}
+              </p>
+            </div>
+          ) : (
+            <>
+              <p className="font-inter text-[13px] leading-snug text-gray-600 dark:text-gray-300">
+                {t({ fr: "Laissez votre email ou téléphone, on vous rappelle.", en: "Leave your email or phone, we'll call you back." })}
+              </p>
+              <form onSubmit={submit} className="mt-3 flex flex-col gap-2">
+                <input
+                  type="text"
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  placeholder={t({ fr: "Email ou téléphone", en: "Email or phone" })}
+                  className="w-full rounded-lg border border-gray-300 dark:border-white/15 bg-white dark:bg-white/[0.03] px-3 py-2 text-[14px] font-inter text-gray-900 dark:text-white placeholder:text-gray-400 outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]"
+                />
+                <button
+                  type="submit"
+                  disabled={status === "sending"}
+                  className="inline-flex items-center justify-center rounded-lg bg-[#3b82f6] px-4 py-2 text-[14px] font-inter font-semibold text-white transition-colors hover:bg-[#2563eb] disabled:opacity-60"
+                >
+                  {status === "sending"
+                    ? t({ fr: "Envoi...", en: "Sending..." })
+                    : t({ fr: "Être rappelé", en: "Get a callback" })}
+                </button>
+                {status === "error" && (
+                  <p className="font-inter text-[12px] text-red-500">
+                    {t({ fr: "Une erreur est survenue. Réessayez.", en: "Something went wrong. Please try again." })}
+                  </p>
+                )}
+              </form>
+
+              <div className="my-3 flex items-center gap-3 text-[12px] text-gray-400">
+                <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
+                {t({ fr: "ou", en: "or" })}
+                <span className="h-px flex-1 bg-gray-200 dark:bg-white/10" />
+              </div>
+
+              <button
+                type="button"
+                onClick={() => { setOpen(false); openBooking(); }}
+                className="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 dark:border-white/15 px-4 py-2 text-[14px] font-inter font-semibold text-gray-700 dark:text-gray-200 transition-colors hover:bg-gray-50 dark:hover:bg-white/[0.06]"
+              >
+                {t({ fr: "Prendre un rendez-vous", en: "Book a meeting" })}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Component ───────────────────────────────────────────────── */
 const Hero = forwardRef<HTMLElement, HeroProps>(
   ({ scrollToSection, openBooking }, ref) => {
@@ -210,6 +402,11 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     // The video plays once (no loop). When it finishes we surface a replay
     // button instead of looping it back automatically.
     const [hasEnded, setHasEnded] = useState(false);
+
+    // Trim just the very start of the clip (the awkward first instant) while
+    // still showing the beginning of the animation. Tweak this single value to
+    // cut more or less. The clip still ends at its natural end.
+    const VIDEO_START = 0.5;
 
     // Track visibility
     useEffect(() => {
@@ -255,7 +452,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
     const replay = () => {
       const video = videoRef.current;
       if (!video) return;
-      video.currentTime = 0;
+      video.currentTime = VIDEO_START;
       setHasEnded(false);
       setIsManuallyPaused(false);
       video.play().catch(() => {});
@@ -629,7 +826,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
           <div className="relative z-10 pt-28 md:pt-32 lg:pt-36 pb-16 md:pb-24">
-            <div className="max-w-5xl mx-auto px-6 lg:px-10 text-center">
+            <div className="max-w-6xl mx-auto px-6 lg:px-10 text-center">
 
               <AnimatedHeroTitle />
 
@@ -655,6 +852,50 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   {t({ fr: "Voir la démo", en: "Watch the demo" })}
                 </button>
               </div>
+
+              {/* Availability badge — sits just below the CTAs. Click opens a
+                  callback capture + booking. relative z-50 keeps the open panel
+                  above the trust row / video below it. */}
+              <div className="hero-stagger hero-d4 relative z-50 mt-7 flex justify-center">
+                <CallbackBadge openBooking={openBooking} />
+              </div>
+
+              {/* Light social proof — single compact line above the demo. */}
+              <div className="hero-stagger hero-d4 mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3">
+                  <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
+                  <div className="flex items-center">
+                    {INTEGRATIONS.map((it, i) => {
+                      // Excel sits in front: bigger, fully opaque, on top. The
+                      // others tuck behind it, smaller and dimmed, tightly stacked.
+                      const front = i === 0;
+                      return (
+                        <IntegrationCircle
+                          key={it.name}
+                          name={it.name}
+                          src={it.src}
+                          front={front}
+                          style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+                <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
+                  <ShieldCheck className="h-4 w-4" />
+                  {t({ fr: "Temps gagné garanti", en: "Guaranteed time saved" })}
+                </span>
+
+                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+                  <SwissFlag />
+                  {t({ fr: "Hébergement Suisse", en: "Swiss hosting" })}
+                </span>
+              </div>
             </div>
 
             {/* ── Browser frame ──────────────────────────────────
@@ -664,23 +905,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d4 relative z-10 mt-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
                   they do, the overlay slides upward and fades out while
                   the video gently rises into view + starts playing. */}
               <div className="browser-frame">
-                <div className="browser-chrome">
-                  <div className="browser-dots">
-                    <div className="browser-dot browser-dot-red" />
-                    <div className="browser-dot browser-dot-amber" />
-                    <div className="browser-dot browser-dot-green" />
-                  </div>
-                  <div className="browser-urlbar">ora-solution.com</div>
-                  <div style={{ width: 56 }} />
-                </div>
-
                 <div className="relative overflow-hidden">
                   <video
                     ref={videoRef}
@@ -694,8 +925,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     onLoadedMetadata={(e) => {
                       e.currentTarget.playbackRate = 1.0;
                       // Pre-seek so the first frame is ready the instant the
-                      // white overlay clears (no flash of black).
-                      e.currentTarget.currentTime = 0.1;
+                      // white overlay clears (no flash of black). Starts 1s in
+                      // to skip the awkward opening moment of the clip.
+                      e.currentTarget.currentTime = VIDEO_START;
                     }}
                   />
 

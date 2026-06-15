@@ -8,7 +8,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { MockupHome, MockupManager, MockupGalaxy } from "./AtlasMockups";
+import { MockupHome, MockupManager, InteractiveGalaxy } from "./AtlasMockups";
 import InViewVideo from "./InViewVideo";
 
 /**
@@ -76,7 +76,7 @@ export default function AtlasShowcase() {
 
   const ActiveMockup =
     activeTab === "galaxy"
-      ? MockupGalaxy
+      ? InteractiveGalaxy
       : activeTab === "dashboard"
         ? MockupHome
         : MockupManager;
@@ -174,13 +174,13 @@ export default function AtlasShowcase() {
           </button>
         </motion.div>
 
-        {/* Two-column: vertical tabs + framed mockup */}
-        <motion.div
-          className="grid grid-cols-1 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] gap-8 lg:gap-12 items-center"
-          variants={fadeInUp}
-        >
-          {/* LEFT — vertical tab list */}
-          <div className="flex flex-col gap-3">
+        {/* Tabs on top + full-width app screen below.
+            Moving the tab pills above lets the mockup take the section's full
+            width, so the 1020px app screen fits without horizontal scrolling
+            on desktop (the previous two-column layout forced a side-scroll). */}
+        <motion.div variants={fadeInUp}>
+          {/* Horizontal tab pills */}
+          <div className="flex flex-wrap justify-center gap-2.5 md:gap-3 mb-10 md:mb-14">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = tab.id === activeTab;
@@ -189,19 +189,19 @@ export default function AtlasShowcase() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-4 px-5 py-4 rounded-full text-left transition-all duration-200 ${
+                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full text-left transition-all duration-200 ${
                     isActive
                       ? "bg-white/[0.08] border border-white/[0.10]"
                       : "border border-transparent hover:bg-white/[0.04]"
                   }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
                   >
-                    <Icon className="w-[18px] h-[18px] text-white" strokeWidth={2.25} />
+                    <Icon className="w-4 h-4 text-white" strokeWidth={2.25} />
                   </div>
                   <span
-                    className={`font-poppins font-semibold text-[15px] leading-snug transition-colors duration-200 ${
+                    className={`font-poppins font-semibold text-[13px] md:text-[14px] leading-snug transition-colors duration-200 ${
                       isActive ? "text-white" : "text-white/55"
                     }`}
                   >
@@ -212,82 +212,42 @@ export default function AtlasShowcase() {
             })}
           </div>
 
-          {/* RIGHT — framed mockup viewer */}
-          <div className="relative">
-            {/* Luminous sky-blue halo behind the frame — Bubble.io look.
-                Pure radial gradient, NO blur filter: blurring this huge layer
-                forced an expensive repaint every scroll frame, which caused
-                the visible stutter when the dark Atlas section arrived. The
-                gradient's own falloff gives the same soft halo for free. */}
+          {/* Framed app screen — tighter frame that hugs the screen, centered,
+              fits without side-scroll. */}
+          <div className="relative w-fit mx-auto">
+            {/* Soft sky-blue halo behind the frame (pure radial gradient,
+                no blur filter — avoids scroll-time repaints). */}
             <div
               aria-hidden
-              className="absolute -inset-10 lg:-inset-24 -z-10 pointer-events-none"
+              className="absolute -inset-3 lg:-inset-5 -z-10 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.38) 0%, rgba(96,165,250,0.22) 32%, rgba(56,189,248,0.10) 55%, rgba(56,189,248,0.03) 70%, transparent 82%)",
+                  "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.26) 0%, rgba(96,165,250,0.15) 35%, rgba(56,189,248,0.06) 60%, transparent 80%)",
               }}
             />
 
-            {/* Soft sky-blue gradient frame panel — extends slightly beyond
-                the column on desktop.
-                Lighter, more pastel gradient (sky-200/blue-300 at low opacity)
-                + sky-blue border + dual blue-tinted shadows replace the dark
-                drop shadow, so the panel itself glows softly. */}
             <div
-              className="relative rounded-3xl overflow-hidden p-6 md:p-10 lg:mr-[-80px]"
+              className="relative rounded-3xl overflow-hidden p-3 md:p-4"
               style={{
                 background:
-                  "linear-gradient(135deg, rgba(186,230,253,0.16) 0%, rgba(147,197,253,0.10) 50%, rgba(186,230,253,0.16) 100%)",
-                border: "1px solid rgba(186,230,253,0.18)",
+                  "linear-gradient(135deg, rgba(186,230,253,0.14) 0%, rgba(147,197,253,0.09) 50%, rgba(186,230,253,0.14) 100%)",
+                border: "1px solid rgba(186,230,253,0.22)",
                 boxShadow:
-                  "0 30px 80px rgba(56,189,248,0.22), 0 10px 40px rgba(96,165,250,0.15), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  "0 28px 72px rgba(56,189,248,0.28), 0 10px 36px rgba(96,165,250,0.18), 0 3px 14px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
               }}
             >
-              {/* Mockup viewer — horizontally scrollable on small screens,
-                  clipped-right by the frame on desktop (Monday "spills over").
-
-                  Smoothness setup:
-                  - No `mode="wait"` → outgoing and incoming mockups overlap
-                    in time, so there's no perceptible gap between them.
-                  - CSS grid with both motion.divs in `1 / 1` → they stack
-                    on top of each other (true crossfade) while the grid
-                    container still reports the correct scroll-width to the
-                    outer `overflow-x-auto` parent. (Pure `position: absolute`
-                    would break horizontal scroll on mobile.)
-                  - No blur filter → blurring a 1020px-wide mockup with the
-                    Galaxy SVG inside causes frame drops on mid-tier hardware,
-                    which read as "harsh".
-                  - Slide direction matches for both elements (`-24px → 0` on
-                    enter, `0 → +24px` on exit) so the whole composition
-                    reads as a single continuous downward slide rather than
-                    two opposing motions passing each other.
-                  - `initial={false}` skips entrance animation on first paint. */}
-              <div
-                className="overflow-x-auto -mx-1"
-                style={{ minHeight: 720 }}
-              >
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "max-content",
-                  }}
-                >
+              {/* Centered when it fits (desktop); scrollable fallback on narrow
+                  screens. The crossfade stacks both mockups in one grid cell. */}
+              <div className="overflow-x-auto">
+                <div className="grid justify-center" style={{ gridTemplateColumns: "minmax(0, max-content)" }}>
                   <AnimatePresence initial={false}>
                     <motion.div
                       key={activeTab}
-                      style={{
-                        gridColumn: 1,
-                        gridRow: 1,
-                        willChange: "opacity, transform",
-                      }}
-                      className="flex justify-start min-w-fit px-1"
+                      style={{ gridColumn: 1, gridRow: 1, willChange: "opacity, transform" }}
                       initial={{ opacity: 0, y: -24 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 24 }}
-                      transition={{
-                        duration: 0.55,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
+                      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
                     >
                       <ActiveMockup />
                     </motion.div>
@@ -322,15 +282,15 @@ export default function AtlasShowcase() {
             Framed to match the section: sky-blue tinted border + soft glow,
             ratio set to the source so it fills with no letterbox bars. */}
         <motion.div
-          className="max-w-4xl mx-auto mt-10 md:mt-12"
+          className="max-w-5xl mx-auto mt-10 md:mt-12"
           variants={fadeInUp}
         >
           <div
             className="rounded-3xl overflow-hidden border"
             style={{
-              borderColor: "rgba(186,230,253,0.18)",
+              borderColor: "rgba(186,230,253,0.22)",
               boxShadow:
-                "0 30px 80px rgba(56,189,248,0.18), 0 10px 40px rgba(96,165,250,0.12)",
+                "0 40px 110px rgba(56,189,248,0.32), 0 16px 56px rgba(96,165,250,0.22), 0 4px 18px rgba(56,189,248,0.12)",
             }}
           >
             <InViewVideo

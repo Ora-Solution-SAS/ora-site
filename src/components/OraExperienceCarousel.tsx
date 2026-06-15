@@ -327,10 +327,9 @@ type CardData = {
   visual: ReactNode;
 };
 
-// Very light blue shared by every card at rest (inactive). Cards no longer
-// sit on black — they rest on a soft "bleu très clair" and only turn cobalt
-// on hover/active.
-const INACTIVE_BG = "#e8f1ff";
+// On the black "expérience Ora" section, cards rest as dark glassy panels
+// (a hair lighter than the section) and turn cobalt on hover/active.
+const INACTIVE_BG = "#14161d";
 
 // Color every card animates to on hover/active — the Ora audit cobalt blue.
 const ACTIVE_BG = "#3457E8";
@@ -352,26 +351,25 @@ function AccordionCard({
   /** CSS class that applies the ambient horizontal drift keyframe animation. */
   driftClass: string;
 }) {
-  // Cards rest on a very light blue and animate to cobalt on hover/active.
-  //   - At rest (light blue)  → dark text + dark icon.
-  //   - Active (cobalt blue)  → white text + light icon.
-  const onLight = !isActive;
-  const palette = onLight
+  // Cards rest as dark glassy panels and animate to cobalt on hover/active.
+  // Text stays light in both states, just brighter when active.
+  const onLight = false;
+  const palette = isActive
     ? {
-        logo: "/logos/icon-dark.png",
-        wordmark: "text-gray-900",
-        suffix: "text-gray-600",
-        tag: "text-gray-500",
-        title: "text-gray-900",
-        desc: "text-gray-600",
-      }
-    : {
         logo: "/logos/icon-light.png",
         wordmark: "text-white",
         suffix: "text-white/75",
         tag: "text-white/60",
         title: "text-white",
-        desc: "text-white/80",
+        desc: "text-white/85",
+      }
+    : {
+        logo: "/logos/icon-light.png",
+        wordmark: "text-white/90",
+        suffix: "text-white/45",
+        tag: "text-white/40",
+        title: "text-white/95",
+        desc: "text-white/60",
       };
 
   return (
@@ -384,7 +382,7 @@ function AccordionCard({
       onMouseEnter={onActivate}
       onFocus={onActivate}
       className={`ora-card-tr relative rounded-[28px] overflow-hidden text-left h-[520px] min-w-0 cursor-pointer ${driftClass} ${
-        isActive ? "" : "ring-1 ring-[#3457E8]/15"
+        isActive ? "" : "ring-1 ring-white/10"
       }`}
       style={{
         backgroundColor: isActive ? data.activeColor : INACTIVE_BG,
@@ -401,7 +399,7 @@ function AccordionCard({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-40 z-0"
         style={{
           background:
-            "linear-gradient(to top, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 35%, transparent 100%)",
+            "linear-gradient(to top, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 35%, transparent 100%)",
         }}
       />
 
@@ -481,10 +479,10 @@ function AccordionCard({
           >
             {data.points.map((point) => (
               <div key={point} className="flex items-center gap-2.5">
-                <span className="w-[22px] h-[22px] rounded-full bg-emerald-500/15 flex items-center justify-center flex-shrink-0">
-                  <Check className="w-3 h-3 text-emerald-600" strokeWidth={3} />
+                <span className="w-[22px] h-[22px] rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                  <Check className="w-3 h-3 text-emerald-400" strokeWidth={3} />
                 </span>
-                <span className="font-inter font-medium text-[13px] text-gray-700 leading-snug">
+                <span className="font-inter font-medium text-[13px] text-white/75 leading-snug">
                   {point}
                 </span>
               </div>
