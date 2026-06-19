@@ -105,6 +105,20 @@ function SwissFlag() {
   );
 }
 
+function EuFlag() {
+  return (
+    <span aria-hidden className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#003399] ring-1 ring-black/5 shadow-sm">
+      <svg viewBox="0 0 32 32" className="h-full w-full">
+        {Array.from({ length: 12 }).map((_, i) => {
+          const a = ((i * 30 - 90) * Math.PI) / 180;
+          const r = 9.5;
+          return <circle key={i} cx={16 + r * Math.cos(a)} cy={16 + r * Math.sin(a)} r={1.35} fill="#ffcc00" />;
+        })}
+      </svg>
+    </span>
+  );
+}
+
 /* One logo in the "Fonctionne avec" stack. If its image is missing (file not
    added yet), it falls back to a visible neutral circle so the slot stays in
    view — drop the real logo into public/logos/ and it upgrades automatically. */
@@ -404,8 +418,8 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               <p className="hero-stagger hero-d2 mt-6 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
                 {t({
-                  fr: "Ora crée des automatisations sur-mesure pour traiter vos données, afin que votre équipe se concentre sur ce qui compte vraiment.",
-                  en: "Ora builds tailored automations that handle your data, so your team can focus on what actually matters.",
+                  fr: "Ora automatise le travail Excel répétitif des équipes finance. Hébergé en Europe, chiffré de bout en bout et traçable : vos données confidentielles restent sous votre contrôle.",
+                  en: "Ora automates the repetitive Excel work of finance teams. EU-hosted, end-to-end encrypted and audit-trailed: your confidential data stays under your control.",
                 })}
               </p>
 
@@ -458,14 +472,24 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
                 <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
                   <ShieldCheck className="h-4 w-4" />
-                  {t({ fr: "Temps gagné garanti", en: "Guaranteed time saved" })}
+                  {t({ fr: "Chiffré de bout en bout", en: "End-to-end encrypted" })}
                 </span>
 
                 <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
 
                 <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <SwissFlag />
-                  {t({ fr: "Hébergement Suisse", en: "Swiss hosting" })}
+                  <span className="flex items-center gap-1">
+                    <EuFlag />
+                    <SwissFlag />
+                  </span>
+                  {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+                </span>
+
+                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+                <span className="flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
+                  <FileText className="h-4 w-4" />
+                  {t({ fr: "Piste d'audit", en: "Audit trail" })}
                 </span>
               </div>
             </div>
