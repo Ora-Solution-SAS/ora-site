@@ -1,7 +1,7 @@
 import { Footer } from "./ui/footer";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "not-found";
 
 interface OraFooterProps {
   onNavigate: (page: Page) => void;
@@ -55,11 +55,9 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
       ]}
       copyright={`© ${new Date().getFullYear()} Ora`}
       bottomLinks={[
-        // Legal pages not ready to be public yet — inert on purpose (no
-        // navigation). Re-wire to their pages when they go live.
-        { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => {} },
-        { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), onClick: () => {} },
-        { text: t({ fr: "CGU", en: "Terms of use" }), onClick: () => {} },
+        { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => onNavigate("mentions-legales") },
+        { text: t({ fr: "Politique de confidentialité", en: "Privacy policy" }), onClick: () => onNavigate("politique-confidentialite") },
+        { text: t({ fr: "CGU", en: "Terms of use" }), onClick: () => onNavigate("cgu") },
       ]}
     />
   );
