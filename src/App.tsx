@@ -21,6 +21,7 @@ import ValueProps from "./components/ValueProps";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
+import ExcelReveal from "./components/ExcelReveal";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
 /* === Booking loading screen fade-out === */
@@ -1049,6 +1050,11 @@ const App = () => {
           </div>
         </FadeInOnScroll>
       </section>
+
+      {/* ── RÉVÉLATION "Cessez de le gaspiller sur Excel" ────────────────
+          Diaporama scroll-driven (pin sticky) : 3 phrases révélées mot par
+          mot, conclu par « Découvrez Ora. ». Entre Features et Atlas. */}
+      <ExcelReveal />
 
       {/* ── ATLAS SHOWCASE ──────────────────────────────────────────── */}
       <AtlasShowcase />

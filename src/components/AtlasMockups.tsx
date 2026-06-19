@@ -34,10 +34,14 @@ import {
   Check,
   Moon,
   Sun,
+  Database,
+  PencilLine,
+  CheckCircle2,
+  BookMarked,
   type LucideIcon,
 } from "lucide-react";
 
-import { useState, useRef, Fragment } from "react";
+import { useState, useRef, useEffect, Fragment } from "react";
 import { motion } from "framer-motion";
 
 /**
@@ -571,6 +575,8 @@ function nodeSize(degree: number) {
   return Math.min(30, 18 + degree * 2);
 }
 
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
 function bezierPath(x1: number, y1: number, x2: number, y2: number) {
   const dx = x2 - x1;
   const c1x = x1 + dx * 0.5;
@@ -762,7 +768,30 @@ type GFile = {
   activity: { who: string; action: string; when: string }[];
 };
 
-type GLink = { a: string; b: string };
+// A link can be tagged with a typology describing the nature of the
+// relationship between two files: raw data, a work-in-progress draft,
+// a finished deliverable, or a reference.
+type GLinkType = "donnees" | "brouillon" | "final" | "reference";
+
+type GLink = { a: string; b: string; type: GLinkType };
+
+const LINK_TYPES: { type: GLinkType; label: string; color: string; icon: LucideIcon }[] = [
+  { type: "donnees", label: "Données", color: "#0ea5e9", icon: Database },
+  { type: "brouillon", label: "Brouillon", color: "#f59e0b", icon: PencilLine },
+  { type: "final", label: "Final", color: "#22c55e", icon: CheckCircle2 },
+  { type: "reference", label: "Référence", color: "#8b5cf6", icon: BookMarked },
+];
+
+const LINK_TYPE = Object.fromEntries(LINK_TYPES.map((t) => [t.type, t])) as Record<
+  GLinkType,
+  (typeof LINK_TYPES)[number]
+>;
+
+// Next typology in the cycle — used when clicking a link chip to reclassify it.
+const nextLinkType = (t: GLinkType): GLinkType => {
+  const i = LINK_TYPES.findIndex((o) => o.type === t);
+  return LINK_TYPES[(i + 1) % LINK_TYPES.length].type;
+};
 
 const GALAXY_TYPES: { format: NodeFormat; label: string }[] = [
   { format: "xlsx", label: "Excel" },
@@ -827,10 +856,10 @@ const INITIAL_FILES: GFile[] = [
 ];
 
 const INITIAL_LINKS: GLink[] = [
-  { a: "f0", b: "f1" },
-  { a: "f0", b: "f2" },
-  { a: "f0", b: "f3" },
-  { a: "f0", b: "f4" },
+  { a: "f0", b: "f1", type: "reference" },
+  { a: "f0", b: "f2", type: "brouillon" },
+  { a: "f0", b: "f3", type: "final" },
+  { a: "f0", b: "f4", type: "donnees" },
 ];
 
 // Tiny faux preview rendered in the detail panel, themed per file type.
@@ -921,13 +950,22 @@ export function InteractiveGalaxy() {
   const [dark, setDark] = useState(false);
   const [name, setName] = useState("");
   const [format, setFormat] = useState<NodeFormat>("xlsx");
+  const [linkType, setLinkType] = useState<GLinkType>("donnees");
   const [linkDrag, setLinkDrag] = useState<{ from: string; x: number; y: number } | null>(null);
   const [openToast, setOpenToast] = useState(false);
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  // Camera: pan offset (px) + zoom scale, applied as a CSS transform on the stage.
+  const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
 
   const canvasRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ mode: "move" | "link" | null; id: string | null; offX: number; offY: number; startX: number; startY: number }>({ mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0 });
+  const drag = useRef<{ mode: "move" | "link" | "pan" | null; id: string | null; offX: number; offY: number; startX: number; startY: number; startTx: number; startTy: number }>({ mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0, startTx: 0, startTy: 0 });
+  const viewRef = useRef(view);
+  viewRef.current = view;
   const idRef = useRef(1);
   const toastRef = useRef<number | null>(null);
+
+  const MIN_SCALE = 0.4;
+  const MAX_SCALE = 2.6;
 
   const panelFile = files.find((f) => f.id === panelId) ?? null;
 
@@ -959,37 +997,92 @@ export function InteractiveGalaxy() {
         hintBg: "rgba(255,255,255,0.85)",
         accent: "#4361ee",
       };
-  const linkColor = (on: boolean) => (dark ? `rgba(96,165,250,${on ? 0.6 : 0.25})` : `rgba(67,97,238,${on ? 0.5 : 0.18})`);
 
-  const radiusOf = (f: GFile) => (f.hub ? 30 : 24);
-  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  // Obsidian-style sizing: the more links a file has, the bigger its node.
+  const degreeOf = (id: string) => links.reduce((n, l) => n + (l.a === id || l.b === id ? 1 : 0), 0);
+  const radiusOf = (f: GFile) => clamp((f.hub ? 22 : 13) + degreeOf(f.id) * 3.5, 13, 34);
 
+  // The set of a node and everything it directly connects to — used to spotlight
+  // a neighbourhood on hover and dim the rest of the graph.
+  const neighbourhood = (id: string) => {
+    const s = new Set<string>([id]);
+    links.forEach((l) => { if (l.a === id) s.add(l.b); if (l.b === id) s.add(l.a); });
+    return s;
+  };
+  const hoverSet = hoverId ? neighbourhood(hoverId) : null;
+  // Labels and edge tags fade out as the graph is zoomed out.
+  const labelOpacity = clamp((view.scale - 0.55) / 0.35, 0, 1);
+
+  // Screen pixel → logical 1000×600 coordinate, undoing the camera transform.
   const toLogical = (clientX: number, clientY: number) => {
     const r = canvasRef.current?.getBoundingClientRect();
     if (!r) return { x: 0, y: 0 };
-    return { x: ((clientX - r.left) / r.width) * 1000, y: ((clientY - r.top) / r.height) * 600 };
+    const v = viewRef.current;
+    const sx = (clientX - r.left - v.tx) / v.scale;
+    const sy = (clientY - r.top - v.ty) / v.scale;
+    return { x: (sx / r.width) * 1000, y: (sy / r.height) * 600 };
   };
 
-  // Hit-test in screen pixels so it stays accurate whatever the canvas ratio.
+  // Hit-test in screen pixels, accounting for pan/zoom.
   const nodeAt = (clientX: number, clientY: number, excludeId: string) => {
     const r = canvasRef.current?.getBoundingClientRect();
     if (!r) return null;
+    const v = viewRef.current;
     for (const f of files) {
       if (f.id === excludeId) continue;
-      const px = r.left + (f.x / 1000) * r.width;
-      const py = r.top + (f.y / 600) * r.height;
-      if (Math.hypot(clientX - px, clientY - py) <= radiusOf(f) + 16) return f;
+      const px = r.left + v.tx + (f.x / 1000) * r.width * v.scale;
+      const py = r.top + v.ty + (f.y / 600) * r.height * v.scale;
+      if (Math.hypot(clientX - px, clientY - py) <= radiusOf(f) * v.scale + 16) return f;
     }
     return null;
   };
 
-  const reset = () => { drag.current = { mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0 }; };
+  const reset = () => { drag.current = { mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0, startTx: 0, startTy: 0 }; };
+
+  // Zoom around a focal point (in canvas-local px) so it stays put on screen.
+  const zoomAt = (factor: number, cx: number, cy: number) => {
+    setView((v) => {
+      const ns = clamp(v.scale * factor, MIN_SCALE, MAX_SCALE);
+      const k = ns / v.scale;
+      return { scale: ns, tx: cx - (cx - v.tx) * k, ty: cy - (cy - v.ty) * k };
+    });
+  };
+  const zoomBy = (factor: number) => {
+    const r = canvasRef.current?.getBoundingClientRect();
+    zoomAt(factor, r ? r.width / 2 : 0, r ? r.height / 2 : 0);
+  };
+  const resetView = () => setView({ scale: 1, tx: 0, ty: 0 });
+
+  // Scroll wheel zooms toward the cursor (native listener so we can preventDefault).
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Pan by dragging the empty canvas background.
+  const onCanvasDown = (e: React.PointerEvent) => {
+    drag.current = { mode: "pan", id: null, offX: 0, offY: 0, startX: e.clientX, startY: e.clientY, startTx: view.tx, startTy: view.ty };
+    try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
+  };
+  const onCanvasMove = (e: React.PointerEvent) => {
+    const d = drag.current;
+    if (d.mode !== "pan") return;
+    setView((v) => ({ ...v, tx: d.startTx + (e.clientX - d.startX), ty: d.startTy + (e.clientY - d.startY) }));
+  };
+  const onCanvasUp = () => { if (drag.current.mode === "pan") reset(); };
 
   // Drag a file around the canvas.
   const onNodeDown = (e: React.PointerEvent, f: GFile) => {
     e.stopPropagation();
     const p = toLogical(e.clientX, e.clientY);
-    drag.current = { mode: "move", id: f.id, offX: p.x - f.x, offY: p.y - f.y, startX: e.clientX, startY: e.clientY };
+    drag.current = { mode: "move", id: f.id, offX: p.x - f.x, offY: p.y - f.y, startX: e.clientX, startY: e.clientY, startTx: 0, startTy: 0 };
     try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
   };
   const onNodeMove = (e: React.PointerEvent) => {
@@ -1011,7 +1104,7 @@ export function InteractiveGalaxy() {
   // Drag from a file's blue handle onto another file to create a link.
   const onLinkDown = (e: React.PointerEvent, f: GFile) => {
     e.stopPropagation();
-    drag.current = { mode: "link", id: f.id, offX: 0, offY: 0, startX: e.clientX, startY: e.clientY };
+    drag.current = { mode: "link", id: f.id, offX: 0, offY: 0, startX: e.clientX, startY: e.clientY, startTx: 0, startTy: 0 };
     setLinkDrag({ from: f.id, x: f.x, y: f.y });
     try { (e.currentTarget as Element).setPointerCapture(e.pointerId); } catch { /* no active pointer */ }
   };
@@ -1027,12 +1120,17 @@ export function InteractiveGalaxy() {
         setLinks((prev) =>
           prev.some((l) => (l.a === f.id && l.b === target.id) || (l.a === target.id && l.b === f.id))
             ? prev
-            : [...prev, { a: f.id, b: target.id }]
+            : [...prev, { a: f.id, b: target.id, type: linkType }]
         );
       }
     }
     setLinkDrag(null);
     reset();
+  };
+
+  // Click a link's chip to cycle its typology (data → draft → final → reference).
+  const cycleLink = (index: number) => {
+    setLinks((prev) => prev.map((l, i) => (i === index ? { ...l, type: nextLinkType(l.type) } : l)));
   };
 
   const addFile = () => {
@@ -1049,7 +1147,7 @@ export function InteractiveGalaxy() {
       activity: [{ who: "Vous", action: "avez créé ce fichier", when: "à l'instant" }],
     };
     setFiles((p) => [...p, nf]);
-    setLinks((p) => [...p, { a: "f0", b: id }]);
+    setLinks((p) => [...p, { a: "f0", b: id, type: linkType }]);
     setSelectedId(id);
     setName("");
   };
@@ -1128,6 +1226,26 @@ export function InteractiveGalaxy() {
                 );
               })}
             </div>
+            {/* Typology of the link created with the new file */}
+            <div className="flex items-center gap-1 rounded-lg border p-0.5 pl-2" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
+              <Link2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: T.sub }} />
+              {LINK_TYPES.map((o) => {
+                const active = linkType === o.type;
+                const Icon = o.icon;
+                return (
+                  <button
+                    key={o.type}
+                    onClick={() => setLinkType(o.type)}
+                    title={o.label}
+                    aria-label={o.label}
+                    className="rounded-md px-1.5 py-1 transition-colors"
+                    style={active ? { background: o.color, color: "#fff" } : { color: T.toolText }}
+                  >
+                    <Icon className="w-3.5 h-3.5" strokeWidth={2.25} />
+                  </button>
+                );
+              })}
+            </div>
             <button
               onClick={addFile}
               disabled={files.length >= 8}
@@ -1143,40 +1261,91 @@ export function InteractiveGalaxy() {
           {/* Galaxy canvas — drag files, draw links, double-click for details */}
           <div
             ref={canvasRef}
-            className="relative rounded-2xl border overflow-hidden flex-1 min-w-0"
+            onPointerDown={onCanvasDown}
+            onPointerMove={onCanvasMove}
+            onPointerUp={onCanvasUp}
+            className="relative rounded-2xl border overflow-hidden flex-1 min-w-0 cursor-grab active:cursor-grabbing"
             style={{
               borderColor: T.toolBorder,
               backgroundColor: T.canvasColor,
               backgroundImage: `${T.glow}, radial-gradient(circle, ${T.dot} 0.9px, transparent 0.9px)`,
               backgroundSize: "100% 100%, 30px 30px",
+              touchAction: "none",
             }}
           >
+            {/* Stage — pannable / zoomable world holding the whole graph */}
+            <div
+              className="absolute inset-0"
+              style={{ transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`, transformOrigin: "0 0", willChange: "transform" }}
+            >
             {/* Links between files (+ the live link being drawn) */}
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 1000 600" preserveAspectRatio="none" style={{ pointerEvents: "none" }}>
               {links.map((l, i) => {
                 const a = files.find((f) => f.id === l.a);
                 const b = files.find((f) => f.id === l.b);
                 if (!a || !b) return null;
-                const on = selectedId === l.a || selectedId === l.b;
-                return <path key={i} d={bezierPath(a.x, a.y, b.x, b.y)} stroke={linkColor(on)} strokeWidth={on ? 2 : 1.5} fill="none" />;
+                const sel = selectedId === l.a || selectedId === l.b;
+                const lit = hoverId ? l.a === hoverId || l.b === hoverId : true;
+                const c = LINK_TYPE[l.type].color;
+                return <path key={i} d={bezierPath(a.x, a.y, b.x, b.y)} stroke={lit ? (sel ? c : `${c}99`) : `${c}1f`} strokeWidth={sel ? 2.5 : 1.75} fill="none" />;
               })}
               {linkDrag && (() => {
                 const from = files.find((f) => f.id === linkDrag.from);
-                return from ? <path d={bezierPath(from.x, from.y, linkDrag.x, linkDrag.y)} stroke={linkColor(true)} strokeWidth={2} strokeDasharray="5 4" fill="none" /> : null;
+                return from ? <path d={bezierPath(from.x, from.y, linkDrag.x, linkDrag.y)} stroke={LINK_TYPE[linkType].color} strokeWidth={2.5} strokeDasharray="5 4" fill="none" /> : null;
               })()}
             </svg>
+
+            {/* Link typology chips — click to reclassify the relationship */}
+            {links.map((l, i) => {
+              const a = files.find((f) => f.id === l.a);
+              const b = files.find((f) => f.id === l.b);
+              if (!a || !b) return null;
+              const lt = LINK_TYPE[l.type];
+              const Icon = lt.icon;
+              const midX = ((a.x + b.x) / 2 / 1000) * 100;
+              const midY = ((a.y + b.y) / 2 / 600) * 100;
+              const lit = hoverId ? l.a === hoverId || l.b === hoverId : true;
+              const op = labelOpacity * (lit ? 1 : 0.15);
+              return (
+                <button
+                  key={`lt-${i}`}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={() => cycleLink(i)}
+                  title={`${lt.label} · cliquez pour changer la typologie`}
+                  className="absolute flex items-center gap-1 rounded-full pl-1.5 pr-2 py-0.5 text-[10px] font-semibold shadow-sm transition-[transform,opacity] hover:scale-105"
+                  style={{
+                    left: `${midX}%`,
+                    top: `${midY}%`,
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 6,
+                    opacity: op,
+                    pointerEvents: op < 0.1 ? "none" : "auto",
+                    background: dark ? "rgba(17,24,39,0.92)" : "rgba(255,255,255,0.95)",
+                    border: `1px solid ${lt.color}`,
+                    color: lt.color,
+                  }}
+                >
+                  <Icon className="w-3 h-3" strokeWidth={2.5} />
+                  {lt.label}
+                </button>
+              );
+            })}
 
             {/* Files */}
             {files.map((f) => {
               const r = radiusOf(f);
               const isSel = f.id === selectedId;
+              const dimmed = hoverSet ? !hoverSet.has(f.id) : false;
               const fmt = FORMAT_STYLE[f.format];
               const Icon = f.hub ? FileSpreadsheet : fmt.icon;
+              const labelShown = view.scale >= 0.7 || isSel || f.id === hoverId;
               return (
                 <div
                   key={f.id}
-                  className="absolute group"
-                  style={{ left: `${(f.x / 1000) * 100}%`, top: `${(f.y / 600) * 100}%`, transform: "translate(-50%, -50%)", zIndex: isSel ? 7 : 5 }}
+                  className="absolute group transition-opacity duration-200"
+                  onMouseEnter={() => setHoverId(f.id)}
+                  onMouseLeave={() => setHoverId((h) => (h === f.id ? null : h))}
+                  style={{ left: `${(f.x / 1000) * 100}%`, top: `${(f.y / 600) * 100}%`, transform: "translate(-50%, -50%)", zIndex: isSel ? 7 : f.id === hoverId ? 8 : 5, opacity: dimmed ? 0.22 : 1 }}
                 >
                   <div className="flex flex-col items-center">
                     <div
@@ -1190,16 +1359,14 @@ export function InteractiveGalaxy() {
                         width: r * 2,
                         height: r * 2,
                         touchAction: "none",
-                        background: f.hub ? "linear-gradient(135deg, #4f6cf0 0%, #3451d1 100%)" : T.nodeBg,
-                        border: f.hub ? "none" : `1.5px solid ${fmt.color}`,
+                        background: f.hub ? "linear-gradient(135deg, #4f6cf0 0%, #3451d1 100%)" : fmt.color,
+                        border: `1.5px solid ${dark ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.55)"}`,
                         boxShadow: isSel
-                          ? `0 0 0 4px ${dark ? "rgba(96,165,250,0.25)" : "rgba(67,97,238,0.18)"}, 0 10px 24px ${f.hub ? "rgba(67,97,238,0.35)" : fmt.color + "44"}`
-                          : f.hub
-                            ? "0 8px 22px rgba(67,97,238,0.30)"
-                            : `0 2px 6px ${fmt.color}22`,
+                          ? `0 0 0 4px ${dark ? "rgba(96,165,250,0.30)" : "rgba(67,97,238,0.20)"}, 0 0 ${r * 0.9}px ${f.hub ? "rgba(67,97,238,0.55)" : fmt.color + "aa"}`
+                          : `0 0 ${r * 0.6}px ${f.hub ? "rgba(67,97,238,0.45)" : fmt.color + "66"}, 0 2px 8px rgba(15,23,42,0.18)`,
                       }}
                     >
-                      <Icon style={{ width: r * 0.85, height: r * 0.85, color: f.hub ? "white" : fmt.color }} strokeWidth={2.25} />
+                      <Icon style={{ width: r * 0.8, height: r * 0.8, color: "#ffffff" }} strokeWidth={2.25} />
 
                       {/* Link handle — drag onto another file to connect */}
                       <button
@@ -1227,8 +1394,8 @@ export function InteractiveGalaxy() {
                       )}
                     </div>
                     <div
-                      className="font-medium text-center mt-2 px-2 py-0.5 rounded-md inline-block truncate pointer-events-none"
-                      style={{ fontSize: 10.5, maxWidth: 140, color: T.labelText, background: T.labelBg, border: `1px solid ${isSel ? (dark ? "rgba(96,165,250,0.55)" : "rgba(67,97,238,0.45)") : T.labelBorder}`, boxShadow: "0 1px 2px rgba(15,23,42,0.04)" }}
+                      className="font-medium text-center mt-1.5 inline-block truncate pointer-events-none transition-opacity duration-200"
+                      style={{ fontSize: 10.5, maxWidth: 150, color: T.labelText, opacity: labelShown ? 1 : 0, textShadow: dark ? "0 1px 3px rgba(0,0,0,0.7)" : "0 1px 3px rgba(255,255,255,0.8)" }}
                     >
                       {f.label}{GALAXY_EXT[f.format]}
                     </div>
@@ -1236,11 +1403,12 @@ export function InteractiveGalaxy() {
                 </div>
               );
             })}
+            </div>
 
             {/* Interaction hint */}
             <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] backdrop-blur-sm" style={{ zIndex: 6, background: T.hintBg, borderColor: T.toolBorder, color: T.sub }}>
               <Sparkles className="w-3 h-3" style={{ color: T.accent }} />
-              Glissez · reliez via le point bleu · double-cliquez pour les détails
+              Molette pour zoomer · glissez le fond pour naviguer · cliquez une étiquette pour sa typologie
             </div>
 
             {/* Open-file demo toast */}
@@ -1258,8 +1426,19 @@ export function InteractiveGalaxy() {
 
             {/* Zoom controls */}
             <div className="absolute bottom-3 right-3 flex flex-col rounded-lg border overflow-hidden" style={{ zIndex: 6, background: T.ctrlBg, borderColor: T.ctrlBorder }}>
-              {[Plus, Minus, Maximize].map((Icon, i) => (
-                <button key={i} className="w-7 h-7 flex items-center justify-center border-b last:border-b-0" style={{ color: T.ctrlText, borderColor: T.ctrlBorder }}>
+              {[
+                { Icon: Plus, title: "Zoomer", action: () => zoomBy(1.25) },
+                { Icon: Minus, title: "Dézoomer", action: () => zoomBy(0.8) },
+                { Icon: Maximize, title: "Réinitialiser la vue", action: resetView },
+              ].map(({ Icon, title, action }) => (
+                <button
+                  key={title}
+                  title={title}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={action}
+                  className="w-7 h-7 flex items-center justify-center border-b last:border-b-0 hover:bg-black/5 transition-colors"
+                  style={{ color: T.ctrlText, borderColor: T.ctrlBorder }}
+                >
                   <Icon className="w-3.5 h-3.5" />
                 </button>
               ))}
