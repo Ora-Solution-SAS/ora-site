@@ -974,23 +974,6 @@ const App = () => {
                 : "radial-gradient(55% 12% at 12% 10%, rgba(59,130,246,0.16) 0%, transparent 70%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.11) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.11) 0%, transparent 70%)",
           }}
         />
-        <div className="features-heading relative text-center mb-20 md:mb-28">
-          <FadeInOnScroll direction="up">
-            <h2 className="font-poppins text-4xl md:text-[3.75rem] font-normal tracking-[-0.04em] leading-[1.12] text-[#111827] dark:text-white">
-              {t({ fr: "Découvrez", en: "Meet" })}{" "}
-              <span className="text-brand-gradient">Ora.</span>
-            </h2>
-          </FadeInOnScroll>
-          <FadeInOnScroll direction="up" delay={180}>
-            <p className="mt-5 text-[clamp(1rem,2vw,1.125rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
-              {t({
-                fr: "Des automatisations concrètes, adaptées à vos données et à vos processus métier.",
-                en: "Concrete automations, tailored to your data and your business processes.",
-              })}
-            </p>
-          </FadeInOnScroll>
-        </div>
-
         {/* Value-props block — headline + benefit checklist + visual,
             placed just below the "Meet Ora." heading. */}
         <ValueProps />
@@ -1026,7 +1009,7 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
-              video: "/ora_engineering.mp4",
+              video: "/ora_story4.mp4",
               // 1280×854 source → 3:2 box so it fills with no black letterbox
               // bars and no side-cropping.
               ratio: "1280 / 854",
