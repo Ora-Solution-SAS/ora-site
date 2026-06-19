@@ -7,6 +7,9 @@ Format: `[version] YYYY-MM-DD — description`
 
 ## [Unreleased]
 
+### Added
+- Legal pages (FR/EN): **Mentions légales** (`/mentions-legales`), **Politique de confidentialité** (`/politique-confidentialite`) and **CGU** (`/cgu`), rendered through a shared `LegalDocLayout` component. Content ported from `Ora_V2/docs/legal/*.md`; footer legal links wired to these routes.
+
 ### Planned
 - Light / Dark mode toggle with `localStorage` persistence
 - Update Tailwind color tokens to official brand palette (`#3b82f6`, `#0d9488`, `#111827`, `#fcfbf7`)

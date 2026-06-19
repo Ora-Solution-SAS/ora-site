@@ -11,6 +11,8 @@ import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import PricingPage from "./pages/PricingPage";
 import MentionsLegalesPage from "./pages/MentionsLegalesPage";
+import PolitiqueConfidentialitePage from "./pages/PolitiqueConfidentialitePage";
+import CGUPage from "./pages/CGUPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
@@ -595,6 +597,8 @@ type Page =
   | "confidentialite"
   | "pricing"
   | "mentions-legales"
+  | "politique-confidentialite"
+  | "cgu"
   | "not-found";
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -609,6 +613,8 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "confidentialite": "/confidentialite",
   "pricing": "/pricing",
   "mentions-legales": "/mentions-legales",
+  "politique-confidentialite": "/politique-confidentialite",
+  "cgu": "/cgu",
   "not-found": "/not-found",
 };
 
@@ -936,6 +942,10 @@ const App = () => {
         <PricingPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "mentions-legales" ? (
         <MentionsLegalesPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "politique-confidentialite" ? (
+        <PolitiqueConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "cgu" ? (
+        <CGUPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : (
       <>
 
