@@ -12,11 +12,10 @@ import {
   Lock,
   BarChart3,
   Calculator,
+  Combine,
   LineChart,
   Table2,
   Timer,
-  Check,
-  Minus,
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
@@ -51,48 +50,6 @@ type Industry = {
   metric: { value: string; label: string };
   examples: Example[];
 };
-
-// ── Cooperative "last-mile" comparison (accounting firms) ──────────────────
-// Ora replaces neither the production software nor Excel; it automates the
-// manual work that lives between them. Each row shows who covers what.
-type CompareCell = "full" | "partial" | "manual" | "none";
-type CompareRow = {
-  task: { fr: string; en: string };
-  prod: CompareCell; // production software (Cegid / Sage / Pennylane…)
-  excel: CompareCell; // Excel by hand
-  ora: CompareCell;
-};
-
-const COMPTABLE_COMPARE: CompareRow[] = [
-  { task: { fr: "Tenue, saisie, production du FEC & liasse", en: "Bookkeeping, entry, FEC & tax bundle" }, prod: "full", excel: "none", ora: "none" },
-  { task: { fr: "Contrôle de conformité du FEC (A47 A-1)", en: "FEC compliance check (A47 A-1)" }, prod: "partial", excel: "manual", ora: "full" },
-  { task: { fr: "Lettrage & rapprochements", en: "Reconciliation & matching" }, prod: "partial", excel: "manual", ora: "full" },
-  { task: { fr: "Balance âgée par tiers", en: "Aged balance by account" }, prod: "partial", excel: "manual", ora: "full" },
-  { task: { fr: "Cadrage TVA (HT + TVA = TTC, taux FR)", en: "VAT reconciliation (net + VAT = gross)" }, prod: "none", excel: "manual", ora: "full" },
-  { task: { fr: "Revue analytique N / N-1 par seuils", en: "Year-over-year analytical review" }, prod: "none", excel: "manual", ora: "full" },
-  { task: { fr: "Anomalies, loi de Benford, échantillonnage", en: "Anomalies, Benford's law, sampling" }, prod: "none", excel: "none", ora: "full" },
-  { task: { fr: "Fiabilisation des fichiers reçus", en: "Cleaning & vetting received files" }, prod: "none", excel: "manual", ora: "full" },
-  { task: { fr: "Rapport PDF versable au dossier", en: "Audit-ready PDF report for the file" }, prod: "none", excel: "none", ora: "full" },
-];
-
-/** One comparison cell — section is always dark, so colors are light-on-dark. */
-function CompareCellView({ v, partial, manual }: { v: CompareCell; partial: string; manual: string }) {
-  if (v === "full")
-    return (
-      <span className="flex justify-center">
-        <span className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center">
-          <Check className="w-3.5 h-3.5 text-emerald-400" strokeWidth={3} />
-        </span>
-      </span>
-    );
-  if (v === "partial") return <span className="block text-center text-[11px] font-semibold text-amber-400">{partial}</span>;
-  if (v === "manual") return <span className="block text-center text-[11px] font-medium text-white/45">{manual}</span>;
-  return (
-    <span className="flex justify-center text-white/25">
-      <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
-    </span>
-  );
-}
 
 export default function IndustrySelector({
   openBooking,
@@ -129,26 +86,26 @@ export default function IndustrySelector({
       iconBg: "bg-blue-500",
       name: t({ fr: "Expertise comptable", en: "Accounting firms" }),
       tagline: t({
-        fr: "Ora reprend là où votre logiciel comptable s'arrête : tous vos contrôles Excel, automatisés.",
-        en: "Ora picks up where your accounting software stops: all your Excel checks, automated.",
+        fr: "Ora n'est pas un logiciel de comptabilité : c'est la passerelle qui automatise tous vos retraitements Excel répétitifs pour vous faire gagner du temps et vous recentrer sur votre vrai métier.",
+        en: "Ora isn't accounting software: it's the bridge that automates all your repetitive Excel rework, so you save time and refocus on what you do best.",
       }),
       metric: {
         value: t({ fr: "2 h → 3 min", en: "2 h → 3 min" }),
-        label: t({ fr: "par contrôle de balance", en: "per trial-balance check" }),
+        label: t({ fr: "par fichier retraité", en: "per file reworked" }),
       },
       examples: [
         {
-          icon: GitCompare,
+          icon: Table2,
           label: t({
-            fr: "Balances contrôlées et écarts détectés en quelques secondes",
-            en: "Trial balances checked, discrepancies flagged in seconds",
+            fr: "Fichiers clients hétérogènes remis en forme automatiquement",
+            en: "Mismatched client files reformatted automatically",
           }),
         },
         {
-          icon: FileCheck,
+          icon: Combine,
           label: t({
-            fr: "Extraction de données depuis vos PDF et mise à jour automatique de vos fichiers",
-            en: "Data extracted from your PDFs and your files updated automatically",
+            fr: "Données éparpillées dans plusieurs fichiers, consolidées en un clic",
+            en: "Data scattered across files, consolidated in one click",
           }),
         },
         {
@@ -401,46 +358,6 @@ export default function IndustrySelector({
                   );
                 })}
               </ul>
-
-              {/* Cooperative comparison — accounting firms only */}
-              {active.id === "comptable" && (
-                <div className="mt-8">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-white/40 mb-3">
-                    {t({ fr: "Le dernier kilomètre, automatisé", en: "The last mile, automated" })}
-                  </div>
-                  <div className="rounded-2xl border border-gray-200/60 dark:border-white/10 overflow-x-auto">
-                    <div className="min-w-[540px]">
-                      {/* header */}
-                      <div className="grid grid-cols-[1.5fr_repeat(3,minmax(0,0.85fr))] items-center px-4 py-2.5 text-[11px] font-semibold border-b border-gray-200/60 dark:border-white/10">
-                        <div className="text-gray-400 dark:text-white/45">{t({ fr: "Étape du dossier", en: "Workflow step" })}</div>
-                        <div className="text-center text-gray-500 dark:text-white/55">{t({ fr: "Logiciel compta", en: "Accounting software" })}</div>
-                        <div className="text-center text-gray-500 dark:text-white/55">{t({ fr: "Excel à la main", en: "Excel by hand" })}</div>
-                        <div className="text-center font-bold text-brand-gradient">Ora</div>
-                      </div>
-                      {/* rows */}
-                      {COMPTABLE_COMPARE.map((row, i) => (
-                        <div
-                          key={i}
-                          className="grid grid-cols-[1.5fr_repeat(3,minmax(0,0.85fr))] items-center px-4 py-3 border-t border-gray-200/50 dark:border-white/[0.06] first:border-t-0"
-                        >
-                          <div className="text-[12.5px] text-[#111827] dark:text-white/85 pr-3 leading-snug">{t(row.task)}</div>
-                          <CompareCellView v={row.prod} partial={t({ fr: "Partiel", en: "Partial" })} manual={t({ fr: "À la main", en: "By hand" })} />
-                          <CompareCellView v={row.excel} partial={t({ fr: "Partiel", en: "Partial" })} manual={t({ fr: "À la main", en: "By hand" })} />
-                          <div className="rounded-lg bg-blue-500/[0.08] py-1.5">
-                            <CompareCellView v={row.ora} partial={t({ fr: "Partiel", en: "Partial" })} manual={t({ fr: "À la main", en: "By hand" })} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="mt-3 text-[12px] leading-relaxed text-gray-500 dark:text-white/45">
-                    {t({
-                      fr: "Ora ne remplace ni votre logiciel de production, ni Excel. Il automatise le travail manuel entre les deux : ce que vous sortez de Cegid, Sage ou Pennylane, fiabilisé et tracé en un clic.",
-                      en: "Ora replaces neither your production software nor Excel. It automates the manual work in between: whatever you export from Cegid, Sage or Pennylane, cleaned and traced in one click.",
-                    })}
-                  </p>
-                </div>
-              )}
 
               {/* CTA → booking flow (the per-industry pages aren't live yet) */}
               <button
