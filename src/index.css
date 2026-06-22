@@ -227,6 +227,14 @@
    }
  }
 
+ /* Titre statique de #features masqué pendant que l'overlay "Découvrez Ora." vole vers lui */
+ .features-heading {
+   transition: opacity 0.35s ease;
+ }
+ body.hero-text-exiting .features-heading {
+   opacity: 0 !important;
+ }
+
  .laser-border {
    position: absolute;
    inset: 0;
