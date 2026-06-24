@@ -81,7 +81,13 @@ const auroraCSS = `
   50%  { transform: translate3d(3%, 2%, 0)  scale(1.08);  opacity: 1;   }
   100% { transform: translate3d(-3%, -2%, 0) scale(1);    opacity: 0.8; }
 }
-.excel-aurora { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.excel-aurora {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  /* Fade the glow out at the top/bottom edges so it blends seamlessly into the
+     white sections above and below (no hard demarcation line). */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+}
 .excel-aurora::before {
   content: "";
   position: absolute;

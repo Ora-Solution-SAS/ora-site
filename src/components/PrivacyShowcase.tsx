@@ -161,6 +161,8 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     <section
       id="securite"
       ref={outerRef}
+      data-nav-shy
+      className="mt-10 md:mt-16"
       // Tall on desktop so the scene pins while the 3 anims play; auto on mobile.
       style={{ background: dk ? "#0f172a" : "#ffffff", height: pinned ? "300vh" : "auto" }}
     >

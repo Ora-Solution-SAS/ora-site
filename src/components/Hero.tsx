@@ -416,14 +416,14 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               <AnimatedHeroTitle />
 
-              <p className="hero-stagger hero-d2 mt-6 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
+              <p className="hero-stagger hero-d2 mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
                 {t({
                   fr: "Ora automatise le travail Excel répétitif des équipes finance. Hébergé en Europe, chiffré de bout en bout et traçable : vos données confidentielles restent sous votre contrôle.",
                   en: "Ora automates the repetitive Excel work of finance teams. EU-hosted, end-to-end encrypted and audit-trailed: your confidential data stays under your control.",
                 })}
               </p>
 
-              <div className="hero-stagger hero-d3 mt-9 flex flex-wrap items-center justify-center gap-3.5">
+              <div className="hero-stagger hero-d3 mt-10 md:mt-11 flex flex-wrap items-center justify-center gap-3.5">
                 <button
                   onClick={openBooking}
                   className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
@@ -441,56 +441,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               {/* Availability badge — sits just below the CTAs. Click opens a
                   callback capture + booking. relative z-50 keeps the open panel
-                  above the trust row / video below it. */}
-              <div className="hero-stagger hero-d4 relative z-50 mt-7 flex justify-center">
+                  above the video below it. */}
+              <div className="hero-stagger hero-d4 relative z-50 mt-8 flex justify-center">
                 <CallbackBadge openBooking={openBooking} />
-              </div>
-
-              {/* Light social proof — single compact line above the demo. */}
-              <div className="hero-stagger hero-d4 mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
-                <div className="flex items-center gap-3">
-                  <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
-                  <div className="flex items-center">
-                    {INTEGRATIONS.map((it, i) => {
-                      // Excel sits in front: bigger, fully opaque, on top. The
-                      // others tuck behind it, smaller and dimmed, tightly stacked.
-                      const front = i === 0;
-                      return (
-                        <IntegrationCircle
-                          key={it.name}
-                          name={it.name}
-                          src={it.src}
-                          front={front}
-                          style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
-                  <ShieldCheck className="h-4 w-4" />
-                  {t({ fr: "Chiffré de bout en bout", en: "End-to-end encrypted" })}
-                </span>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <span className="flex items-center gap-1">
-                    <EuFlag />
-                    <SwissFlag />
-                  </span>
-                  {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
-                </span>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-1.5 font-medium text-gray-700 dark:text-gray-300">
-                  <FileText className="h-4 w-4" />
-                  {t({ fr: "Piste d'audit", en: "Audit trail" })}
-                </span>
               </div>
             </div>
 
@@ -560,6 +513,48 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Light social proof — single compact line below the demo. */}
+            <div className="hero-stagger hero-d5 mt-12 md:mt-14 max-w-6xl mx-auto px-6 lg:px-10">
+              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
+                <div className="flex items-center gap-3">
+                  <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
+                  <div className="flex items-center">
+                    {INTEGRATIONS.map((it, i) => {
+                      // Excel sits in front: bigger, fully opaque, on top. The
+                      // others tuck behind it, smaller and dimmed, tightly stacked.
+                      const front = i === 0;
+                      return (
+                        <IntegrationCircle
+                          key={it.name}
+                          name={it.name}
+                          src={it.src}
+                          front={front}
+                          style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+                <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
+                  <ShieldCheck className="h-4 w-4" />
+                  {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+                </span>
+
+                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+                  <span className="flex items-center gap-1">
+                    <EuFlag />
+                    <SwissFlag />
+                  </span>
+                  {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+                </span>
               </div>
             </div>
           </div>

@@ -85,6 +85,7 @@ export default function AtlasShowcase() {
     <section
       id="atlas"
       data-nav-dark
+      data-nav-shy
       className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
         background:

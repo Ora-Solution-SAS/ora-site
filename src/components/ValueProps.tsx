@@ -1,79 +1,58 @@
+import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
- * Value-props block — a longer, lighter headline with two highlighted phrases,
- * a two-column benefit checklist (rows separated by thin rules), and a product
- * mockup floating on a soft panel to the right. Clean two-column composition
- * (text ↔ image), inspired by modern agency landing pages.
+ * Value-props — split-card layout (à la Bubble "Native Mobile"): one unified
+ * rounded card with a light-blue left panel (eyebrow pill + headline +
+ * paragraph + CTA) and a blue right panel holding the product mockup.
  */
-export default function ValueProps() {
+export default function ValueProps({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
 
-  // Benefits in ROW order (left, right, left, right…): the grid auto-places
-  // them two per row, so each row shares one height and the separator rules
-  // of the two columns stay perfectly aligned even when a label wraps.
-  const benefits: string[] = [
-    t({ fr: "Gagnez des heures chaque semaine", en: "Save hours every week" }),
-    t({ fr: "Zéro saisie manuelle", en: "Zero manual entry" }),
-    t({ fr: "Déployé en quelques heures", en: "Live in just hours" }),
-    t({ fr: "100% local et sécurisé", en: "100% local & secure" }),
-    t({ fr: "Aucune IA, du vrai sur-mesure", en: "No AI, real design talent" }),
-    t({ fr: "Conçu pour votre métier", en: "Built for your business" }),
-  ];
-
   return (
-    <div className="relative max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center py-16 md:py-24">
-      {/* LEFT — headline + benefit checklist */}
-      <div>
-        <h3 className="font-poppins font-normal text-[1.5rem] md:text-[1.95rem] leading-[1.34] tracking-[-0.01em] text-[#111827] dark:text-white">
-          {t({ fr: "Nous pensons qu'une ", en: "We believe " })}
-          <span className="text-[#3b82f6]">
-            {t({ fr: "automatisation puissante", en: "powerful automation" })}
-          </span>
-          {t({
-            fr: " ne devrait pas prendre des mois. On transforme vos tâches Excel en automatisations en un clic, ",
-            en: " shouldn't take months. So we turn your Excel work into a one-click workflow, ",
-          })}
-          <span className="text-[#3b82f6]">
-            {t({ fr: "en quelques minutes.", en: "in just minutes." })}
-          </span>
-        </h3>
-
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-x-10">
-          {benefits.map((item) => (
-            <div
-              key={item}
-              className="flex items-center font-inter font-medium text-base md:text-[17px] text-[#111827] dark:text-white py-5 border-b border-gray-300 dark:border-white/25"
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT — mockup. The box keeps the image's native 4:3 ratio at EVERY
-          breakpoint (the PNG is 2003×1502), so object-cover is an exact fit:
-          the full mockup always shows, never zoomed or cropped, regardless of
-          how tall the text column gets (e.g. the longer French copy). The
-          column is vertically centered (items-center) so the image floats
-          balanced next to the text instead of being stretched to its height. */}
+    <div className="relative max-w-7xl mx-auto py-16 md:py-24">
       <div
-        className="relative w-full rounded-[24px] overflow-hidden aspect-[4/3]"
-        style={{
-          boxShadow:
-            "0 24px 70px -22px rgba(59,130,246,0.28), 0 8px 30px -12px rgba(13,148,136,0.15)",
-        }}
+        data-nav-shy
+        className="grid lg:grid-cols-[1.45fr_1fr] rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)]"
       >
-        <img
-          src="/value-automation-v11.png"
-          alt={t({
-            fr: "Interface Ora : automatisations Excel disponibles",
-            en: "Ora interface: available Excel automations",
-          })}
-          className="absolute inset-0 w-full h-full object-cover object-center"
-          loading="lazy"
-          decoding="async"
-        />
+        {/* LEFT — light-blue gradient panel: eyebrow + headline + paragraph + CTA */}
+        <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-10 md:p-14 lg:p-16 flex flex-col justify-center">
+          <span className="inline-flex w-fit items-center rounded-full border border-blue-300/70 dark:border-blue-400/30 bg-white/60 dark:bg-white/[0.06] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">
+            {t({ fr: "Automatisation sur-mesure", en: "Tailored automation" })}
+          </span>
+
+          <h3 className="font-poppins font-normal text-[2rem] md:text-[2.6rem] leading-[1.1] tracking-[-0.03em] text-[#111827] dark:text-white mt-6">
+            {t({ fr: "Vos tâches Excel, automatisées en un clic.", en: "Your Excel work, automated in one click." })}
+          </h3>
+
+          <p className="font-inter mt-5 text-base md:text-[17px] leading-relaxed text-gray-600 dark:text-gray-300 max-w-md">
+            {t({
+              fr: "Une automatisation sur-mesure ne devrait pas prendre des mois. On la livre en quelques jours, adaptée à votre processus, sans que personne ait à maîtriser Excel.",
+              en: "Tailored automation shouldn't take months. We deliver it in days, built around your process, with no one needing to master Excel.",
+            })}
+          </p>
+
+          <button
+            onClick={openBooking}
+            className="group mt-9 inline-flex w-fit items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px transition-all duration-150"
+          >
+            {t({ fr: "Réserver un appel", en: "Book a call" })}
+            <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
+          </button>
+        </div>
+
+        {/* RIGHT — hero image fills the whole panel. Light backdrop (same as
+            the left panel) so the image's transparent edges blend in: no
+            violet band, just the image taking the entire right side. */}
+        <div className="relative min-h-[440px] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#d6e6fd] dark:from-[#0f1d3a] dark:to-[#152a52]">
+          <img
+            src="/ora_hero_violet-v3.png"
+            alt={t({ fr: "Interface Ora : automatisations Excel disponibles", en: "Ora interface: available Excel automations" })}
+            className="absolute inset-0 w-full h-full object-cover object-center scale-[1.12]"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
       </div>
     </div>
   );
