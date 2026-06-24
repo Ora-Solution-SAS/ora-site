@@ -11,6 +11,9 @@ import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import PricingPage from "./pages/PricingPage";
 import MentionsLegalesPage from "./pages/MentionsLegalesPage";
+import PolitiqueConfidentialitePage from "./pages/PolitiqueConfidentialitePage";
+import CGUPage from "./pages/CGUPage";
+import DownloadPage from "./pages/DownloadPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
@@ -601,6 +604,9 @@ type Page =
   | "confidentialite"
   | "pricing"
   | "mentions-legales"
+  | "politique-confidentialite"
+  | "cgu"
+  | "telechargement"
   | "not-found";
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -615,6 +621,11 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "confidentialite": "/confidentialite",
   "pricing": "/pricing",
   "mentions-legales": "/mentions-legales",
+  "politique-confidentialite": "/politique-confidentialite",
+  "cgu": "/cgu",
+  // Hidden client download page: reachable only via this private direct link.
+  // NOT added to HIDDEN_PAGES (that would 404 it) and NOT linked in nav/footer.
+  "telechargement": "/telechargement/ora-app",
   "not-found": "/not-found",
 };
 
@@ -909,16 +920,19 @@ const App = () => {
     >
       <style>{bubbleStyles}</style>
 
-      <Navigation
-        theme={theme}
-        onToggleTheme={() => {
-          // Toggle provisoire — session uniquement, ne persiste pas en localStorage
-          setTheme(theme === "dark" ? "light" : "dark");
-        }}
-        onBookCall={() => openBooking()}
-        currentPage={page}
-        onNavigate={navigateTo}
-      />
+      {/* Global nav is hidden on the standalone client download page */}
+      {page !== "telechargement" && (
+        <Navigation
+          theme={theme}
+          onToggleTheme={() => {
+            // Toggle provisoire — session uniquement, ne persiste pas en localStorage
+            setTheme(theme === "dark" ? "light" : "dark");
+          }}
+          onBookCall={() => openBooking()}
+          currentPage={page}
+          onNavigate={navigateTo}
+        />
+      )}
 
       {page === "not-found" ? (
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
@@ -942,6 +956,17 @@ const App = () => {
         <PricingPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "mentions-legales" ? (
         <MentionsLegalesPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "politique-confidentialite" ? (
+        <PolitiqueConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "cgu" ? (
+        <CGUPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "telechargement" ? (
+        <DownloadPage
+          theme={theme}
+          openBooking={openBooking}
+          onNavigate={navigateTo}
+          onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
+        />
       ) : (
       <>
 
@@ -1363,14 +1388,16 @@ const App = () => {
       )}
 
 
-      {/* FOOTER — visible on all pages */}
-      <FadeInOnScroll>
-        <OraFooter
-          onNavigate={navigateTo}
-          onBookCall={openBooking}
-          theme={theme}
-        />
-      </FadeInOnScroll>
+      {/* FOOTER — visible on all pages except the standalone download page */}
+      {page !== "telechargement" && (
+        <FadeInOnScroll>
+          <OraFooter
+            onNavigate={navigateTo}
+            onBookCall={openBooking}
+            theme={theme}
+          />
+        </FadeInOnScroll>
+      )}
 
     </div>
   );

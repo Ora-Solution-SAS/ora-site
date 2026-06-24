@@ -13,7 +13,7 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
