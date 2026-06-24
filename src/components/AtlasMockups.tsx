@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Bell,
   Sparkles,
+  Hand,
   FileSpreadsheet,
   Plus,
   Network,
@@ -42,7 +43,7 @@ import {
 } from "lucide-react";
 
 import { useState, useRef, useEffect, Fragment } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * ORA Atlas — 3 static "app screenshot" mockups for the landing page.
@@ -954,6 +955,9 @@ export function InteractiveGalaxy() {
   const [linkDrag, setLinkDrag] = useState<{ from: string; x: number; y: number } | null>(null);
   const [openToast, setOpenToast] = useState(false);
   const [hoverId, setHoverId] = useState<string | null>(null);
+  // Onboarding hint: dim the galaxy with an "it's interactive" cue until the
+  // user interacts (or a few seconds pass).
+  const [showHint, setShowHint] = useState(true);
   // Camera: pan offset (px) + zoom scale, applied as a CSS transform on the stage.
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
 
@@ -1059,11 +1063,32 @@ export function InteractiveGalaxy() {
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      setShowHint(false);
       const r = el.getBoundingClientRect();
       zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top);
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // The onboarding hint should appear when the galaxy actually scrolls into
+  // view (not on page load). Start its auto-dismiss timer only then, so the
+  // user reliably sees it when they reach the section.
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    let timer = 0;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          timer = window.setTimeout(() => setShowHint(false), 4500);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 },
+    );
+    io.observe(el);
+    return () => { io.disconnect(); if (timer) window.clearTimeout(timer); };
   }, []);
 
   // Pan by dragging the empty canvas background.
@@ -1166,6 +1191,7 @@ export function InteractiveGalaxy() {
   };
 
   return (
+    <div className="relative inline-block">
     <WindowShell activeNav="atlas" pageTitle="Atlas" pageSubtitle="Acquisition NewCo" height={720} dark={dark}>
       <div className="px-6 py-5 flex flex-col" style={{ height: "100%" }}>
         {/* Project header */}
@@ -1261,6 +1287,7 @@ export function InteractiveGalaxy() {
           {/* Galaxy canvas — drag files, draw links, double-click for details */}
           <div
             ref={canvasRef}
+            onPointerDownCapture={() => setShowHint(false)}
             onPointerDown={onCanvasDown}
             onPointerMove={onCanvasMove}
             onPointerUp={onCanvasUp}
@@ -1443,6 +1470,7 @@ export function InteractiveGalaxy() {
                 </button>
               ))}
             </div>
+
           </div>
 
           {/* Detail panel — opens on double-click, closeable */}
@@ -1527,5 +1555,46 @@ export function InteractiveGalaxy() {
         </div>
       </div>
     </WindowShell>
+
+      {/* Onboarding hint — dims the WHOLE window placeholder and signals
+          interactivity. Covers the entire mockup, not just the canvas. */}
+      <AnimatePresence>
+        {showHint && (
+          <motion.div
+            className="absolute inset-0 z-40 flex items-center justify-center cursor-pointer rounded-2xl"
+            style={{ background: "rgba(8,12,24,0.6)", backdropFilter: "blur(2px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            onPointerDown={() => setShowHint(false)}
+          >
+            <motion.div
+              className="flex flex-col items-center text-center gap-3 px-6"
+              initial={{ scale: 0.92, y: 10, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <span className="relative flex items-center justify-center w-16 h-16">
+                <motion.span
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: "rgba(96,165,250,0.35)" }}
+                  animate={{ scale: [1, 1.65], opacity: [0.55, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                />
+                <span className="relative w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+                  <Hand className="w-6 h-6 text-[#4361ee]" strokeWidth={2} />
+                </span>
+              </span>
+              <div className="text-white font-poppins font-semibold text-[18px]">Galaxie interactive</div>
+              <div className="text-white/75 font-inter text-[13.5px] max-w-sm leading-relaxed">
+                Glissez les fichiers, zoomez à la molette, cliquez une étiquette pour sa typologie.
+              </div>
+              <span className="mt-1 text-white/55 font-inter text-[12px]">Cliquez pour explorer</span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

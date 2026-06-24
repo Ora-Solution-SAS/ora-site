@@ -237,6 +237,7 @@ export default function IndustrySelector({
   return (
     <section
       id="industries"
+      data-nav-shy
       className="dark relative py-24 md:py-32 px-6 md:px-12"
       style={{ backgroundColor: bg }}
     >
@@ -250,15 +251,15 @@ export default function IndustrySelector({
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         >
           <h2 className="font-poppins font-semibold text-4xl md:text-[3.25rem] tracking-[-0.03em] leading-[1.1] text-[#111827] dark:text-white">
-            {t({ fr: "Conçu pour ", en: "Built for " })}
+            {t({ fr: "Éprouvé sur les secteurs les plus ", en: "Proven in the most " })}
             <span className="text-brand-gradient">
-              {t({ fr: "votre métier.", en: "your industry." })}
+              {t({ fr: "exigeants.", en: "demanding sectors." })}
             </span>
           </h2>
           <p className="mt-5 text-[clamp(1rem,2vw,1.125rem)] leading-[1.7] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
             {t({
-              fr: "Sélectionnez votre secteur pour découvrir des exemples concrets d'automatisations Ora.",
-              en: "Pick your field to see concrete examples of what Ora automates.",
+              fr: "Audit, M&A, fonds, expertise comptable : là où la confidentialité et la précision ne tolèrent aucune erreur, Ora automatise déjà le travail Excel. Explorez les exemples par secteur.",
+              en: "Audit, M&A, funds, accounting: where confidentiality and precision leave no room for error, Ora already automates the Excel work. Browse the examples by sector.",
             })}
           </p>
         </motion.div>

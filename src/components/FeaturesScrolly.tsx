@@ -73,54 +73,34 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
     return () => io.disconnect();
   }, [feature.video]);
 
+  // Fills its parent (which sets the size / aspect ratio). The continuous
+  // frame lives on the parent containers, not here.
   return (
-    <div className="relative">
-      {/* Main video card — neutral, subtle drop shadow only (no blue glow).
-          NOTE: pure shadows, NO blur() filter, to avoid scroll jank. */}
-      <div
-        className="relative w-full rounded-[24px] overflow-hidden border border-gray-200/60 dark:border-white/[0.06] bg-white dark:bg-white/[0.02]"
-        style={{
-          boxShadow:
-            "0 14px 36px -14px rgba(15,23,42,0.14), 0 2px 8px rgba(15,23,42,0.05)",
-        }}
-      >
-        {feature.video ? (
-          <video
-            ref={videoRef}
-            src={feature.video}
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="w-full object-cover block"
-            style={{
-              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
-              objectPosition: feature.objectPosition ?? "center",
-            }}
-          />
-        ) : feature.image ? (
-          <img
-            src={feature.image}
-            alt={feature.title}
-            className="w-full object-cover block"
-            style={{
-              aspectRatio: feature.ratio ?? DEFAULT_RATIO,
-              objectPosition: feature.objectPosition ?? "center",
-            }}
-          />
-        ) : (
-          // Empty placeholder — visual to be added later.
-          <div
-            className="relative w-full bg-gray-100 dark:bg-white/[0.03]"
-            style={{ aspectRatio: feature.ratio ?? DEFAULT_RATIO }}
-          >
-            <div
-              className="absolute inset-0 opacity-50 dark:opacity-30"
-              style={{ background: feature.grad }}
-            />
-          </div>
-        )}
-      </div>
+    <div className="relative w-full h-full">
+      {feature.video ? (
+        <video
+          ref={videoRef}
+          src={feature.video}
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover block"
+          style={{ objectPosition: feature.objectPosition ?? "center" }}
+        />
+      ) : feature.image ? (
+        <img
+          src={feature.image}
+          alt={feature.title}
+          className="w-full h-full object-cover block"
+          style={{ objectPosition: feature.objectPosition ?? "center" }}
+        />
+      ) : (
+        // Empty placeholder — visual to be added later.
+        <div className="relative w-full h-full bg-gray-100 dark:bg-white/[0.03]">
+          <div className="absolute inset-0 opacity-50 dark:opacity-30" style={{ background: feature.grad }} />
+        </div>
+      )}
     </div>
   );
 }
@@ -236,9 +216,11 @@ export default function FeaturesScrolly({ features }: Props) {
               className="min-h-[70vh] md:min-h-[80vh] flex flex-col justify-center py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
-                {/* Mobile-only inline visual */}
-                <div className="min-[560px]:hidden mt-8">
-                  <Visual feature={feat} />
+                {/* Mobile-only inline visual — same white frame */}
+                <div className="min-[560px]:hidden mt-8 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
+                  <div className="relative w-full rounded-[18px] overflow-hidden" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
+                    <Visual feature={feat} />
+                  </div>
                 </div>
               </TextBlock>
             </div>
@@ -267,14 +249,13 @@ export default function FeaturesScrolly({ features }: Props) {
             <AnimatePresence> (the browser doesn't have to re-init the <video>
             element each swap) and keeps the crossfade fully overlapped — so a
             fast scroll never shows a blank moment between videos. */}
-        <div className="hidden min-[560px]:block relative">
+        <div data-nav-shy className="hidden min-[560px]:block relative">
           <div className="sticky top-24 h-[calc(100vh-8rem)] max-h-[780px] flex items-center">
+            {/* One continuous white frame — stays put while the video swaps. */}
+            <div className="w-full rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 md:p-4 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.22)]">
             <div
-              className="relative w-full"
-              style={{
-                aspectRatio: features[activeIdx]?.ratio ?? DEFAULT_RATIO,
-                transition: "aspect-ratio 450ms cubic-bezier(0.22, 1, 0.36, 1)",
-              }}
+              className="relative w-full rounded-[18px] overflow-hidden"
+              style={{ aspectRatio: "1280 / 854" }}
             >
               {features.map((feat, i) => {
                 const isActive = i === activeIdx;
@@ -294,6 +275,7 @@ export default function FeaturesScrolly({ features }: Props) {
                   </motion.div>
                 );
               })}
+            </div>
             </div>
           </div>
         </div>
