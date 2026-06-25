@@ -10,6 +10,9 @@ import {
   Bell,
   Sparkles,
   Hand,
+  Move,
+  ZoomIn,
+  MousePointerClick,
   FileSpreadsheet,
   Plus,
   Network,
@@ -1557,12 +1560,12 @@ export function InteractiveGalaxy() {
     </WindowShell>
 
       {/* Onboarding hint — dims the WHOLE window placeholder and signals
-          interactivity. Covers the entire mockup, not just the canvas. */}
+          interactivity with a demonstrative drag gesture + capability chips. */}
       <AnimatePresence>
         {showHint && (
           <motion.div
             className="absolute inset-0 z-40 flex items-center justify-center cursor-pointer rounded-2xl"
-            style={{ background: "rgba(8,12,24,0.6)", backdropFilter: "blur(2px)" }}
+            style={{ background: "rgba(8,12,24,0.62)", backdropFilter: "blur(3px)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -1570,27 +1573,84 @@ export function InteractiveGalaxy() {
             onPointerDown={() => setShowHint(false)}
           >
             <motion.div
-              className="flex flex-col items-center text-center gap-3 px-6"
-              initial={{ scale: 0.92, y: 10, opacity: 0 }}
-              animate={{ scale: 1, y: 0, opacity: 1 }}
-              transition={{ delay: 0.1, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col items-center text-center px-6"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: { transition: { staggerChildren: 0.08, delayChildren: 0.08 } },
+              }}
             >
-              <span className="relative flex items-center justify-center w-16 h-16">
+              {/* Demonstrative drag gesture: the hand glides side-to-side while a
+                  soft halo and a moving "ghost trail" sell the draggable feel. */}
+              <motion.div
+                className="relative flex items-center justify-center w-28 h-20 mb-4"
+                variants={hintItem}
+              >
+                {/* expanding halo pulse */}
                 <motion.span
-                  className="absolute inset-0 rounded-full"
-                  style={{ background: "rgba(96,165,250,0.35)" }}
-                  animate={{ scale: [1, 1.65], opacity: [0.55, 0] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                  className="absolute w-16 h-16 rounded-full"
+                  style={{ background: "rgba(96,165,250,0.30)" }}
+                  animate={{ scale: [0.9, 1.7], opacity: [0.5, 0] }}
+                  transition={{ duration: 1.9, repeat: Infinity, ease: "easeOut" }}
                 />
-                <span className="relative w-14 h-14 rounded-full bg-white/95 flex items-center justify-center shadow-lg">
+                {/* faint dashed track the hand travels along */}
+                <span
+                  className="absolute h-[2px] w-20 rounded-full"
+                  style={{ background: "repeating-linear-gradient(90deg, rgba(255,255,255,0.30) 0 5px, transparent 5px 10px)" }}
+                />
+                {/* the dragging hand */}
+                <motion.span
+                  className="relative w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-[0_8px_24px_rgba(8,12,24,0.45)]"
+                  animate={{ x: [-26, 26, -26], rotate: [-7, 7, -7], scale: [1, 0.94, 1] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: [0.45, 0, 0.55, 1] }}
+                >
                   <Hand className="w-6 h-6 text-[#4361ee]" strokeWidth={2} />
-                </span>
-              </span>
-              <div className="text-white font-poppins font-semibold text-[18px]">Galaxie interactive</div>
-              <div className="text-white/75 font-inter text-[13.5px] max-w-sm leading-relaxed">
-                Glissez les fichiers, zoomez à la molette, cliquez une étiquette pour sa typologie.
-              </div>
-              <span className="mt-1 text-white/55 font-inter text-[12px]">Cliquez pour explorer</span>
+                </motion.span>
+              </motion.div>
+
+              <motion.div
+                className="text-white font-poppins font-semibold text-[18px]"
+                variants={hintItem}
+              >
+                Galaxie interactive
+              </motion.div>
+              <motion.div
+                className="text-white/70 font-inter text-[13px] max-w-xs leading-relaxed mt-1.5"
+                variants={hintItem}
+              >
+                Explorez le dossier comme une carte vivante.
+              </motion.div>
+
+              {/* Capability chips — the 3 interactions, staggered in */}
+              <motion.div className="flex flex-wrap items-center justify-center gap-2 mt-4" variants={hintItem}>
+                {[
+                  { icon: Move, label: "Glisser" },
+                  { icon: ZoomIn, label: "Zoomer" },
+                  { icon: MousePointerClick, label: "Cliquer une étiquette" },
+                ].map((c) => {
+                  const CIcon = c.icon;
+                  return (
+                    <motion.span
+                      key={c.label}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.08] px-3 py-1.5 text-white/90 font-inter text-[12px] backdrop-blur-sm"
+                      variants={hintItem}
+                    >
+                      <CIcon className="w-3.5 h-3.5 text-[#7da6ff]" strokeWidth={2.25} />
+                      {c.label}
+                    </motion.span>
+                  );
+                })}
+              </motion.div>
+
+              <motion.span
+                className="mt-5 inline-flex items-center gap-1.5 text-white/55 font-inter text-[12px]"
+                variants={hintItem}
+                animate={{ opacity: [0.55, 1, 0.55] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                Cliquez n'importe où pour explorer
+              </motion.span>
             </motion.div>
           </motion.div>
         )}
@@ -1598,3 +1658,9 @@ export function InteractiveGalaxy() {
     </div>
   );
 }
+
+/** Staggered fade-up entrance for each onboarding-hint child. */
+const hintItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] as const } },
+};

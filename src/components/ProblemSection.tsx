@@ -50,10 +50,10 @@ export default function ProblemSection() {
           <div className="mt-5 border-t border-gray-200 dark:border-white/10">
             {pains.map((p, i) => (
               <div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10">
-                <span className="w-7 h-7 rounded-full bg-gray-100 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <X className="w-4 h-4 text-gray-400 dark:text-gray-500" strokeWidth={2.5} />
+                <span className="w-7 h-7 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" strokeWidth={3} />
                 </span>
-                <span className="font-inter text-base md:text-[17px] leading-snug text-gray-600 dark:text-gray-300">{p}</span>
+                <span className="font-inter text-base md:text-[17px] leading-snug text-gray-800 dark:text-gray-100">{p}</span>
               </div>
             ))}
           </div>

@@ -136,7 +136,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
         en: "Your business and financial data is encrypted directly on your device, before anything is sent. Only unreadable blobs leave your machine, and the key that opens them never leaves your account.",
       }),
       chips: [
-        { label: t({ fr: "Chiffrement AES-256", en: "AES-256 encryption" }) },
+        { label: t({ fr: "Chiffrement XChaCha20-Poly1305", en: "XChaCha20-Poly1305 encryption" }) },
         { label: t({ fr: "Côté client", en: "Client-side" }) },
       ],
     },

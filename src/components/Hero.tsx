@@ -418,8 +418,8 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               <p className="hero-stagger hero-d2 mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
                 {t({
-                  fr: "Ora automatise le travail Excel répétitif des équipes finance. Hébergé en Europe, chiffré de bout en bout et traçable : vos données confidentielles restent sous votre contrôle.",
-                  en: "Ora automates the repetitive Excel work of finance teams. EU-hosted, end-to-end encrypted and audit-trailed: your confidential data stays under your control.",
+                  fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
+                  en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
                 })}
               </p>
 
