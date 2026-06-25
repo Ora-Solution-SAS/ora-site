@@ -28,6 +28,7 @@ import ExcelReveal from "./components/ExcelReveal";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 import ProblemSection from "./components/ProblemSection";
+import CompareGenericAI from "./components/CompareGenericAI";
 import FAQ from "./components/FAQ";
 import SectionNav from "./components/SectionNav";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -993,8 +994,8 @@ const App = () => {
           style={{
             background:
               theme === "dark"
-                ? "radial-gradient(55% 12% at 50% 3%, rgba(59,130,246,0.18) 0%, transparent 70%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.17) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.12) 0%, transparent 70%)"
-                : "radial-gradient(55% 12% at 50% 3%, rgba(59,130,246,0.16) 0%, transparent 70%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.11) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.11) 0%, transparent 70%)",
+                ? "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.18) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.18) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.17) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.12) 0%, transparent 70%)"
+                : "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.16) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.16) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.11) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.11) 0%, transparent 70%)",
             // Fade the tint layer in/out at the very top and bottom so its
             // edges never form a hard horizontal line against the adjacent
             // white sections (hero above, next section below).
@@ -1106,6 +1107,9 @@ const App = () => {
       {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
           3 trust cards. See PrivacyShowcase.tsx. */}
       <PrivacyShowcase theme={theme} />
+
+      {/* ── ORA vs IA GÉNÉRIQUE — answers "why not ChatGPT/Copilot?" ──── */}
+      <CompareGenericAI />
 
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
       <FAQ openBooking={openBooking} />

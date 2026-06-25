@@ -10,6 +10,7 @@ import {
 import { useLang } from "@/lib/i18n";
 import { MockupHome, MockupManager, InteractiveGalaxy } from "./AtlasMockups";
 import InViewVideo from "./InViewVideo";
+import ScaleToFit from "./ScaleToFit";
 
 /**
  * Atlas showcase section — Monday.com "Un vrai impact" layout.
@@ -42,7 +43,10 @@ type Tab = {
 
 export default function AtlasShowcase() {
   const { t } = useLang();
-  const [activeTab, setActiveTab] = useState<TabId>("galaxy");
+  // Tab state for the lower demo area (pills above the Atlas video). Galaxy
+  // shows the video; the other tabs reuse their mockups. The top mockup is no
+  // longer tabbed — it always shows the interactive galaxy.
+  const [bottomTab, setBottomTab] = useState<TabId>("galaxy");
 
   const tabs: Tab[] = [
     {
@@ -73,13 +77,6 @@ export default function AtlasShowcase() {
       }),
     },
   ];
-
-  const ActiveMockup =
-    activeTab === "galaxy"
-      ? InteractiveGalaxy
-      : activeTab === "dashboard"
-        ? MockupHome
-        : MockupManager;
 
   return (
     <section
@@ -175,47 +172,13 @@ export default function AtlasShowcase() {
           </button>
         </motion.div>
 
-        {/* Tabs on top + full-width app screen below.
-            Moving the tab pills above lets the mockup take the section's full
-            width, so the 1020px app screen fits without horizontal scrolling
-            on desktop (the previous two-column layout forced a side-scroll). */}
+        {/* Full-width interactive app screen (no tabs — the galaxy is the
+            single hero mockup here; feature switching lives in the lower
+            demo, below the paragraph). */}
         <motion.div variants={fadeInUp}>
-          {/* Horizontal tab pills */}
-          <div className="flex flex-wrap justify-center gap-2.5 md:gap-3 mb-10 md:mb-14">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full text-left transition-all duration-200 ${
-                    isActive
-                      ? "bg-white/[0.08] border border-white/[0.10]"
-                      : "border border-transparent hover:bg-white/[0.04]"
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
-                  >
-                    <Icon className="w-4 h-4 text-white" strokeWidth={2.25} />
-                  </div>
-                  <span
-                    className={`font-poppins font-semibold text-[13px] md:text-[14px] leading-snug transition-colors duration-200 ${
-                      isActive ? "text-white" : "text-white/55"
-                    }`}
-                  >
-                    {tab.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
           {/* Framed app screen — tighter frame that hugs the screen, centered,
               fits without side-scroll. */}
-          <div className="relative w-fit mx-auto">
+          <div className="relative w-full max-w-[1052px] mx-auto">
             {/* Soft sky-blue halo behind the frame (pure radial gradient,
                 no blur filter — avoids scroll-time repaints). */}
             <div
@@ -237,24 +200,11 @@ export default function AtlasShowcase() {
                   "0 28px 72px rgba(56,189,248,0.28), 0 10px 36px rgba(96,165,250,0.18), 0 3px 14px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
               }}
             >
-              {/* Centered when it fits (desktop); scrollable fallback on narrow
-                  screens. The crossfade stacks both mockups in one grid cell. */}
-              <div className="overflow-x-auto">
-                <div className="grid justify-center" style={{ gridTemplateColumns: "minmax(0, max-content)" }}>
-                  <AnimatePresence initial={false}>
-                    <motion.div
-                      key={activeTab}
-                      style={{ gridColumn: 1, gridRow: 1, willChange: "opacity, transform" }}
-                      initial={{ opacity: 0, y: -24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 24 }}
-                      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                    >
-                      <ActiveMockup />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </div>
+              {/* Scales the 1020px mockup down to fit on narrow screens
+                  (centered at full size on desktop). */}
+              <ScaleToFit>
+                <InteractiveGalaxy />
+              </ScaleToFit>
             </div>
           </div>
         </motion.div>
@@ -267,42 +217,134 @@ export default function AtlasShowcase() {
         >
           <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
             {t({
-              fr: "Reprenez le contrôle de tous vos fichiers",
-              en: "Take back control of every file",
+              fr: "Le dossier complet, orchestré et traçable",
+              en: "The whole dossier, orchestrated and traceable",
             })}
           </h3>
           <p className="mt-5 font-inter text-[15px] md:text-base leading-[1.75] text-gray-300">
             {t({
-              fr: "Fini les heures perdues à chercher le bon fichier ou la dernière version. Atlas transforme tout votre désordre Excel en une carte vivante et instantanément lisible : chaque dossier devient une planète, chaque rapport une étoile. Retrouvez n'importe quel fichier en quelques secondes, suivez l'avancement de vos équipes en temps réel et gardez une longueur d'avance sur toute votre activité, sans jamais quitter votre environnement de travail.",
-              en: "Stop losing hours hunting for the right file or the latest version. Atlas turns your Excel chaos into a living, instantly readable map: every folder becomes a planet, every report a star. Find any file in seconds, track your teams' progress in real time, and stay one step ahead of your whole operation, without ever leaving your working environment.",
+              fr: "Atlas transforme un dossier de deal ou de mission en une carte vivante : chaque fichier est relié à ses sources, ses dérivés et ses livrables. Vous voyez d'un coup d'œil le statut de chaque document, ce qui reste à valider et qui a fait quoi, grâce à un journal d'audit par document. La lignée complète d'un chiffre, de la donnée brute au livrable final, sans jamais quitter Excel.",
+              en: "Atlas turns a deal or engagement dossier into a living map: every file is linked to its sources, its derivatives and its deliverables. See each document's status at a glance, what's still to validate and who did what, with a per-document audit trail. The full lineage of a figure, from raw data to final deliverable, without ever leaving Excel.",
             })}
           </p>
         </motion.div>
 
-        {/* Atlas detail visual — client-supplied demo video (2560×854 → 3:2).
-            Framed to match the section: sky-blue tinted border + soft glow,
-            ratio set to the source so it fills with no letterbox bars. */}
-        <motion.div
-          className="max-w-5xl mx-auto mt-10 md:mt-12"
-          variants={fadeInUp}
-        >
-          <div
-            className="rounded-3xl overflow-hidden border"
-            style={{
-              borderColor: "rgba(186,230,253,0.22)",
-              boxShadow:
-                "0 40px 110px rgba(56,189,248,0.32), 0 16px 56px rgba(96,165,250,0.22), 0 4px 18px rgba(56,189,248,0.12)",
-            }}
-          >
-            <InViewVideo
-              src="/ora_atlas.mp4"
-              className="w-full block object-cover"
-              style={{ aspectRatio: "2560 / 1708" }}
-            />
+        {/* Lower tabbed demo — pills above the visual. The galaxy tab shows
+            the Atlas demo video; the other tabs reuse their app mockups so
+            each pill below the paragraph has matching content. */}
+        <motion.div className="mt-14 md:mt-16" variants={fadeInUp}>
+          <TabPills tabs={tabs} active={bottomTab} onSelect={setBottomTab} />
+
+          {/* Single grid cell so the active visual and the outgoing one stack
+              and crossfade (same proven pattern as the interactive mockup
+              above — no mode="wait", which can stall the exit). */}
+          <div className="grid" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
+            <AnimatePresence initial={false}>
+              <motion.div
+                key={bottomTab}
+                style={{ gridColumn: 1, gridRow: 1, willChange: "opacity, transform" }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {bottomTab === "galaxy" ? (
+                  // Atlas detail visual — client-supplied demo video
+                  // (2560×1708 → 3:2). Sky-blue tinted border + soft glow.
+                  <div className="max-w-5xl mx-auto">
+                    <div
+                      className="rounded-3xl overflow-hidden border"
+                      style={{
+                        borderColor: "rgba(186,230,253,0.22)",
+                        boxShadow:
+                          "0 40px 110px rgba(56,189,248,0.32), 0 16px 56px rgba(96,165,250,0.22), 0 4px 18px rgba(56,189,248,0.12)",
+                      }}
+                    >
+                      <InViewVideo
+                        src="/ora_atlas.mp4"
+                        className="w-full block object-cover"
+                        style={{ aspectRatio: "2560 / 1708" }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="relative w-full max-w-[1052px] mx-auto">
+                    <div
+                      aria-hidden
+                      className="absolute -inset-3 lg:-inset-5 -z-10 pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.26) 0%, rgba(96,165,250,0.15) 35%, rgba(56,189,248,0.06) 60%, transparent 80%)",
+                      }}
+                    />
+                    <div
+                      className="relative rounded-3xl overflow-hidden p-3 md:p-4"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(186,230,253,0.14) 0%, rgba(147,197,253,0.09) 50%, rgba(186,230,253,0.14) 100%)",
+                        border: "1px solid rgba(186,230,253,0.22)",
+                        boxShadow:
+                          "0 28px 72px rgba(56,189,248,0.28), 0 10px 36px rgba(96,165,250,0.18), 0 3px 14px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
+                      }}
+                    >
+                      <ScaleToFit>
+                        {bottomTab === "dashboard" ? <MockupHome /> : <MockupManager />}
+                      </ScaleToFit>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.div>
       </motion.div>
     </section>
+  );
+}
+
+/** Horizontal row of feature tab pills (icon badge + label). Shared by the
+    interactive mockup (top) and the demo-video area (below the paragraph). */
+function TabPills({
+  tabs,
+  active,
+  onSelect,
+}: {
+  tabs: Tab[];
+  active: TabId;
+  onSelect: (id: TabId) => void;
+}) {
+  return (
+    <div className="flex flex-wrap justify-center gap-2.5 md:gap-3 mb-10 md:mb-14">
+      {tabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = tab.id === active;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onSelect(tab.id)}
+            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full text-left transition-all duration-200 ${
+              isActive
+                ? "bg-white/[0.08] border border-white/[0.10]"
+                : "border border-transparent hover:bg-white/[0.04]"
+            }`}
+          >
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
+            >
+              <Icon className="w-4 h-4 text-white" strokeWidth={2.25} />
+            </div>
+            <span
+              className={`font-poppins font-semibold text-[13px] md:text-[14px] leading-snug transition-colors duration-200 ${
+                isActive ? "text-white" : "text-white/55"
+              }`}
+            >
+              {tab.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

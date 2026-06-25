@@ -52,8 +52,8 @@ export default function FAQ({ openBooking }: { openBooking: () => void }) {
     {
       q: t({ fr: "Comment Ora se déploie sur nos postes ?", en: "How does Ora deploy on our machines?" }),
       a: t({
-        fr: "Ora est une application desktop native pour macOS et Windows. Vos fichiers Excel se synchronisent automatiquement à chaque enregistrement.",
-        en: "Ora is a native desktop app for macOS and Windows. Your Excel files sync automatically on every save.",
+        fr: "Ora est une application desktop native, disponible sur macOS aujourd'hui, avec Windows en cours de déploiement. Vos fichiers Excel se synchronisent automatiquement à chaque enregistrement.",
+        en: "Ora is a native desktop app, available on macOS today, with Windows rolling out. Your Excel files sync automatically on every save.",
       }),
     },
     {
@@ -73,7 +73,7 @@ export default function FAQ({ openBooking }: { openBooking: () => void }) {
   ];
 
   return (
-    <section id="faq" className="relative py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a] scroll-mt-24">
+    <section id="faq" className="relative py-24 md:py-32 px-6 md:px-12 bg-white dark:bg-[#0f172a] scroll-mt-24">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12 md:mb-16">
           <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-500 dark:text-blue-400">

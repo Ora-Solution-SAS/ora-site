@@ -34,7 +34,7 @@ import { animatedScrollToId } from "@/lib/scrollTo";
 // Branch order — must match the `industries` array below. Used to resolve the
 // id sent by the "Solutions" nav menu (via the `ora:select-industry` event)
 // into the active tab index.
-const INDUSTRY_ORDER = ["comptable", "audit", "fonds", "banque"];
+const INDUSTRY_ORDER = ["fonds", "banque", "audit", "comptable"];
 
 type Example = { icon: LucideIcon; label: string };
 
@@ -81,80 +81,6 @@ export default function IndustrySelector({
 
   const industries: Industry[] = [
     {
-      id: "comptable",
-      icon: Briefcase,
-      iconBg: "bg-blue-500",
-      name: t({ fr: "Expertise comptable", en: "Accounting firms" }),
-      tagline: t({
-        fr: "Ora n'est pas un logiciel de comptabilité : c'est la passerelle qui automatise tous vos retraitements Excel répétitifs pour vous faire gagner du temps et vous recentrer sur votre vrai métier.",
-        en: "Ora isn't accounting software: it's the bridge that automates all your repetitive Excel rework, so you save time and refocus on what you do best.",
-      }),
-      metric: {
-        value: t({ fr: "2 h → 3 min", en: "2 h → 3 min" }),
-        label: t({ fr: "par fichier retraité", en: "per file reworked" }),
-      },
-      examples: [
-        {
-          icon: Table2,
-          label: t({
-            fr: "Fichiers clients hétérogènes remis en forme automatiquement",
-            en: "Mismatched client files reformatted automatically",
-          }),
-        },
-        {
-          icon: Combine,
-          label: t({
-            fr: "Données éparpillées dans plusieurs fichiers, consolidées en un clic",
-            en: "Data scattered across files, consolidated in one click",
-          }),
-        },
-        {
-          icon: Lock,
-          label: t({
-            fr: "Dossiers clients chiffrés et stockés en Suisse",
-            en: "Client files encrypted and stored in Switzerland",
-          }),
-        },
-      ],
-    },
-    {
-      id: "audit",
-      icon: PieChart,
-      iconBg: "bg-emerald-500",
-      name: t({ fr: "Audit", en: "Audit" }),
-      tagline: t({
-        fr: "Vos feuilles de travail et vos rapprochements, prêts pendant que vous révisez.",
-        en: "Your working papers and reconciliations, ready while you review.",
-      }),
-      metric: {
-        value: t({ fr: "3 h → 5 min", en: "3 h → 5 min" }),
-        label: t({ fr: "par rapprochement", en: "per reconciliation" }),
-      },
-      examples: [
-        {
-          icon: FileCheck,
-          label: t({
-            fr: "Tests de cohérence sur vos échantillons",
-            en: "Consistency tests across your samples",
-          }),
-        },
-        {
-          icon: FileText,
-          label: t({
-            fr: "Feuilles de travail générées automatiquement",
-            en: "Working papers generated automatically",
-          }),
-        },
-        {
-          icon: GitCompare,
-          label: t({
-            fr: "Rapprochement grand livre / pièces justificatives",
-            en: "Ledger vs supporting-documents reconciliation",
-          }),
-        },
-      ],
-    },
-    {
       id: "fonds",
       icon: TrendingUp,
       iconBg: "bg-pink-500",
@@ -164,7 +90,7 @@ export default function IndustrySelector({
         en: "Your NAV and consolidated reporting, ready every morning, with no rework.",
       }),
       metric: {
-        value: t({ fr: "4 h → 6 min", en: "4 h → 6 min" }),
+        value: t({ fr: "Des heures → minutes", en: "Hours → minutes" }),
         label: t({ fr: "par reporting de NAV", en: "per NAV report" }),
       },
       examples: [
@@ -201,7 +127,7 @@ export default function IndustrySelector({
         en: "Your comps and valuation decks, updated straight from the source.",
       }),
       metric: {
-        value: t({ fr: "3 h → 4 min", en: "3 h → 4 min" }),
+        value: t({ fr: "Des heures → minutes", en: "Hours → minutes" }),
         label: t({ fr: "par mise à jour de comparables", en: "per comps refresh" }),
       },
       examples: [
@@ -224,6 +150,80 @@ export default function IndustrySelector({
           label: t({
             fr: "Decks de données financières générés",
             en: "Financial data decks generated",
+          }),
+        },
+      ],
+    },
+    {
+      id: "audit",
+      icon: PieChart,
+      iconBg: "bg-emerald-500",
+      name: t({ fr: "Audit", en: "Audit" }),
+      tagline: t({
+        fr: "Vos feuilles de travail et vos rapprochements, prêts pendant que vous révisez.",
+        en: "Your working papers and reconciliations, ready while you review.",
+      }),
+      metric: {
+        value: t({ fr: "Des heures → minutes", en: "Hours → minutes" }),
+        label: t({ fr: "par rapprochement", en: "per reconciliation" }),
+      },
+      examples: [
+        {
+          icon: FileCheck,
+          label: t({
+            fr: "Tests de cohérence sur vos échantillons",
+            en: "Consistency tests across your samples",
+          }),
+        },
+        {
+          icon: FileText,
+          label: t({
+            fr: "Feuilles de travail générées automatiquement",
+            en: "Working papers generated automatically",
+          }),
+        },
+        {
+          icon: GitCompare,
+          label: t({
+            fr: "Rapprochement grand livre / pièces justificatives",
+            en: "Ledger vs supporting-documents reconciliation",
+          }),
+        },
+      ],
+    },
+    {
+      id: "comptable",
+      icon: Briefcase,
+      iconBg: "bg-blue-500",
+      name: t({ fr: "Expertise comptable", en: "Accounting firms" }),
+      tagline: t({
+        fr: "Ora n'est pas un logiciel de comptabilité : c'est la passerelle qui automatise tous vos retraitements Excel répétitifs pour vous faire gagner du temps et vous recentrer sur votre vrai métier.",
+        en: "Ora isn't accounting software: it's the bridge that automates all your repetitive Excel rework, so you save time and refocus on what you do best.",
+      }),
+      metric: {
+        value: t({ fr: "Des heures → minutes", en: "Hours → minutes" }),
+        label: t({ fr: "par fichier retraité", en: "per file reworked" }),
+      },
+      examples: [
+        {
+          icon: Table2,
+          label: t({
+            fr: "Fichiers clients hétérogènes remis en forme automatiquement",
+            en: "Mismatched client files reformatted automatically",
+          }),
+        },
+        {
+          icon: Combine,
+          label: t({
+            fr: "Données éparpillées dans plusieurs fichiers, consolidées en un clic",
+            en: "Data scattered across files, consolidated in one click",
+          }),
+        },
+        {
+          icon: Lock,
+          label: t({
+            fr: "Dossiers clients chiffrés et stockés en Suisse",
+            en: "Client files encrypted and stored in Switzerland",
           }),
         },
       ],

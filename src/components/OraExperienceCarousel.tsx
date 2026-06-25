@@ -667,7 +667,7 @@ export default function OraExperienceCarousel() {
       }),
       points: [
         t({ fr: "Calcul 100% local", en: "100% local compute" }),
-        t({ fr: "Chiffrement AES-256", en: "AES-256 encryption" }),
+        t({ fr: "Chiffrement XChaCha20-Poly1305", en: "XChaCha20-Poly1305 encryption" }),
         t({ fr: "Données hébergées en Suisse", en: "Data hosted in Switzerland" }),
       ],
       activeColor: ACTIVE_BG,

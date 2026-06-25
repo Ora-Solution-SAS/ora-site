@@ -108,19 +108,9 @@ const Navigation: React.FC<NavigationProps> = ({
     return () => window.removeEventListener("ora:open-solutions", handler);
   }, []);
 
+  // Ordered by buyer value: PE & M&A (target market) first, audit/accounting
+  // (beachhead) after.
   const solutionsLinks: LinkItem[] = [
-    {
-      title: t({ fr: "Expertise-comptable", en: "Accounting firms" }),
-      description: t({ fr: "Automatisez vos travaux comptables récurrents", en: "Automate your recurring accounting work" }),
-      icon: Briefcase,
-      page: "solution-expertise-comptable",
-    },
-    {
-      title: t({ fr: "Audit", en: "Audit" }),
-      description: t({ fr: "Accélérez vos missions d'audit avec Ora", en: "Speed up your audit engagements with Ora" }),
-      icon: PieChart,
-      page: "solution-audit",
-    },
     {
       title: t({ fr: "Fonds d'investissement", en: "Investment funds" }),
       description: t({ fr: "Simplifiez le suivi de vos portefeuilles", en: "Simplify portfolio monitoring" }),
@@ -132,6 +122,18 @@ const Navigation: React.FC<NavigationProps> = ({
       description: t({ fr: "Optimisez vos analyses financières", en: "Optimize your financial analyses" }),
       icon: Building2,
       page: "solution-banque-affaires",
+    },
+    {
+      title: t({ fr: "Audit", en: "Audit" }),
+      description: t({ fr: "Accélérez vos missions d'audit avec Ora", en: "Speed up your audit engagements with Ora" }),
+      icon: PieChart,
+      page: "solution-audit",
+    },
+    {
+      title: t({ fr: "Expertise-comptable", en: "Accounting firms" }),
+      description: t({ fr: "Automatisez vos travaux comptables récurrents", en: "Automate your recurring accounting work" }),
+      icon: Briefcase,
+      page: "solution-expertise-comptable",
     },
   ];
 
