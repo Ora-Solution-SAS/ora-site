@@ -14,7 +14,7 @@ import { useLang } from "@/lib/i18n";
 export function AnimatedHeroTitle() {
   const { t } = useLang();
   return (
-    <h1 className="hero-stagger hero-d1 font-poppins font-normal text-[clamp(1.45rem,5.6vw,1.85rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.18] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[19rem] sm:max-w-4xl mx-auto [text-wrap:balance]">
+    <h1 className="hero-stagger hero-d1 font-poppins font-bold md:font-normal text-[clamp(1.6rem,6.2vw,2.1rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.18] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[19rem] sm:max-w-4xl mx-auto [text-wrap:balance]">
       <span className="block">
         {t({
           fr: "Vos dossiers financiers les plus sensibles, automatisés et orchestrés.",
