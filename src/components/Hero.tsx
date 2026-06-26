@@ -416,24 +416,24 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               <AnimatedHeroTitle />
 
-              <p className="hero-stagger hero-d2 mt-5 md:mt-9 text-[clamp(0.85rem,1.9vw,1.175rem)] leading-[1.55] md:leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-light md:font-normal max-w-[19rem] sm:max-w-2xl mx-auto">
+              <p className="hero-stagger hero-d2 mt-4 md:mt-9 text-[clamp(0.85rem,1.9vw,1.175rem)] leading-[1.4] md:leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-light md:font-normal max-w-[19rem] sm:max-w-2xl mx-auto">
                 {t({
                   fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
                   en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
                 })}
               </p>
 
-              <div className="hero-stagger hero-d3 mt-7 md:mt-11 flex flex-wrap items-center justify-center gap-3.5">
+              <div className="hero-stagger hero-d3 mt-6 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
                 <button
                   onClick={openBooking}
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+                  className="group inline-flex items-center gap-2 whitespace-nowrap px-5 md:px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
                   {t({ fr: "Réserver un appel", en: "Book a call" })}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
                 <button
                   onClick={() => scrollToSection("demo-preview")}
-                  className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
+                  className="inline-flex items-center whitespace-nowrap px-5 md:px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
                 >
                   {t({ fr: "Voir la démo", en: "Watch the demo" })}
                 </button>
