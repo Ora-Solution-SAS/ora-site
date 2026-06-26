@@ -216,8 +216,11 @@ export default function FeaturesScrolly({ features }: Props) {
               className="min-h-[70vh] md:min-h-[80vh] flex flex-col justify-center py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
-                {/* Mobile-only inline visual — same white frame */}
-                <div className="min-[560px]:hidden mt-8 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
+                {/* Mobile-only inline visual — same white frame. Breaks out of
+                    the section's horizontal padding (-mx-4) and uses a slimmer
+                    inner pad on phones so the demo video reads noticeably
+                    larger; resets to the framed look from min-[560px] up. */}
+                <div className="min-[560px]:hidden mt-8 -mx-4 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-2 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
                   <div className="relative w-full rounded-[18px] overflow-hidden" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
                     <Visual feature={feat} />
                   </div>

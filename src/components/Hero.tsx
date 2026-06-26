@@ -454,7 +454,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-10 mx-auto max-w-7xl px-1 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
