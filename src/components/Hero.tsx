@@ -411,19 +411,19 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           </div>
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
-          <div className="relative z-10 pt-28 md:pt-32 lg:pt-36 pb-16 md:pb-24">
+          <div className="relative z-10 pt-24 md:pt-32 lg:pt-36 pb-16 md:pb-24">
             <div className="max-w-6xl mx-auto px-6 lg:px-10 text-center">
 
               <AnimatedHeroTitle />
 
-              <p className="hero-stagger hero-d2 mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
+              <p className="hero-stagger hero-d2 mt-5 md:mt-9 text-[clamp(0.95rem,2vw,1.175rem)] leading-[1.6] md:leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
                 {t({
                   fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
                   en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
                 })}
               </p>
 
-              <div className="hero-stagger hero-d3 mt-10 md:mt-11 flex flex-wrap items-center justify-center gap-3.5">
+              <div className="hero-stagger hero-d3 mt-7 md:mt-11 flex flex-wrap items-center justify-center gap-3.5">
                 <button
                   onClick={openBooking}
                   className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
@@ -442,7 +442,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               {/* Availability badge — sits just below the CTAs. Click opens a
                   callback capture + booking. relative z-50 keeps the open panel
                   above the video below it. */}
-              <div className="hero-stagger hero-d4 relative z-50 mt-8 flex justify-center">
+              <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 flex justify-center">
                 <CallbackBadge openBooking={openBooking} />
               </div>
             </div>
@@ -454,7 +454,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-10 mx-auto max-w-7xl px-1 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-7 md:mt-10 mx-auto max-w-7xl px-1 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
