@@ -459,7 +459,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
           <div className="relative z-10 pt-16 md:pt-32 lg:pt-36 pb-16 md:pb-24">
-            <div className="max-w-6xl mx-auto px-6 lg:px-10 text-center">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 text-center">
 
               {/* On mobile, the headline + one supporting line fill the first
                   screen (centered), so on arrival ONLY these two phrases are
