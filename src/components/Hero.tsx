@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText, FileSpreadsheet, Lock, Clock } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useLang } from "@/lib/i18n";
 
@@ -119,25 +119,49 @@ function EuFlag() {
   );
 }
 
-/* Compact trust / feature strip shown under the hero CTAs on mobile — small
-   icon + short fact, two per row (à la the reference landing pages). Mobile
-   only; the desktop hero keeps its own social-proof row below the demo. */
-function HeroTrustFeatures() {
+/* Social-proof row — "Works with [logos] · Security & compliance · EU and
+   Swiss hosting". Shared so it can sit under the CTAs on mobile and below the
+   demo on desktop. */
+function HeroSocialProof() {
   const { t } = useLang();
-  const items = [
-    { icon: FileSpreadsheet, label: t({ fr: "Compatible Excel & PDF", en: "Works with Excel & PDF" }) },
-    { icon: Lock, label: t({ fr: "Hébergé en Suisse", en: "Hosted in Switzerland" }) },
-    { icon: ShieldCheck, label: t({ fr: "Jamais d'entraînement IA", en: "No AI training" }) },
-    { icon: Clock, label: t({ fr: "Opérationnel en quelques jours", en: "Set up in days" }) },
-  ];
   return (
-    <div className="md:hidden mt-7 grid grid-cols-2 gap-x-5 gap-y-3.5 max-w-[20rem] mx-auto">
-      {items.map(({ icon: Icon, label }) => (
-        <div key={label} className="flex items-center gap-2 text-left text-[12.5px] font-inter font-medium text-gray-600 dark:text-gray-300">
-          <Icon className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" strokeWidth={2.25} />
-          <span className="leading-tight">{label}</span>
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-3">
+        <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
+        <div className="flex items-center">
+          {INTEGRATIONS.map((it, i) => {
+            // Excel sits in front: bigger, fully opaque, on top. The
+            // others tuck behind it, smaller and dimmed, tightly stacked.
+            const front = i === 0;
+            return (
+              <IntegrationCircle
+                key={it.name}
+                name={it.name}
+                src={it.src}
+                front={front}
+                style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+              />
+            );
+          })}
         </div>
-      ))}
+      </div>
+
+      <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+      <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
+        <ShieldCheck className="h-4 w-4" />
+        {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+      </span>
+
+      <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+      <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+        <span className="flex items-center gap-1">
+          <EuFlag />
+          <SwissFlag />
+        </span>
+        {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+      </span>
     </div>
   );
 }
@@ -469,9 +493,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 <CallbackBadge openBooking={openBooking} />
               </div>
 
-              {/* Mobile trust / feature strip under the CTAs */}
-              <div className="hero-stagger hero-d4">
-                <HeroTrustFeatures />
+              {/* Social-proof row under the CTAs — mobile only (desktop keeps
+                  the copy below the demo). */}
+              <div className="hero-stagger hero-d4 md:hidden mt-8">
+                <HeroSocialProof />
               </div>
             </div>
 
@@ -544,46 +569,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               </div>
             </div>
 
-            {/* Light social proof — single compact line below the demo. */}
-            <div className="hero-stagger hero-d5 mt-12 md:mt-14 max-w-6xl mx-auto px-6 lg:px-10">
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
-                <div className="flex items-center gap-3">
-                  <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
-                  <div className="flex items-center">
-                    {INTEGRATIONS.map((it, i) => {
-                      // Excel sits in front: bigger, fully opaque, on top. The
-                      // others tuck behind it, smaller and dimmed, tightly stacked.
-                      const front = i === 0;
-                      return (
-                        <IntegrationCircle
-                          key={it.name}
-                          name={it.name}
-                          src={it.src}
-                          front={front}
-                          style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
-                  <ShieldCheck className="h-4 w-4" />
-                  {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
-                </span>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <span className="flex items-center gap-1">
-                    <EuFlag />
-                    <SwissFlag />
-                  </span>
-                  {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
-                </span>
-              </div>
+            {/* Light social proof — single compact line below the demo
+                (desktop/tablet; on mobile it sits under the CTAs instead). */}
+            <div className="hero-stagger hero-d5 hidden md:block mt-12 md:mt-14 max-w-6xl mx-auto px-6 lg:px-10">
+              <HeroSocialProof />
             </div>
           </div>
 
