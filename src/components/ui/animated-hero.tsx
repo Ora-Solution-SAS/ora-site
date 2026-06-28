@@ -14,7 +14,7 @@ import { useLang } from "@/lib/i18n";
 export function AnimatedHeroTitle() {
   const { t } = useLang();
   return (
-    <h1 className="hero-stagger hero-d1 font-poppins font-medium md:font-normal text-[clamp(1.55rem,6vw,2.05rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.1] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[23rem] sm:max-w-4xl mx-auto [text-wrap:balance]">
+    <h1 className="hero-stagger hero-d1 font-poppins font-medium md:font-normal text-[clamp(1.9rem,7.6vw,2.5rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.1] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[23rem] sm:max-w-4xl mx-auto [text-wrap:balance]">
       <span className="block">
         {t({
           fr: "Prenez le contrôle de vos dossiers.",
