@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText, Maximize2 } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useLang } from "@/lib/i18n";
 
@@ -467,21 +467,6 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       video.play().catch(() => {});
     };
 
-    const togglePlayPause = () => {
-      const video = videoRef.current;
-      if (!video) return;
-      if (video.ended || hasEnded) {
-        replay();
-        return;
-      }
-      if (video.paused) {
-        setIsManuallyPaused(false);
-        video.play().catch(() => {});
-      } else {
-        setIsManuallyPaused(true);
-        video.pause();
-      }
-    };
 
     const toggleMute = () => {
       const video = videoRef.current;
@@ -489,6 +474,21 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       const next = !video.muted;
       video.muted = next;
       setIsMuted(next);
+    };
+
+    // Open the demo video full-screen. iOS Safari only supports the
+    // proprietary webkitEnterFullscreen on the <video> element itself.
+    const enterFullscreen = () => {
+      const video = videoRef.current as
+        | (HTMLVideoElement & {
+            webkitEnterFullscreen?: () => void;
+            webkitRequestFullscreen?: () => void;
+          })
+        | null;
+      if (!video) return;
+      if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
     };
 
     /* ══════════════════════════════════════════════════════════ */
@@ -570,7 +570,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               {/* Social-proof row under the CTAs — mobile only (desktop keeps
                   the copy below the demo). */}
-              <div className="hero-stagger hero-d4 md:hidden mt-8">
+              <div className="hero-stagger hero-d4 md:hidden mt-14">
                 <HeroSocialProofMobile />
               </div>
             </div>
@@ -582,7 +582,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-7 md:mt-10 mx-auto max-w-7xl px-1 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-7 md:mt-10 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
@@ -596,9 +596,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     muted={isMuted}
                     playsInline
                     preload="auto"
-                    onClick={togglePlayPause}
+                    onClick={enterFullscreen}
                     onEnded={() => setHasEnded(true)}
-                    className="w-full aspect-[16/9] object-cover block cursor-pointer"
+                    className="w-full aspect-[16/9] object-cover block cursor-zoom-in"
                     onLoadedMetadata={(e) => {
                       e.currentTarget.playbackRate = 1.0;
                       // Pre-seek so the first frame is ready the instant the
@@ -608,20 +608,43 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     }}
                   />
 
-                  {/* Mute / unmute toggle — top right (hidden once ended) */}
+                  {/* Top-right controls: expand to full-screen + mute toggle. */}
+                  {!hasEnded && (
+                    <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={enterFullscreen}
+                        aria-label={t({ fr: "Plein écran", en: "Full screen" })}
+                        className="w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleMute}
+                        aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
+                        aria-pressed={!isMuted}
+                        className="w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="w-4 h-4" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* "Tap to expand" hint — bottom-left affordance so users know
+                      the demo can open full-screen. */}
                   {!hasEnded && (
                     <button
                       type="button"
-                      onClick={toggleMute}
-                      aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
-                      aria-pressed={!isMuted}
-                      className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      onClick={enterFullscreen}
+                      className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur-md px-3 py-1.5 text-[12px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 hover:bg-black/75 transition-all duration-150"
                     >
-                      {isMuted ? (
-                        <VolumeX className="w-4 h-4" />
-                      ) : (
-                        <Volume2 className="w-4 h-4" />
-                      )}
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      {t({ fr: "Plein écran", en: "Tap to expand" })}
                     </button>
                   )}
 
