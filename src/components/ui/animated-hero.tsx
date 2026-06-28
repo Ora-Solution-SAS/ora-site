@@ -14,14 +14,14 @@ import { useLang } from "@/lib/i18n";
 export function AnimatedHeroTitle() {
   const { t } = useLang();
   return (
-    <h1 className="hero-stagger hero-d1 font-poppins font-normal text-[clamp(1.7rem,6.5vw,2.15rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-4xl mx-auto [text-wrap:balance]">
+    <h1 className="hero-stagger hero-d1 font-poppins font-medium md:font-normal text-[clamp(1.55rem,6vw,2.05rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.1] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[23rem] sm:max-w-4xl mx-auto [text-wrap:balance]">
       <span className="block">
         {t({
           fr: "Vos dossiers financiers les plus sensibles, automatisés et orchestrés.",
           en: "Your most sensitive financial dossiers, automated and orchestrated.",
         })}
       </span>
-      <span className="block mt-2 text-brand-gradient">
+      <span className="block mt-1 md:mt-2 text-brand-gradient">
         {t({ fr: "Vos données vous appartiennent.", en: "Your data stays yours." })}
       </span>
     </h1>

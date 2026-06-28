@@ -251,7 +251,7 @@ export default function AtlasShowcase() {
                 {bottomTab === "galaxy" ? (
                   // Atlas detail visual — client-supplied demo video
                   // (2560×1708 → 3:2). Sky-blue tinted border + soft glow.
-                  <div className="max-w-5xl mx-auto">
+                  <div className="max-w-5xl -mx-4 sm:mx-auto">
                     <div
                       className="rounded-3xl overflow-hidden border"
                       style={{
