@@ -472,8 +472,8 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 {/* Mobile — one short supporting line (keep the hero clean). */}
                 <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
                   {t({
-                    fr: "Votre travail Excel et PDF, automatisé en local — chiffré, tracé, en Europe.",
-                    en: "Your Excel and PDF work, automated locally — encrypted, audit-trailed, in Europe.",
+                    fr: "Votre travail Excel et PDF, automatisé en local. Chiffré, tracé, en Europe.",
+                    en: "Your Excel and PDF work, automated locally. Encrypted, audit-trailed, in Europe.",
                   })}
                 </p>
 
@@ -486,7 +486,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 </p>
               </div>
 
-              <div className="hero-stagger hero-d3 mt-6 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
+              <div className="hero-stagger hero-d3 mt-20 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
                 <button
                   onClick={openBooking}
                   className="group inline-flex items-center gap-2 whitespace-nowrap px-5 md:px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
