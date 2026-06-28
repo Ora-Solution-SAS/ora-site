@@ -119,6 +119,59 @@ function EuFlag() {
   );
 }
 
+/* Mobile social-proof — the same three facts ("Works with", "Security &
+   compliance", "EU and Swiss hosting") presented as one clean card with three
+   divided rows, each with a consistent left visual + label. Replaces the
+   scattered inline row on phones. */
+function HeroSocialProofMobile() {
+  const { t } = useLang();
+  return (
+    <div className="mx-auto max-w-[19.5rem] overflow-hidden rounded-[20px] border border-gray-200/80 bg-white/80 shadow-[0_12px_36px_-16px_rgba(15,23,42,0.22)] backdrop-blur-sm divide-y divide-gray-100 dark:border-white/10 dark:bg-white/[0.04] dark:divide-white/[0.07]">
+      {/* Works with — label left, logo cluster right */}
+      <div className="flex items-center justify-between gap-2 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Fonctionne avec", en: "Works with" })}
+        </span>
+        <div className="flex origin-right scale-[0.72] items-center">
+          {INTEGRATIONS.map((it, i) => {
+            const front = i === 0;
+            return (
+              <IntegrationCircle
+                key={it.name}
+                name={it.name}
+                src={it.src}
+                front={front}
+                style={{ marginLeft: front ? 0 : -16, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Security & compliance */}
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+          <ShieldCheck className="h-[18px] w-[18px] text-blue-600 dark:text-blue-400" />
+        </span>
+        <span className="font-inter text-[13.5px] font-medium text-gray-700 dark:text-gray-200">
+          {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+        </span>
+      </div>
+
+      {/* EU & Swiss hosting */}
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="flex flex-shrink-0 items-center -space-x-1.5">
+          <span className="inline-flex scale-[0.78]"><EuFlag /></span>
+          <span className="inline-flex scale-[0.78]"><SwissFlag /></span>
+        </span>
+        <span className="font-inter text-[13.5px] font-medium text-gray-700 dark:text-gray-200">
+          {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 /* Social-proof row — "Works with [logos] · Security & compliance · EU and
    Swiss hosting". Shared so it can sit under the CTAs on mobile and below the
    demo on desktop. */
@@ -518,7 +571,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               {/* Social-proof row under the CTAs — mobile only (desktop keeps
                   the copy below the demo). */}
               <div className="hero-stagger hero-d4 md:hidden mt-8">
-                <HeroSocialProof />
+                <HeroSocialProofMobile />
               </div>
             </div>
 
