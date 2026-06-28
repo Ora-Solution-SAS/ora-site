@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText, FileSpreadsheet, Lock, Clock } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useLang } from "@/lib/i18n";
 
@@ -116,6 +116,29 @@ function EuFlag() {
         })}
       </svg>
     </span>
+  );
+}
+
+/* Compact trust / feature strip shown under the hero CTAs on mobile — small
+   icon + short fact, two per row (à la the reference landing pages). Mobile
+   only; the desktop hero keeps its own social-proof row below the demo. */
+function HeroTrustFeatures() {
+  const { t } = useLang();
+  const items = [
+    { icon: FileSpreadsheet, label: t({ fr: "Compatible Excel & PDF", en: "Works with Excel & PDF" }) },
+    { icon: Lock, label: t({ fr: "Hébergé en Suisse", en: "Hosted in Switzerland" }) },
+    { icon: ShieldCheck, label: t({ fr: "Jamais d'entraînement IA", en: "No AI training" }) },
+    { icon: Clock, label: t({ fr: "Opérationnel en quelques jours", en: "Set up in days" }) },
+  ];
+  return (
+    <div className="md:hidden mt-7 grid grid-cols-2 gap-x-5 gap-y-3.5 max-w-[20rem] mx-auto">
+      {items.map(({ icon: Icon, label }) => (
+        <div key={label} className="flex items-center gap-2 text-left text-[12.5px] font-inter font-medium text-gray-600 dark:text-gray-300">
+          <Icon className="w-4 h-4 shrink-0 text-blue-600 dark:text-blue-400" strokeWidth={2.25} />
+          <span className="leading-tight">{label}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -444,6 +467,11 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   above the video below it. */}
               <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 flex justify-center">
                 <CallbackBadge openBooking={openBooking} />
+              </div>
+
+              {/* Mobile trust / feature strip under the CTAs */}
+              <div className="hero-stagger hero-d4">
+                <HeroTrustFeatures />
               </div>
             </div>
 
