@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { type LucideIcon } from "lucide-react";
+import { Maximize2, type LucideIcon } from "lucide-react";
 
 /**
  * Bubble.io-style scrollytelling block.
@@ -73,21 +73,53 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
     return () => io.disconnect();
   }, [feature.video]);
 
+  // Open the video full-screen (iOS uses the proprietary webkit method).
+  const enterFullscreen = () => {
+    const el = videoRef.current as
+      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => void })
+      | null;
+    if (!el) return;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  };
+
   // Fills its parent (which sets the size / aspect ratio). The continuous
   // frame lives on the parent containers, not here.
   return (
     <div className="relative w-full h-full">
       {feature.video ? (
-        <video
-          ref={videoRef}
-          src={feature.video}
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="w-full h-full object-cover block"
-          style={{ objectPosition: feature.objectPosition ?? "center" }}
-        />
+        <>
+          <video
+            ref={videoRef}
+            src={feature.video}
+            loop
+            muted
+            playsInline
+            preload="auto"
+            onClick={enterFullscreen}
+            className="w-full h-full object-cover block cursor-zoom-in"
+            style={{ objectPosition: feature.objectPosition ?? "center" }}
+          />
+          {/* Full-screen affordance — mobile only (desktop swaps these visuals
+              via the sticky crossfade, where a button would get in the way). */}
+          <button
+            type="button"
+            onClick={enterFullscreen}
+            aria-label="Full screen"
+            className="min-[560px]:hidden absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-all duration-150 hover:bg-black/75"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={enterFullscreen}
+            className="min-[560px]:hidden absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-[11.5px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-all duration-150 hover:bg-black/75"
+          >
+            <Maximize2 className="h-3.5 w-3.5" />
+            Tap to expand
+          </button>
+        </>
       ) : feature.image ? (
         <img
           src={feature.image}
@@ -202,7 +234,7 @@ export default function FeaturesScrolly({ features }: Props) {
   }, [features.length]);
 
   return (
-    <div className="relative max-w-7xl mx-auto">
+    <div className="relative max-w-7xl mx-auto mt-6 md:mt-0">
       {/* Asymmetric columns: the visual (right) gets more width than the text
           (left) so the demo videos read larger. */}
       <div className="grid grid-cols-1 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-10 min-[560px]:gap-12 md:gap-16">
@@ -213,14 +245,14 @@ export default function FeaturesScrolly({ features }: Props) {
               key={i}
               ref={(el) => { blockRefs.current[i] = el; }}
               data-idx={i}
-              className="min-h-0 md:min-h-[80vh] flex flex-col justify-center py-7 md:py-10"
+              className="min-h-0 md:min-h-[80vh] flex flex-col justify-center py-10 md:py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
                 {/* Mobile-only inline visual — same white frame. Breaks out of
                     the section's horizontal padding (-mx-4) and uses a slimmer
                     inner pad on phones so the demo video reads noticeably
                     larger; resets to the framed look from min-[560px] up. */}
-                <div className="min-[560px]:hidden mt-8 -mx-4 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-2 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
+                <div className="min-[560px]:hidden mt-10 -mx-4 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-2 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
                   <div className="relative w-full rounded-[18px] overflow-hidden" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
                     <Visual feature={feat} />
                   </div>
