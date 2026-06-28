@@ -469,6 +469,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               <div className="flex flex-col justify-center min-h-[calc(100svh-4rem)] md:contents">
                 <AnimatedHeroTitle />
 
+                {/* Mobile — availability badge sits between the title and the
+                    supporting line (desktop keeps it below the CTAs). */}
+                <div className="hero-stagger hero-d2 md:hidden relative z-50 mt-7 flex justify-center">
+                  <CallbackBadge openBooking={openBooking} />
+                </div>
+
                 {/* Mobile — one short supporting line (keep the hero clean). */}
                 <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
                   {t({
@@ -505,7 +511,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               {/* Availability badge — sits just below the CTAs. Click opens a
                   callback capture + booking. relative z-50 keeps the open panel
                   above the video below it. */}
-              <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 flex justify-center">
+              <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 hidden md:flex justify-center">
                 <CallbackBadge openBooking={openBooking} />
               </div>
 
