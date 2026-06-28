@@ -18,7 +18,7 @@ export function AnimatedHeroTitle() {
       <span className="block">
         {t({
           fr: "Prenez le contrôle de vos dossiers.",
-          en: "Take control of every dossier.",
+          en: "Take control of every file.",
         })}
       </span>
       <span className="block mt-1 md:mt-2 text-brand-gradient">
