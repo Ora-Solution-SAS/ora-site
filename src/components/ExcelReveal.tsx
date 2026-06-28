@@ -73,6 +73,34 @@ function RevealLine({
   );
 }
 
+/* Static (non-animated) version of a reveal line — used on mobile, where
+   the scroll-driven word cascade is replaced by plain, fully-visible text.
+   A keyword can still be highlighted with the brand gradient. */
+function StaticLine({
+  text, gradientWords = [], className, style,
+}: {
+  text: string;
+  gradientWords?: string[];
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const grad = gradientWords.map((g) => g.toLowerCase());
+  const words = text.split(" ");
+  return (
+    <p className={className} style={style}>
+      {words.map((w, i) => {
+        const clean = w.replace(/[.,;:!?]/g, "").toLowerCase();
+        return (
+          <span key={i}>
+            <span className={grad.includes(clean) ? "text-brand-gradient" : ""}>{w}</span>
+            {i < words.length - 1 ? " " : ""}
+          </span>
+        );
+      })}
+    </p>
+  );
+}
+
 /* Living background — a slow drifting blue/teal glow so the space behind
    the phrases isn't dead. */
 const auroraCSS = `
@@ -125,6 +153,17 @@ export default function ExcelReveal() {
   /* State mirror of isLockedRef — drives the on-screen "keep scrolling" hint. */
   const [isLocked, setIsLocked] = useState(false);
   const hasTextCompletedRef = useRef(false);
+  /* Mobile gets a plain static version — no scroll hijacking. */
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const on = () => setIsMobile(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
 
   /* Diaporama : chaque phrase entre PUIS sort avant que la suivante n'arrive.
      Les fenêtres [in0, in1, out0, out1] ne se chevauchent pas → une à la fois. */
@@ -142,6 +181,7 @@ export default function ExcelReveal() {
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
   useEffect(() => {
+    if (isMobile) return;
     const el = lockRef.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -169,10 +209,11 @@ export default function ExcelReveal() {
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [isMobile]);
 
   /* ── Wheel + touch handlers drive the reveal while locked ── */
   useEffect(() => {
+    if (isMobile) return;
     const SPEED = 4800;
     /* Lerp factor per frame — smooths discrete wheel/touch input into a
        continuous, jank-free motion (lower = smoother, higher = snappier). */
@@ -259,7 +300,46 @@ export default function ExcelReveal() {
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [revealProgress]);
+  }, [revealProgress, isMobile]);
+
+  /* ── Mobile: plain static section, no scroll lock ──────────────── */
+  if (isMobile) {
+    const lineCls = "font-poppins font-normal text-[#111827] dark:text-white";
+    const lineStyle: CSSProperties = {
+      fontSize: "clamp(1.45rem,5.6vw,1.9rem)",
+      lineHeight: 1.25,
+      letterSpacing: "-0.025em",
+    };
+    return (
+      <>
+        <style>{auroraCSS}</style>
+        <section
+          id="excel-reveal"
+          className="relative z-[20] bg-white dark:bg-[#111827] overflow-hidden px-6 py-16"
+        >
+          <div className="excel-aurora" aria-hidden />
+          <div className="relative z-10 max-w-xl mx-auto text-center space-y-3">
+            <StaticLine
+              text={t({ fr: "Votre temps est votre actif le plus précieux.", en: "Your time is your most valuable asset." })}
+              gradientWords={["temps", "time"]}
+              className={lineCls}
+              style={lineStyle}
+            />
+            <StaticLine
+              text={t({ fr: "Cessez de le gaspiller sur Excel.", en: "Stop wasting it on Excel." })}
+              gradientWords={["Excel"]}
+              className={lineCls}
+              style={lineStyle}
+            />
+            <p className="font-poppins font-normal pt-1" style={{ fontSize: "clamp(1.9rem,8vw,2.6rem)", lineHeight: 1.1, letterSpacing: "-0.035em" }}>
+              <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
+              <span className="text-brand-gradient">Ora.</span>
+            </p>
+          </div>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
