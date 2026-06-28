@@ -6,7 +6,7 @@ import {
   useSpring,
   type MotionValue,
 } from "framer-motion";
-import { Lock, Check, ShieldCheck } from "lucide-react";
+import { Lock, Check, ShieldCheck, Cloud } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /** Small inline Swiss flag (red rounded square + white cross) — a reassuring
@@ -203,17 +203,42 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
             </p>
           </motion.div>
 
-          {/* ── 3 cards, each topped by its animated icon ─────────────── */}
+          {/* ── Mobile — compact single card listing the three guarantees,
+              without the tall animated icon stages (which only read on the
+              pinned desktop scene). Privacy is also covered by the hero, the
+              "With Ora" list and the "Local & secure" feature. ───────────── */}
+          <div className="md:hidden rounded-3xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] divide-y divide-gray-200 dark:divide-white/10 overflow-hidden">
+            {cards.map((card) => {
+              const Ico = card.kind === "lock" ? Lock : card.kind === "cloud" ? Cloud : ShieldCheck;
+              return (
+                <div key={card.kind} className="flex items-start gap-3 p-4">
+                  <span className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <Ico className="w-[18px] h-[18px] text-blue-600 dark:text-blue-400" />
+                  </span>
+                  <div>
+                    <h3 className="font-poppins font-semibold text-[15px] text-[#111827] dark:text-white leading-snug">
+                      {card.title}
+                    </h3>
+                    <p className="mt-1 font-inter text-[13px] leading-snug text-gray-500 dark:text-gray-400">
+                      {card.desc}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── 3 cards, each topped by its animated icon (desktop) ─────── */}
           {/* items-stretch + h-full inside each card → all three cards share
               the height of the tallest one. */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6 items-stretch">
             {cards.map((card) => (
               <PrivacyCard key={card.kind} {...card} dk={dk} />
             ))}
           </div>
 
           {/* ── Trust strip — quick reassurance markers under the cards ──── */}
-          <div className="mt-10 md:mt-12 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 font-inter text-[13px] font-medium text-gray-500 dark:text-gray-400">
+          <div className="mt-6 md:mt-12 flex flex-wrap items-center justify-center gap-x-5 md:gap-x-7 gap-y-2.5 md:gap-y-3 font-inter text-[12.5px] md:text-[13px] font-medium text-gray-500 dark:text-gray-400">
             <span className="inline-flex items-center gap-2">
               <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               {t({ fr: "Chiffrement de bout en bout", en: "End-to-end encryption" })}
