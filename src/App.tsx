@@ -981,7 +981,7 @@ const App = () => {
       />
 
       {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
+      <section id="features" className="relative -mt-16 pt-16 md:pt-44 pb-20 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1069,7 +1069,7 @@ const App = () => {
         />
 
         <FadeInOnScroll delay={200}>
-          <div className="relative flex justify-center mt-16">
+          <div className="relative flex justify-center mt-6 md:mt-16">
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("ora:open-solutions"))}
               className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
@@ -1118,7 +1118,7 @@ const App = () => {
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
        * ───────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-20 md:pt-56 pb-16 md:pb-32 min-h-0 md:min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"

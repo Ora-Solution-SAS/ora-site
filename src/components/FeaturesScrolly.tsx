@@ -122,7 +122,7 @@ function TextBlock({
       // On mobile, all blocks stay at full opacity.
       style={{ opacity: isActive ? 1 : undefined }}
     >
-      <div className="md:transition-opacity md:duration-500" style={{ opacity: isActive ? 1 : 0.35 }}>
+      <div className={`md:transition-opacity md:duration-500 ${isActive ? "" : "md:opacity-[0.35]"}`}>
         <div className="flex items-center gap-2.5 mb-5">
           <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/[0.08] flex items-center justify-center">
             <Icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -213,7 +213,7 @@ export default function FeaturesScrolly({ features }: Props) {
               key={i}
               ref={(el) => { blockRefs.current[i] = el; }}
               data-idx={i}
-              className="min-h-[70vh] md:min-h-[80vh] flex flex-col justify-center py-10"
+              className="min-h-0 md:min-h-[80vh] flex flex-col justify-center py-7 md:py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
                 {/* Mobile-only inline visual — same white frame. Breaks out of

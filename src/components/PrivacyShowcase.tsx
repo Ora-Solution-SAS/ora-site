@@ -167,7 +167,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       style={{ background: dk ? "#0f172a" : "#ffffff", height: pinned ? "300vh" : "auto" }}
     >
       <div
-        className={`${pinned ? "sticky top-0 min-h-screen flex flex-col justify-center" : ""} px-6 md:px-12 py-20 md:py-0`}
+        className={`${pinned ? "sticky top-0 min-h-screen flex flex-col justify-center" : ""} px-6 md:px-12 py-12 md:py-0`}
       >
         <div className="max-w-6xl mx-auto w-full">
           {/* ── Header ──────────────────────────────────────────────── */}

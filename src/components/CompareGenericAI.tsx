@@ -42,17 +42,17 @@ export default function CompareGenericAI() {
   return (
     <section
       data-nav-shy
-      className="relative py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827]"
+      className="relative py-14 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827]"
     >
       <div className="max-w-5xl mx-auto">
-        <div className="text-center max-w-2xl mx-auto mb-12 md:mb-16">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-16">
+          <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
             {t({ fr: "Pourquoi pas ChatGPT ?", en: "Why not ChatGPT?" })}
           </span>
-          <h2 className="font-poppins font-semibold text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-4">
+          <h2 className="font-poppins font-semibold text-[1.35rem] md:text-[2.75rem] tracking-[-0.03em] leading-[1.2] md:leading-[1.12] text-[#111827] dark:text-white mt-2 md:mt-4">
             {t({ fr: "Pas un chatbot. Un outil que vous pouvez auditer.", en: "Not a chatbot. A tool you can audit." })}
           </h2>
-          <p className="font-inter mt-5 text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="font-inter mt-2.5 md:mt-5 text-[0.85rem] md:text-lg leading-relaxed text-gray-500 dark:text-gray-400">
             {t({
               fr: "L'IA générique improvise. Sur des données financières confidentielles, vous avez besoin de résultats reproductibles, tracés et contrôlés.",
               en: "Generic AI improvises. On confidential financial data, you need results that are reproducible, traced and controlled.",
@@ -60,7 +60,51 @@ export default function CompareGenericAI() {
           </p>
         </div>
 
-        <div className="rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-white/[0.02]">
+        {/* ── Mobile layout — stacked, single-column groups (compact).
+            On phones a side-by-side table forces narrow columns and heavy
+            text wrapping, so each side gets its own full-width list. */}
+        <div className="sm:hidden space-y-4">
+          {/* Generic AI group */}
+          <div>
+            <h3 className="font-poppins font-semibold text-[15px] text-gray-500 dark:text-gray-400 mb-2 px-1">
+              {t({ fr: "ChatGPT / Copilot", en: "ChatGPT / Copilot" })}
+            </h3>
+            <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-white/[0.02] divide-y divide-gray-200 dark:divide-white/10">
+              {rows.map((r) => (
+                <div key={r.dim} className="flex items-start gap-2.5 px-3.5 py-2">
+                  <span className="w-[18px] h-[18px] mt-px rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <X className="w-3 h-3 text-gray-500 dark:text-gray-400" strokeWidth={3} />
+                  </span>
+                  <span className="font-inter text-[13px] leading-snug text-gray-600 dark:text-gray-300">
+                    {r.ai}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Ora group */}
+          <div>
+            <h3 className="font-poppins font-semibold text-[15px] text-[#111827] dark:text-white mb-2 px-1">
+              Ora
+            </h3>
+            <div className="rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden bg-gradient-to-br from-[#3b82f6]/[0.05] to-[#0d9488]/[0.05] divide-y divide-gray-200 dark:divide-white/10">
+              {rows.map((r) => (
+                <div key={r.dim} className="flex items-start gap-2.5 px-3.5 py-2">
+                  <span className="w-[18px] h-[18px] mt-px rounded-full bg-gradient-to-br from-[#3b82f6] to-[#0d9488] flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-white" strokeWidth={3.5} />
+                  </span>
+                  <span className="font-inter text-[13px] leading-snug text-[#111827] dark:text-white">
+                    {r.ora}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Desktop / tablet layout — side-by-side comparison table. */}
+        <div className="hidden sm:block rounded-3xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-white/[0.02]">
           {/* Header row */}
           <div className="grid grid-cols-[1fr_1fr] sm:grid-cols-[0.8fr_1fr_1fr]">
             <div className="hidden sm:block p-5" />

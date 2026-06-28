@@ -83,7 +83,7 @@ export default function AtlasShowcase() {
       id="atlas"
       data-nav-dark
       data-nav-shy
-      className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
+      className="relative py-14 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
         background:
           "radial-gradient(ellipse at 50% 0%, #0f1424 0%, #060810 55%, #000 100%)",
