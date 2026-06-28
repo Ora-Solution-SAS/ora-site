@@ -148,24 +148,24 @@ function HeroSocialProofMobile() {
         </div>
       </div>
 
-      {/* Security & compliance */}
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* Security & compliance — label left, icon right */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+        </span>
         <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
           <ShieldCheck className="h-[18px] w-[18px] text-blue-600 dark:text-blue-400" />
         </span>
-        <span className="font-inter text-[13.5px] font-medium text-gray-700 dark:text-gray-200">
-          {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
-        </span>
       </div>
 
-      {/* EU & Swiss hosting */}
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* EU & Swiss hosting — label left, flags right */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+        </span>
         <span className="flex flex-shrink-0 items-center -space-x-1.5">
           <span className="inline-flex scale-[0.78]"><EuFlag /></span>
           <span className="inline-flex scale-[0.78]"><SwissFlag /></span>
-        </span>
-        <span className="font-inter text-[13.5px] font-medium text-gray-700 dark:text-gray-200">
-          {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
         </span>
       </div>
     </div>
