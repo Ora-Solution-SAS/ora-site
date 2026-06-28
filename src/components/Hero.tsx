@@ -463,7 +463,16 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               <AnimatedHeroTitle />
 
-              <p className="hero-stagger hero-d2 mt-6 md:mt-9 text-[clamp(0.85rem,1.9vw,1.175rem)] leading-[1.4] md:leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-light md:font-normal max-w-[19rem] sm:max-w-2xl mx-auto">
+              {/* Mobile — one short supporting line (keep the hero clean). */}
+              <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
+                {t({
+                  fr: "Votre travail Excel et PDF, automatisé en local — chiffré, tracé, en Europe.",
+                  en: "Your Excel and PDF work, automated locally — encrypted, audit-trailed, in Europe.",
+                })}
+              </p>
+
+              {/* Desktop/tablet — full paragraph. */}
+              <p className="hero-stagger hero-d2 hidden md:block mt-9 text-[clamp(1rem,1.9vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-normal max-w-2xl mx-auto">
                 {t({
                   fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
                   en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
