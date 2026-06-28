@@ -41,7 +41,7 @@ export function AnimatedHeroTitle() {
       initial="hidden"
       animate="show"
       style={{ willChange: "transform, opacity" }}
-      className="font-poppins font-medium md:font-normal text-[clamp(2.15rem,8.8vw,2.8rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.08] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[26rem] sm:max-w-4xl mx-auto [text-wrap:balance]"
+      className="font-poppins font-normal text-[clamp(2.15rem,8.8vw,2.8rem)] md:text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.08] md:leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-[26rem] sm:max-w-4xl mx-auto [text-wrap:balance]"
     >
       <motion.span variants={titleLine} className="block">
         {t({
