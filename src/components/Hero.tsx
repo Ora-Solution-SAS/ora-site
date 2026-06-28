@@ -458,26 +458,33 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           </div>
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
-          <div className="relative z-10 pt-24 md:pt-32 lg:pt-36 pb-16 md:pb-24">
+          <div className="relative z-10 pt-16 md:pt-32 lg:pt-36 pb-16 md:pb-24">
             <div className="max-w-6xl mx-auto px-6 lg:px-10 text-center">
 
-              <AnimatedHeroTitle />
+              {/* On mobile, the headline + one supporting line fill the first
+                  screen (centered), so on arrival ONLY these two phrases are
+                  visible; the CTAs and the rest sit just below the fold. On
+                  md+ this wrapper dissolves (display:contents) and the original
+                  flow is unchanged. */}
+              <div className="flex flex-col justify-center min-h-[calc(100svh-4rem)] md:contents">
+                <AnimatedHeroTitle />
 
-              {/* Mobile — one short supporting line (keep the hero clean). */}
-              <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
-                {t({
-                  fr: "Votre travail Excel et PDF, automatisé en local — chiffré, tracé, en Europe.",
-                  en: "Your Excel and PDF work, automated locally — encrypted, audit-trailed, in Europe.",
-                })}
-              </p>
+                {/* Mobile — one short supporting line (keep the hero clean). */}
+                <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
+                  {t({
+                    fr: "Votre travail Excel et PDF, automatisé en local — chiffré, tracé, en Europe.",
+                    en: "Your Excel and PDF work, automated locally — encrypted, audit-trailed, in Europe.",
+                  })}
+                </p>
 
-              {/* Desktop/tablet — full paragraph. */}
-              <p className="hero-stagger hero-d2 hidden md:block mt-9 text-[clamp(1rem,1.9vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-normal max-w-2xl mx-auto">
-                {t({
-                  fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
-                  en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
-                })}
-              </p>
+                {/* Desktop/tablet — full paragraph. */}
+                <p className="hero-stagger hero-d2 hidden md:block mt-9 text-[clamp(1rem,1.9vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-normal max-w-2xl mx-auto">
+                  {t({
+                    fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
+                    en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
+                  })}
+                </p>
+              </div>
 
               <div className="hero-stagger hero-d3 mt-6 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
                 <button
