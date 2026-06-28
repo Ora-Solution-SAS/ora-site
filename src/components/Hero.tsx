@@ -570,7 +570,9 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
 
               {/* Social-proof row under the CTAs — mobile only (desktop keeps
                   the copy below the demo). */}
-              <div className="hero-stagger hero-d4 md:hidden mt-14">
+              {/* Trust card hidden for now (re-enable: swap `hidden` for
+                  `md:hidden mt-14`). */}
+              <div className="hidden">
                 <HeroSocialProofMobile />
               </div>
             </div>
@@ -582,7 +584,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-7 md:mt-10 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-4 md:mt-10 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
