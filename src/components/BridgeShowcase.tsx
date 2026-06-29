@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { animate, motion, useInView, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Check, Clock, Play, Sparkles, Video } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Play, Video } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -398,85 +398,5 @@ function VideoSlot({ label, src }: { label?: string; src?: string }) {
         <Play className="w-6 h-6 md:w-7 md:h-7 text-blue-600 dark:text-blue-400 translate-x-[2px]" fill="currentColor" />
       </div>
     </div>
-  );
-}
-
-// ── Stat counter card (count-up on scroll-in) ───────────────────────────────
-function StatCard() {
-  const { t } = useLang();
-  return (
-    <div className="flex-1 flex flex-col justify-center rounded-[28px] p-7 md:p-8 bg-blue-50 dark:bg-blue-500/[0.08] border border-blue-100 dark:border-white/10">
-      <div className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400">
-        <Clock className="w-4 h-4" />
-        <span className="font-inter text-[11px] font-bold uppercase tracking-[0.14em]">
-          {t({ fr: "Gain de temps", en: "Time saved" })}
-        </span>
-      </div>
-      <div className="mt-3 font-poppins font-semibold text-[2.7rem] md:text-[3.4rem] leading-none tracking-[-0.03em] text-[#0b1220] dark:text-white">
-        <Counter to={15} suffix=" h" />
-      </div>
-      <p className="font-inter mt-3 text-[14px] md:text-[15px] leading-relaxed text-gray-600 dark:text-gray-400">
-        {t({
-          fr: "économisées chaque mois sur vos retraitements Excel (estimation conservatrice).",
-          en: "saved every month on your Excel rework (conservative estimate).",
-        })}
-      </p>
-    </div>
-  );
-}
-
-// ── Benefits card — 3 advantages that swap with the active use-case tab ──────
-function BenefitsCard({ benefits, active }: { benefits: string[]; active: number }) {
-  const { t } = useLang();
-  return (
-    <div className="flex-1 flex flex-col justify-center rounded-[28px] p-7 md:p-8 bg-gray-50 dark:bg-white/[0.03] border border-gray-200 dark:border-white/10">
-      <div className="inline-flex items-center gap-2 text-teal-600 dark:text-teal-400">
-        <Sparkles className="w-4 h-4" />
-        <span className="font-inter text-[11px] font-bold uppercase tracking-[0.14em]">
-          {t({ fr: "Ce que ça change", en: "What it changes" })}
-        </span>
-      </div>
-      <motion.ul
-        key={active}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-5 flex flex-col gap-4"
-      >
-        {benefits.map((b, i) => (
-          <li key={i} className="flex items-start gap-3">
-            <span className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
-              <Check className="w-3 h-3 text-white" strokeWidth={3} />
-            </span>
-            <span className="font-inter text-[15px] md:text-[16px] font-medium leading-snug text-gray-700 dark:text-gray-200">
-              {b}
-            </span>
-          </li>
-        ))}
-      </motion.ul>
-    </div>
-  );
-}
-
-// ── Counter — animates 0 → `to` once it scrolls into view ───────────────────
-function Counter({ to, suffix = "" }: { to: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const mv = useMotionValue(0);
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    const controls = animate(mv, to, { duration: 1.3, ease: [0.22, 1, 0.36, 1] });
-    const unsub = mv.on("change", (v) => setVal(Math.round(v)));
-    return () => {
-      controls.stop();
-      unsub();
-    };
-  }, [inView, to, mv]);
-  return (
-    <span ref={ref}>
-      {val}
-      {suffix}
-    </span>
   );
 }
