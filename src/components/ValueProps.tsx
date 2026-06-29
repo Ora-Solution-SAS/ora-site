@@ -10,7 +10,7 @@ export default function ValueProps({ openBooking }: { openBooking: () => void })
   const { t } = useLang();
 
   return (
-    <div className="relative max-w-7xl mx-auto py-14 md:py-24">
+    <div className="relative max-w-7xl mx-auto py-16 md:py-24">
       <div
         data-nav-shy
         className="grid lg:grid-cols-[1.45fr_1fr] rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)]"
@@ -44,7 +44,7 @@ export default function ValueProps({ openBooking }: { openBooking: () => void })
         {/* RIGHT — hero image fills the whole panel. Light backdrop (same as
             the left panel) so the image's transparent edges blend in: no
             violet band, just the image taking the entire right side. */}
-        <div className="relative min-h-[280px] md:min-h-[440px] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#d6e6fd] dark:from-[#0f1d3a] dark:to-[#152a52]">
+        <div className="relative min-h-[440px] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#d6e6fd] dark:from-[#0f1d3a] dark:to-[#152a52]">
           <img
             src="/ora_hero_violet-v3.png"
             alt={t({ fr: "Interface Ora : automatisations Excel disponibles", en: "Ora interface: available Excel automations" })}

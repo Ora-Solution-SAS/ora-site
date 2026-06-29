@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Maximize2, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 /**
  * Bubble.io-style scrollytelling block.
@@ -28,6 +28,10 @@ export type ScrollyFeature = {
   image?: string;
   /** CSS gradient for the placeholder (when no video/image). */
   grad: string;
+  /** CSS background for the surrounding frame — matched to this clip's own
+   *  background colour so the video melts into the frame (no empty margin).
+   *  Falls back to a soft neutral when absent. */
+  frameBg?: string;
   /** Optional CSS aspect-ratio for this feature's visual box (e.g. "2 / 1").
    *  Lets a video with a non-standard ratio fill its frame with no black
    *  letterbox bars and no side-cropping. Defaults to "16 / 10". */
@@ -73,53 +77,21 @@ function Visual({ feature }: { feature: ScrollyFeature }) {
     return () => io.disconnect();
   }, [feature.video]);
 
-  // Open the video full-screen (iOS uses the proprietary webkit method).
-  const enterFullscreen = () => {
-    const el = videoRef.current as
-      | (HTMLVideoElement & { webkitEnterFullscreen?: () => void; webkitRequestFullscreen?: () => void })
-      | null;
-    if (!el) return;
-    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-    else if (el.webkitEnterFullscreen) el.webkitEnterFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  };
-
   // Fills its parent (which sets the size / aspect ratio). The continuous
   // frame lives on the parent containers, not here.
   return (
     <div className="relative w-full h-full">
       {feature.video ? (
-        <>
-          <video
-            ref={videoRef}
-            src={feature.video}
-            loop
-            muted
-            playsInline
-            preload="auto"
-            onClick={enterFullscreen}
-            className="w-full h-full object-cover block cursor-zoom-in"
-            style={{ objectPosition: feature.objectPosition ?? "center" }}
-          />
-          {/* Full-screen affordance — mobile only (desktop swaps these visuals
-              via the sticky crossfade, where a button would get in the way). */}
-          <button
-            type="button"
-            onClick={enterFullscreen}
-            aria-label="Full screen"
-            className="min-[560px]:hidden absolute top-3 right-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-all duration-150 hover:bg-black/75"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={enterFullscreen}
-            className="min-[560px]:hidden absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-[11.5px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-all duration-150 hover:bg-black/75"
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-            Tap to expand
-          </button>
-        </>
+        <video
+          ref={videoRef}
+          src={feature.video}
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover block"
+          style={{ objectPosition: feature.objectPosition ?? "center" }}
+        />
       ) : feature.image ? (
         <img
           src={feature.image}
@@ -154,7 +126,7 @@ function TextBlock({
       // On mobile, all blocks stay at full opacity.
       style={{ opacity: isActive ? 1 : undefined }}
     >
-      <div className={`md:transition-opacity md:duration-500 ${isActive ? "" : "md:opacity-[0.35]"}`}>
+      <div className="md:transition-opacity md:duration-500" style={{ opacity: isActive ? 1 : 0.35 }}>
         <div className="flex items-center gap-2.5 mb-5">
           <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-500/[0.08] flex items-center justify-center">
             <Icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -234,7 +206,7 @@ export default function FeaturesScrolly({ features }: Props) {
   }, [features.length]);
 
   return (
-    <div className="relative max-w-7xl mx-auto mt-6 md:mt-0">
+    <div className="relative max-w-7xl mx-auto">
       {/* Asymmetric columns: the visual (right) gets more width than the text
           (left) so the demo videos read larger. */}
       <div className="grid grid-cols-1 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-10 min-[560px]:gap-12 md:gap-16">
@@ -245,16 +217,23 @@ export default function FeaturesScrolly({ features }: Props) {
               key={i}
               ref={(el) => { blockRefs.current[i] = el; }}
               data-idx={i}
-              className="min-h-0 md:min-h-[80vh] flex flex-col justify-center py-10 md:py-10"
+              className="min-h-[70vh] md:min-h-[80vh] flex flex-col justify-center py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
-                {/* Mobile-only inline visual — same white frame. Breaks out of
-                    the section's horizontal padding (-mx-4) and uses a slimmer
-                    inner pad on phones so the demo video reads noticeably
-                    larger; resets to the framed look from min-[560px] up. */}
-                <div className="min-[560px]:hidden mt-10 -mx-4 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-2 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
-                  <div className="relative w-full rounded-[18px] overflow-hidden" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
-                    <Visual feature={feat} />
+                {/* Mobile-only inline visual — matching discreet frame + glow. */}
+                <div className="relative min-[560px]:hidden mt-8">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-4 -z-10 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(62% 60% at 50% 45%, rgba(59,130,246,0.30) 0%, rgba(37,99,235,0.16) 42%, transparent 78%)",
+                    }}
+                  />
+                  <div className="rounded-[26px] border border-gray-200/40 dark:border-white/[0.06] bg-white/60 dark:bg-white/[0.03] px-4 py-6 shadow-[0_22px_54px_-26px_rgba(37,99,235,0.32)]">
+                    <div className="relative w-full rounded-[16px] overflow-hidden ring-1 ring-black/[0.05] dark:ring-white/[0.06]" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
+                      <Visual feature={feat} />
+                    </div>
                   </div>
                 </div>
               </TextBlock>
@@ -285,32 +264,35 @@ export default function FeaturesScrolly({ features }: Props) {
             element each swap) and keeps the crossfade fully overlapped — so a
             fast scroll never shows a blank moment between videos. */}
         <div data-nav-shy className="hidden min-[560px]:block relative">
-          <div className="sticky top-24 h-[calc(100vh-8rem)] max-h-[780px] flex items-center">
-            {/* One continuous white frame — stays put while the video swaps. */}
-            <div className="w-full rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 md:p-4 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.22)]">
-            <div
-              className="relative w-full rounded-[18px] overflow-hidden"
-              style={{ aspectRatio: "1280 / 854" }}
-            >
-              {features.map((feat, i) => {
-                const isActive = i === activeIdx;
-                return (
-                  <motion.div
-                    key={i}
-                    className="absolute inset-0"
-                    initial={false}
-                    animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.985 }}
-                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    style={{
-                      pointerEvents: isActive ? "auto" : "none",
-                      zIndex: isActive ? 2 : 1,
-                    }}
-                  >
-                    <Visual feature={feat} />
-                  </motion.div>
-                );
-              })}
-            </div>
+          {/* ONE clean white frame, centred in the sticky viewport and snug
+              around the video — white background, no glow, no shadow, and no
+              empty top/bottom gap. The frame stays put for the whole scroll;
+              only the video crossfades inside it. */}
+          <div className="sticky top-24 h-[calc(100vh-8rem)] flex items-center">
+            <div className="relative w-full rounded-[30px] border border-gray-200/60 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 md:p-7">
+              <div
+                className="relative w-full rounded-[18px] overflow-hidden"
+                style={{ aspectRatio: "1280 / 854" }}
+              >
+                {features.map((feat, i) => {
+                  const isActive = i === activeIdx;
+                  return (
+                    <motion.div
+                      key={i}
+                      className="absolute inset-0"
+                      initial={false}
+                      animate={{ opacity: isActive ? 1 : 0 }}
+                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        pointerEvents: isActive ? "auto" : "none",
+                        zIndex: isActive ? 2 : 1,
+                      }}
+                    >
+                      <Visual feature={feat} />
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight,
   Briefcase,
+  Check,
   PieChart,
   TrendingUp,
   Building2,
@@ -62,8 +63,7 @@ export default function IndustrySelector({
   const { t } = useLang();
   const [activeIdx, setActiveIdx] = useState(0);
   // This section is intentionally always rendered on a dark/black background,
-  // independent of the site theme, so force the dark styling on.
-  const dk = true;
+  // independent of the site theme — the markup below hard-codes the dark styling.
 
   // Triggered by the "Solutions" nav menu: select the requested branch and
   // scroll here with the shared accelerating animation (slow start, faster and
@@ -231,14 +231,15 @@ export default function IndustrySelector({
   ];
 
   const active = industries[activeIdx];
+  const ActiveIcon = active.icon;
 
-  const bg = "#000000";
+  const bg = "#06070a";
 
   return (
     <section
       id="industries"
       data-nav-shy
-      className="dark relative py-20 md:py-32 px-6 md:px-12"
+      className="dark relative py-24 md:py-32 px-6 md:px-12"
       style={{ backgroundColor: bg }}
     >
       <div className="max-w-7xl mx-auto">
@@ -264,56 +265,67 @@ export default function IndustrySelector({
           </p>
         </motion.div>
 
-        {/* Horizontal industry tabs */}
+        {/* Industry tabs — unified segmented control with a sliding active
+            pill (Framer shared-layout). Reads as one cohesive control rather
+            than four floating buttons. */}
         <motion.div
-          className="flex flex-wrap justify-center gap-2.5 md:gap-3 mb-8 md:mb-10"
+          className="flex justify-center mb-10 md:mb-14"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "0px 0px -10% 0px" }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.08 }}
         >
-          {industries.map((ind, i) => {
-            const Icon = ind.icon;
-            const isActive = i === activeIdx;
-            return (
-              <button
-                key={ind.id}
-                type="button"
-                onClick={() => setActiveIdx(i)}
-                className={`flex items-center gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-50 dark:bg-white/[0.08] ring-1 ring-blue-200 dark:ring-white/15"
-                    : "ring-1 ring-transparent hover:bg-gray-50 dark:hover:bg-white/[0.04]"
-                }`}
-              >
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${ind.iconBg}`}>
-                  <Icon className="w-[16px] h-[16px] text-white" strokeWidth={2.25} />
-                </div>
-                <span
-                  className={`font-poppins font-semibold text-[14px] md:text-[15px] whitespace-nowrap transition-colors duration-200 ${
-                    isActive ? "text-[#111827] dark:text-white" : "text-gray-500 dark:text-white/55"
-                  }`}
+          <div className="inline-flex flex-wrap justify-center gap-1 p-1.5 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-sm">
+            {industries.map((ind, i) => {
+              const Icon = ind.icon;
+              const isActive = i === activeIdx;
+              return (
+                <button
+                  key={ind.id}
+                  type="button"
+                  onClick={() => setActiveIdx(i)}
+                  className="relative flex items-center gap-2.5 px-3.5 md:px-4 py-2.5 rounded-xl transition-colors duration-200"
                 >
-                  {ind.name}
-                </span>
-              </button>
-            );
-          })}
+                  {isActive && (
+                    <motion.div
+                      layoutId="industry-tab-active"
+                      className="absolute inset-0 rounded-xl bg-white/[0.10] ring-1 ring-white/[0.14] shadow-[0_2px_14px_rgba(0,0,0,0.35)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                  <div className={`relative w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${ind.iconBg}`}>
+                    <Icon className="w-[15px] h-[15px] text-white" strokeWidth={2.25} />
+                  </div>
+                  <span
+                    className={`relative font-poppins font-semibold text-[13px] md:text-[14px] whitespace-nowrap transition-colors duration-200 ${
+                      isActive ? "text-white" : "text-white/55 hover:text-white/80"
+                    }`}
+                  >
+                    {ind.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </motion.div>
 
-        {/* Large panel for the active industry */}
+        {/* Active industry panel — two-column: identity + headline metric +
+            CTA on the left, the concrete automation list on the right. */}
         <motion.div
-          className="relative rounded-3xl border p-6 md:p-10 border-gray-200/70 dark:border-white/10 max-w-5xl mx-auto"
+          className="relative rounded-[28px] border border-white/10 overflow-hidden max-w-5xl mx-auto"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "0px 0px -8% 0px" }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
           style={{
-            background: dk
-              ? "linear-gradient(135deg, rgba(59,130,246,0.06), rgba(13,148,136,0.05))"
-              : "linear-gradient(135deg, #f7faff, #f3f9f8)",
+            background: "linear-gradient(135deg, rgba(59,130,246,0.07), rgba(13,148,136,0.05))",
           }}
         >
+          {/* Hairline sheen along the top edge */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"
+          />
           <AnimatePresence mode="wait">
             <motion.div
               key={active.id}
@@ -321,54 +333,80 @@ export default function IndustrySelector({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="grid md:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] gap-8 md:gap-12 p-7 md:p-10 items-stretch"
             >
-              <h3 className="font-poppins font-semibold text-2xl md:text-[1.85rem] tracking-[-0.03em] leading-[1.15] text-[#111827] dark:text-white">
-                {active.name}
-              </h3>
-              <p className="mt-2 font-inter text-[15px] md:text-base text-gray-500 dark:text-gray-400 leading-relaxed">
-                {active.tagline}
-              </p>
+              {/* LEFT — identity, headline metric, CTA */}
+              <div className="flex flex-col">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${active.iconBg} shadow-[0_6px_22px_rgba(0,0,0,0.35)]`}
+                  >
+                    <ActiveIcon className="w-6 h-6 md:w-7 md:h-7 text-white" strokeWidth={2.25} />
+                  </div>
+                  <h3 className="font-poppins font-semibold text-2xl md:text-[1.85rem] tracking-[-0.03em] leading-[1.1] text-white">
+                    {active.name}
+                  </h3>
+                </div>
 
-              {/* Headline time-saving stat for this sector */}
-              <div className="mt-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2 bg-blue-50 dark:bg-white/[0.06] border border-blue-100 dark:border-white/10">
-                <Timer className="w-4 h-4 text-blue-600 dark:text-blue-400" strokeWidth={2.25} />
-                <span className="font-poppins font-semibold text-[15px] text-[#111827] dark:text-white">
-                  {active.metric.value}
-                </span>
-                <span className="font-inter text-[13px] text-gray-500 dark:text-gray-400">
-                  {active.metric.label}
-                </span>
+                <p className="mt-5 font-inter text-[15px] md:text-base text-gray-300/90 leading-relaxed">
+                  {active.tagline}
+                </p>
+
+                {/* Headline time-saving stat + CTA, pinned to the bottom so
+                    the column stays balanced across sectors. */}
+                <div className="mt-auto pt-7">
+                  <div className="inline-flex items-center gap-3 rounded-2xl pl-3 pr-5 py-3 bg-white/[0.04] border border-white/10">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3b82f6] to-[#0d9488]">
+                      <Timer className="w-4 h-4 text-white" strokeWidth={2.25} />
+                    </div>
+                    <div className="flex flex-col leading-tight">
+                      <span className="font-poppins font-semibold text-[15px] md:text-base text-white">
+                        {active.metric.value}
+                      </span>
+                      <span className="font-inter text-[12.5px] text-gray-400">
+                        {active.metric.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={openBooking}
+                      className="group mt-6 inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.30)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]"
+                    >
+                      {t({ fr: "Réserver un appel", en: "Book a call" })}
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              {/* Concrete automation examples */}
-              <ul className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {active.examples.map((ex) => {
-                  const ExIcon = ex.icon;
-                  return (
-                    <li
-                      key={ex.label}
-                      className="flex items-center gap-3.5 rounded-2xl px-4 py-3.5 bg-white dark:bg-white/[0.04] border border-gray-200/60 dark:border-white/[0.07] shadow-sm"
-                    >
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3b82f6] to-[#0d9488]">
-                        <ExIcon className="w-4 h-4 text-white" strokeWidth={2} />
+              {/* RIGHT — concrete automations for this sector */}
+              <div className="flex flex-col justify-center">
+                <div className="text-[11px] font-inter font-semibold uppercase tracking-[0.16em] text-gray-500 mb-3">
+                  {t({ fr: "Ce qu'Ora automatise", en: "What Ora automates" })}
+                </div>
+                <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] divide-y divide-white/[0.06] overflow-hidden">
+                  {active.examples.map((ex) => {
+                    const ExIcon = ex.icon;
+                    return (
+                      <div
+                        key={ex.label}
+                        className="group flex items-center gap-3.5 px-4 py-4 transition-colors duration-150 hover:bg-white/[0.035]"
+                      >
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] shadow-[0_2px_10px_rgba(37,99,235,0.25)]">
+                          <ExIcon className="w-4 h-4 text-white" strokeWidth={2} />
+                        </div>
+                        <span className="font-inter font-medium text-[14px] md:text-[15px] text-white/90 leading-snug">
+                          {ex.label}
+                        </span>
+                        <Check className="w-4 h-4 text-emerald-400/70 ml-auto flex-shrink-0" strokeWidth={2.5} />
                       </div>
-                      <span className="font-inter font-medium text-[14px] md:text-[15px] text-[#111827] dark:text-white/90 leading-snug">
-                        {ex.label}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {/* CTA → booking flow (the per-industry pages aren't live yet) */}
-              <button
-                type="button"
-                onClick={openBooking}
-                className="group mt-8 inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.30)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]"
-              >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
-              </button>
+                    );
+                  })}
+                </div>
+              </div>
             </motion.div>
           </AnimatePresence>
         </motion.div>
