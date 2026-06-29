@@ -25,14 +25,14 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
   void theme;
 
   const topRow = [
-    { label: t({ fr: "Reporting mensuel", en: "Monthly report" }), src: "/try1.mp4",               width: "w-[340px] md:w-[540px]", offset: "translate-y-0" },
-    { label: t({ fr: "Extraction", en: "Extraction" }),           src: "/feature-automate-v3.mp4", width: "w-[340px] md:w-[540px]", offset: "md:translate-y-7" },
-    { label: t({ fr: "Tracking", en: "Tracking" }),               src: "/ora_engineering.mp4",     width: "w-[340px] md:w-[540px]", offset: "md:-translate-y-2" },
+    { label: t({ fr: "Reporting mensuel", en: "Monthly report" }), src: "/try1.mp4",               width: "w-[210px] md:w-[540px]", offset: "translate-y-0" },
+    { label: t({ fr: "Extraction", en: "Extraction" }),           src: "/feature-automate-v3.mp4", width: "w-[210px] md:w-[540px]", offset: "translate-y-7" },
+    { label: t({ fr: "Tracking", en: "Tracking" }),               src: "/ora_engineering.mp4",     width: "w-[210px] md:w-[540px]", offset: "-translate-y-2" },
   ];
   const bottomRow = [
-    { label: t({ fr: "Rapprochement", en: "Reconciliation" }),    src: "/ora_story3-v2.mp4",       width: "w-[340px] md:w-[540px]", offset: "md:translate-y-3" },
-    { label: t({ fr: "Export PDF", en: "PDF export" }),           src: "/ora_story4-v2.mp4",       width: "w-[340px] md:w-[540px]", offset: "md:translate-y-8" },
-    { label: t({ fr: "Multi-dossier", en: "Multi-folder" }),      src: "/feature-automate-v2.mp4", width: "w-[340px] md:w-[540px]", offset: "md:translate-y-1" },
+    { label: t({ fr: "Rapprochement", en: "Reconciliation" }),    src: "/ora_story3-v2.mp4",       width: "w-[210px] md:w-[540px]", offset: "translate-y-3" },
+    { label: t({ fr: "Export PDF", en: "PDF export" }),           src: "/ora_story4-v2.mp4",       width: "w-[210px] md:w-[540px]", offset: "translate-y-8" },
+    { label: t({ fr: "Multi-dossier", en: "Multi-folder" }),      src: "/feature-automate-v2.mp4", width: "w-[210px] md:w-[540px]", offset: "translate-y-1" },
   ];
 
   return (
@@ -69,7 +69,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
         variants={fadeUp}
       >
         <Row cards={topRow} />
-        <Row cards={bottomRow} shift="md:translate-x-20" />
+        <Row cards={bottomRow} shift="translate-x-10 md:translate-x-20" />
       </motion.div>
 
       {/* CTA */}
@@ -96,7 +96,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
 function Row({ cards, shift = "" }: { cards: { label: string; src: string; width: string; offset: string }[]; shift?: string }) {
   return (
     <div className="flex justify-center">
-      <div className={`flex flex-none items-start gap-6 md:gap-9 px-2 ${shift}`}>
+      <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
           <VideoFrame key={c.label} label={c.label} src={c.src} width={c.width} offset={c.offset} />
         ))}
