@@ -1088,8 +1088,11 @@ const App = () => {
 
       {/* ── RÉVÉLATION "Cessez de le gaspiller sur Excel" ────────────────
           Diaporama scroll-driven (pin sticky) : 3 phrases révélées mot par
-          mot, conclu par « Découvrez Ora. ». Entre Features et Atlas. */}
-      <ExcelReveal />
+          mot, conclu par « Découvrez Ora. ». Entre Features et Atlas.
+          Masqué sur mobile (à réactiver : retirer le wrapper hidden md:block). */}
+      <div className="hidden md:block">
+        <ExcelReveal />
+      </div>
 
       {/* ── ATLAS SHOWCASE ──────────────────────────────────────────── */}
       <AtlasShowcase />
