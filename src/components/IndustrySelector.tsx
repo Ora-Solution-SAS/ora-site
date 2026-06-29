@@ -232,7 +232,7 @@ export default function IndustrySelector({
 
   const active = industries[activeIdx];
 
-  const bg = "#06070a";
+  const bg = "#000000";
 
   return (
     <section

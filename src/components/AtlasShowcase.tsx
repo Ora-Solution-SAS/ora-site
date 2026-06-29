@@ -86,7 +86,7 @@ export default function AtlasShowcase() {
       className="relative py-20 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
         background:
-          "radial-gradient(ellipse at 50% 0%, #0f1424 0%, #060810 55%, #000 100%)",
+          "radial-gradient(ellipse at 50% 0%, #0a0a0a 0%, #000 55%, #000 100%)",
       }}
     >
       {/* Scroll-triggered stagger entrance: each major block fades up

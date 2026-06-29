@@ -1123,7 +1123,7 @@ const App = () => {
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
        * ───────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 md:px-12 pt-28 md:pt-56 pb-24 md:pb-32 min-h-0 md:min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-28 md:pt-56 pb-24 md:pb-32 min-h-0 md:min-h-[70vh] flex items-center bg-white dark:bg-black">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"

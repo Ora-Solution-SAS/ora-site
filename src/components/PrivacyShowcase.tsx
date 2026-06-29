@@ -164,7 +164,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       data-nav-shy
       className="mt-10 md:mt-16"
       // Tall on desktop so the scene pins while the 3 anims play; auto on mobile.
-      style={{ background: dk ? "#0f172a" : "#ffffff", height: pinned ? "300vh" : "auto" }}
+      style={{ background: dk ? "#000000" : "#ffffff", height: pinned ? "300vh" : "auto" }}
     >
       <div
         className={`${pinned ? "sticky top-0 min-h-screen flex flex-col justify-center" : ""} px-6 md:px-12 py-20 md:py-0`}

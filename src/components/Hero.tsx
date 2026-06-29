@@ -503,7 +503,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         >
           {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-white dark:bg-[#111827]" />
+            <div className="absolute inset-0 bg-white dark:bg-black" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
             <div className="absolute top-1/2 -left-20 w-[600px] h-[600px] rounded-full"
