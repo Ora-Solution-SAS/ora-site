@@ -28,6 +28,10 @@ export type ScrollyFeature = {
   image?: string;
   /** CSS gradient for the placeholder (when no video/image). */
   grad: string;
+  /** CSS background for the surrounding frame — matched to this clip's own
+   *  background colour so the video melts into the frame (no empty margin).
+   *  Falls back to a soft neutral when absent. */
+  frameBg?: string;
   /** Optional CSS aspect-ratio for this feature's visual box (e.g. "2 / 1").
    *  Lets a video with a non-standard ratio fill its frame with no black
    *  letterbox bars and no side-cropping. Defaults to "16 / 10". */
@@ -216,10 +220,20 @@ export default function FeaturesScrolly({ features }: Props) {
               className="min-h-[70vh] md:min-h-[80vh] flex flex-col justify-center py-10"
             >
               <TextBlock feature={feat} isActive={activeIdx === i}>
-                {/* Mobile-only inline visual — same white frame */}
-                <div className="min-[560px]:hidden mt-8 rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 shadow-[0_18px_44px_-20px_rgba(15,23,42,0.18)]">
-                  <div className="relative w-full rounded-[18px] overflow-hidden" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
-                    <Visual feature={feat} />
+                {/* Mobile-only inline visual — matching discreet frame + glow. */}
+                <div className="relative min-[560px]:hidden mt-8">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-4 -z-10 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(62% 60% at 50% 45%, rgba(59,130,246,0.30) 0%, rgba(37,99,235,0.16) 42%, transparent 78%)",
+                    }}
+                  />
+                  <div className="rounded-[26px] border border-gray-200/40 dark:border-white/[0.06] bg-white/60 dark:bg-white/[0.03] px-4 py-6 shadow-[0_22px_54px_-26px_rgba(37,99,235,0.32)]">
+                    <div className="relative w-full rounded-[16px] overflow-hidden ring-1 ring-black/[0.05] dark:ring-white/[0.06]" style={{ aspectRatio: feat.ratio ?? DEFAULT_RATIO }}>
+                      <Visual feature={feat} />
+                    </div>
                   </div>
                 </div>
               </TextBlock>
@@ -250,32 +264,35 @@ export default function FeaturesScrolly({ features }: Props) {
             element each swap) and keeps the crossfade fully overlapped — so a
             fast scroll never shows a blank moment between videos. */}
         <div data-nav-shy className="hidden min-[560px]:block relative">
-          <div className="sticky top-24 h-[calc(100vh-8rem)] max-h-[780px] flex items-center">
-            {/* One continuous white frame — stays put while the video swaps. */}
-            <div className="w-full rounded-[28px] border border-gray-200/70 dark:border-white/10 bg-white dark:bg-white/[0.03] p-3 md:p-4 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.22)]">
-            <div
-              className="relative w-full rounded-[18px] overflow-hidden"
-              style={{ aspectRatio: "1280 / 854" }}
-            >
-              {features.map((feat, i) => {
-                const isActive = i === activeIdx;
-                return (
-                  <motion.div
-                    key={i}
-                    className="absolute inset-0"
-                    initial={false}
-                    animate={{ opacity: isActive ? 1 : 0, scale: isActive ? 1 : 0.985 }}
-                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    style={{
-                      pointerEvents: isActive ? "auto" : "none",
-                      zIndex: isActive ? 2 : 1,
-                    }}
-                  >
-                    <Visual feature={feat} />
-                  </motion.div>
-                );
-              })}
-            </div>
+          {/* ONE clean white frame, centred in the sticky viewport and snug
+              around the video — white background, no glow, no shadow, and no
+              empty top/bottom gap. The frame stays put for the whole scroll;
+              only the video crossfades inside it. */}
+          <div className="sticky top-24 h-[calc(100vh-8rem)] flex items-center">
+            <div className="relative w-full rounded-[30px] border border-gray-200/60 dark:border-white/10 bg-white dark:bg-white/[0.03] p-5 md:p-7">
+              <div
+                className="relative w-full rounded-[18px] overflow-hidden"
+                style={{ aspectRatio: "1280 / 854" }}
+              >
+                {features.map((feat, i) => {
+                  const isActive = i === activeIdx;
+                  return (
+                    <motion.div
+                      key={i}
+                      className="absolute inset-0"
+                      initial={false}
+                      animate={{ opacity: isActive ? 1 : 0 }}
+                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                      style={{
+                        pointerEvents: isActive ? "auto" : "none",
+                        zIndex: isActive ? 2 : 1,
+                      }}
+                    >
+                      <Visual feature={feat} />
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>

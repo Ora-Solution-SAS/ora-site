@@ -27,10 +27,10 @@ export default function ProblemSection() {
   return (
     <div id="probleme" className="relative mb-24 md:mb-32 scroll-mt-24">
       <div className="text-center max-w-2xl mx-auto mb-14 md:mb-20">
-        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-red-500">
+        <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
           {t({ fr: "Le problème", en: "The problem" })}
         </span>
-        <h2 className="font-poppins font-semibold text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-4">
+        <h2 className="font-poppins font-medium text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-4">
           {t({ fr: "Votre Excel vous coûte plus que du temps", en: "Your Excel work costs more than time" })}
         </h2>
         <p className="font-inter mt-5 text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400">
@@ -41,41 +41,42 @@ export default function ProblemSection() {
         </p>
       </div>
 
-      <div data-nav-shy className="grid md:grid-cols-2 gap-x-16 lg:gap-x-24 gap-y-12 max-w-5xl mx-auto">
-        {/* Without Ora — muted */}
-        <div>
-          <h3 className="font-poppins font-semibold text-2xl md:text-[1.9rem] tracking-[-0.02em] text-gray-900 dark:text-white mb-1">
-            {t({ fr: "Sans Ora", en: "Without Ora" })}
-          </h3>
-          <div className="mt-5 border-t border-gray-200 dark:border-white/10">
-            {pains.map((p, i) => (
-              <div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10">
-                <span className="w-7 h-7 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
-                  <X className="w-4 h-4 text-gray-600 dark:text-gray-300" strokeWidth={3} />
-                </span>
-                <span className="font-inter text-base md:text-[17px] leading-snug text-gray-800 dark:text-gray-100">{p}</span>
-              </div>
-            ))}
+      {/* Plain two-column comparison, directly on the section background. */}
+      <div data-nav-shy className="grid md:grid-cols-2 gap-x-12 lg:gap-x-20 gap-y-12 max-w-6xl mx-auto">
+          {/* With Ora — dark text + brand ✓ */}
+          <div>
+            <h3 className="font-poppins font-medium text-2xl md:text-[1.9rem] tracking-[-0.02em] text-gray-900 dark:text-white mb-1">
+              {t({ fr: "Avec Ora", en: "With Ora" })}
+            </h3>
+            <div className="mt-5 border-t border-gray-200 dark:border-white/10">
+              {gains.map((g, i) => (
+                <div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10">
+                  <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#0d9488] flex items-center justify-center flex-shrink-0">
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                  </span>
+                  <span className="font-inter text-base md:text-[17px] leading-snug text-gray-900 dark:text-white">{g}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* With Ora — dark text + brand ✓ */}
-        <div>
-          <h3 className="font-poppins font-semibold text-2xl md:text-[1.9rem] tracking-[-0.02em] text-gray-900 dark:text-white mb-1">
-            {t({ fr: "Avec Ora", en: "With Ora" })}
-          </h3>
-          <div className="mt-5 border-t border-gray-200 dark:border-white/10">
-            {gains.map((g, i) => (
-              <div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10">
-                <span className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#0d9488] flex items-center justify-center flex-shrink-0">
-                  <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                </span>
-                <span className="font-inter text-base md:text-[17px] leading-snug text-gray-900 dark:text-white">{g}</span>
-              </div>
-            ))}
+          {/* Without Ora — muted */}
+          <div>
+            <h3 className="font-poppins font-medium text-2xl md:text-[1.9rem] tracking-[-0.02em] text-gray-900 dark:text-white mb-1">
+              {t({ fr: "Sans Ora", en: "Without Ora" })}
+            </h3>
+            <div className="mt-5 border-t border-gray-200 dark:border-white/10">
+              {pains.map((p, i) => (
+                <div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10">
+                  <span className="w-7 h-7 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <X className="w-4 h-4 text-gray-600 dark:text-gray-300" strokeWidth={3} />
+                  </span>
+                  <span className="font-inter text-base md:text-[17px] leading-snug text-gray-800 dark:text-gray-100">{p}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

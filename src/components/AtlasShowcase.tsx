@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   ArrowRight,
   Globe,
@@ -212,7 +212,7 @@ export default function AtlasShowcase() {
         {/* Explanatory paragraph below the main mockup — gives Atlas more
             context than the headline alone. */}
         <motion.div
-          className="max-w-3xl mx-auto mt-20 md:mt-28 text-center"
+          className="max-w-3xl mx-auto mt-48 md:mt-64 text-center"
           variants={fadeInUp}
         >
           <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
@@ -229,72 +229,76 @@ export default function AtlasShowcase() {
           </p>
         </motion.div>
 
-        {/* Lower tabbed demo — pills above the visual. The galaxy tab shows
-            the Atlas demo video; the other tabs reuse their app mockups so
-            each pill below the paragraph has matching content. */}
+        {/* Lower tabbed demo — ONE continuous frame. The active tab's visual
+            sits on the left, with a smaller, blurred peek of the NEXT tab's
+            visual emerging on the right (carousel feel). The frame itself never
+            changes between tabs — only the visuals slide/swap inside it. */}
         <motion.div className="mt-14 md:mt-16" variants={fadeInUp}>
           <TabPills tabs={tabs} active={bottomTab} onSelect={setBottomTab} />
 
-          {/* Single grid cell so the active visual and the outgoing one stack
-              and crossfade (same proven pattern as the interactive mockup
-              above — no mode="wait", which can stall the exit). */}
-          <div className="grid" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
-            <AnimatePresence initial={false}>
-              <motion.div
-                key={bottomTab}
-                style={{ gridColumn: 1, gridRow: 1, willChange: "opacity, transform" }}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {bottomTab === "galaxy" ? (
-                  // Atlas detail visual — client-supplied demo video
-                  // (2560×1708 → 3:2). Sky-blue tinted border + soft glow.
-                  <div className="max-w-5xl mx-auto">
-                    <div
-                      className="rounded-3xl overflow-hidden border"
+          <div className="relative max-w-5xl mx-auto">
+            {/* No surrounding frame — the cards float directly (Bubble-style),
+                lifted only by a soft ambient glow behind the active card. */}
+            <div
+              aria-hidden
+              className="absolute -inset-8 -z-10 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(48% 58% at 50% 50%, rgba(96,165,250,0.22) 0%, rgba(56,189,248,0.10) 46%, transparent 76%)",
+              }}
+            />
+            {/* Stage — Bubble-style carousel with NO frame: the active card is
+                centred, neighbours peek on the sides, clipped only by the
+                section's own overflow. */}
+            <div className="relative w-full" style={{ aspectRatio: "16 / 10" }}>
+                {tabs.map((tab, i) => {
+                  const activeI = tabs.findIndex((t) => t.id === bottomTab);
+                  const offset = i - activeI;
+                  const isActive = offset === 0;
+                  // Coverflow WITHOUT wrap-around: only the IMMEDIATE neighbours
+                  // peek. So the first tab shows just a right peek, the last just
+                  // a left peek, and the middle ("Pilotez") shows both.
+                  const isPeek = offset === 1 || offset === -1;
+                  // Horizontal track: each card sits one ~104% "step" left/right
+                  // of centre, so cards slide in from the correct side.
+                  const x = `${-50 + offset * 104}%`;
+                  return (
+                    <motion.div
+                      key={tab.id}
+                      className="absolute top-1/2 left-1/2 w-[74%] rounded-2xl overflow-hidden ring-1 ring-black/[0.06] bg-white shadow-[0_24px_56px_-22px_rgba(8,12,28,0.55)]"
                       style={{
-                        borderColor: "rgba(186,230,253,0.22)",
-                        boxShadow:
-                          "0 40px 110px rgba(56,189,248,0.32), 0 16px 56px rgba(96,165,250,0.22), 0 4px 18px rgba(56,189,248,0.12)",
+                        aspectRatio: "16 / 10",
+                        zIndex: isActive ? 3 : 2,
                       }}
+                      initial={false}
+                      animate={{
+                        opacity: isActive ? 1 : isPeek ? 0.5 : 0,
+                        scale: isActive ? 1 : 0.72,
+                        x,
+                        y: "-50%",
+                        filter: isActive ? "blur(0px)" : "blur(3px)",
+                      }}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     >
-                      <InViewVideo
-                        src="/ora_atlas.mp4"
-                        className="w-full block object-cover"
-                        style={{ aspectRatio: "2560 / 1708" }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="relative w-full max-w-[1052px] mx-auto">
-                    <div
-                      aria-hidden
-                      className="absolute -inset-3 lg:-inset-5 -z-10 pointer-events-none"
-                      style={{
-                        background:
-                          "radial-gradient(ellipse at 50% 45%, rgba(125,211,252,0.26) 0%, rgba(96,165,250,0.15) 35%, rgba(56,189,248,0.06) 60%, transparent 80%)",
-                      }}
-                    />
-                    <div
-                      className="relative rounded-3xl overflow-hidden p-3 md:p-4"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, rgba(186,230,253,0.14) 0%, rgba(147,197,253,0.09) 50%, rgba(186,230,253,0.14) 100%)",
-                        border: "1px solid rgba(186,230,253,0.22)",
-                        boxShadow:
-                          "0 28px 72px rgba(56,189,248,0.28), 0 10px 36px rgba(96,165,250,0.18), 0 3px 14px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
-                      }}
-                    >
-                      <ScaleToFit>
-                        {bottomTab === "dashboard" ? <MockupHome /> : <MockupManager />}
-                      </ScaleToFit>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+                      {tab.id === "galaxy" ? (
+                        <InViewVideo
+                          src="/ora_atlas.mp4"
+                          className="absolute inset-0 w-full h-full object-cover block"
+                        />
+                      ) : (
+                        // Mockups are taller than the 16/10 card: anchor to the
+                        // top so the meaningful header + cards show (cropped at
+                        // the bottom, like a windowed screenshot).
+                        <div className="absolute inset-x-0 top-0">
+                          <ScaleToFit>
+                            {tab.id === "dashboard" ? <MockupHome /> : <MockupManager />}
+                          </ScaleToFit>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
           </div>
         </motion.div>
       </motion.div>
@@ -314,36 +318,40 @@ function TabPills({
   onSelect: (id: TabId) => void;
 }) {
   return (
-    <div className="flex flex-wrap justify-center gap-2.5 md:gap-3 mb-10 md:mb-14">
-      {tabs.map((tab) => {
-        const Icon = tab.icon;
-        const isActive = tab.id === active;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onSelect(tab.id)}
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full text-left transition-all duration-200 ${
-              isActive
-                ? "bg-white/[0.08] border border-white/[0.10]"
-                : "border border-transparent hover:bg-white/[0.04]"
-            }`}
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
-            >
-              <Icon className="w-4 h-4 text-white" strokeWidth={2.25} />
-            </div>
-            <span
-              className={`font-poppins font-semibold text-[13px] md:text-[14px] leading-snug transition-colors duration-200 ${
-                isActive ? "text-white" : "text-white/55"
+    <div className="flex justify-center mb-10 md:mb-14">
+      {/* One unified rounded selector (Bubble-style): the active tab is an
+          outlined pill, the others are plain text inside the same track. */}
+      <div className="inline-flex flex-wrap justify-center items-center gap-1.5 p-1.5 rounded-full border border-white/[0.12] bg-white/[0.03]">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = tab.id === active;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onSelect(tab.id)}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-full transition-all duration-200 ${
+                isActive
+                  ? "border border-white/70 bg-white/[0.07]"
+                  : "border border-transparent hover:bg-white/[0.05]"
               }`}
             >
-              {tab.label}
-            </span>
-          </button>
-        );
-      })}
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${tab.iconBg}`}
+              >
+                <Icon className="w-[15px] h-[15px] text-white" strokeWidth={2.25} />
+              </div>
+              <span
+                className={`font-poppins font-semibold text-[13px] md:text-[14px] leading-snug whitespace-nowrap transition-colors duration-200 ${
+                  isActive ? "text-white" : "text-white/55 hover:text-white/80"
+                }`}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
