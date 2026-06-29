@@ -238,7 +238,7 @@ export default function IndustrySelector({
     <section
       id="industries"
       data-nav-shy
-      className="dark relative py-14 md:py-32 px-6 md:px-12"
+      className="dark relative py-20 md:py-32 px-6 md:px-12"
       style={{ backgroundColor: bg }}
     >
       <div className="max-w-7xl mx-auto">

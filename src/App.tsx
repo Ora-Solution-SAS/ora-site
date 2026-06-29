@@ -981,7 +981,7 @@ const App = () => {
       />
 
       {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative -mt-16 pt-16 md:pt-44 pb-20 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
+      <section id="features" className="relative -mt-16 pt-24 md:pt-44 pb-28 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1121,7 +1121,7 @@ const App = () => {
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
        * ───────────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 md:px-12 pt-20 md:pt-56 pb-16 md:pb-32 min-h-0 md:min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-28 md:pt-56 pb-24 md:pb-32 min-h-0 md:min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"

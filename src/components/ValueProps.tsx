@@ -10,7 +10,7 @@ export default function ValueProps({ openBooking }: { openBooking: () => void })
   const { t } = useLang();
 
   return (
-    <div className="relative max-w-7xl mx-auto py-8 md:py-24">
+    <div className="relative max-w-7xl mx-auto py-14 md:py-24">
       <div
         data-nav-shy
         className="grid lg:grid-cols-[1.45fr_1fr] rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)]"

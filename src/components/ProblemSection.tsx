@@ -26,7 +26,7 @@ export default function ProblemSection() {
   ];
 
   return (
-    <div id="probleme" className="relative mb-16 md:mb-32 scroll-mt-24">
+    <div id="probleme" className="relative mb-24 md:mb-32 scroll-mt-24">
       <div className="text-center max-w-2xl mx-auto mb-8 md:mb-20">
         <span className="text-[11px] md:text-xs font-semibold uppercase tracking-[0.18em] text-red-500">
           {t({ fr: "Le problème", en: "The problem" })}

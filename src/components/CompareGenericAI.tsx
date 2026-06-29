@@ -42,7 +42,7 @@ export default function CompareGenericAI() {
   return (
     <section
       data-nav-shy
-      className="relative py-14 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827]"
+      className="relative py-20 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#111827]"
     >
       <div className="max-w-5xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-6 md:mb-16">
