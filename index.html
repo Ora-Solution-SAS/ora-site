@@ -12,8 +12,7 @@
   <script>
     (function () {
       var stored = localStorage.getItem('ora-theme-v2');
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = stored === 'dark' || stored === 'light' ? stored : (prefersDark ? 'dark' : 'light');
+      var theme = stored === 'dark' || stored === 'light' ? stored : 'dark';
       document.documentElement.classList.add(theme);
     })();
   </script>

@@ -835,7 +835,8 @@ const App = () => {
     if (typeof window === "undefined") return "light";
     const stored = window.localStorage.getItem("ora-theme-v2");
     if (stored === "dark" || stored === "light") return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    // Default to dark (black background) unless the user explicitly chose light.
+    return "dark";
   });
 
   const benefitsRef = useRef<HTMLElement | null>(null);
@@ -855,9 +856,10 @@ const App = () => {
   // Follow system preference changes when no manual override is stored
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = (e: MediaQueryListEvent) => {
+    const onChange = () => {
+      // Default stays dark; only an explicit stored choice overrides it.
       if (!window.localStorage.getItem("ora-theme-v2")) {
-        setTheme(e.matches ? "dark" : "light");
+        setTheme("dark");
       }
     };
     mq.addEventListener("change", onChange);
