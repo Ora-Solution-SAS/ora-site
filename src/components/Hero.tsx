@@ -460,6 +460,8 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   covered by a white overlay until the user scrolls; when
                   they do, the overlay slides upward and fades out while
                   the video gently rises into view + starts playing. */}
+              {/* Soft very-light-blue frame around the demo video. */}
+              <div className="rounded-[22px] bg-blue-50/70 dark:bg-blue-500/[0.06] ring-1 ring-blue-200/70 dark:ring-blue-400/20 p-2.5 md:p-3">
               <div className="browser-frame">
                 <div className="relative overflow-hidden">
                   <video
@@ -513,6 +515,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     </button>
                   )}
                 </div>
+              </div>
               </div>
             </div>
 

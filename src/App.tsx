@@ -28,7 +28,6 @@ import ExcelReveal from "./components/ExcelReveal";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 import ProblemSection from "./components/ProblemSection";
-import CompareGenericAI from "./components/CompareGenericAI";
 import FAQ from "./components/FAQ";
 import SectionNav from "./components/SectionNav";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -502,6 +501,8 @@ import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
 import Hero from "./components/Hero";
+import { BridgeAnimation } from "./components/BridgeShowcase";
+import OraGallery from "./components/OraGallery";
 import { useLang } from "./lib/i18n";
 import {
   Clock,
@@ -980,6 +981,10 @@ const App = () => {
         openBooking={openBooking}
       />
 
+      {/* GALLERY — Bubble-style staggered landscape cards showing what Ora
+          produces (replaces the old "Ora en action" tabbed card). */}
+      <OraGallery theme={theme} openBooking={openBooking} />
+
       {/* FEATURES — alternating video + text rows */}
       <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
@@ -994,8 +999,8 @@ const App = () => {
           style={{
             background:
               theme === "dark"
-                ? "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.18) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.18) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.13) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.17) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.12) 0%, transparent 70%)"
-                : "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.16) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.16) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.11) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.15) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.11) 0%, transparent 70%)",
+                ? "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.28) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.18) 0%, transparent 70%)"
+                : "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.21) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.26) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.18) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.18) 0%, transparent 70%)",
             // Fade the tint layer in/out at the very top and bottom so its
             // edges never form a hard horizontal line against the adjacent
             // white sections (hero above, next section below).
@@ -1029,6 +1034,8 @@ const App = () => {
               }),
               icon: Zap,
               grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
+              // Frame bg matched to this clip's blue/periwinkle background.
+              frameBg: "linear-gradient(180deg, #b1d2f4 0%, #a7cbee 26%, #769de6 74%, #6a92e1 100%)",
               video: "/ora_story3-v2.mp4",
               // 1280×854 source → 3:2 box (narrower than the old 2:1) so it
               // fills with no black letterbox bars and no side-cropping.
@@ -1046,6 +1053,8 @@ const App = () => {
               }),
               icon: TrendingUp,
               grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+              // Frame bg matched to this clip's pale blue-grey background.
+              frameBg: "linear-gradient(180deg, #ecf1f8 0%, #e3ebf5 28%, #d3e4e7 74%, #cadee2 100%)",
               video: "/ora_story4-v2.mp4",
               // 1280×854 source → 3:2 box so it fills with no black letterbox
               // bars and no side-cropping.
@@ -1063,6 +1072,8 @@ const App = () => {
               }),
               icon: ShieldCheck,
               grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
+              // Frame bg matched to this clip's dark-navy background.
+              frameBg: "linear-gradient(180deg, #0c0c2a 0%, #080820 55%, #06061a 100%)",
               video: "/feature-secure.mp4",
             },
           ]}
@@ -1071,7 +1082,7 @@ const App = () => {
         <FadeInOnScroll delay={200}>
           <div className="relative flex justify-center mt-16">
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent("ora:open-solutions"))}
+              onClick={() => animatedScrollToId("industries")}
               className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
             >
               {t({ fr: "Découvrir les applications métier", en: "Explore industry applications" })}
@@ -1100,24 +1111,28 @@ const App = () => {
 
       {/* ── INDUSTRIES ───────────────────────────────────────────────── */}
       {/* Pick a field → see concrete automation examples → jump to the
-          dedicated solution page. */}
-      <IndustrySelector theme={theme} openBooking={openBooking} />
+          dedicated solution page.
+          TEMPORAIREMENT MASQUÉ (pas fini) — repasser `false` à `true`. */}
+      {false && <IndustrySelector theme={theme} openBooking={openBooking} />}
 
       {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
       {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
           3 trust cards. See PrivacyShowcase.tsx. */}
       <PrivacyShowcase theme={theme} />
 
-      {/* ── ORA vs IA GÉNÉRIQUE — answers "why not ChatGPT/Copilot?" ──── */}
-      <CompareGenericAI />
-
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
       <FAQ openBooking={openBooking} />
+
+      {/* ── BRIDGE — the Ora logo unfolds into a bridge (positioning climax,
+          right before the closing CTA). */}
+      <BridgeAnimation theme={theme} />
 
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
+       *  TEMPORAIREMENT MASQUÉ — repasser `false` à `true` pour réactiver. *
        * ───────────────────────────────────────────────────────────────── */}
+      {false && (
       <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-[#111827]">
         {/* Subtle grid, fading at the edges */}
         <div
@@ -1232,6 +1247,19 @@ const App = () => {
             </p>
           </FadeInOnScroll>
         </div>
+      </section>
+      )}
+
+      {/* ── CTA FINAL (provisoire) — un seul bouton centré, collé à la phrase
+          "Ora, c'est automatiser sans renoncer à vos données" du pont. ──── */}
+      <section className="relative px-6 md:px-12 pt-6 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-[#111827]">
+        <button
+          onClick={openBooking}
+          className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
+        >
+          {t({ fr: "Réserver mon appel", en: "Get started" })}
+          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
+        </button>
       </section>
 
       </>

@@ -13,6 +13,12 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "4600", "--directory", "motion"],
       "port": 4600
+    },
+    {
+      "name": "ferme-montavigny",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8778", "--bind", "127.0.0.1", "--directory", "/Users/gaugainraphael/Desktop/Empire Familial/ferme-de-montavigny"],
+      "port": 8778
     }
   ]
 }
