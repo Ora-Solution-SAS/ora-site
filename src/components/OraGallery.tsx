@@ -36,7 +36,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
   ];
 
   return (
-    <section data-nav-shy className="relative overflow-hidden pt-24 md:pt-32 pb-24 md:pb-28 px-6 md:px-12 bg-white dark:bg-[#0f172a]">
+    <section data-nav-shy className="relative overflow-hidden pt-24 md:pt-32 pb-24 md:pb-28 px-6 md:px-12 bg-white dark:bg-black">
       {/* Header */}
       <motion.div
         className="relative z-10 text-center max-w-3xl mx-auto"

@@ -115,7 +115,7 @@ export function BridgeAnimation({ theme }: BridgeShowcaseProps) {
   const payoffY = useTransform(p, [0.62, 0.8], [22, 0]);
 
   return (
-    <section ref={outerRef} className="relative bg-white dark:bg-[#0f172a]">
+    <section ref={outerRef} className="relative bg-white dark:bg-black">
       {/* ════ PART 1 — the logo unfolds into a bridge (white) ════ */}
       <div data-nav-shy style={{ height: pinned ? "220vh" : "auto" }} className="relative">
         <div
@@ -284,7 +284,7 @@ export default function BridgeShowcase({ theme }: BridgeShowcaseProps) {
   const cur = cases[active];
 
   return (
-    <section data-nav-shy className="relative pt-24 md:pt-36 pb-24 md:pb-32 px-6 md:px-12 bg-white dark:bg-[#0f172a]">
+    <section data-nav-shy className="relative pt-24 md:pt-36 pb-24 md:pb-32 px-6 md:px-12 bg-white dark:bg-black">
       <div className="max-w-[1500px] mx-auto">
         <motion.div
           className="text-center max-w-3xl mx-auto mb-10 md:mb-12"
