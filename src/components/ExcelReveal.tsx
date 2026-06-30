@@ -131,7 +131,9 @@ export default function ExcelReveal() {
   const LINE1_RANGE: [number, number, number, number] = [0.02, 0.22, 0.26, 0.32];
   const LINE2_RANGE: [number, number, number, number] = [0.34, 0.50, 0.52, 0.58];
 
-  /* Ligne 3 : entre (0.56→0.66), grandit (0.62→0.96) et reste affichée. */
+  /* Ligne 3 : entre (0.56→0.66), grandit (0.62→0.96) et RESTE affichée jusqu'à
+     la fin du lock. Elle ne s'efface jamais d'elle-même : à la sortie du lock,
+     le scroll naturel fait monter la section Atlas par-dessus, progressivement. */
   const l3o      = useTransform(revealProgress, [0.56, 0.66], [0, 1]);
   const l3y      = useTransform(revealProgress, [0.56, 0.66], [28, 0]);
   const l3Blur   = useTransform(revealProgress, [0.56, 0.66], [12, 0]);
@@ -190,6 +192,8 @@ export default function ExcelReveal() {
       if (next >= 1) {
         revealProgress.set(1);
         hasTextCompletedRef.current = true;
+        // On relâche simplement le lock : le scroll naturel reprend et fait
+        // monter la section Atlas progressivement (pas de saut brutal).
         unlockText();
         return;
       }

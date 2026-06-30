@@ -946,6 +946,52 @@ function FilePreview({ format, dark }: { format: NodeFormat; dark?: boolean }) {
   );
 }
 
+// ── Guided tour ────────────────────────────────────────────────────────────
+// A fully assisted, step-by-step walkthrough so a first-time visitor is never
+// lost: each step spotlights the exact control, explains the action in plain
+// French, and auto-advances the instant the action is performed.
+type TourSpot = "create" | "node" | "linkhandle" | "chip";
+const TOUR: { spot: TourSpot; title: string; body: string; hint: string }[] = [
+  {
+    spot: "create",
+    title: "Créez un fichier",
+    body: "Saisissez un nom, choisissez le type (Excel, PDF, CSV), puis cliquez sur « Ajouter ». Il rejoint la galaxie, déjà relié au fichier central.",
+    hint: "Nom + type + Ajouter",
+  },
+  {
+    spot: "node",
+    title: "Ouvrez un fichier",
+    body: "Double-cliquez sur n'importe quel fichier pour voir son aperçu, qui y a accès et tout son historique.",
+    hint: "Double-cliquez un fichier",
+  },
+  {
+    spot: "linkhandle",
+    title: "Reliez deux fichiers",
+    body: "Survolez un fichier, puis glissez la pastille bleue jusqu'à un autre fichier pour créer un lien entre eux.",
+    hint: "Glissez la pastille bleue",
+  },
+  {
+    spot: "chip",
+    title: "Qualifiez la relation",
+    body: "Cliquez sur l'étiquette d'un lien pour décrire sa nature : Données, Brouillon, Final ou Référence.",
+    hint: "Cliquez une étiquette",
+  },
+];
+
+/** Pulsing brand ring drawn around whatever the active tour step points at. */
+function TourRing({ rounded = "rounded-xl", inset = "-inset-1.5" }: { rounded?: string; inset?: string }) {
+  return (
+    <motion.span
+      aria-hidden
+      className={`pointer-events-none absolute ${inset} ${rounded} z-30`}
+      style={{ boxShadow: "0 0 0 2px #4361ee, 0 0 0 7px rgba(67,97,238,0.22)" }}
+      initial={{ opacity: 0.45 }}
+      animate={{ opacity: [0.45, 1, 0.45] }}
+      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+    />
+  );
+}
+
 export function InteractiveGalaxy() {
   const [files, setFiles] = useState<GFile[]>(INITIAL_FILES);
   const [links, setLinks] = useState<GLink[]>(INITIAL_LINKS);
@@ -963,6 +1009,25 @@ export function InteractiveGalaxy() {
   const [showHint, setShowHint] = useState(true);
   // Camera: pan offset (px) + zoom scale, applied as a CSS transform on the stage.
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
+
+  // ── Guided tour ──────────────────────────────────────────────────
+  const [tourActive, setTourActive] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  // Bumped each time a link's typology is cycled — lets the last step auto-complete.
+  const [reclassCount, setReclassCount] = useState(0);
+  // Baseline metrics captured at each step's entry, so auto-advance only fires on
+  // a NEW action done during that step (not one already performed while exploring).
+  const tourBase = useRef({ files: 0, links: 0, reclass: 0 });
+  const spot = (key: TourSpot) => tourActive && TOUR[tourStep]?.spot === key;
+  const startTour = () => { setShowHint(false); setTourActive(true); setTourStep(0); };
+  const endTour = () => setTourActive(false);
+
+  // Refs used to measure the "spotlight" hole (the only area left interactive
+  // while the rest of the mockup is blurred + blocked during the guided tour).
+  const rootRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [holeRect, setHoleRect] = useState<{ left: number; top: number; width: number; height: number } | null>(null);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ mode: "move" | "link" | "pan" | null; id: string | null; offX: number; offY: number; startX: number; startY: number; startTx: number; startTy: number }>({ mode: null, id: null, offX: 0, offY: 0, startX: 0, startY: 0, startTx: 0, startTy: 0 });
@@ -1094,6 +1159,57 @@ export function InteractiveGalaxy() {
     return () => { io.disconnect(); if (timer) window.clearTimeout(timer); };
   }, []);
 
+  // Capture the baseline metrics when a tour step begins (declared BEFORE the
+  // auto-advance effect so it runs first on a step change).
+  useEffect(() => {
+    if (!tourActive) return;
+    tourBase.current = { files: files.length, links: links.length, reclass: reclassCount };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourStep, tourActive]);
+
+  // Auto-advance the moment the user completes the current step's action.
+  useEffect(() => {
+    if (!tourActive) return;
+    const step = TOUR[tourStep];
+    if (!step) return;
+    const done =
+      (step.spot === "create" && files.length > tourBase.current.files) ||
+      (step.spot === "node" && panelId !== null) ||
+      (step.spot === "linkhandle" && links.length > tourBase.current.links) ||
+      (step.spot === "chip" && reclassCount > tourBase.current.reclass);
+    if (!done) return;
+    // Small delay so the user sees their action land before the next step appears.
+    const t = window.setTimeout(() => setTourStep((s) => s + 1), 650);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [files.length, links.length, panelId, reclassCount, tourStep, tourActive]);
+
+  // Measure the active step's spotlight hole (toolbar for the "create" step, the
+  // canvas+panel area for the others), in the mockup's own unscaled coordinates.
+  useEffect(() => {
+    if (!tourActive || tourStep >= TOUR.length) { setHoleRect(null); return; }
+    const measure = () => {
+      const container = rootRef.current;
+      const targetEl = TOUR[tourStep].spot === "create" ? toolbarRef.current : contentRef.current;
+      if (!container || !targetEl) return;
+      const cRect = container.getBoundingClientRect();
+      const tRect = targetEl.getBoundingClientRect();
+      const scale = container.offsetWidth ? cRect.width / container.offsetWidth : 1;
+      const pad = 8;
+      setHoleRect({
+        left: (tRect.left - cRect.left) / scale - pad,
+        top: (tRect.top - cRect.top) / scale - pad,
+        width: tRect.width / scale + pad * 2,
+        height: tRect.height / scale + pad * 2,
+      });
+    };
+    measure();
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", measure); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourActive, tourStep, panelId, files.length, links.length]);
+
   // Pan by dragging the empty canvas background.
   const onCanvasDown = (e: React.PointerEvent) => {
     drag.current = { mode: "pan", id: null, offX: 0, offY: 0, startX: e.clientX, startY: e.clientY, startTx: view.tx, startTy: view.ty };
@@ -1159,6 +1275,7 @@ export function InteractiveGalaxy() {
   // Click a link's chip to cycle its typology (data → draft → final → reference).
   const cycleLink = (index: number) => {
     setLinks((prev) => prev.map((l, i) => (i === index ? { ...l, type: nextLinkType(l.type) } : l)));
+    setReclassCount((c) => c + 1);
   };
 
   const addFile = () => {
@@ -1194,7 +1311,7 @@ export function InteractiveGalaxy() {
   };
 
   return (
-    <div className="relative inline-block">
+    <div ref={rootRef} className="relative inline-block">
     <WindowShell activeNav="atlas" pageTitle="Atlas" pageSubtitle="Acquisition NewCo" height={720} dark={dark}>
       <div className="px-6 py-5 flex flex-col" style={{ height: "100%" }}>
         {/* Project header */}
@@ -1212,7 +1329,7 @@ export function InteractiveGalaxy() {
         </div>
 
         {/* Toolbar: tabs · night toggle · add control */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div ref={toolbarRef} className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div className="flex gap-1.5 rounded-xl border p-1 w-fit" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
             <div className="px-3 py-1.5 rounded-lg text-[12px] font-medium flex items-center gap-1.5" style={{ color: T.toolText }}><List className="w-3.5 h-3.5" strokeWidth={2.25} /> Liste</div>
             <div className="px-3 py-1.5 rounded-lg text-[12px] font-semibold flex items-center gap-1.5" style={{ background: dark ? "rgba(96,165,250,0.15)" : "#eef2ff", color: dark ? "#93c5fd" : "#4361ee" }}><Globe className="w-3.5 h-3.5" strokeWidth={2.25} /> Galaxy</div>
@@ -1229,6 +1346,8 @@ export function InteractiveGalaxy() {
             >
               {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
+            <div className="relative flex items-center gap-2">
+            {spot("create") && <TourRing inset="-inset-2" rounded="rounded-2xl" />}
             <div className="flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5" style={{ borderColor: T.toolBorder, background: T.toolBg }}>
               <FolderPlus className="w-3.5 h-3.5" style={{ color: T.sub }} />
               <input
@@ -1282,11 +1401,12 @@ export function InteractiveGalaxy() {
             >
               <Plus className="w-3.5 h-3.5" /> Ajouter
             </button>
+            </div>
           </div>
         </div>
 
         {/* Canvas + detail panel */}
-        <div className="flex-1 flex gap-3 min-h-0">
+        <div ref={contentRef} className="flex-1 flex gap-3 min-h-0">
           {/* Galaxy canvas — drag files, draw links, double-click for details */}
           <div
             ref={canvasRef}
@@ -1355,6 +1475,7 @@ export function InteractiveGalaxy() {
                     color: lt.color,
                   }}
                 >
+                  {spot("chip") && i === 0 && <TourRing rounded="rounded-full" inset="-inset-1.5" />}
                   <Icon className="w-3 h-3" strokeWidth={2.5} />
                   {lt.label}
                 </button>
@@ -1398,14 +1519,27 @@ export function InteractiveGalaxy() {
                     >
                       <Icon style={{ width: r * 0.8, height: r * 0.8, color: "#ffffff" }} strokeWidth={2.25} />
 
+                      {/* Tour spotlight on the hub for the "open" and "link" steps */}
+                      {(spot("node") || spot("linkhandle")) && f.hub && (
+                        <TourRing rounded="rounded-full" inset="-inset-[6px]" />
+                      )}
+
                       {/* Link handle — drag onto another file to connect */}
                       <button
                         onPointerDown={(e) => onLinkDown(e, f)}
                         onPointerMove={onLinkMove}
                         onPointerUp={(e) => onLinkUp(e, f)}
                         title="Relier à un autre fichier"
-                        className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm cursor-crosshair"
-                        style={{ touchAction: "none", background: T.nodeBg, border: "1px solid #4361ee", color: "#4361ee" }}
+                        className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center transition-opacity shadow-sm cursor-crosshair ${
+                          spot("linkhandle") && f.hub ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                        style={{
+                          touchAction: "none",
+                          background: T.nodeBg,
+                          border: "1px solid #4361ee",
+                          color: "#4361ee",
+                          boxShadow: spot("linkhandle") && f.hub ? "0 0 0 3px rgba(67,97,238,0.35)" : undefined,
+                        }}
                       >
                         <Link2 className="w-2.5 h-2.5" strokeWidth={2.5} />
                       </button>
@@ -1435,11 +1569,24 @@ export function InteractiveGalaxy() {
             })}
             </div>
 
-            {/* Interaction hint */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] backdrop-blur-sm" style={{ zIndex: 6, background: T.hintBg, borderColor: T.toolBorder, color: T.sub }}>
-              <Sparkles className="w-3 h-3" style={{ color: T.accent }} />
-              Molette pour zoomer · glissez le fond pour naviguer · cliquez une étiquette pour sa typologie
-            </div>
+            {/* Interaction hint — only once the mandatory guide is complete */}
+            {!tourActive && (
+              <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] backdrop-blur-sm" style={{ zIndex: 6, background: T.hintBg, borderColor: T.toolBorder, color: T.sub }}>
+                <Sparkles className="w-3 h-3" style={{ color: T.accent }} />
+                Molette pour zoomer · glissez le fond pour naviguer · cliquez une étiquette pour sa typologie
+              </div>
+            )}
+
+            {/* Relaunch the guide once it has been completed */}
+            {!tourActive && !showHint && (
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={startTour}
+                className="absolute bottom-3 left-3 z-[45] inline-flex items-center gap-1.5 rounded-full bg-[#4361ee] hover:bg-[#3451d1] text-white px-3 py-1.5 text-[11px] font-semibold shadow-lg transition-colors"
+              >
+                <Sparkles className="w-3.5 h-3.5" /> Revoir le guide
+              </button>
+            )}
 
             {/* Open-file demo toast */}
             {openToast && (
@@ -1559,18 +1706,120 @@ export function InteractiveGalaxy() {
       </div>
     </WindowShell>
 
+      {/* ── MANDATORY GUIDED TOUR ──────────────────────────────────────────
+          A blur + dim mask covers the whole mockup and BLOCKS interaction,
+          leaving only the step's active area lit & clickable. The instruction
+          card sits over the blurred zone so the user is led, step by step. */}
+      <AnimatePresence>
+        {tourActive && tourStep < TOUR.length && holeRect && (
+          <motion.div
+            key="tour-mask"
+            className="absolute inset-0 z-40 rounded-2xl overflow-hidden pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {(() => {
+              const W = rootRef.current?.offsetWidth ?? 1020;
+              const H = rootRef.current?.offsetHeight ?? 720;
+              const r = holeRect;
+              const m = { position: "absolute" as const, background: "rgba(8,12,24,0.6)", backdropFilter: "blur(2.5px)", WebkitBackdropFilter: "blur(2.5px)", pointerEvents: "auto" as const };
+              return (
+                <>
+                  <div style={{ ...m, left: 0, top: 0, width: W, height: Math.max(0, r.top) }} />
+                  <div style={{ ...m, left: 0, top: r.top + r.height, width: W, height: Math.max(0, H - (r.top + r.height)) }} />
+                  <div style={{ ...m, left: 0, top: r.top, width: Math.max(0, r.left), height: r.height }} />
+                  <div style={{ ...m, left: r.left + r.width, top: r.top, width: Math.max(0, W - (r.left + r.width)), height: r.height }} />
+                  <div style={{ position: "absolute", left: r.left, top: r.top, width: r.width, height: r.height, borderRadius: 14, boxShadow: "0 0 0 2px rgba(96,165,250,0.9)", pointerEvents: "none" }} />
+                </>
+              );
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Instruction card */}
+      <AnimatePresence mode="wait">
+        {tourActive && tourStep < TOUR.length && (
+          <motion.div
+            key={`coach-${tourStep}`}
+            className="absolute left-1/2 -translate-x-1/2 z-50 w-[320px] rounded-2xl border shadow-2xl overflow-hidden"
+            style={{ [TOUR[tourStep].spot === "create" ? "bottom" : "top"]: 14, background: T.panelBg, borderColor: T.border }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="h-1 w-full" style={{ background: T.section }}>
+              <div className="h-full bg-[#4361ee] transition-all duration-300" style={{ width: `${((tourStep + 1) / TOUR.length) * 100}%` }} />
+            </div>
+            <div className="p-4">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: T.accent }}>
+                <Sparkles className="w-3 h-3" /> Guide · étape {tourStep + 1}/{TOUR.length}
+              </span>
+              <div className="text-[15px] font-bold mb-1" style={{ color: T.pageText }}>{TOUR[tourStep].title}</div>
+              <p className="text-[12.5px] leading-relaxed" style={{ color: T.sub }}>{TOUR[tourStep].body}</p>
+              <div className="flex items-center justify-between mt-4">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10.5px] font-semibold" style={{ background: dark ? "rgba(96,165,250,0.15)" : "#eef2ff", color: T.accent }}>
+                  <MousePointerClick className="w-3 h-3" /> {TOUR[tourStep].hint}
+                </span>
+                <button onClick={() => setTourStep((s) => s + 1)} className="inline-flex items-center gap-1 rounded-lg bg-[#4361ee] hover:bg-[#3451d1] text-white px-3 py-1.5 text-[12px] font-semibold transition-colors">
+                  {tourStep < TOUR.length - 1 ? "Suivant" : "Terminer"} <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Completion — recap, then unlock free exploration */}
+      <AnimatePresence>
+        {tourActive && tourStep >= TOUR.length && (
+          <motion.div
+            key="tour-complete"
+            className="absolute inset-0 z-50 flex items-center justify-center rounded-2xl"
+            style={{ background: "rgba(8,12,24,0.55)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="w-[340px] rounded-2xl border shadow-2xl p-5 text-center"
+              style={{ background: T.panelBg, borderColor: T.border }}
+              initial={{ scale: 0.95, y: 8 }}
+              animate={{ scale: 1, y: 0 }}
+            >
+              <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                <Check className="w-5 h-5" strokeWidth={3} />
+              </div>
+              <div className="text-[17px] font-bold mb-1.5" style={{ color: T.pageText }}>Vous maîtrisez Atlas</div>
+              <p className="text-[12.5px] leading-relaxed" style={{ color: T.sub }}>
+                Chaque fichier est relié, tracé et qualifié. C'est exactement ce qu'Atlas fait de vos dossiers : une carte vivante, sans jamais quitter Excel.
+              </p>
+              <div className="flex items-center justify-center gap-2.5 mt-5">
+                <button onClick={startTour} className="rounded-lg border px-3.5 py-2 text-[12.5px] font-semibold transition-colors" style={{ borderColor: T.toolBorder, color: T.toolText }}>Revoir le guide</button>
+                <button onClick={endTour} className="inline-flex items-center gap-1.5 rounded-lg bg-[#4361ee] hover:bg-[#3451d1] text-white px-4 py-2 text-[12.5px] font-semibold transition-colors">
+                  Explorer librement <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Onboarding hint — dims the WHOLE window placeholder and signals
           interactivity with a demonstrative drag gesture + capability chips. */}
       <AnimatePresence>
         {showHint && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center cursor-pointer rounded-2xl"
+            className="absolute inset-0 z-40 flex items-center justify-center rounded-2xl"
             style={{ background: "rgba(8,12,24,0.62)", backdropFilter: "blur(3px)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
-            onPointerDown={() => setShowHint(false)}
           >
             <motion.div
               className="flex flex-col items-center text-center px-6"
@@ -1643,13 +1892,15 @@ export function InteractiveGalaxy() {
                 })}
               </motion.div>
 
-              <motion.span
-                className="mt-5 inline-flex items-center gap-1.5 text-white/55 font-inter text-[12px]"
+              <motion.button
+                onClick={startTour}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#4361ee] hover:bg-[#3451d1] text-white px-6 py-3 text-[14px] font-semibold shadow-lg transition-colors"
                 variants={hintItem}
-                animate={{ opacity: [0.55, 1, 0.55] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               >
-                Cliquez n'importe où pour explorer
+                <Sparkles className="w-4 h-4" /> Commencer le guide
+              </motion.button>
+              <motion.span className="mt-3 text-white/45 font-inter text-[11px]" variants={hintItem}>
+                Un pas à pas interactif vous montre exactement quoi faire.
               </motion.span>
             </motion.div>
           </motion.div>

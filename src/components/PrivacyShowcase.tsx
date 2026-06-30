@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import { motion, useMotionValue, useTransform, animate, type MotionValue } from "framer-motion";
+import { motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
 import { Lock, Check, ShieldCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -100,13 +100,28 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  // Active-card detection via direct scroll math (same approach as FeaturesScrolly).
+  // On mobile, every icon is shown finished (no scrolly).
+  useEffect(() => {
+    if (!isDesktop) lps.forEach((l) => l.set(1));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDesktop]);
+
+  // Active-card detection + SCROLL-SCRUBBED icon formation. Each icon's progress
+  // (lp 0→1) is driven directly by its card's position: 0 when the card sits a
+  // full `range` below the trigger line, 1 once its center reaches the middle of
+  // the viewport (and it holds formed above). So you literally watch each design
+  // draw in, continuously, as you scroll its card up to the center — not a quick
+  // one-shot animation you can miss.
   useEffect(() => {
     if (!isDesktop) return;
     let raf = 0;
     const compute = () => {
       raf = 0;
-      const triggerY = window.innerHeight * 0.5;
+      const vh = window.innerHeight;
+      const triggerY = vh * 0.5;
+      // Formation spans roughly the last half-viewport of the card's approach —
+      // long enough that the draw-in is clearly visible while scrolling.
+      const range = vh * 0.5;
       let bestIdx = 0;
       let bestDistance = Infinity;
       blockRefs.current.forEach((ref, i) => {
@@ -118,6 +133,8 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
           bestDistance = d;
           bestIdx = i;
         }
+        const p = Math.min(1, Math.max(0, (triggerY + range - center) / range));
+        lps[i].set(p);
       });
       setActiveIdx((prev) => (prev !== bestIdx ? bestIdx : prev));
     };
@@ -133,18 +150,8 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [isDesktop]);
-
-  // Play the active icon's animation; on mobile every icon is shown finished.
-  useEffect(() => {
-    if (!isDesktop) {
-      lps.forEach((l) => l.set(1));
-      return;
-    }
-    const controls = animate(lps[activeIdx], 1, { duration: 1.0, ease: [0.22, 1, 0.36, 1] });
-    return () => controls.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIdx, isDesktop]);
+  }, [isDesktop]);
 
   return (
     <section
@@ -192,7 +199,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
               <div
                 key={f.kind}
                 ref={(el) => { blockRefs.current[i] = el; }}
-                className="md:min-h-[62vh] flex flex-col justify-center py-6 md:py-0"
+                className="md:min-h-[calc(100vh-8rem)] flex flex-col justify-center py-6 md:py-0"
               >
                 {/* Mobile-only icon above the card */}
                 <div className="md:hidden h-20 flex items-end justify-center mb-3">
