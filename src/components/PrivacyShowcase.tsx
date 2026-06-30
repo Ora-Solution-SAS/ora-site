@@ -151,7 +151,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       id="securite"
       data-nav-shy
       className="px-6 md:px-12 pt-32 md:pt-44 pb-20 md:pb-28"
-      style={{ background: dk ? "#0f172a" : "#ffffff" }}
+      style={{ background: dk ? (isDesktop ? "#0f172a" : "#000000") : "#ffffff" }}
     >
       <div className="max-w-7xl mx-auto">
         {/* ── Header ──────────────────────────────────────────────── */}

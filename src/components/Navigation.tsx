@@ -195,7 +195,7 @@ const Navigation: React.FC<NavigationProps> = ({
         overDark
           ? "bg-black/70 backdrop-blur-md border-b border-white/10"
           : scrolled
-          ? "bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
           : "bg-transparent"
       )}
     >
@@ -329,7 +329,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* ── Mobile menu ─────────────────────────────────── */}
       {mobileOpen && typeof window !== "undefined" && createPortal(
-        <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
+        <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#ffffff]/95 dark:bg-black/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
           <div className="px-6 py-4 flex flex-col gap-1">
 
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>
