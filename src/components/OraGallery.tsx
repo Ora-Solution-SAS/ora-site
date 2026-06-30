@@ -75,7 +75,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
 
       {/* CTA */}
       <motion.div
-        className="relative z-10 mt-36 md:mt-52 flex justify-center"
+        className="relative z-10 mt-10 md:mt-52 flex justify-center"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-60px" }}
