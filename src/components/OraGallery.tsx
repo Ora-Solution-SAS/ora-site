@@ -1,5 +1,6 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Maximize2 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -69,7 +70,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
         variants={fadeUp}
       >
         <Row cards={topRow} />
-        <Row cards={bottomRow} shift="translate-x-10 md:translate-x-20" />
+        <Row cards={bottomRow} shift="md:translate-x-20" />
       </motion.div>
 
       {/* CTA */}
@@ -92,10 +93,14 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
   );
 }
 
-// ── One staggered, centered row ─────────────────────────────────────────────
+// ── One staggered row ───────────────────────────────────────────────────────
+// Desktop: centered, bleeds off the edges (unchanged from the original layout).
+// Mobile: a horizontal, snap-scrolling carousel so the user can swipe left/right
+// through the videos. The scrollbar is hidden and the row breaks out of the
+// section's side padding so it feels edge-to-edge.
 function Row({ cards, shift = "" }: { cards: { label: string; src: string; width: string; offset: string }[]; shift?: string }) {
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-6 -mx-6 px-6 md:mx-0 md:px-0 py-10 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
           <VideoFrame key={c.label} label={c.label} src={c.src} width={c.width} offset={c.offset} />
@@ -107,8 +112,27 @@ function Row({ cards, shift = "" }: { cards: { label: string; src: string; width
 
 // ── A large auto-playing video inside a light-blue framed panel ─────────────
 function VideoFrame({ label, src, width, offset }: { label: string; src: string; width: string; offset: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Tap a video on mobile to open it full-screen. iOS Safari only supports the
+  // proprietary webkitEnterFullscreen on the <video> element itself. On desktop
+  // the click is a no-op so the layout behaves exactly as before.
+  const enterFullscreen = () => {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    const video = videoRef.current as
+      | (HTMLVideoElement & {
+          webkitEnterFullscreen?: () => void;
+          webkitRequestFullscreen?: () => void;
+        })
+      | null;
+    if (!video) return;
+    if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+    else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  };
+
   return (
-    <div className={`flex-none ${width} ${offset}`}>
+    <div className={`flex-none snap-center ${width} ${offset}`}>
       {/* category pill — tab above the panel */}
       <div className="ml-5 inline-flex rounded-t-xl bg-blue-50 dark:bg-white/10 px-4 pt-2 pb-3 -mb-2 relative">
         <span className="font-inter text-[13px] font-semibold text-blue-700/80 dark:text-gray-300">{label}</span>
@@ -117,14 +141,25 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
       <div className="relative rounded-[24px] bg-blue-50 ring-1 ring-blue-100 p-3 shadow-[0_34px_80px_-34px_rgba(59,130,246,0.45)]">
         <div className="relative aspect-video rounded-[16px] overflow-hidden bg-[#dbeafe]">
           <video
+            ref={videoRef}
             src={src}
             autoPlay
             muted
             loop
             playsInline
             preload="metadata"
-            className="absolute inset-0 h-full w-full object-cover"
+            onClick={enterFullscreen}
+            className="absolute inset-0 h-full w-full object-cover cursor-zoom-in md:cursor-auto"
           />
+          {/* Tap-to-expand affordance — mobile only. */}
+          <button
+            type="button"
+            onClick={enterFullscreen}
+            aria-label="Plein écran"
+            className="md:hidden absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/75"
+          >
+            <Maximize2 className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>

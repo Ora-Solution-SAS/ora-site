@@ -1268,7 +1268,7 @@ const App = () => {
       {/* Booking modal — portal, visible on all pages */}
       {isBookingOpen && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xl px-4"
+          className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-xl px-4 max-md:py-6 max-md:overflow-y-auto"
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
           <div className="relative w-full max-w-3xl">
@@ -1284,7 +1284,7 @@ const App = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* LEFT — Brand panel (copy adapts across all 3 phases) */}
-                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden min-h-[220px] md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
+                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
                   <div>
                     <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
                     <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
@@ -1312,7 +1312,7 @@ const App = () => {
                     </p>
                   </div>
 
-                  <div className="mt-6 space-y-3">
+                  <div className="mt-6 space-y-3 hidden md:block">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
                         <Clock className="w-4 h-4 text-white" />
@@ -1361,8 +1361,7 @@ const App = () => {
                       )}
 
                       <div
-                        className={`p-2 md:p-3 overflow-y-auto transition-opacity duration-500 ${bookingReady ? "opacity-100" : "opacity-0"}`}
-                        style={{ maxHeight: "80vh" }}
+                        className={`p-2 md:p-3 overflow-y-auto transition-opacity duration-500 max-h-[68vh] md:max-h-[80vh] ${bookingReady ? "opacity-100" : "opacity-0"}`}
                       >
                         {CAL_LINK ? (
                           <Cal
