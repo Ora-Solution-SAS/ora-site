@@ -1,6 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Maximize2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -63,14 +63,14 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
 
       {/* Two staggered rows of large landscape video frames */}
       <motion.div
-        className="relative z-10 mt-14 md:mt-20 space-y-6 md:space-y-8"
+        className="relative z-10 mt-14 md:mt-20 space-y-2 md:space-y-8"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-60px" }}
         variants={fadeUp}
       >
         <Row cards={topRow} />
-        <Row cards={bottomRow} shift="md:translate-x-20" />
+        <Row cards={bottomRow} shift="ml-10 md:ml-0 md:translate-x-20" />
       </motion.div>
 
       {/* CTA */}
@@ -93,14 +93,32 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
   );
 }
 
-// ── One staggered row ───────────────────────────────────────────────────────
-// Desktop: centered, bleeds off the edges (unchanged from the original layout).
-// Mobile: a horizontal, snap-scrolling carousel so the user can swipe left/right
-// through the videos. The scrollbar is hidden and the row breaks out of the
-// section's side padding so it feels edge-to-edge.
+// ── One staggered, centered row ─────────────────────────────────────────────
+// Layout is identical to before. The only addition is that on mobile the row
+// becomes horizontally scrollable so the user can swipe left/right; we start it
+// scrolled to the middle so the resting position matches the original centered
+// look. Desktop is untouched (centered, bleeds off the edges, no scroll).
 function Row({ cards, shift = "" }: { cards: { label: string; src: string; width: string; offset: string }[]; shift?: string }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const center = () => {
+      if (window.matchMedia("(max-width: 767px)").matches) {
+        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+      }
+    };
+    center();
+    window.addEventListener("resize", center);
+    return () => window.removeEventListener("resize", center);
+  }, []);
+
   return (
-    <div className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-6 -mx-6 px-6 md:mx-0 md:px-0 py-10 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    <div
+      ref={scrollRef}
+      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+    >
       <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
           <VideoFrame key={c.label} label={c.label} src={c.src} width={c.width} offset={c.offset} />
@@ -116,7 +134,7 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
 
   // Tap a video on mobile to open it full-screen. iOS Safari only supports the
   // proprietary webkitEnterFullscreen on the <video> element itself. On desktop
-  // the click is a no-op so the layout behaves exactly as before.
+  // the click is a no-op so the behaviour is exactly as before.
   const enterFullscreen = () => {
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     const video = videoRef.current as
@@ -132,13 +150,14 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
   };
 
   return (
-    <div className={`flex-none snap-center ${width} ${offset}`}>
+    <div className={`flex-none ${width} ${offset}`}>
       {/* category pill — tab above the panel */}
       <div className="ml-5 inline-flex rounded-t-xl bg-blue-50 dark:bg-white/10 px-4 pt-2 pb-3 -mb-2 relative">
         <span className="font-inter text-[13px] font-semibold text-blue-700/80 dark:text-gray-300">{label}</span>
       </div>
-      {/* light-blue frame around the video */}
-      <div className="relative rounded-[24px] bg-blue-50 ring-1 ring-blue-100 p-3 shadow-[0_34px_80px_-34px_rgba(59,130,246,0.45)]">
+      {/* light-blue frame around the video — the heavy blue drop-shadow only
+          shows on desktop (md+); mobile keeps a clean flat frame. */}
+      <div className="relative rounded-[24px] bg-blue-50 ring-1 ring-blue-100 p-3 md:shadow-[0_34px_80px_-34px_rgba(59,130,246,0.45)]">
         <div className="relative aspect-video rounded-[16px] overflow-hidden bg-[#dbeafe]">
           <video
             ref={videoRef}
@@ -151,15 +170,6 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
             onClick={enterFullscreen}
             className="absolute inset-0 h-full w-full object-cover cursor-zoom-in md:cursor-auto"
           />
-          {/* Tap-to-expand affordance — mobile only. */}
-          <button
-            type="button"
-            onClick={enterFullscreen}
-            aria-label="Plein écran"
-            className="md:hidden absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-white shadow-lg ring-1 ring-white/15 backdrop-blur-md transition-colors hover:bg-black/75"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </button>
         </div>
       </div>
     </div>
