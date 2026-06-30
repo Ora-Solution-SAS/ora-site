@@ -1252,7 +1252,7 @@ const App = () => {
 
       {/* ── CTA FINAL (provisoire) — un seul bouton centré, collé à la phrase
           "Ora, c'est automatiser sans renoncer à vos données" du pont. ──── */}
-      <section className="relative px-6 md:px-12 pt-6 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-[#111827]">
+      <section className="relative px-6 md:px-12 pt-16 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-[#111827]">
         <button
           onClick={openBooking}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
