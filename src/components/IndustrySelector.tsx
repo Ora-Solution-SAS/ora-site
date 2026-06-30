@@ -65,6 +65,16 @@ export default function IndustrySelector({
   // This section is intentionally always rendered on a dark/black background,
   // independent of the site theme — the markup below hard-codes the dark styling.
 
+  // Mobile uses pure black; desktop keeps the original near-black (#06070a).
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   // Triggered by the "Solutions" nav menu: select the requested branch and
   // scroll here with the shared accelerating animation (slow start, faster and
   // faster).
@@ -233,7 +243,7 @@ export default function IndustrySelector({
   const active = industries[activeIdx];
   const ActiveIcon = active.icon;
 
-  const bg = "#000000";
+  const bg = isMobile ? "#000000" : "#06070a";
 
   return (
     <section

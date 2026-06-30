@@ -12,7 +12,7 @@ module.exports = {
                 "brand-blue": "#3b82f6",
                 "brand-teal": "#0d9488",
                 // Backgrounds
-                background: "#000000",
+                background: "#111827",
                 "bg-light": "#fcfbf7",
                 // Legacy (kept for backward compat)
                 "gray-medium": "#9CA3AF",

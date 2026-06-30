@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
@@ -48,6 +48,17 @@ export default function AtlasShowcase() {
   // longer tabbed — it always shows the interactive galaxy.
   const [bottomTab, setBottomTab] = useState<TabId>("galaxy");
 
+  // Mobile gets a pure-black section background (night mode); desktop keeps the
+  // original deep-navy radial gradient. Matches the md (768px) breakpoint.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
   const tabs: Tab[] = [
     {
       id: "galaxy",
@@ -85,8 +96,9 @@ export default function AtlasShowcase() {
       data-nav-shy
       className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
-        background:
-          "radial-gradient(ellipse at 50% 0%, #0a0a0a 0%, #000 55%, #000 100%)",
+        background: isMobile
+          ? "radial-gradient(ellipse at 50% 0%, #0a0a0a 0%, #000 55%, #000 100%)"
+          : "radial-gradient(ellipse at 50% 0%, #0f1424 0%, #060810 55%, #000 100%)",
       }}
     >
       {/* Scroll-triggered stagger entrance: each major block fades up

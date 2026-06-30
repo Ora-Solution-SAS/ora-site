@@ -476,6 +476,24 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       setIsMuted(next);
     };
 
+    // Desktop click behaviour — tap the video to play/pause (or replay once
+    // it has finished). Mobile taps open full-screen instead (see below).
+    const togglePlayPause = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (video.ended || hasEnded) {
+        replay();
+        return;
+      }
+      if (video.paused) {
+        setIsManuallyPaused(false);
+        video.play().catch(() => {});
+      } else {
+        setIsManuallyPaused(true);
+        video.pause();
+      }
+    };
+
     // Open the demo video full-screen. iOS Safari only supports the
     // proprietary webkitEnterFullscreen on the <video> element itself.
     const enterFullscreen = () => {
@@ -503,7 +521,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         >
           {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-white dark:bg-black" />
+            <div className="absolute inset-0 bg-white dark:bg-black md:dark:bg-[#111827]" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
             <div className="absolute top-1/2 -left-20 w-[600px] h-[600px] rounded-full"
@@ -537,7 +555,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 </p>
 
                 {/* Desktop/tablet — full paragraph. */}
-                <p className="hero-stagger hero-d2 hidden md:block mt-9 text-[clamp(1rem,1.9vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter font-normal max-w-2xl mx-auto">
+                <p className="hero-stagger hero-d2 hidden md:block mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
                   {t({
                     fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
                     en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
@@ -590,6 +608,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   covered by a white overlay until the user scrolls; when
                   they do, the overlay slides upward and fades out while
                   the video gently rises into view + starts playing. */}
+              {/* Soft very-light-blue frame around the demo video — desktop
+                  only. On mobile the video runs edge-to-edge (no frame/padding)
+                  so it can be as large and immersive as possible. */}
+              <div className="md:rounded-[22px] md:bg-blue-50/70 md:dark:bg-blue-500/[0.06] md:ring-1 md:ring-blue-200/70 md:dark:ring-blue-400/20 md:p-3">
               <div className="browser-frame">
                 <div className="relative overflow-hidden">
                   <video
@@ -598,9 +620,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     muted={isMuted}
                     playsInline
                     preload="auto"
-                    onClick={enterFullscreen}
+                    onClick={() => {
+                      // Mobile taps open full-screen; desktop clicks play/pause.
+                      if (window.matchMedia("(max-width: 767px)").matches) enterFullscreen();
+                      else togglePlayPause();
+                    }}
                     onEnded={() => setHasEnded(true)}
-                    className="w-full aspect-[16/9] object-cover block cursor-zoom-in"
+                    className="w-full aspect-[16/9] object-cover block cursor-zoom-in md:cursor-pointer"
                     onLoadedMetadata={(e) => {
                       e.currentTarget.playbackRate = 1.0;
                       // Pre-seek so the first frame is ready the instant the
@@ -610,14 +636,16 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     }}
                   />
 
-                  {/* Top-right controls: expand to full-screen + mute toggle. */}
+                  {/* Top-right controls: expand to full-screen (mobile only) +
+                      mute toggle. On desktop only the mute toggle shows, exactly
+                      like the original. */}
                   {!hasEnded && (
                     <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={enterFullscreen}
                         aria-label={t({ fr: "Plein écran", en: "Full screen" })}
-                        className="w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                        className="md:hidden w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
                       >
                         <Maximize2 className="w-4 h-4" />
                       </button>
@@ -638,12 +666,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   )}
 
                   {/* "Tap to expand" hint — bottom-left affordance so users know
-                      the demo can open full-screen. */}
+                      the demo can open full-screen. Mobile only. */}
                   {!hasEnded && (
                     <button
                       type="button"
                       onClick={enterFullscreen}
-                      className="absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur-md px-3 py-1.5 text-[12px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 hover:bg-black/75 transition-all duration-150"
+                      className="md:hidden absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur-md px-3 py-1.5 text-[12px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 hover:bg-black/75 transition-all duration-150"
                     >
                       <Maximize2 className="w-3.5 h-3.5" />
                       {t({ fr: "Plein écran", en: "Tap to expand" })}
@@ -666,6 +694,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     </button>
                   )}
                 </div>
+              </div>
               </div>
             </div>
 

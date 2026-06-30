@@ -80,7 +80,7 @@ const NavigationMenuContent = React.forwardRef<
     className={cn(
       "absolute left-0 top-full mt-1.5 z-50 w-auto",
       "rounded-xl border border-gray-200/60 dark:border-white/[0.08]",
-      "bg-[#ffffff]/95 dark:bg-black/95 backdrop-blur-xl",
+      "bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-xl",
       "shadow-lg text-gray-900 dark:text-white",
       "data-[motion^=from-]:animate-in data-[motion^=to-]:animate-out",
       "data-[motion^=from-]:fade-in data-[motion^=to-]:fade-out",
@@ -102,7 +102,7 @@ const NavigationMenuViewport = React.forwardRef<
   <div className={cn("absolute left-0 top-full flex justify-center")}>
     <NavigationMenuPrimitive.Viewport
       className={cn(
-        "origin-top-center relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-[#ffffff]/95 dark:bg-black/95 backdrop-blur-xl text-gray-900 dark:text-white shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 md:w-[var(--radix-navigation-menu-viewport-width)]",
+        "origin-top-center relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-xl border border-gray-200/60 dark:border-white/[0.08] bg-[#ffffff]/95 dark:bg-[#111827]/95 backdrop-blur-xl text-gray-900 dark:text-white shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 md:w-[var(--radix-navigation-menu-viewport-width)]",
         className
       )}
       ref={ref}

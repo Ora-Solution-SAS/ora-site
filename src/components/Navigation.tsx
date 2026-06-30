@@ -195,7 +195,7 @@ const Navigation: React.FC<NavigationProps> = ({
         overDark
           ? "bg-black/70 backdrop-blur-md border-b border-white/10"
           : scrolled
-          ? "bg-[#ffffff]/95 dark:bg-black/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
           : "bg-transparent"
       )}
     >

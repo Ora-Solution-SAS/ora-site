@@ -1133,7 +1133,7 @@ const App = () => {
        *  TEMPORAIREMENT MASQUÉ — repasser `false` à `true` pour réactiver. *
        * ───────────────────────────────────────────────────────────────── */}
       {false && (
-      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-black">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-black md:dark:bg-[#111827]">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"
@@ -1252,7 +1252,7 @@ const App = () => {
 
       {/* ── CTA FINAL (provisoire) — un seul bouton centré, collé à la phrase
           "Ora, c'est automatiser sans renoncer à vos données" du pont. ──── */}
-      <section className="relative px-6 md:px-12 pt-6 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black">
+      <section className="relative px-6 md:px-12 pt-6 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-[#111827]">
         <button
           onClick={openBooking}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
@@ -1272,7 +1272,7 @@ const App = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
           <div className="relative w-full max-w-3xl">
-            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black">
+            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black md:dark:bg-[#111827]">
               {/* Close button */}
               <button
                 type="button"
@@ -1352,7 +1352,7 @@ const App = () => {
                     <>
                       {/* Short loading transition between result and calendar */}
                       {!bookingReady && (
-                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-black ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
+                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
                           <OraLogoSpinner gradientId="g-booking" size={64} />
                           <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
                             {t({ fr: "Préparation de votre créneau...", en: "Preparing your slot..." })}
