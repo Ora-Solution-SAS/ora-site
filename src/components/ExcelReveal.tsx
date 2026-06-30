@@ -268,7 +268,7 @@ export default function ExcelReveal() {
       <section
         id="excel-reveal"
         ref={lockRef}
-        className="relative z-[20] flex items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] overflow-hidden min-h-screen"
+        className="relative z-[20] hidden md:flex items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] overflow-hidden min-h-screen"
       >
         {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
         <div className="excel-aurora" aria-hidden />

@@ -986,7 +986,7 @@ const App = () => {
       <OraGallery theme={theme} openBooking={openBooking} />
 
       {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-36 md:pb-56 px-6 md:px-12 bg-white dark:bg-background">
+      <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-16 md:pb-56 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
