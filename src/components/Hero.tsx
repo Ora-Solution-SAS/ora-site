@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useEffect, useState, type CSSProperties, type FormEvent } from "react";
-import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText } from "lucide-react";
+import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText, Maximize2 } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useLang } from "@/lib/i18n";
 
@@ -116,6 +116,106 @@ function EuFlag() {
         })}
       </svg>
     </span>
+  );
+}
+
+/* Mobile social-proof — the same three facts ("Works with", "Security &
+   compliance", "EU and Swiss hosting") presented as one clean card with three
+   divided rows, each with a consistent left visual + label. Replaces the
+   scattered inline row on phones. */
+function HeroSocialProofMobile() {
+  const { t } = useLang();
+  return (
+    <div className="mx-auto max-w-[19.5rem] overflow-hidden rounded-[20px] border border-gray-200/80 bg-white/80 shadow-[0_12px_36px_-16px_rgba(15,23,42,0.22)] backdrop-blur-sm divide-y divide-gray-100 dark:border-white/10 dark:bg-white/[0.04] dark:divide-white/[0.07]">
+      {/* Works with — label left, logo cluster right */}
+      <div className="flex items-center justify-between gap-2 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Fonctionne avec", en: "Works with" })}
+        </span>
+        <div className="flex origin-right scale-[0.72] items-center">
+          {INTEGRATIONS.map((it, i) => {
+            const front = i === 0;
+            return (
+              <IntegrationCircle
+                key={it.name}
+                name={it.name}
+                src={it.src}
+                front={front}
+                style={{ marginLeft: front ? 0 : -16, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Security & compliance — label left, icon right */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+        </span>
+        <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10">
+          <ShieldCheck className="h-[18px] w-[18px] text-blue-600 dark:text-blue-400" />
+        </span>
+      </div>
+
+      {/* EU & Swiss hosting — label left, flags right */}
+      <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <span className="font-inter text-[13px] font-semibold text-gray-700 dark:text-gray-200">
+          {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+        </span>
+        <span className="flex flex-shrink-0 items-center -space-x-1.5">
+          <span className="inline-flex scale-[0.78]"><EuFlag /></span>
+          <span className="inline-flex scale-[0.78]"><SwissFlag /></span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* Social-proof row — "Works with [logos] · Security & compliance · EU and
+   Swiss hosting". Shared so it can sit under the CTAs on mobile and below the
+   demo on desktop. */
+function HeroSocialProof() {
+  const { t } = useLang();
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-3">
+        <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
+        <div className="flex items-center">
+          {INTEGRATIONS.map((it, i) => {
+            // Excel sits in front: bigger, fully opaque, on top. The
+            // others tuck behind it, smaller and dimmed, tightly stacked.
+            const front = i === 0;
+            return (
+              <IntegrationCircle
+                key={it.name}
+                name={it.name}
+                src={it.src}
+                front={front}
+                style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
+              />
+            );
+          })}
+        </div>
+      </div>
+
+      <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+      <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
+        <ShieldCheck className="h-4 w-4" />
+        {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
+      </span>
+
+      <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
+
+      <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
+        <span className="flex items-center gap-1">
+          <EuFlag />
+          <SwissFlag />
+        </span>
+        {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
+      </span>
+    </div>
   );
 }
 
@@ -367,6 +467,17 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       video.play().catch(() => {});
     };
 
+
+    const toggleMute = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      const next = !video.muted;
+      video.muted = next;
+      setIsMuted(next);
+    };
+
+    // Desktop click behaviour — tap the video to play/pause (or replay once
+    // it has finished). Mobile taps open full-screen instead (see below).
     const togglePlayPause = () => {
       const video = videoRef.current;
       if (!video) return;
@@ -383,12 +494,19 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
       }
     };
 
-    const toggleMute = () => {
-      const video = videoRef.current;
+    // Open the demo video full-screen. iOS Safari only supports the
+    // proprietary webkitEnterFullscreen on the <video> element itself.
+    const enterFullscreen = () => {
+      const video = videoRef.current as
+        | (HTMLVideoElement & {
+            webkitEnterFullscreen?: () => void;
+            webkitRequestFullscreen?: () => void;
+          })
+        | null;
       if (!video) return;
-      const next = !video.muted;
-      video.muted = next;
-      setIsMuted(next);
+      if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+      else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
     };
 
     /* ══════════════════════════════════════════════════════════ */
@@ -403,7 +521,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         >
           {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-white dark:bg-[#111827]" />
+            <div className="absolute inset-0 bg-white dark:bg-black md:dark:bg-[#111827]" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
             <div className="absolute top-1/2 -left-20 w-[600px] h-[600px] rounded-full"
@@ -411,29 +529,53 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
           </div>
 
           {/* ═══ SECTION 1 — above the fold ═══ */}
-          <div className="relative z-10 pt-28 md:pt-32 lg:pt-36 pb-16 md:pb-24">
-            <div className="max-w-6xl mx-auto px-6 lg:px-10 text-center">
+          <div className="relative z-10 pt-16 md:pt-32 lg:pt-36 pb-16 md:pb-24">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 text-center">
 
-              <AnimatedHeroTitle />
+              {/* On mobile, the headline + one supporting line fill the first
+                  screen (centered), so on arrival ONLY these two phrases are
+                  visible; the CTAs and the rest sit just below the fold. On
+                  md+ this wrapper dissolves (display:contents) and the original
+                  flow is unchanged. */}
+              <div className="flex flex-col justify-center min-h-[calc(100svh-4rem)] md:contents">
+                <AnimatedHeroTitle />
 
-              <p className="hero-stagger hero-d2 mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
-                {t({
-                  fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
-                  en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
-                })}
-              </p>
+                {/* Mobile — availability badge sits between the title and the
+                    supporting line (desktop keeps it below the CTAs). */}
+                <div className="hero-stagger hero-d2 md:hidden relative z-50 mt-7 flex justify-center">
+                  <CallbackBadge openBooking={openBooking} />
+                </div>
 
-              <div className="hero-stagger hero-d3 mt-10 md:mt-11 flex flex-wrap items-center justify-center gap-3.5">
+                {/* Mobile — one short supporting line (keep the hero clean). */}
+                <p className="hero-stagger hero-d2 md:hidden mt-6 text-[0.95rem] leading-[1.5] text-gray-500 dark:text-gray-400 font-inter font-light max-w-[19rem] mx-auto">
+                  {t({
+                    fr: "Votre travail Excel et PDF, automatisé en local. Chiffré, tracé, en Europe.",
+                    en: "Your Excel and PDF work, automated locally. Encrypted, audit-trailed, in Europe.",
+                  })}
+                </p>
+
+                {/* Desktop/tablet — full paragraph. */}
+                <p className="hero-stagger hero-d2 hidden md:block mt-8 md:mt-9 text-[clamp(1rem,2vw,1.175rem)] leading-[1.75] text-gray-500 dark:text-gray-400 font-inter max-w-2xl mx-auto">
+                  {t({
+                    fr: "Ora exécute votre travail Excel et PDF en local, chiffré et tracé, par-dessus vos fichiers existants. Vos données confidentielles restent chez vous, en Europe.",
+                    en: "Ora runs your Excel and PDF work locally, encrypted and audit-trailed, on top of your existing files. Your confidential data stays with you, in Europe.",
+                  })}
+                </p>
+              </div>
+
+              <div className="hero-stagger hero-d3 mt-20 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
                 <button
                   onClick={openBooking}
-                  className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+                  className="group inline-flex items-center justify-center gap-2 whitespace-nowrap px-10 md:px-7 py-5 md:py-3.5 rounded-full text-[18px] md:text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
                   {t({ fr: "Réserver un appel", en: "Book a call" })}
-                  <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
+                  <ArrowRight className="w-5 h-5 md:w-4 md:h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
+                {/* "Watch the demo" — desktop/tablet only; on mobile the
+                    "Book a call" CTA stands alone and larger. */}
                 <button
                   onClick={() => scrollToSection("demo-preview")}
-                  className="inline-flex items-center px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
+                  className="hidden md:inline-flex items-center whitespace-nowrap px-5 md:px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
                 >
                   {t({ fr: "Voir la démo", en: "Watch the demo" })}
                 </button>
@@ -442,8 +584,16 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               {/* Availability badge — sits just below the CTAs. Click opens a
                   callback capture + booking. relative z-50 keeps the open panel
                   above the video below it. */}
-              <div className="hero-stagger hero-d4 relative z-50 mt-8 flex justify-center">
+              <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 hidden md:flex justify-center">
                 <CallbackBadge openBooking={openBooking} />
+              </div>
+
+              {/* Social-proof row under the CTAs — mobile only (desktop keeps
+                  the copy below the demo). */}
+              {/* Trust card hidden for now (re-enable: swap `hidden` for
+                  `md:hidden mt-14`). */}
+              <div className="hidden">
+                <HeroSocialProofMobile />
               </div>
             </div>
 
@@ -454,14 +604,16 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-10 mx-auto max-w-7xl px-3 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-28 md:mt-10 mb-12 md:mb-0 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
                   they do, the overlay slides upward and fades out while
                   the video gently rises into view + starts playing. */}
-              {/* Soft very-light-blue frame around the demo video. */}
-              <div className="rounded-[22px] bg-blue-50/70 dark:bg-blue-500/[0.06] ring-1 ring-blue-200/70 dark:ring-blue-400/20 p-2.5 md:p-3">
+              {/* Soft very-light-blue frame around the demo video — desktop
+                  only. On mobile the video runs edge-to-edge (no frame/padding)
+                  so it can be as large and immersive as possible. */}
+              <div className="md:rounded-[22px] md:bg-blue-50/70 md:dark:bg-blue-500/[0.06] md:ring-1 md:ring-blue-200/70 md:dark:ring-blue-400/20 md:p-3">
               <div className="browser-frame">
                 <div className="relative overflow-hidden">
                   <video
@@ -470,9 +622,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     muted={isMuted}
                     playsInline
                     preload="auto"
-                    onClick={togglePlayPause}
+                    onClick={() => {
+                      // Mobile taps open full-screen; desktop clicks play/pause.
+                      if (window.matchMedia("(max-width: 767px)").matches) enterFullscreen();
+                      else togglePlayPause();
+                    }}
                     onEnded={() => setHasEnded(true)}
-                    className="w-full aspect-[16/9] object-cover block cursor-pointer"
+                    className="w-full aspect-[16/9] object-cover block cursor-zoom-in md:cursor-pointer"
                     onLoadedMetadata={(e) => {
                       e.currentTarget.playbackRate = 1.0;
                       // Pre-seek so the first frame is ready the instant the
@@ -482,20 +638,45 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                     }}
                   />
 
-                  {/* Mute / unmute toggle — top right (hidden once ended) */}
+                  {/* Top-right controls: expand to full-screen (mobile only) +
+                      mute toggle. On desktop only the mute toggle shows, exactly
+                      like the original. */}
+                  {!hasEnded && (
+                    <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={enterFullscreen}
+                        aria-label={t({ fr: "Plein écran", en: "Full screen" })}
+                        className="md:hidden w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={toggleMute}
+                        aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
+                        aria-pressed={!isMuted}
+                        className="w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="w-4 h-4" />
+                        ) : (
+                          <Volume2 className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* "Tap to expand" hint — bottom-left affordance so users know
+                      the demo can open full-screen. Mobile only. */}
                   {!hasEnded && (
                     <button
                       type="button"
-                      onClick={toggleMute}
-                      aria-label={isMuted ? t({ fr: "Activer le son", en: "Unmute" }) : t({ fr: "Couper le son", en: "Mute" })}
-                      aria-pressed={!isMuted}
-                      className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/55 backdrop-blur-md text-white flex items-center justify-center shadow-lg ring-1 ring-white/15 hover:bg-black/75 hover:ring-white/30 transition-all duration-150"
+                      onClick={enterFullscreen}
+                      className="md:hidden absolute bottom-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 backdrop-blur-md px-3 py-1.5 text-[12px] font-inter font-medium text-white shadow-lg ring-1 ring-white/15 hover:bg-black/75 transition-all duration-150"
                     >
-                      {isMuted ? (
-                        <VolumeX className="w-4 h-4" />
-                      ) : (
-                        <Volume2 className="w-4 h-4" />
-                      )}
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      {t({ fr: "Plein écran", en: "Tap to expand" })}
                     </button>
                   )}
 
@@ -519,46 +700,10 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
               </div>
             </div>
 
-            {/* Light social proof — single compact line below the demo. */}
-            <div className="hero-stagger hero-d5 mt-12 md:mt-14 max-w-6xl mx-auto px-6 lg:px-10">
-              <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-inter text-gray-500 dark:text-gray-400">
-                <div className="flex items-center gap-3">
-                  <span>{t({ fr: "Fonctionne avec", en: "Works with" })}</span>
-                  <div className="flex items-center">
-                    {INTEGRATIONS.map((it, i) => {
-                      // Excel sits in front: bigger, fully opaque, on top. The
-                      // others tuck behind it, smaller and dimmed, tightly stacked.
-                      const front = i === 0;
-                      return (
-                        <IntegrationCircle
-                          key={it.name}
-                          name={it.name}
-                          src={it.src}
-                          front={front}
-                          style={{ marginLeft: front ? 0 : -18, zIndex: 50 - i, opacity: front ? 1 : 0.85 }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-1.5 font-medium text-blue-600 dark:text-blue-400">
-                  <ShieldCheck className="h-4 w-4" />
-                  {t({ fr: "Sécurité et conformité", en: "Security & compliance" })}
-                </span>
-
-                <span className="hidden sm:inline-block h-3.5 w-px bg-gray-300 dark:bg-white/15" aria-hidden />
-
-                <span className="flex items-center gap-2 font-medium text-gray-700 dark:text-gray-300">
-                  <span className="flex items-center gap-1">
-                    <EuFlag />
-                    <SwissFlag />
-                  </span>
-                  {t({ fr: "Hébergement UE et Suisse", en: "EU and Swiss hosting" })}
-                </span>
-              </div>
+            {/* Light social proof — single compact line below the demo
+                (desktop/tablet; on mobile it sits under the CTAs instead). */}
+            <div className="hero-stagger hero-d5 hidden md:block mt-12 md:mt-14 max-w-6xl mx-auto px-6 lg:px-10">
+              <HeroSocialProof />
             </div>
           </div>
 

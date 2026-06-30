@@ -3,8 +3,12 @@ import { useLang } from "@/lib/i18n";
 
 /**
  * Value-props — split-card layout (à la Bubble "Native Mobile"): one unified
- * rounded card with a light-blue left panel (eyebrow pill + headline +
- * paragraph + CTA) and a blue right panel holding the product mockup.
+ * rounded card with a light-blue text panel (eyebrow pill + headline +
+ * paragraph + CTA) and a blue panel holding the product mockup.
+ *
+ * Desktop (lg+): the two panels sit side by side, text left / image right.
+ * Mobile (< lg): they stack like Bubble's "Native Mobile" block — the image
+ * on top, then the text below, ending with a full-width CTA button.
  */
 export default function ValueProps({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
@@ -13,10 +17,10 @@ export default function ValueProps({ openBooking }: { openBooking: () => void })
     <div className="relative max-w-7xl mx-auto py-16 md:py-24">
       <div
         data-nav-shy
-        className="grid lg:grid-cols-[1.45fr_1fr] rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)]"
+        className="grid lg:grid-cols-[1.45fr_1fr] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)]"
       >
-        {/* LEFT — light-blue gradient panel: eyebrow + headline + paragraph + CTA */}
-        <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-10 md:p-14 lg:p-16 flex flex-col justify-center">
+        {/* TEXT — light-blue gradient panel: eyebrow + headline + paragraph + CTA */}
+        <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-8 md:p-14 lg:p-16 flex flex-col justify-center">
           <span className="inline-flex w-fit items-center rounded-full border border-blue-300/70 dark:border-blue-400/30 bg-white/60 dark:bg-white/[0.06] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">
             {t({ fr: "Automatisation sur-mesure", en: "Tailored automation" })}
           </span>
@@ -32,19 +36,21 @@ export default function ValueProps({ openBooking }: { openBooking: () => void })
             })}
           </p>
 
+          {/* Full-width on mobile (Bubble-style), auto width on desktop. */}
           <button
             onClick={openBooking}
-            className="group mt-9 inline-flex w-fit items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px transition-all duration-150"
+            className="group mt-8 md:mt-9 inline-flex w-full md:w-fit items-center justify-center gap-2 px-7 py-4 md:py-3.5 rounded-full text-[16px] md:text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px transition-all duration-150"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
             <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
           </button>
         </div>
 
-        {/* RIGHT — hero image fills the whole panel. Light backdrop (same as
-            the left panel) so the image's transparent edges blend in: no
-            violet band, just the image taking the entire right side. */}
-        <div className="relative min-h-[440px] overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#d6e6fd] dark:from-[#0f1d3a] dark:to-[#152a52]">
+        {/* IMAGE — hero image fills the whole panel. Light backdrop (same family
+            as the text panel) so the image's transparent edges blend in. On
+            phones it sits ON TOP of the text (order-first), matching Bubble's
+            "Native Mobile" stacked layout. */}
+        <div className="relative min-h-[300px] md:min-h-[440px] max-md:order-first overflow-hidden bg-gradient-to-br from-[#eef4ff] to-[#d6e6fd] dark:from-[#0f1d3a] dark:to-[#152a52]">
           <img
             src="/ora_hero_violet-v3.png"
             alt={t({ fr: "Interface Ora : automatisations Excel disponibles", en: "Ora interface: available Excel automations" })}
