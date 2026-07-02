@@ -117,7 +117,7 @@ function Row({ cards, shift = "" }: { cards: { label: string; src: string; width
   return (
     <div
       ref={scrollRef}
-      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible -mx-6 px-6 md:mx-0 md:px-0 pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
@@ -151,8 +151,10 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
 
   return (
     <div className={`flex-none ${width} ${offset}`}>
-      {/* category pill — tab above the panel */}
-      <div className="ml-5 inline-flex rounded-t-xl bg-blue-50 dark:bg-white/10 px-4 pt-2 pb-3 -mb-2 relative">
+      {/* category pill — tab above the panel. Hidden on mobile: the tabs read
+          as dark blocks in night mode / white blocks in light mode and clip
+          awkwardly over the swiped edge videos. Desktop keeps them. */}
+      <div className="ml-5 hidden md:inline-flex rounded-t-xl bg-blue-50 dark:bg-white/10 px-4 pt-2 pb-3 -mb-2 relative">
         <span className="font-inter text-[13px] font-semibold text-blue-700/80 dark:text-gray-300">{label}</span>
       </div>
       {/* light-blue frame around the video — the heavy blue drop-shadow only
