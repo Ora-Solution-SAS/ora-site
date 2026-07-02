@@ -117,7 +117,7 @@ function Row({ cards, shift = "" }: { cards: { label: string; src: string; width
   return (
     <div
       ref={scrollRef}
-      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible -mx-6 px-6 md:mx-0 md:px-0 pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
