@@ -25,15 +25,19 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
   const { t } = useLang();
   void theme;
 
+  // Mobile: each card is ~full width so only ONE video shows at a time (a clean
+  // snap carousel — no confusing slivers of the neighbouring videos at the
+  // edges). The staggered vertical offsets are desktop-only (md:) so the mobile
+  // cards line up flat. Desktop keeps the wide staggered bleed layout.
   const topRow = [
-    { label: t({ fr: "Reporting mensuel", en: "Monthly report" }), src: "/try1.mp4",               width: "w-[210px] md:w-[540px]", offset: "translate-y-0" },
-    { label: t({ fr: "Extraction", en: "Extraction" }),           src: "/feature-automate-v3.mp4", width: "w-[210px] md:w-[540px]", offset: "translate-y-7" },
-    { label: t({ fr: "Tracking", en: "Tracking" }),               src: "/ora_engineering.mp4",     width: "w-[210px] md:w-[540px]", offset: "-translate-y-2" },
+    { label: t({ fr: "Reporting mensuel", en: "Monthly report" }), src: "/try1.mp4",               width: "w-[80vw] md:w-[540px]", offset: "md:translate-y-0" },
+    { label: t({ fr: "Extraction", en: "Extraction" }),           src: "/feature-automate-v3.mp4", width: "w-[80vw] md:w-[540px]", offset: "md:translate-y-7" },
+    { label: t({ fr: "Tracking", en: "Tracking" }),               src: "/ora_engineering.mp4",     width: "w-[80vw] md:w-[540px]", offset: "md:-translate-y-2" },
   ];
   const bottomRow = [
-    { label: t({ fr: "Rapprochement", en: "Reconciliation" }),    src: "/ora_story3-v2.mp4",       width: "w-[210px] md:w-[540px]", offset: "translate-y-3" },
-    { label: t({ fr: "Export PDF", en: "PDF export" }),           src: "/ora_story4-v2.mp4",       width: "w-[210px] md:w-[540px]", offset: "translate-y-8" },
-    { label: t({ fr: "Multi-dossier", en: "Multi-folder" }),      src: "/feature-automate-v2.mp4", width: "w-[210px] md:w-[540px]", offset: "translate-y-1" },
+    { label: t({ fr: "Rapprochement", en: "Reconciliation" }),    src: "/ora_story3-v2.mp4",       width: "w-[80vw] md:w-[540px]", offset: "md:translate-y-3" },
+    { label: t({ fr: "Export PDF", en: "PDF export" }),           src: "/ora_story4-v2.mp4",       width: "w-[80vw] md:w-[540px]", offset: "md:translate-y-8" },
+    { label: t({ fr: "Multi-dossier", en: "Multi-folder" }),      src: "/feature-automate-v2.mp4", width: "w-[80vw] md:w-[540px]", offset: "md:translate-y-1" },
   ];
 
   return (
@@ -70,7 +74,7 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
         variants={fadeUp}
       >
         <Row cards={topRow} />
-        <Row cards={bottomRow} shift="ml-10 md:ml-0 md:translate-x-20" />
+        <Row cards={bottomRow} shift="md:translate-x-20" />
       </motion.div>
 
       {/* CTA */}
@@ -117,7 +121,7 @@ function Row({ cards, shift = "" }: { cards: { label: string; src: string; width
   return (
     <div
       ref={scrollRef}
-      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible pt-3 pb-8 md:py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      className="flex justify-start md:justify-center overflow-x-auto md:overflow-x-visible snap-x snap-mandatory md:snap-none scroll-px-6 py-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className={`flex flex-none items-start gap-4 md:gap-9 px-2 ${shift}`}>
         {cards.map((c) => (
@@ -150,7 +154,7 @@ function VideoFrame({ label, src, width, offset }: { label: string; src: string;
   };
 
   return (
-    <div className={`flex-none ${width} ${offset}`}>
+    <div className={`flex-none snap-center ${width} ${offset}`}>
       {/* category pill — tab above the panel. Hidden on mobile: the tabs read
           as dark blocks in night mode / white blocks in light mode and clip
           awkwardly over the swiped edge videos. Desktop keeps them. */}
