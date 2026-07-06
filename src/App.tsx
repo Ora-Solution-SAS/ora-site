@@ -1124,8 +1124,12 @@ const App = () => {
       <FAQ openBooking={openBooking} />
 
       {/* ── BRIDGE — the Ora logo unfolds into a bridge (positioning climax,
-          right before the closing CTA). */}
-      <BridgeAnimation theme={theme} />
+          right before the closing CTA). Desktop/tablet only: on phones the
+          bridge animation adds little and just lengthens the page, so it's
+          hidden there. */}
+      <div className="hidden md:block">
+        <BridgeAnimation theme={theme} />
+      </div>
 
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
