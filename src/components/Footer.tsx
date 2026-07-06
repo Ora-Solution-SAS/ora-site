@@ -53,6 +53,10 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
           ],
         },
       ]}
+      legal={t({
+        fr: "ORA SOLUTION · SAS au capital de 2 040 € · Siège social : 229 rue Saint-Honoré, 75001 Paris · SIREN 106 290 950 · SIRET 106 290 950 00018 · RCS Paris · TVA intracommunautaire FR09106290950",
+        en: "ORA SOLUTION · SAS with share capital of €2,040 · Registered office: 229 rue Saint-Honoré, 75001 Paris · SIREN 106 290 950 · SIRET 106 290 950 00018 · RCS Paris · Intra-EU VAT FR09106290950",
+      })}
       copyright={`© ${new Date().getFullYear()} Ora`}
       bottomLinks={[
         { text: t({ fr: "Mentions légales", en: "Legal notice" }), onClick: () => onNavigate("mentions-legales") },

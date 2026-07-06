@@ -19,6 +19,7 @@ import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
 import QualifierResult from "./components/QualifierResult";
+import GiftReveal from "./components/GiftReveal";
 import FeaturesScrolly from "./components/FeaturesScrolly";
 import ValueProps from "./components/ValueProps";
 import AtlasShowcase from "./components/AtlasShowcase";
@@ -501,7 +502,6 @@ import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
 import Hero from "./components/Hero";
-import { BridgeAnimation } from "./components/BridgeShowcase";
 import OraGallery from "./components/OraGallery";
 import { useLang } from "./lib/i18n";
 import {
@@ -680,11 +680,13 @@ const App = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingReady, setBookingReady] = useState(false);
   const [bookingFading, setBookingFading] = useState(false);
-  // 3-phase booking funnel:
+  // 4-phase booking funnel:
   //  - "qualifier" : 3-question Preply-style mini-flow
   //  - "result"    : quantified loss + "with Ora" comparison (the aha moment)
+  //  - "gift"      : reciprocity reveal — personalized before/after video +
+  //                  free audit + "already prepared" automation for their field
   //  - "calendar"  : Cal.com embed with pre-filled notes
-  type BookingPhase = "qualifier" | "result" | "calendar";
+  type BookingPhase = "qualifier" | "result" | "gift" | "calendar";
   const [bookingPhase, setBookingPhase] = useState<BookingPhase>("qualifier");
   const [qualifierAnswers, setQualifierAnswers] = useState<QualifierAnswers | null>(null);
 
@@ -703,9 +705,18 @@ const App = () => {
     setBookingPhase("result");
   };
 
-  // Called when the user clicks "Réserver mon créneau" on the result screen
-  // → transition to Cal.com with a brief loading screen.
+  // Result screen → gift reveal (reciprocity), then the calendar.
   const handleResultContinue = () => {
+    setBookingPhase("gift");
+  };
+
+  // Allow stepping back from the result screen to the last qualifier question.
+  const handleResultBack = () => {
+    setBookingPhase("qualifier");
+  };
+
+  // Gift screen → transition to Cal.com with a brief loading screen.
+  const handleGiftContinue = () => {
     setBookingPhase("calendar");
     setBookingReady(false);
     setBookingFading(false);
@@ -715,9 +726,9 @@ const App = () => {
     }, 900);
   };
 
-  // Allow stepping back from the result screen to the last qualifier question.
-  const handleResultBack = () => {
-    setBookingPhase("qualifier");
+  // Step back from the gift screen to the result estimate.
+  const handleGiftBack = () => {
+    setBookingPhase("result");
   };
 
   // Build the Cal.com "Additional notes" string from the qualifier answers,
@@ -727,15 +738,6 @@ const App = () => {
       ? `Format souhaité : ${qualifierAnswers.format.label}\nMétier : ${qualifierAnswers.sector.label}\nTâche prioritaire : ${qualifierAnswers.pain.label}\nVolume hebdo : ${qualifierAnswers.hours.label}`
       : `Preferred format: ${qualifierAnswers.format.label}\nField: ${qualifierAnswers.sector.label}\nMain task: ${qualifierAnswers.pain.label}\nWeekly volume: ${qualifierAnswers.hours.label}`
     : "";
-  // Smooth scroll helper used by CTA buttons
-  const scrollToSection = (id: string) => {
-    const lenis = (window as any).__lenis;
-    if (lenis) {
-      lenis.scrollTo(`#${id}`);
-    } else {
-      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  };
 
 
 
@@ -977,7 +979,6 @@ const App = () => {
 
       <Hero
         theme={theme}
-        scrollToSection={scrollToSection}
         openBooking={openBooking}
       />
 
@@ -1121,11 +1122,7 @@ const App = () => {
       <PrivacyShowcase theme={theme} />
 
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
-      <FAQ openBooking={openBooking} />
-
-      {/* ── BRIDGE — the Ora logo unfolds into a bridge (positioning climax,
-          right before the closing CTA). */}
-      <BridgeAnimation theme={theme} />
+      <FAQ />
 
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
@@ -1292,23 +1289,30 @@ const App = () => {
                         ? t({ fr: "Préparons votre appel.", en: "Let's prep your call." })
                         : bookingPhase === "result"
                           ? t({ fr: "Votre estimation.", en: "Your estimate." })
-                          : t({ fr: "Choisissez votre créneau", en: "Pick your time slot" })}
+                          : bookingPhase === "gift"
+                            ? t({ fr: "Un cadeau pour démarrer.", en: "A gift to get started." })
+                            : t({ fr: "Choisissez votre créneau", en: "Pick your time slot" })}
                     </h3>
                     <p className="mt-3 text-white/75 text-sm leading-relaxed">
                       {bookingPhase === "qualifier"
                         ? t({
-                            fr: "3 questions rapides pour qu'on arrive avec un plan concret, pas un pitch générique.",
-                            en: "3 quick questions so we arrive with a concrete plan, not a generic pitch.",
+                            fr: "3 questions rapides, et on vous prépare un audit et une démo d'automatisation offerts, adaptés à votre métier.",
+                            en: "3 quick questions, and we'll prepare a free audit and an automation demo tailored to your field.",
                           })
                         : bookingPhase === "result"
                           ? t({
                               fr: "Voici ce que cette tâche coûte à votre équipe chaque année, et ce qu'Ora pourrait changer.",
                               en: "Here's what this task costs your team every year, and what Ora could change.",
                             })
-                          : t({
-                              fr: "On a votre contexte. Choisissez le moment qui vous convient. On arrive avec un plan adapté à votre métier.",
-                              en: "We've got your context. Pick a time that works. We'll arrive with a plan tailored to your field.",
-                            })}
+                          : bookingPhase === "gift"
+                            ? t({
+                                fr: "On vous apporte de la valeur avant même l'appel. Récupérez-la en réservant votre créneau.",
+                                en: "We bring you value before the call even happens. Claim it by booking your slot.",
+                              })
+                            : t({
+                                fr: "On a votre contexte. Choisissez le moment qui vous convient. On arrive avec un plan adapté à votre métier.",
+                                en: "We've got your context. Pick a time that works. We'll arrive with a plan tailored to your field.",
+                              })}
                     </p>
                   </div>
 
@@ -1345,6 +1349,14 @@ const App = () => {
                       answers={qualifierAnswers}
                       onContinue={handleResultContinue}
                       onBack={handleResultBack}
+                    />
+                  )}
+
+                  {bookingPhase === "gift" && qualifierAnswers && (
+                    <GiftReveal
+                      answers={qualifierAnswers}
+                      onContinue={handleGiftContinue}
+                      onBack={handleGiftBack}
                     />
                   )}
 

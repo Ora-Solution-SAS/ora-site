@@ -203,7 +203,7 @@ export default function QualifierResult({ answers, onContinue, onBack }: Props) 
           onClick={onContinue}
           className="group w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
         >
-          {t({ fr: "Réserver mon créneau", en: "Book my slot" })}
+          {t({ fr: "Voir ce qu'on vous offre", en: "See what we've prepared for you" })}
           <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
         </button>
         <p className="mt-2.5 text-center text-[11.5px] text-gray-400 dark:text-gray-500">

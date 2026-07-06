@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
@@ -9,7 +9,7 @@ import { useLang } from "@/lib/i18n";
  * "security review" answer is a process commitment — confirm you can honor it.
  */
 
-export default function FAQ({ openBooking }: { openBooking: () => void }) {
+export default function FAQ() {
   const { t } = useLang();
   const [open, setOpen] = useState<number | null>(0);
 
@@ -117,19 +117,6 @@ export default function FAQ({ openBooking }: { openBooking: () => void }) {
               </div>
             );
           })}
-        </div>
-
-        <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="font-inter text-base text-gray-600 dark:text-gray-300">
-            {t({ fr: "Une autre question ?", en: "Another question?" })}
-          </p>
-          <button
-            onClick={openBooking}
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-full text-[14px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px transition-all duration-150"
-          >
-            {t({ fr: "Réserver un appel", en: "Book a call" })}
-            <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
-          </button>
         </div>
       </div>
     </section>

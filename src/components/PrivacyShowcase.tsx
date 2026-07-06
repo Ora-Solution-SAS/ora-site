@@ -157,10 +157,21 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
     <section
       id="securite"
       data-nav-shy
-      className="px-6 md:px-12 pt-32 md:pt-44 pb-20 md:pb-28"
+      className="relative px-6 md:px-12 pt-32 md:pt-44 pb-20 md:pb-28"
       style={{ background: dk ? (isDesktop ? "#0f172a" : "#000000") : "#ffffff" }}
     >
-      <div className="max-w-7xl mx-auto">
+      {/* Very soft blue ambient glows so the cards lift off the flat background.
+          Pure radial gradients (no blur filter) → no scroll-time repaints. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: dk
+            ? "radial-gradient(38% 26% at 24% 32%, rgba(59,130,246,0.14) 0%, transparent 70%), radial-gradient(42% 30% at 78% 60%, rgba(59,130,246,0.11) 0%, transparent 72%), radial-gradient(34% 24% at 52% 88%, rgba(45,212,191,0.07) 0%, transparent 70%)"
+            : "radial-gradient(36% 26% at 22% 30%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(42% 30% at 80% 58%, rgba(96,165,250,0.10) 0%, transparent 72%), radial-gradient(32% 22% at 50% 88%, rgba(13,148,136,0.05) 0%, transparent 70%)",
+        }}
+      />
+      <div className="relative z-10 max-w-7xl mx-auto">
         {/* ── Header ──────────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -287,22 +298,22 @@ function PrivacyCard({
 }) {
   return (
     <div
-      className={`group w-full p-8 md:p-10 rounded-[30px] border border-gray-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] transition-all duration-300 hover:bg-[#3b82f6] hover:border-[#3b82f6] hover:shadow-[0_30px_70px_-30px_rgba(59,130,246,0.6)] ${
+      className={`group w-full p-10 md:p-14 rounded-[32px] border border-gray-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] transition-all duration-300 hover:bg-[#3b82f6] hover:border-[#3b82f6] hover:shadow-[0_30px_70px_-30px_rgba(59,130,246,0.6)] ${
         active ? "opacity-100" : "md:opacity-45"
       }`}
     >
-      <h3 className="font-poppins font-semibold text-xl md:text-[1.5rem] tracking-tight leading-snug text-[#111827] dark:text-white group-hover:text-white transition-colors duration-300">
+      <h3 className="font-poppins font-semibold text-[1.35rem] md:text-[1.7rem] tracking-tight leading-snug text-[#111827] dark:text-white group-hover:text-white transition-colors duration-300">
         {title}
       </h3>
-      <p className="mt-3 font-inter text-[14.5px] md:text-[15px] leading-relaxed text-gray-500 dark:text-gray-400 group-hover:text-white/90 transition-colors duration-300">
+      <p className="mt-3.5 font-inter text-[15px] md:text-[16.5px] leading-relaxed text-gray-500 dark:text-gray-400 group-hover:text-white/90 transition-colors duration-300">
         {desc}
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-7 flex flex-wrap gap-2">
         {chips.map((chip) => (
           <span
             key={chip.label}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-inter font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-400/20 group-hover:bg-white/15 group-hover:text-white group-hover:ring-white/30 transition-colors duration-300"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-inter font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-400/20 group-hover:bg-white/15 group-hover:text-white group-hover:ring-white/30 transition-colors duration-300"
           >
             {chip.flag ? (
               <SwissFlag className="w-3.5 h-3.5" />
