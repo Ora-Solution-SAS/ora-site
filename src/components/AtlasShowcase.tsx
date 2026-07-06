@@ -224,7 +224,7 @@ export default function AtlasShowcase() {
         {/* Explanatory paragraph below the main mockup — gives Atlas more
             context than the headline alone. */}
         <motion.div
-          className="max-w-3xl mx-auto mt-48 md:mt-64 text-center"
+          className="max-w-3xl mx-auto mt-20 md:mt-64 text-center"
           variants={fadeInUp}
         >
           <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
