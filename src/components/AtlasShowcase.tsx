@@ -8,7 +8,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { MockupHome, MockupManager, InteractiveGalaxy } from "./AtlasMockups";
+import { MockupHome, MockupManager } from "./AtlasMockups";
+import AtlasSimulation from "./atlas-sim";
 import InViewVideo from "./InViewVideo";
 import ScaleToFit from "./ScaleToFit";
 
@@ -212,10 +213,11 @@ export default function AtlasShowcase() {
                   "0 28px 72px rgba(56,189,248,0.28), 0 10px 36px rgba(96,165,250,0.18), 0 3px 14px rgba(56,189,248,0.10), inset 0 1px 0 rgba(255,255,255,0.07)",
               }}
             >
-              {/* Scales the 1020px mockup down to fit on narrow screens
-                  (centered at full size on desktop). */}
+              {/* Scales the 1020px simulation down to fit on narrow screens
+                  (centered at full size on desktop). Faithful replica of the
+                  real Atlas software per docs/atlas-site-simulation-brief.md. */}
               <ScaleToFit>
-                <InteractiveGalaxy />
+                <AtlasSimulation />
               </ScaleToFit>
             </div>
           </div>

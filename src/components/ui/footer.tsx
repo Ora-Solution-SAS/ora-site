@@ -16,6 +16,8 @@ interface FooterProps {
   };
   tagline?: string;
   menuItems?: FooterMenuItem[];
+  /** Small-print legal line (company legal mentions) shown in the bottom bar. */
+  legal?: string;
   copyright?: string;
   bottomLinks?: {
     text: string;
@@ -28,6 +30,7 @@ const Footer = ({
   logo,
   tagline,
   menuItems = [],
+  legal,
   copyright,
   bottomLinks = [],
 }: FooterProps) => {
@@ -87,7 +90,13 @@ const Footer = ({
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 flex flex-col justify-between gap-3 border-t border-gray-200 dark:border-gray-800 pt-5 md:flex-row md:items-center">
+        <div className="mt-10 border-t border-gray-200 dark:border-gray-800 pt-5">
+          {legal && (
+            <p className="mb-4 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+              {legal}
+            </p>
+          )}
+          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
           {copyright && (
             <p className="text-xs text-gray-400 dark:text-gray-500">{copyright}</p>
           )}
@@ -114,6 +123,7 @@ const Footer = ({
               ))}
             </ul>
           )}
+          </div>
         </div>
       </div>
     </footer>

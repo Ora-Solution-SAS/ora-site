@@ -77,7 +77,6 @@ const heroCSS = `
 /* ── Types ───────────────────────────────────────────────────── */
 interface HeroProps {
   theme: "light" | "dark";
-  scrollToSection: (id: string) => void;
   openBooking: () => void;
 }
 
@@ -388,7 +387,7 @@ function CallbackBadge({ openBooking }: { openBooking: () => void }) {
 
 /* ── Component ───────────────────────────────────────────────── */
 const Hero = forwardRef<HTMLElement, HeroProps>(
-  ({ scrollToSection, openBooking }, ref) => {
+  ({ openBooking }, ref) => {
     const { t } = useLang();
 
     /* ── Mount animation ── */
@@ -563,29 +562,16 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 </p>
               </div>
 
-              <div className="hero-stagger hero-d3 mt-20 md:mt-11 flex flex-nowrap md:flex-wrap items-center justify-center gap-3 md:gap-3.5">
+              {/* Single primary CTA, enlarged on desktop. The availability
+                  badge now lives below the demo video (further down). */}
+              <div className="hero-stagger hero-d3 mt-20 md:mt-14 md:mb-10 flex items-center justify-center">
                 <button
                   onClick={openBooking}
-                  className="group inline-flex items-center justify-center gap-2 whitespace-nowrap px-10 md:px-7 py-5 md:py-3.5 rounded-full text-[18px] md:text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+                  className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap px-10 md:px-11 py-5 rounded-full text-[18px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
                   {t({ fr: "Réserver un appel", en: "Book a call" })}
-                  <ArrowRight className="w-5 h-5 md:w-4 md:h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
+                  <ArrowRight className="w-5 h-5 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
-                {/* "Watch the demo" — desktop/tablet only; on mobile the
-                    "Book a call" CTA stands alone and larger. */}
-                <button
-                  onClick={() => scrollToSection("demo-preview")}
-                  className="hidden md:inline-flex items-center whitespace-nowrap px-5 md:px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 hover:bg-[#3b82f6] hover:text-white hover:border-[#3b82f6] dark:hover:bg-[#3b82f6] dark:hover:text-white dark:hover:border-[#3b82f6] shadow-[0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-150"
-                >
-                  {t({ fr: "Voir la démo", en: "Watch the demo" })}
-                </button>
-              </div>
-
-              {/* Availability badge — sits just below the CTAs. Click opens a
-                  callback capture + booking. relative z-50 keeps the open panel
-                  above the video below it. */}
-              <div className="hero-stagger hero-d4 relative z-50 mt-6 md:mt-8 hidden md:flex justify-center">
-                <CallbackBadge openBooking={openBooking} />
               </div>
 
               {/* Social-proof row under the CTAs — mobile only (desktop keeps
@@ -604,16 +590,13 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                 just smooth-scrolls to this section.               */}
             <div
               id="demo-preview"
-              className="hero-stagger hero-d5 relative z-10 mt-28 md:mt-10 mb-12 md:mb-0 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
+              className="hero-stagger hero-d5 relative z-10 mt-28 md:mt-20 mb-12 md:mb-0 mx-auto max-w-7xl px-0 sm:px-6 lg:px-10"
             >
               {/* Browser frame — clean visible chrome. The video area is
                   covered by a white overlay until the user scrolls; when
                   they do, the overlay slides upward and fades out while
                   the video gently rises into view + starts playing. */}
-              {/* Soft very-light-blue frame around the demo video — desktop
-                  only. On mobile the video runs edge-to-edge (no frame/padding)
-                  so it can be as large and immersive as possible. */}
-              <div className="md:rounded-[22px] md:bg-blue-50/70 md:dark:bg-blue-500/[0.06] md:ring-1 md:ring-blue-200/70 md:dark:ring-blue-400/20 md:p-3">
+              {/* No outer frame — the browser-framed video sits on its own. */}
               <div className="browser-frame">
                 <div className="relative overflow-hidden">
                   <video
@@ -697,7 +680,12 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   )}
                 </div>
               </div>
-              </div>
+            </div>
+
+            {/* Availability badge — now sits just below the demo video
+                (desktop/tablet). Click opens the callback capture + booking. */}
+            <div className="hero-stagger hero-d5 relative z-50 mt-10 md:mt-12 hidden md:flex justify-center">
+              <CallbackBadge openBooking={openBooking} />
             </div>
 
             {/* Light social proof — single compact line below the demo
