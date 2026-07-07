@@ -138,8 +138,8 @@ export default function ExcelReveal() {
   const l3y      = useTransform(revealProgress, [0.56, 0.66], [28, 0]);
   const l3Blur   = useTransform(revealProgress, [0.56, 0.66], [12, 0]);
   const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
-  const l3Size    = useTransform(revealProgress, [0.62, 0.96], ["2.25rem", "3.75rem"]);
-  const l3Leading = useTransform(revealProgress, [0.62, 0.96], [1.5, 1.12]);
+  const l3Size    = useTransform(revealProgress, [0.62, 0.96], ["3rem", "5rem"]);
+  const l3Leading = useTransform(revealProgress, [0.62, 0.96], [1.4, 1.08]);
   const l3Track   = useTransform(revealProgress, [0.62, 0.96], ["-0.025em", "-0.04em"]);
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
@@ -269,10 +269,14 @@ export default function ExcelReveal() {
     <>
       <style>{auroraCSS}</style>
 
+      {/* `sticky top-0` : une fois le texte terminé, la section reste épinglée
+          en haut du viewport pendant que la section Atlas (z supérieur) monte
+          par-dessus, effet rideau. Le pin est borné par le wrapper commun
+          ExcelReveal + AtlasShowcase dans App.tsx. */}
       <section
         id="excel-reveal"
         ref={lockRef}
-        className="relative z-[20] hidden md:flex items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] overflow-hidden min-h-screen"
+        className="sticky top-0 z-[10] hidden md:flex items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] overflow-hidden min-h-screen"
       >
         {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
         <div className="excel-aurora" aria-hidden />
@@ -287,7 +291,7 @@ export default function ExcelReveal() {
               progress={revealProgress}
               range={LINE1_RANGE}
               className="font-poppins font-normal text-[#111827] dark:text-white"
-              style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.75rem)", lineHeight: 1.4, letterSpacing: "-0.025em" }}
+              style={{ fontSize: "clamp(2.25rem, 4.2vw, 3.5rem)", lineHeight: 1.3, letterSpacing: "-0.025em" }}
               gradientWords={["temps", "time"]}
               text={t({
                 fr: "Votre temps est votre actif le plus précieux.",
@@ -302,7 +306,7 @@ export default function ExcelReveal() {
               progress={revealProgress}
               range={LINE2_RANGE}
               className="font-poppins font-normal text-[#111827] dark:text-white"
-              style={{ fontSize: "clamp(1.75rem, 3.2vw, 2.75rem)", lineHeight: 1.4, letterSpacing: "-0.025em" }}
+              style={{ fontSize: "clamp(2.25rem, 4.2vw, 3.5rem)", lineHeight: 1.3, letterSpacing: "-0.025em" }}
               gradientWords={["Excel"]}
               text={t({
                 fr: "Cessez de le gaspiller sur Excel.",
