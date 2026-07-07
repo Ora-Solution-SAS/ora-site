@@ -95,11 +95,14 @@ export default function AtlasShowcase() {
       id="atlas"
       data-nav-dark
       data-nav-shy
-      className="relative py-24 md:py-32 px-6 md:px-12 overflow-hidden"
+      className="relative z-[20] py-24 md:py-32 px-6 md:px-12 overflow-hidden"
       style={{
         background: isMobile
           ? "radial-gradient(ellipse at 50% 0%, #0a0a0a 0%, #000 55%, #000 100%)"
           : "radial-gradient(ellipse at 50% 0%, #0f1424 0%, #060810 55%, #000 100%)",
+        // Ombre portée au-dessus du bord haut : renforce l'effet "rideau" quand
+        // la section monte par-dessus ExcelReveal épinglé (sticky) en dessous.
+        boxShadow: "0 -36px 72px rgba(2,6,23,0.35)",
       }}
     >
       {/* Scroll-triggered stagger entrance: each major block fades up

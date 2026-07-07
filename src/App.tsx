@@ -1098,13 +1098,18 @@ const App = () => {
           dans SectionNav.
       <EnterpriseReady /> */}
 
-      {/* ── RÉVÉLATION "Cessez de le gaspiller sur Excel" ────────────────
-          Diaporama scroll-driven (pin sticky) : 3 phrases révélées mot par
-          mot, conclu par « Découvrez Ora. ». Entre Features et Atlas. */}
-      <ExcelReveal />
+      {/* ── RÉVÉLATION "Cessez de le gaspiller sur Excel" + ATLAS ────────
+          Diaporama scroll-driven : 3 phrases révélées mot par mot, conclu
+          par « Découvrez Ora. ». Puis effet rideau : ExcelReveal est
+          `sticky top-0` (z-10) et reste épinglé pendant que AtlasShowcase
+          (z-20) monte par-dessus au scroll. Le wrapper `relative` borne le
+          pin à ces deux sections. */}
+      <div className="relative">
+        <ExcelReveal />
 
-      {/* ── ATLAS SHOWCASE ──────────────────────────────────────────── */}
-      <AtlasShowcase />
+        {/* ── ATLAS SHOWCASE ────────────────────────────────────────── */}
+        <AtlasShowcase />
+      </div>
 
       {/* L'expérience Ora (carousel) + l'offre « tout inclus » ont été
           retirés pour l'instant. La section Industries prend leur place,

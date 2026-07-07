@@ -58,15 +58,16 @@ export function AnimatedHeroTitle() {
         </motion.span>
       </motion.h1>
 
-      {/* Desktop-only title — original main version, untouched */}
-      <h1 className="hidden md:block hero-stagger hero-d1 font-poppins font-normal text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-4xl mx-auto [text-wrap:balance]">
+      {/* Desktop-only title — WHOOP-inspired: much larger, left-aligned, tight
+          leading for editorial impact. Weight stays `font-normal` (no bolder). */}
+      <h1 className="hidden md:block hero-stagger hero-d1 font-poppins font-normal text-[clamp(2.6rem,4.8vw,4rem)] leading-[1.04] tracking-[-0.035em] text-[#111827] dark:text-white text-center max-w-5xl mx-auto [text-wrap:balance]">
         <span className="block">
           {t({
             fr: "Vos dossiers financiers les plus sensibles, automatisés et orchestrés.",
             en: "Your most sensitive financial dossiers, automated and orchestrated.",
           })}
         </span>
-        <span className="block mt-2 text-brand-gradient">
+        <span className="block mt-1 text-brand-gradient">
           {t({ fr: "Vos données vous appartiennent.", en: "Your data stays yours." })}
         </span>
       </h1>
