@@ -21,7 +21,7 @@ import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow
 import QualifierResult from "./components/QualifierResult";
 import GiftReveal from "./components/GiftReveal";
 import FeaturesScrolly from "./components/FeaturesScrolly";
-import ValueProps from "./components/ValueProps";
+import ValuePropsFlip from "./components/ValuePropsFlip";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
@@ -30,7 +30,6 @@ import ExcelReveal from "./components/ExcelReveal";
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 import ProblemSection from "./components/ProblemSection";
 import FAQ from "./components/FAQ";
-import SectionNav from "./components/SectionNav";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
 /* === Booking loading screen fade-out === */
@@ -974,8 +973,7 @@ const App = () => {
       ) : (
       <>
 
-      {/* Right-edge scroll-spy nav (desktop), à la The Patch. */}
-      <SectionNav theme={theme} />
+      {/* Right-edge scroll-spy nav removed at the client's request. */}
 
       <Hero
         theme={theme}
@@ -1018,8 +1016,9 @@ const App = () => {
             l'import en haut, ce bloc, et l'entrée "cas-usage" dans SectionNav.
         <FinanceUseCases openBooking={openBooking} /> */}
 
-        {/* Value-props — split card (light-blue text panel + blue mockup panel). */}
-        <ValueProps openBooking={openBooking} />
+        {/* Value-props — split card (light-blue text panel + blue mockup panel),
+            with a scroll-lock 3D flip revealing FEC Studio on its back. */}
+        <ValuePropsFlip openBooking={openBooking} />
 
         <FeaturesScrolly
           features={[
