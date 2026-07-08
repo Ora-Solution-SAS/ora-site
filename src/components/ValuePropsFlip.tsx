@@ -127,18 +127,14 @@ function BackCard({ openBooking }: { openBooking: () => void }) {
     <div className="grid lg:grid-cols-[1.45fr_1fr] h-full rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)] bg-white dark:bg-[#0c1830]">
       {/* TEXT panel */}
       <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-8 md:p-14 lg:p-16 flex flex-col justify-center min-h-[440px]">
-        <span className="inline-flex w-fit items-center rounded-full border border-blue-300/70 dark:border-blue-400/30 bg-white/60 dark:bg-white/[0.06] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">
-          {t({ fr: "Conformité fiscale", en: "Tax compliance" })}
-        </span>
-
-        <h3 className="font-poppins font-normal text-[2.4rem] md:text-[3.1rem] leading-[1.05] tracking-[-0.035em] text-[#111827] dark:text-white mt-6">
+        <h3 className="font-poppins font-normal text-[2.4rem] md:text-[3.1rem] leading-[1.05] tracking-[-0.035em] text-[#111827] dark:text-white">
           FEC Studio.
         </h3>
 
         <p className="font-inter mt-5 text-base md:text-[17px] leading-relaxed text-gray-600 dark:text-gray-300 max-w-md">
           {t({
-            fr: "Générez et contrôlez votre Fichier des Écritures Comptables au format DGFiP. Les anomalies sont repérées avant le contrôle fiscal, pas pendant.",
-            en: "Generate and check your FEC accounting file in DGFiP format. Anomalies are caught before the tax audit, not during it.",
+            fr: "Importez le FEC de vos clients, contrôlez son intégrité et repérez les écritures atypiques en quelques secondes. Vos missions d'audit et de commissariat aux comptes démarrent sur une base fiable, sans retraitement manuel.",
+            en: "Import your clients' FEC file, check its integrity and flag unusual entries in seconds. Your audit and statutory engagements start from a reliable base, with no manual rework.",
           })}
         </p>
 
