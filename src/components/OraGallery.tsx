@@ -389,6 +389,9 @@ function VideoFrame({ card, onSelect }: { card: Card; onSelect: (rect: DOMRect) 
       >
         <video
           src={src}
+          // First-frame poster (see /public/posters). It shows INSTANTLY while
+          // the clip buffers, so cards are never empty on arrival.
+          poster={src.replace(/^\//, "/posters/").replace(/\.mp4$/, ".jpg")}
           autoPlay
           muted
           loop
