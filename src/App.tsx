@@ -20,8 +20,7 @@ import OraLogoSpinner from "./components/OraLogoSpinner";
 import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
 import QualifierResult from "./components/QualifierResult";
 import GiftReveal from "./components/GiftReveal";
-import FeaturesScrolly from "./components/FeaturesScrolly";
-import ValuePropsFlip from "./components/ValuePropsFlip";
+import StackingCards from "./components/StackingCards";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
@@ -500,8 +499,8 @@ import Cal from "@calcom/embed-react";
 import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
-import Hero from "./components/Hero";
 import OraGallery from "./components/OraGallery";
+import DemoVideoCurtain from "./components/DemoVideoCurtain";
 import { useLang } from "./lib/i18n";
 import {
   Clock,
@@ -509,8 +508,6 @@ import {
   CheckCircle2,
   X,
   Zap,
-  TrendingUp,
-  ShieldCheck,
   ArrowRight,
   FileSpreadsheet,
   Mail,
@@ -975,17 +972,22 @@ const App = () => {
 
       {/* Right-edge scroll-spy nav removed at the client's request. */}
 
-      <Hero
-        theme={theme}
-        openBooking={openBooking}
-      />
-
-      {/* GALLERY — Bubble-style staggered landscape cards showing what Ora
-          produces (replaces the old "Ora en action" tabbed card). */}
+      {/* GALLERY — the black hero at the very top: the curved 3D video
+          carousel over a truly black background (Bending-Spoons style). */}
       <OraGallery theme={theme} openBooking={openBooking} />
 
+      {/* ── "Your time is your most valuable asset" + DEMO VIDEO curtain ──
+          ExcelReveal (black, `sticky top-0` z-10) plays its word-by-word
+          reveal right under the videos; then the white demo-video panel
+          (z-20) rises up over it — same curtain recipe used for Atlas. The
+          wrapper `relative` bounds the sticky pin to these two sections. */}
+      <div className="relative">
+        <ExcelReveal />
+        <DemoVideoCurtain />
+      </div>
+
       {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative -mt-16 pt-32 md:pt-44 pb-16 md:pb-56 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
+      <section id="features" className="relative pt-32 md:pt-44 pb-0 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1003,10 +1005,13 @@ const App = () => {
             // Fade the tint layer in/out at the very top and bottom so its
             // edges never form a hard horizontal line against the adjacent
             // white sections (hero above, next section below).
+            // Fade the tint in much lower so the top of this section stays
+            // clean white — seamless with the white demo section above it (no
+            // visible demarcation line).
             maskImage:
-              "linear-gradient(to bottom, transparent 0, #000 240px, #000 calc(100% - 200px), transparent 100%)",
+              "linear-gradient(to bottom, transparent 0, transparent 360px, #000 620px, #000 calc(100% - 200px), transparent 100%)",
             WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, #000 240px, #000 calc(100% - 200px), transparent 100%)",
+              "linear-gradient(to bottom, transparent 0, transparent 360px, #000 620px, #000 calc(100% - 200px), transparent 100%)",
           }}
         />
         {/* Problem — the "il me comprend" moment before the product. */}
@@ -1016,80 +1021,8 @@ const App = () => {
             l'import en haut, ce bloc, et l'entrée "cas-usage" dans SectionNav.
         <FinanceUseCases openBooking={openBooking} /> */}
 
-        {/* Value-props — split card (light-blue text panel + blue mockup panel),
-            with a scroll-lock 3D flip revealing FEC Studio on its back. */}
-        <ValuePropsFlip openBooking={openBooking} />
-
-        <FeaturesScrolly
-          features={[
-            {
-              tag: t({ fr: "Automatisation", en: "Automation" }),
-              title: t({
-                fr: "Automatisez ce qui vous fait perdre du temps",
-                en: "Automate what's eating your time",
-              }),
-              desc: t({
-                fr: "Vos tâches Excel répétitives, exécutées en un clic. Concentrez-vous sur l'analyse, plus sur la saisie.",
-                en: "Your repetitive Excel tasks, executed in one click. Focus on analysis, not data entry.",
-              }),
-              icon: Zap,
-              grad: "linear-gradient(135deg, #f0f7ff 0%, #e8f4f8 50%, #f5f0ff 100%)",
-              // Frame bg matched to this clip's blue/periwinkle background.
-              frameBg: "linear-gradient(180deg, #b1d2f4 0%, #a7cbee 26%, #769de6 74%, #6a92e1 100%)",
-              video: "/ora_story3-v2.mp4",
-              // 1280×854 source → 3:2 box (narrower than the old 2:1) so it
-              // fills with no black letterbox bars and no side-cropping.
-              ratio: "1280 / 854",
-            },
-            {
-              tag: t({ fr: "Sur-mesure", en: "Tailored" }),
-              title: t({
-                fr: "Conçu pour votre métier, pas pour tout le monde",
-                en: "Built for your business, not for everyone",
-              }),
-              desc: t({
-                fr: "Vous nous décrivez votre processus, on l'automatise à l'identique, le tout livré en quelques jours. Pas de template générique, pas de mois d'attente.",
-                en: "You describe your workflow, we automate it exactly as it is, delivered in days. No generic templates, no months of waiting.",
-              }),
-              icon: TrendingUp,
-              grad: "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
-              // Frame bg matched to this clip's pale blue-grey background.
-              frameBg: "linear-gradient(180deg, #ecf1f8 0%, #e3ebf5 28%, #d3e4e7 74%, #cadee2 100%)",
-              video: "/ora_story4-v2.mp4",
-              // 1280×854 source → 3:2 box so it fills with no black letterbox
-              // bars and no side-cropping.
-              ratio: "1280 / 854",
-            },
-            {
-              tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
-              title: t({
-                fr: "Vos données restent chez vous",
-                en: "Your data stays with you",
-              }),
-              desc: t({
-                fr: "Le traitement s'exécute en local, sur votre machine. Vos fichiers sont chiffrés sur votre appareil avant tout envoi, puis stockés en Suisse, illisibles sur nos serveurs.",
-                en: "Processing runs locally, on your machine. Your files are encrypted on your device before anything is sent, then stored in Switzerland, unreadable on our servers.",
-              }),
-              icon: ShieldCheck,
-              grad: "linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fdf2f8 100%)",
-              // Frame bg matched to this clip's dark-navy background.
-              frameBg: "linear-gradient(180deg, #0c0c2a 0%, #080820 55%, #06061a 100%)",
-              video: "/feature-secure.mp4",
-            },
-          ]}
-        />
-
-        <FadeInOnScroll delay={200}>
-          <div className="relative flex justify-center mt-16">
-            <button
-              onClick={() => animatedScrollToId("industries")}
-              className="inline-flex items-center gap-2 text-[14px] font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-150"
-            >
-              {t({ fr: "Découvrir les applications métier", en: "Explore industry applications" })}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </FadeInOnScroll>
+        {/* ValuePropsFlip (FEC Studio) moved into the stacking wrapper below so
+            the feature cards can rise up and cover it, one by one. */}
       </section>
 
       {/* ── PRÊT POUR L'ENTREPRISE — masqué pour l'instant. Réactiver :
@@ -1097,16 +1030,18 @@ const App = () => {
           dans SectionNav.
       <EnterpriseReady /> */}
 
-      {/* ── RÉVÉLATION "Cessez de le gaspiller sur Excel" + ATLAS ────────
-          Diaporama scroll-driven : 3 phrases révélées mot par mot, conclu
-          par « Découvrez Ora. ». Puis effet rideau : ExcelReveal est
-          `sticky top-0` (z-10) et reste épinglé pendant que AtlasShowcase
-          (z-20) monte par-dessus au scroll. Le wrapper `relative` borne le
-          pin à ces deux sections. */}
-      <div className="relative">
-        <ExcelReveal />
-
-        {/* ── ATLAS SHOWCASE ────────────────────────────────────────── */}
+      {/* ── FEC STUDIO + STACKING FEATURE CARDS + ATLAS ──────────────────
+          One shared `relative` wrapper so every `sticky` element inside pins
+          against it: FEC Studio (ValuePropsFlip) pins first, then each feature
+          card rises up and fully covers the previous one, then a spacer keeps
+          the last card on screen a while, and finally AtlasShowcase (z-20)
+          rises up over the whole stack. */}
+      <div className="relative bg-white dark:bg-[#0f172a] pt-16 md:pt-24">
+        {/* FEC Studio / "Vos tâches Excel automatisées" cards removed for now.
+            The stack starts directly with the three feature cards. */}
+        <StackingCards />
+        {/* Breathing room: the last card stays on screen before Atlas rises. */}
+        <div aria-hidden className="h-[40vh] md:h-[95vh]" />
         <AtlasShowcase />
       </div>
 

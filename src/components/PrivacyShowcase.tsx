@@ -1,5 +1,5 @@
-import { useRef, useEffect, useState } from "react";
-import { motion, useMotionValue, useTransform, type MotionValue } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { motion, useMotionValue, useInView, animate, useTransform, type MotionValue } from "framer-motion";
 import { Lock, Check, ShieldCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -15,16 +15,14 @@ function SwissFlag({ className }: { className?: string }) {
 }
 
 /**
- * Privacy section — bubble.io-style scrollytelling (desktop).
+ * Privacy section — Joko-style tile grid.
  *
- *  Left  : three text cards stacked vertically. Each defines a scroll segment
- *          (min-height) so the user reads them one at a time. Hovering a card
- *          flips it to a blue fill with white text.
- *  Right : a single sticky stage holding a large animated icon (lock → cloud →
- *          check) that plays + swaps to match whichever left card is centered.
- *          No frame — the icon floats on a soft ambient glow.
+ *  Three tiles side by side: each holds a blue-gradient visual with one of the
+ *  animated security icons (lock / cloud / check) that draws itself in when
+ *  the tile scrolls into view — and replays on hover. Under each tile sits a
+ *  short title; hovering the tile unfolds its paragraph beneath the title.
  *
- *  Mobile (< md): single column, each card with its finished icon inline.
+ *  Mobile (< md): tiles stack and paragraphs are always visible (no hover).
  */
 
 interface PrivacyShowcaseProps {
@@ -38,137 +36,48 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
   const dk = theme === "dark";
   const lockColor = dk ? "#60a5fa" : "#2563eb";
 
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(true);
-  const blockRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  const lp0 = useMotionValue(0);
-  const lp1 = useMotionValue(0);
-  const lp2 = useMotionValue(0);
-  const lps = [lp0, lp1, lp2];
-
-  const features: {
-    kind: IconKind;
-    title: string;
-    desc: string;
-    chips: { label: string; flag?: boolean }[];
-  }[] = [
+  const features: { kind: IconKind; title: string; desc: string }[] = [
     {
       kind: "lock",
-      title: t({ fr: "Traitées sur votre machine", en: "Processed on your machine" }),
+      title: t({ fr: "En local", en: "On-device" }),
       desc: t({
         fr: "Les automatisations s'exécutent localement, sur votre appareil. Le traitement de vos fichiers se fait chez vous, nos serveurs ne servent qu'à stocker vos données chiffrées, jamais à les analyser.",
         en: "Automations run locally, on your own device. Your files are processed on your side; our servers only store your encrypted data, they never analyze it.",
       }),
-      chips: [
-        { label: t({ fr: "Calcul local", en: "Local compute" }) },
-        { label: t({ fr: "Déchiffré chez vous", en: "Decrypted on your side" }) },
-      ],
     },
     {
       kind: "cloud",
-      title: t({ fr: "Chiffrées avant de partir", en: "Encrypted before they leave" }),
+      title: t({ fr: "Chiffrement", en: "Encryption" }),
       desc: t({
         fr: "Vos données métier et financières sont chiffrées directement sur votre appareil, avant tout envoi. Seuls des blobs illisibles quittent votre machine, la clé qui les ouvre ne sort jamais de votre compte.",
         en: "Your business and financial data is encrypted directly on your device, before anything is sent. Only unreadable blobs leave your machine, and the key that opens them never leaves your account.",
       }),
-      chips: [
-        { label: t({ fr: "Chiffrement XChaCha20-Poly1305", en: "XChaCha20-Poly1305 encryption" }) },
-        { label: t({ fr: "Côté client", en: "Client-side" }) },
-      ],
     },
     {
       kind: "check",
-      title: t({ fr: "Jamais utilisées pour entraîner des modèles", en: "Never used to train models" }),
+      title: t({ fr: "En Suisse", en: "In Switzerland" }),
       desc: t({
         fr: "Aucun fichier client n'est utilisé pour entraîner des modèles d'IA. Vos données servent uniquement à votre travail. Stockées chiffrées en Suisse, chez un hébergeur conforme au RGPD, hors CLOUD Act américain.",
         en: "No client file is ever used to train AI models. Your data serves only your work. Stored encrypted in Switzerland, with a GDPR-compliant host, outside the US CLOUD Act.",
       }),
-      chips: [
-        { label: t({ fr: "Aucun entraînement IA", en: "No AI training" }) },
-        { label: t({ fr: "Hébergé en Suisse", en: "Hosted in Switzerland" }), flag: true },
-      ],
     },
   ];
-
-  // Pin/scrolly only on md+; on mobile show everything finished.
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 768px)");
-    const apply = () => setIsDesktop(mq.matches);
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  // On mobile, every icon is shown finished (no scrolly).
-  useEffect(() => {
-    if (!isDesktop) lps.forEach((l) => l.set(1));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDesktop]);
-
-  // Active-card detection + SCROLL-SCRUBBED icon formation. Each icon's progress
-  // (lp 0→1) is driven directly by its card's position: 0 when the card sits a
-  // full `range` below the trigger line, 1 once its center reaches the middle of
-  // the viewport (and it holds formed above). So you literally watch each design
-  // draw in, continuously, as you scroll its card up to the center — not a quick
-  // one-shot animation you can miss.
-  useEffect(() => {
-    if (!isDesktop) return;
-    let raf = 0;
-    const compute = () => {
-      raf = 0;
-      const vh = window.innerHeight;
-      const triggerY = vh * 0.5;
-      // Formation spans roughly the last half-viewport of the card's approach —
-      // long enough that the draw-in is clearly visible while scrolling.
-      const range = vh * 0.5;
-      let bestIdx = 0;
-      let bestDistance = Infinity;
-      blockRefs.current.forEach((ref, i) => {
-        if (!ref) return;
-        const rect = ref.getBoundingClientRect();
-        const center = rect.top + rect.height / 2;
-        const d = Math.abs(center - triggerY);
-        if (d < bestDistance) {
-          bestDistance = d;
-          bestIdx = i;
-        }
-        const p = Math.min(1, Math.max(0, (triggerY + range - center) / range));
-        lps[i].set(p);
-      });
-      setActiveIdx((prev) => (prev !== bestIdx ? bestIdx : prev));
-    };
-    const onScroll = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(compute);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    compute();
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDesktop]);
 
   return (
     <section
       id="securite"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-32 md:pt-44 pb-20 md:pb-28"
-      style={{ background: dk ? (isDesktop ? "#0f172a" : "#000000") : "#ffffff" }}
+      className="relative px-6 md:px-12 pt-44 md:pt-64 pb-20 md:pb-28"
+      style={{ background: dk ? "#0f172a" : "#ffffff" }}
     >
-      {/* Very soft blue ambient glows so the cards lift off the flat background.
-          Pure radial gradients (no blur filter) → no scroll-time repaints. */}
+      {/* Very soft blue ambient glows so the tiles lift off the flat background. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background: dk
-            ? "radial-gradient(38% 26% at 24% 32%, rgba(59,130,246,0.14) 0%, transparent 70%), radial-gradient(42% 30% at 78% 60%, rgba(59,130,246,0.11) 0%, transparent 72%), radial-gradient(34% 24% at 52% 88%, rgba(45,212,191,0.07) 0%, transparent 70%)"
-            : "radial-gradient(36% 26% at 22% 30%, rgba(59,130,246,0.12) 0%, transparent 70%), radial-gradient(42% 30% at 80% 58%, rgba(96,165,250,0.10) 0%, transparent 72%), radial-gradient(32% 22% at 50% 88%, rgba(13,148,136,0.05) 0%, transparent 70%)",
+            ? "radial-gradient(38% 26% at 24% 32%, rgba(59,130,246,0.14) 0%, transparent 70%), radial-gradient(42% 30% at 78% 60%, rgba(59,130,246,0.11) 0%, transparent 72%)"
+            : "radial-gradient(36% 26% at 22% 30%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(42% 30% at 80% 58%, rgba(96,165,250,0.08) 0%, transparent 72%)",
         }}
       />
       <div className="relative z-10 max-w-7xl mx-auto">
@@ -202,59 +111,12 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
           </p>
         </motion.div>
 
-        {/* ── Scrolly: text cards (left) + sticky animated stage (right) ── */}
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-10 md:gap-16">
-          {/* LEFT — stacked text cards */}
-          <div className="flex flex-col">
-            {features.map((f, i) => (
-              <div
-                key={f.kind}
-                ref={(el) => { blockRefs.current[i] = el; }}
-                className="md:min-h-[calc(100vh-8rem)] flex flex-col justify-center py-6 md:py-0"
-              >
-                {/* Mobile-only icon above the card */}
-                <div className="md:hidden h-20 flex items-end justify-center mb-3">
-                  <IconStage kind={f.kind} lp={lps[i]} dk={dk} />
-                </div>
-                <PrivacyCard
-                  title={f.title}
-                  desc={f.desc}
-                  chips={f.chips}
-                  active={isDesktop ? i === activeIdx : true}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* RIGHT — sticky animated design (desktop only). No frame: the icon
-              floats on a soft ambient glow. */}
-          <div className="hidden md:block">
-            <div className="sticky top-24 h-[calc(100vh-8rem)] flex items-center">
-              <div className="relative w-full aspect-square max-w-[460px] mx-auto flex items-center justify-center">
-                <div
-                  aria-hidden
-                  className="absolute inset-0 -z-10 pointer-events-none"
-                  style={{
-                    background:
-                      "radial-gradient(50% 50% at 50% 45%, rgba(59,130,246,0.16) 0%, transparent 70%)",
-                  }}
-                />
-                {features.map((f, i) => (
-                  <motion.div
-                    key={f.kind}
-                    className="absolute inset-0 flex items-center justify-center"
-                    initial={false}
-                    animate={{ opacity: i === activeIdx ? 1 : 0 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <div className="scale-[3]">
-                      <IconStage kind={f.kind} lp={lps[i]} dk={dk} />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* ── Joko-style tile row. Flex (not grid) on md+ so the hovered
+            tile can widen while its neighbours slide aside. ─────────── */}
+        <div className="flex flex-col md:flex-row gap-10 md:gap-8 lg:gap-10">
+          {features.map((f, i) => (
+            <PrivacyTile key={f.kind} kind={f.kind} title={f.title} desc={f.desc} dk={dk} index={i} />
+          ))}
         </div>
 
         {/* ── Trust strip — quick reassurance markers ──────────────────── */}
@@ -282,62 +144,112 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  PrivacyCard — text card; hovering flips it to a blue fill with white text.
+//  PrivacyTile — blue visual + word + paragraph revealed on hover.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function PrivacyCard({
+function PrivacyTile({
+  kind,
   title,
   desc,
-  chips,
-  active,
+  dk,
+  index,
 }: {
+  kind: IconKind;
   title: string;
   desc: string;
-  chips: { label: string; flag?: boolean }[];
-  active: boolean;
+  dk: boolean;
+  index: number;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-120px" });
+  const lp = useMotionValue(0);
+
+  // Draw the icon in when the tile first scrolls into view…
+  useEffect(() => {
+    if (inView) {
+      const controls = animate(lp, 1, { duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: index * 0.12 });
+      return () => controls.stop();
+    }
+  }, [inView, lp, index]);
+
+  // …and replay the draw-in on hover.
+  const onEnter = () => {
+    lp.set(0);
+    animate(lp, 1, { duration: 0.9, ease: [0.22, 1, 0.36, 1] });
+  };
+
   return (
-    <div
-      className={`group w-full p-10 md:p-14 rounded-[32px] border border-gray-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] transition-all duration-300 hover:bg-[#3b82f6] hover:border-[#3b82f6] hover:shadow-[0_30px_70px_-30px_rgba(59,130,246,0.6)] ${
-        active ? "opacity-100" : "md:opacity-45"
-      }`}
+    <motion.div
+      ref={ref}
+      // flex-grow animates: the hovered tile widens, neighbours slide aside.
+      className="group md:flex-[1_1_0%] md:hover:flex-[1.35_1_0%] transition-[flex-grow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] min-w-0"
+      onMouseEnter={onEnter}
+      initial={{ opacity: 0, y: 26 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }}
     >
-      <h3 className="font-poppins font-semibold text-[1.35rem] md:text-[1.7rem] tracking-tight leading-snug text-[#111827] dark:text-white group-hover:text-white transition-colors duration-300">
+      {/* Visual — brand-blue gradient sky, Joko-style, icon floating center.
+          Fixed height on md+ so widening the tile never changes the row
+          height; colors invert on hover (light face, blue icon). */}
+      <div
+        className="relative aspect-[4/3] md:aspect-auto md:h-[280px] lg:h-[300px] rounded-[24px] overflow-hidden"
+        style={{
+          background: dk
+            ? "linear-gradient(180deg, #23407a 0%, #182f5e 55%, #12224a 100%)"
+            : "linear-gradient(180deg, #b7d5fc 0%, #6ba3f7 55%, #4285f0 100%)",
+        }}
+      >
+        {/* soft top glow, like light coming from above */}
+        <div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: "radial-gradient(90% 60% at 50% -10%, rgba(255,255,255,0.35) 0%, transparent 60%)",
+          }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-110">
+          <div className="scale-[1.9] md:scale-[2.1]">
+            <IconStage kind={kind} lp={lp} accent="#ffffff" muted="rgba(255,255,255,0.55)" />
+          </div>
+        </div>
+      </div>
+
+      {/* Word */}
+      <h3 className="mt-5 text-center font-poppins font-semibold text-xl md:text-2xl tracking-[-0.02em] text-[#111827] dark:text-white">
         {title}
       </h3>
-      <p className="mt-3.5 font-inter text-[15px] md:text-[16.5px] leading-relaxed text-gray-500 dark:text-gray-400 group-hover:text-white/90 transition-colors duration-300">
-        {desc}
-      </p>
 
-      <div className="mt-7 flex flex-wrap gap-2">
-        {chips.map((chip) => (
-          <span
-            key={chip.label}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-inter font-semibold bg-blue-50 text-blue-700 ring-1 ring-blue-200/70 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-400/20 group-hover:bg-white/15 group-hover:text-white group-hover:ring-white/30 transition-colors duration-300"
-          >
-            {chip.flag ? (
-              <SwissFlag className="w-3.5 h-3.5" />
-            ) : (
-              <Check className="w-3 h-3 text-emerald-500 group-hover:text-white" strokeWidth={3} />
-            )}
-            {chip.label}
-          </span>
-        ))}
+      {/* Paragraph — folded on desktop, unfolds on hover; always open < md */}
+      <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] md:group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]">
+        <div className="overflow-hidden min-h-0">
+          <p className="pt-2.5 text-center font-inter text-[15px] md:text-base leading-relaxed text-gray-500 dark:text-gray-400 md:opacity-0 md:translate-y-1 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-500">
+            {desc}
+          </p>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  IconStage — the three scroll-driven SVG animations.
+//  IconStage — the three draw-in SVG animations (lock / cloud / check).
 // ─────────────────────────────────────────────────────────────────────────────
 
-function IconStage({ kind, lp, dk }: { kind: IconKind; lp: MotionValue<number>; dk: boolean }) {
-  const accent = dk ? "#60a5fa" : "#2563eb";
-  const muted = dk ? "rgba(148,163,184,0.45)" : "rgba(100,116,139,0.32)";
+function IconStage({
+  kind,
+  lp,
+  accent,
+  muted,
+}: {
+  kind: IconKind;
+  lp: MotionValue<number>;
+  accent: string;
+  muted: string;
+}) {
   const stroke = 2;
 
-  // ── LOCK: shackle seats down as you scroll ──
+  // ── LOCK: shackle seats down ──
   const shackleY = useTransform(lp, [0, 1], [-7, 0]);
   const lockColor = useTransform(lp, [0.55, 1], [muted, accent]);
   const lockOpacity = useTransform(lp, [0, 0.22], [0, 1]);

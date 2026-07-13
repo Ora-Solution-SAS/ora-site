@@ -83,31 +83,36 @@ export default function ProblemSection() {
         </motion.p>
       </motion.div>
 
-      {/* Plain two-column comparison, directly on the section background. */}
-      <div data-nav-shy className="grid md:grid-cols-2 gap-x-12 lg:gap-x-20 gap-y-12 max-w-6xl mx-auto">
+      {/* Two framed comparison panels. "Avec Ora" is a solid light-blue
+          brand card with white text; "Sans Ora" a greyish-white card with
+          dark text — deliberately mute next to the blue one. */}
+      <div data-nav-shy className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-6xl mx-auto">
           {/* With Ora — dark text + brand ✓ */}
           <motion.div
+            className="rounded-3xl bg-gradient-to-br from-[#4f93f7] to-[#3b82f6] dark:from-[#3b82f6] dark:to-[#2f6fe0] border border-blue-400/40 dark:border-blue-300/25 shadow-[0_28px_70px_-30px_rgba(59,130,246,0.55)] hover:shadow-[0_40px_90px_-28px_rgba(59,130,246,0.7)] transition-shadow duration-300 p-7 md:p-9"
+            whileHover={{ y: -6, scale: 1.012 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
             variants={container}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-80px" }}
           >
             <motion.h3
-              className="font-poppins font-medium text-2xl md:text-[1.9rem] tracking-[-0.02em] text-gray-900 dark:text-white mb-1"
+              className="font-poppins font-medium text-2xl md:text-[1.9rem] tracking-[-0.02em] text-white mb-1"
               variants={rowLeft}
             >
               {t({ fr: "Avec Ora", en: "With Ora" })}
             </motion.h3>
-            <div className="mt-5 border-t border-gray-200 dark:border-white/10">
+            <div className="mt-5 border-t border-white/25">
               {gains.map((g, i) => (
-                <motion.div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10" variants={rowLeft}>
+                <motion.div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b last:border-b-0 border-white/25" variants={rowLeft}>
                   <motion.span
-                    className="w-7 h-7 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#0d9488] flex items-center justify-center flex-shrink-0"
+                    className="w-7 h-7 rounded-full bg-white flex items-center justify-center flex-shrink-0"
                     variants={iconPop}
                   >
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                    <Check className="w-4 h-4 text-[#3b82f6]" strokeWidth={3} />
                   </motion.span>
-                  <span className="font-inter text-base md:text-[17px] leading-snug text-gray-900 dark:text-white">{g}</span>
+                  <span className="font-inter text-base md:text-[17px] leading-snug text-white">{g}</span>
                 </motion.div>
               ))}
             </div>
@@ -115,6 +120,9 @@ export default function ProblemSection() {
 
           {/* Without Ora — muted */}
           <motion.div
+            className="rounded-3xl bg-gray-100/80 dark:bg-white/[0.05] border border-gray-200 dark:border-white/10 shadow-[0_24px_60px_-40px_rgba(17,24,39,0.18)] hover:shadow-[0_34px_80px_-36px_rgba(17,24,39,0.3)] transition-shadow duration-300 p-7 md:p-9"
+            whileHover={{ y: -6, scale: 1.012 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
             variants={container}
             initial="hidden"
             whileInView="visible"
@@ -128,14 +136,14 @@ export default function ProblemSection() {
             </motion.h3>
             <div className="mt-5 border-t border-gray-200 dark:border-white/10">
               {pains.map((p, i) => (
-                <motion.div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b border-gray-200 dark:border-white/10" variants={rowRight}>
+                <motion.div key={i} className="flex items-center gap-3.5 min-h-[72px] border-b last:border-b-0 border-gray-200 dark:border-white/10" variants={rowRight}>
                   <motion.span
                     className="w-7 h-7 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center flex-shrink-0"
                     variants={iconPop}
                   >
                     <X className="w-4 h-4 text-gray-600 dark:text-gray-300" strokeWidth={3} />
                   </motion.span>
-                  <span className="font-inter text-base md:text-[17px] leading-snug text-gray-800 dark:text-gray-100">{p}</span>
+                  <span className="font-inter text-base md:text-[17px] leading-snug text-gray-900 dark:text-gray-100">{p}</span>
                 </motion.div>
               ))}
             </div>

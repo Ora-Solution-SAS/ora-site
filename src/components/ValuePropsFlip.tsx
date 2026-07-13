@@ -5,20 +5,21 @@ import { ArrowRight, ChevronDown, Maximize2, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /**
- * ValuePropsFlip — the "Tailored automation" split card, now with a scroll-lock
- * 3D flip that reveals a second card (FEC Studio) on its back.
+ * ValuePropsFlip — the "Tailored automation" split card, with a scroll-lock
+ * slide-over that brings the FEC Studio card up over it.
  *
  * Desktop (md+):
  *   When the section fills the viewport the page scroll is locked (Lenis
- *   stopped). The wheel/touch input then scrubs a `progress` MotionValue 0→1,
- *   which rotates the card on its Y axis from 0° to 180°. At 0° the front face
- *   (tailored automation) shows; past 90° the back face (FEC Studio) takes over.
- *   Once fully flipped the scroll unlocks and the page continues. This mirrors
- *   the ExcelReveal scroll-lock pattern so the two feel consistent.
+ *   stopped). The wheel/touch input then scrubs a `progress` MotionValue 0→1:
+ *   the FEC Studio card rises from below the front card (clipped by the
+ *   rounded wrapper, like a sheet sliding out from behind it) until it covers
+ *   it 100%, while the front card recedes slightly (scale + dim). Once fully
+ *   covered the scroll unlocks and the page continues. This mirrors the
+ *   ExcelReveal scroll-lock pattern so the two feel consistent.
  *
  * Mobile (< md):
- *   No scroll-lock / no 3D (touch-locking is fragile on phones). The two cards
- *   simply stack — front then FEC Studio — so mobile users still get both.
+ *   No scroll-lock (touch-locking is fragile on phones). The two cards simply
+ *   stack — front then FEC Studio — so mobile users still get both.
  */
 
 /* ── FEC Studio media ────────────────────────────────────────────────────────
@@ -30,9 +31,9 @@ const FEC_STUDIO_VIDEO = "/fec-studio.mp4";
 function FrontCard({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
   return (
-    <div className="grid lg:grid-cols-[1.45fr_1fr] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)] bg-white dark:bg-[#0c1830]">
+    <div className="grid lg:grid-cols-[1.45fr_1fr] md:h-[470px] rounded-[24px] md:rounded-[32px] overflow-hidden shadow-[0_30px_80px_-30px_rgba(15,23,42,0.25)] bg-white dark:bg-[#0c1830]">
       {/* TEXT panel */}
-      <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-8 md:p-14 lg:p-16 flex flex-col justify-center min-h-[440px]">
+      <div className="bg-gradient-to-br from-[#f5f8ff] via-[#d3e4fc] to-[#a9c6f4] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#1c3360] p-8 md:p-14 lg:p-16 flex flex-col justify-center min-h-[440px] md:min-h-0 md:h-full">
         <span className="inline-flex w-fit items-center rounded-full border border-blue-300/70 dark:border-blue-400/30 bg-white/60 dark:bg-white/[0.06] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-300">
           {t({ fr: "Automatisation sur-mesure", en: "Tailored automation" })}
         </span>
@@ -190,8 +191,20 @@ export default function ValuePropsFlip({ openBooking }: { openBooking: () => voi
   const { t } = useLang();
 
   const progress = useMotionValue(0);
-  // Vertical flip: rotate around the X axis (top-over-bottom), not sideways.
-  const rotateX = useTransform(progress, [0, 1], [0, 180]);
+  // Slide-over: the FEC card rises from well below the viewport (190% of the
+  // card height clears the bottom edge on any screen) and settles ~4.5% below
+  // the front card's top edge, so the card behind stays slightly visible — a
+  // stacked-cards look, not a replacement. Same unit on both ends: Framer
+  // cannot interpolate between mixed units (vh → px silently breaks).
+  const backY = useTransform(progress, [0, 1], ["190%", "4.5%"]);
+  // Hidden while idle: without a clip the waiting card would otherwise sit
+  // (invisible to the eye but clickable) over the sections further down.
+  const backOpacity = useTransform(progress, [0, 0.03], [0, 1]);
+  const backVisibility = useTransform(progress, (p) => (p > 0.005 ? "visible" : "hidden"));
+  // The front card recedes as it gets covered — subtle push-back depth cue.
+  const frontY = useTransform(progress, [0, 1], [0, -18]);
+  const frontScale = useTransform(progress, [0, 1], [1, 0.965]);
+  const frontOpacity = useTransform(progress, [0, 1], [1, 0.8]);
 
   const lockRef = useRef<HTMLDivElement>(null);
   const isLockedRef = useRef(false);
@@ -313,33 +326,32 @@ export default function ValuePropsFlip({ openBooking }: { openBooking: () => voi
 
   return (
     <>
-      {/* ── Desktop : scroll-lock 3D flip ─────────────────────────────────── */}
+      {/* ── Desktop : scroll-lock slide-over ────────────────────────────────
+          `sticky top-0`: once its own front→FEC slide-over finishes, the FEC
+          card stays pinned while the StackingCards (in the same relative
+          wrapper in App.tsx) rise up and cover it, one by one. */}
       <section
         ref={lockRef}
-        className="hidden md:flex relative min-h-screen items-center justify-center px-6 lg:px-10"
+        className="hidden md:flex sticky top-0 min-h-screen items-center justify-center px-6 lg:px-10"
       >
-        <div className="w-full max-w-7xl mx-auto" style={{ perspective: "2200px" }}>
-          <motion.div
-            data-nav-shy
-            className="relative"
-            style={{ rotateX, transformStyle: "preserve-3d", willChange: "transform" }}
-          >
-            {/* Front face (in flow → defines the card height) */}
-            <div style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}>
+        <div className="w-full max-w-7xl mx-auto">
+          {/* Bare positioning context — no frame of its own. Each card keeps
+              its own radius and shadow; nothing clips the rising card, so it
+              really travels up from the bottom of the page. */}
+          <div data-nav-shy className="relative">
+            {/* Front card (in flow → defines the height) */}
+            <motion.div style={{ y: frontY, scale: frontScale, opacity: frontOpacity, willChange: "transform" }}>
               <FrontCard openBooking={openBooking} />
-            </div>
-            {/* Back face (absolute, pre-rotated so it reads upright once flipped) */}
-            <div
+            </motion.div>
+            {/* FEC Studio card — rises from below the viewport and stacks on
+                top, leaving a sliver of the front card visible behind. */}
+            <motion.div
               className="absolute inset-0"
-              style={{
-                backfaceVisibility: "hidden",
-                WebkitBackfaceVisibility: "hidden",
-                transform: "rotateX(180deg)",
-              }}
+              style={{ y: backY, opacity: backOpacity, visibility: backVisibility, willChange: "transform" }}
             >
               <BackCard openBooking={openBooking} />
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
