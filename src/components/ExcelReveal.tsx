@@ -18,8 +18,8 @@ function RevealWord({
   isGradient: boolean; children: ReactNode;
 }) {
   const opacity = useTransform(progress, [inStart, inEnd, outStart, outEnd], [0, 1, 1, 0]);
-  const y       = useTransform(progress, [inStart, inEnd], [26, 0]);
-  const blurPx  = useTransform(progress, [inStart, inEnd], [12, 0]);
+  const y       = useTransform(progress, [inStart, inEnd], [22, 0]);
+  const blurPx  = useTransform(progress, [inStart, inEnd], [7, 0]);
   const filter  = useTransform(blurPx, (b) => `blur(${b}px)`);
   return (
     <motion.span
@@ -45,9 +45,9 @@ function RevealLine({
   const [inS, inE, outS, outE] = range;
   const span = inE - inS;
   const total = words.length;
-  /* Each word's fade-in occupies a sub-window; windows overlap so the
-     cascade flows rather than stepping word-by-word. */
-  const per  = span * 0.55;
+  /* Each word's fade-in occupies a sub-window; a light overlap keeps the
+     motion fluid while the words arrive clearly one by one (word-by-word). */
+  const per  = span * 0.28;
   const step = total > 1 ? (span - per) / (total - 1) : 0;
   const grad = gradientWords.map((g) => g.toLowerCase());
   return (
@@ -92,16 +92,18 @@ const auroraCSS = `
   content: "";
   position: absolute;
   inset: -25%;
+  /* Very faint blue only — no green/teal. Kept low so it reads as a subtle
+     bluish depth on the black, never a coloured glow. */
   background:
-    radial-gradient(38% 38% at 32% 36%, rgba(59,130,246,0.20), transparent 70%),
-    radial-gradient(42% 42% at 68% 64%, rgba(13,148,136,0.20), transparent 70%);
+    radial-gradient(40% 40% at 38% 38%, rgba(59,130,246,0.09), transparent 72%),
+    radial-gradient(40% 40% at 64% 62%, rgba(59,130,246,0.06), transparent 74%);
   animation: excelAuroraDrift 16s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .dark .excel-aurora::before {
   background:
-    radial-gradient(38% 38% at 32% 36%, rgba(59,130,246,0.28), transparent 70%),
-    radial-gradient(42% 42% at 68% 64%, rgba(45,212,191,0.26), transparent 70%);
+    radial-gradient(40% 40% at 38% 38%, rgba(59,130,246,0.11), transparent 72%),
+    radial-gradient(40% 40% at 64% 62%, rgba(59,130,246,0.07), transparent 74%);
 }
 @media (prefers-reduced-motion: reduce) {
   .excel-aurora::before { animation: none; }
@@ -126,21 +128,23 @@ export default function ExcelReveal() {
   const [isLocked, setIsLocked] = useState(false);
   const hasTextCompletedRef = useRef(false);
 
-  /* Diaporama : chaque phrase entre PUIS sort avant que la suivante n'arrive.
-     Les fenêtres [in0, in1, out0, out1] ne se chevauchent pas → une à la fois. */
-  const LINE1_RANGE: [number, number, number, number] = [0.02, 0.22, 0.26, 0.32];
-  const LINE2_RANGE: [number, number, number, number] = [0.34, 0.50, 0.52, 0.58];
+  /* Diaporama avec de VRAIS intervalles vides entre les phrases : chaque phrase
+     entre, tient, sort ENTIÈREMENT, puis un blanc, puis la suivante entre. Les
+     fenêtres [in0,in1,out0,out1] ne se recouvrent jamais → jamais deux phrases
+     à l'écran en même temps (fini l'overlap). */
+  const LINE1_RANGE: [number, number, number, number] = [0, 0.08, 0.20, 0.27];
+  const LINE2_RANGE: [number, number, number, number] = [0.34, 0.44, 0.56, 0.63];
 
-  /* Ligne 3 : entre (0.56→0.66), grandit (0.62→0.96) et RESTE affichée jusqu'à
-     la fin du lock. Elle ne s'efface jamais d'elle-même : à la sortie du lock,
-     le scroll naturel fait monter la section Atlas par-dessus, progressivement. */
-  const l3o      = useTransform(revealProgress, [0.56, 0.66], [0, 1]);
-  const l3y      = useTransform(revealProgress, [0.56, 0.66], [28, 0]);
-  const l3Blur   = useTransform(revealProgress, [0.56, 0.66], [12, 0]);
+  /* Ligne 3 « Découvrez Ora » : entre (0.70→0.80) après un blanc, grandit
+     (0.74→0.96) et RESTE affichée. Elle ne s'efface pas : à la fin du scrub, le
+     scroll naturel fait monter la vidéo démo (fond blanc) par-dessus. */
+  const l3o      = useTransform(revealProgress, [0.70, 0.80], [0, 1]);
+  const l3y      = useTransform(revealProgress, [0.70, 0.80], [28, 0]);
+  const l3Blur   = useTransform(revealProgress, [0.70, 0.80], [12, 0]);
   const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
-  const l3Size    = useTransform(revealProgress, [0.62, 0.96], ["3rem", "5rem"]);
-  const l3Leading = useTransform(revealProgress, [0.62, 0.96], [1.4, 1.08]);
-  const l3Track   = useTransform(revealProgress, [0.62, 0.96], ["-0.025em", "-0.04em"]);
+  const l3Size    = useTransform(revealProgress, [0.74, 0.96], ["3.5rem", "6rem"]);
+  const l3Leading = useTransform(revealProgress, [0.74, 0.96], [1.4, 1.08]);
+  const l3Track   = useTransform(revealProgress, [0.74, 0.96], ["-0.025em", "-0.04em"]);
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
   useEffect(() => {
@@ -173,12 +177,44 @@ export default function ExcelReveal() {
     return () => obs.disconnect();
   }, []);
 
+  /* ── Nav banner colour handoff ──────────────────────────────────
+     This section is black + [data-nav-dark] (white nav logo). But it stays
+     `sticky`-pinned behind the white demo panel as that panel rises over it,
+     so the nav would keep its dark look on a white screen. Fix: once the demo
+     panel has risen above the nav line, drop [data-nav-dark] so the nav flips
+     to its light look — matching the white background under it. */
+  useEffect(() => {
+    const el = lockRef.current;
+    if (!el) return;
+    let raf = 0;
+    const NAV_LINE = 34;
+    const update = () => {
+      raf = 0;
+      const demo = document.querySelector<HTMLElement>("[data-demo-curtain]");
+      const covered = demo ? demo.getBoundingClientRect().top <= NAV_LINE : false;
+      if (covered) el.removeAttribute("data-nav-dark");
+      else el.setAttribute("data-nav-dark", "");
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
   /* ── Wheel + touch handlers drive the reveal while locked ── */
   useEffect(() => {
-    const SPEED = 4800;
+    /* Higher SPEED = each wheel/touch delta advances the reveal LESS, so the
+       words come in gradually as you scroll (less sensitive). Bumped up a lot
+       so the word-by-word reveal is clearly visible and no longer whips by. */
+    const SPEED = 5200;
     /* Lerp factor per frame — smooths discrete wheel/touch input into a
        continuous, jank-free motion (lower = smoother, higher = snappier). */
-    const EASE = 0.18;
+    const EASE = 0.19;
     /* Below this gap we snap to target and stop the rAF loop. */
     const EPS = 0.0008;
 
@@ -275,23 +311,24 @@ export default function ExcelReveal() {
           ExcelReveal + AtlasShowcase dans App.tsx. */}
       <section
         id="excel-reveal"
+        data-nav-dark
         ref={lockRef}
-        className="sticky top-0 z-[10] hidden md:flex items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] overflow-hidden min-h-screen"
+        className="sticky top-0 z-[10] hidden md:flex items-center justify-center bg-black overflow-hidden min-h-screen"
       >
         {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
         <div className="excel-aurora" aria-hidden />
 
         {/* Les 3 lignes sont superposées (absolute inset-0) et centrées :
             une seule visible à la fois → effet diaporama, pas d'empilement. */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-6 lg:px-10 text-center h-[42vh] min-h-[220px] flex items-center justify-center">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 lg:px-10 text-center h-[52vh] min-h-[300px] flex items-center justify-center">
 
           {/* Ligne 1 — révélation mot par mot */}
           <div className="absolute inset-0 flex items-center justify-center">
             <RevealLine
               progress={revealProgress}
               range={LINE1_RANGE}
-              className="font-poppins font-normal text-[#111827] dark:text-white"
-              style={{ fontSize: "clamp(2.25rem, 4.2vw, 3.5rem)", lineHeight: 1.3, letterSpacing: "-0.025em" }}
+              className="font-inter font-normal text-white"
+              style={{ fontSize: "clamp(2.6rem, 5vw, 4.25rem)", lineHeight: 1.18, letterSpacing: "-0.03em" }}
               gradientWords={["temps", "time"]}
               text={t({
                 fr: "Votre temps est votre actif le plus précieux.",
@@ -305,12 +342,12 @@ export default function ExcelReveal() {
             <RevealLine
               progress={revealProgress}
               range={LINE2_RANGE}
-              className="font-poppins font-normal text-[#111827] dark:text-white"
-              style={{ fontSize: "clamp(2.25rem, 4.2vw, 3.5rem)", lineHeight: 1.3, letterSpacing: "-0.025em" }}
+              className="font-inter font-normal text-white"
+              style={{ fontSize: "clamp(1.9rem, 3.6vw, 3rem)", lineHeight: 1.22, letterSpacing: "-0.025em" }}
               gradientWords={["Excel"]}
               text={t({
-                fr: "Cessez de le gaspiller sur Excel.",
-                en: "Stop wasting it on Excel.",
+                fr: "Cessez de gaspiller des heures sur des tâches répétitives à faible valeur ajoutée, sur Excel.",
+                en: "Stop wasting hours on repetitive, low-value tasks in Excel.",
               })}
             />
           </div>
@@ -321,10 +358,10 @@ export default function ExcelReveal() {
             style={{ opacity: l3o, y: l3y, filter: l3Filter }}
           >
             <motion.p
-              className="inline-block font-poppins font-normal whitespace-nowrap"
+              className="inline-block font-inter font-normal whitespace-nowrap"
               style={{ fontSize: l3Size, lineHeight: l3Leading, letterSpacing: l3Track }}
             >
-              <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
+              <span className="text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
               <span className="text-brand-gradient">Ora.</span>
             </motion.p>
           </motion.div>
@@ -335,7 +372,7 @@ export default function ExcelReveal() {
       {/* ── Indication de scroll pendant le verrouillage du texte ── */}
       {isLocked && (
         <motion.div
-          className="fixed bottom-7 left-1/2 z-[60] -translate-x-1/2 flex flex-col items-center gap-1.5 pointer-events-none"
+          className="fixed bottom-12 inset-x-0 mx-auto w-fit z-[60] flex flex-col items-center gap-1.5 pointer-events-none text-center"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}

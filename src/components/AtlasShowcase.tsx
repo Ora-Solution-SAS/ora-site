@@ -229,16 +229,16 @@ export default function AtlasShowcase() {
         {/* Explanatory paragraph below the main mockup — gives Atlas more
             context than the headline alone. */}
         <motion.div
-          className="max-w-3xl mx-auto mt-48 md:mt-64 text-center"
+          className="max-w-3xl mx-auto mt-16 md:mt-24 text-center"
           variants={fadeInUp}
         >
-          <h3 className="font-poppins font-semibold text-2xl md:text-[2rem] tracking-[-0.03em] leading-[1.15] text-white">
+          <h3 className="font-poppins font-semibold text-3xl md:text-[2.6rem] tracking-[-0.03em] leading-[1.12] text-white">
             {t({
               fr: "Le dossier complet, orchestré et traçable",
               en: "The whole dossier, orchestrated and traceable",
             })}
           </h3>
-          <p className="mt-5 font-inter text-[15px] md:text-base leading-[1.75] text-gray-300">
+          <p className="mt-6 font-inter text-base md:text-lg leading-[1.75] text-gray-200">
             {t({
               fr: "Atlas transforme un dossier de deal ou de mission en une carte vivante : chaque fichier est relié à ses sources, ses dérivés et ses livrables. Vous voyez d'un coup d'œil le statut de chaque document, ce qui reste à valider et qui a fait quoi, grâce à un journal d'audit par document. La lignée complète d'un chiffre, de la donnée brute au livrable final, sans jamais quitter Excel.",
               en: "Atlas turns a deal or engagement dossier into a living map: every file is linked to its sources, its derivatives and its deliverables. See each document's status at a glance, what's still to validate and who did what, with a per-document audit trail. The full lineage of a figure, from raw data to final deliverable, without ever leaving Excel.",
@@ -246,10 +246,9 @@ export default function AtlasShowcase() {
           </p>
         </motion.div>
 
-        {/* Lower tabbed demo — ONE continuous frame. The active tab's visual
-            sits on the left, with a smaller, blurred peek of the NEXT tab's
-            visual emerging on the right (carousel feel). The frame itself never
-            changes between tabs — only the visuals slide/swap inside it. */}
+        {/* Lower tabbed demo (TabPills + 3 video/mockup carousel) — hidden for
+            now at the client's request. Flip `false` to `true` to restore. */}
+        {false && (
         <motion.div className="mt-14 md:mt-16" variants={fadeInUp}>
           <TabPills tabs={tabs} active={bottomTab} onSelect={setBottomTab} />
 
@@ -318,6 +317,7 @@ export default function AtlasShowcase() {
               </div>
           </div>
         </motion.div>
+        )}
       </motion.div>
     </section>
   );
