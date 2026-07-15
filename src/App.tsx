@@ -29,6 +29,7 @@ import ExcelReveal from "./components/ExcelReveal";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 import ProblemSection from "./components/ProblemSection";
+import UseCases from "./components/UseCases";
 import FAQ from "./components/FAQ";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
@@ -500,8 +501,15 @@ import Cal from "@calcom/embed-react";
 import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
-import OraGallery from "./components/OraGallery";
-import DemoVideoCurtain from "./components/DemoVideoCurtain";
+// OraGallery = the Bending-Spoons-style 6-video carousel hero. Preserved intact
+// and ready to swap back in once the real demo clips are available (just replace
+// <OraHeroVideo> below with <OraGallery>). Temporarily replaced by a single
+// demo video via OraHeroVideo.
+// import OraGallery from "./components/OraGallery";
+import OraHeroVideo from "./components/OraHeroVideo";
+// DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: its video
+// now lives in the hero (OraHeroVideo). Component file kept for reference.
+// import DemoVideoCurtain from "./components/DemoVideoCurtain";
 import { useLang } from "./lib/i18n";
 import {
   Clock,
@@ -973,18 +981,17 @@ const App = () => {
 
       {/* Right-edge scroll-spy nav removed at the client's request. */}
 
-      {/* GALLERY — the black hero at the very top: the curved 3D video
-          carousel over a truly black background (Bending-Spoons style). */}
-      <OraGallery theme={theme} openBooking={openBooking} />
+      {/* HERO — black section at the very top. Currently a single product demo
+          video (OraHeroVideo); swap back to <OraGallery> for the 6-video curved
+          carousel once the real clips are ready. */}
+      <OraHeroVideo theme={theme} openBooking={openBooking} />
 
-      {/* ── "Your time is your most valuable asset" + DEMO VIDEO curtain ──
+      {/* ── "Your time is your most valuable asset" scroll-reveal ──
           ExcelReveal (black, `sticky top-0` z-10) plays its word-by-word
-          reveal right under the videos; then the white demo-video panel
-          (z-20) rises up over it — same curtain recipe used for Atlas. The
-          wrapper `relative` bounds the sticky pin to these two sections. */}
+          reveal under the hero. The demo-video curtain that used to rise over
+          it has been removed; ExcelReveal now stands on its own. */}
       <div className="relative">
         <ExcelReveal />
-        <DemoVideoCurtain />
       </div>
 
       {/* FEATURES — alternating video + text rows */}
@@ -1015,6 +1022,12 @@ const App = () => {
               "linear-gradient(to bottom, transparent 0, transparent 360px, #000 620px, #000 calc(100% - 200px), transparent 100%)",
           }}
         />
+        {/* Use cases — Bending-Spoons-style blue cards showing concretely
+            what Ora automates (FEC Studio, monthly reporting), with the real
+            demo clips. Placed right above the "coûte plus que du temps"
+            problem section. */}
+        <UseCases />
+
         {/* Problem — the "il me comprend" moment before the product. */}
         <ProblemSection />
 

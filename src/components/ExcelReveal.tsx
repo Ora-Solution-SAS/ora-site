@@ -132,19 +132,20 @@ export default function ExcelReveal() {
      entre, tient, sort ENTIÈREMENT, puis un blanc, puis la suivante entre. Les
      fenêtres [in0,in1,out0,out1] ne se recouvrent jamais → jamais deux phrases
      à l'écran en même temps (fini l'overlap). */
-  const LINE1_RANGE: [number, number, number, number] = [0, 0.08, 0.20, 0.27];
-  const LINE2_RANGE: [number, number, number, number] = [0.34, 0.44, 0.56, 0.63];
+  const LINE1_RANGE: [number, number, number, number] = [0, 0.10, 0.27, 0.33];
+  const LINE2_RANGE: [number, number, number, number] = [0.36, 0.48, 0.63, 0.69];
 
-  /* Ligne 3 « Découvrez Ora » : entre (0.70→0.80) après un blanc, grandit
-     (0.74→0.96) et RESTE affichée. Elle ne s'efface pas : à la fin du scrub, le
-     scroll naturel fait monter la vidéo démo (fond blanc) par-dessus. */
-  const l3o      = useTransform(revealProgress, [0.70, 0.80], [0, 1]);
-  const l3y      = useTransform(revealProgress, [0.70, 0.80], [28, 0]);
-  const l3Blur   = useTransform(revealProgress, [0.70, 0.80], [12, 0]);
+  /* Ligne 3 « Découvrez Ora » : entre (0.72→0.81) après un micro-blanc,
+     grandit (0.75→0.96) et RESTE affichée. Elle ne s'efface pas : à la fin du
+     scrub, le scroll naturel fait monter la vidéo démo (fond blanc) par-dessus.
+     Les blancs entre phrases sont réduits à ~3% pour éviter tout temps mort. */
+  const l3o      = useTransform(revealProgress, [0.72, 0.81], [0, 1]);
+  const l3y      = useTransform(revealProgress, [0.72, 0.81], [28, 0]);
+  const l3Blur   = useTransform(revealProgress, [0.72, 0.81], [12, 0]);
   const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
-  const l3Size    = useTransform(revealProgress, [0.74, 0.96], ["3.5rem", "6rem"]);
-  const l3Leading = useTransform(revealProgress, [0.74, 0.96], [1.4, 1.08]);
-  const l3Track   = useTransform(revealProgress, [0.74, 0.96], ["-0.025em", "-0.04em"]);
+  const l3Size    = useTransform(revealProgress, [0.75, 0.96], ["3.5rem", "6rem"]);
+  const l3Leading = useTransform(revealProgress, [0.75, 0.96], [1.4, 1.08]);
+  const l3Track   = useTransform(revealProgress, [0.75, 0.96], ["-0.025em", "-0.04em"]);
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
   useEffect(() => {
@@ -208,10 +209,10 @@ export default function ExcelReveal() {
 
   /* ── Wheel + touch handlers drive the reveal while locked ── */
   useEffect(() => {
-    /* Higher SPEED = each wheel/touch delta advances the reveal LESS, so the
-       words come in gradually as you scroll (less sensitive). Bumped up a lot
-       so the word-by-word reveal is clearly visible and no longer whips by. */
-    const SPEED = 5200;
+    /* Higher SPEED = each wheel/touch delta advances the reveal LESS. 4200
+       keeps the word-by-word reveal clearly visible while shortening the
+       whole sequence (the user found 5200 dragged on too long). */
+    const SPEED = 4200;
     /* Lerp factor per frame — smooths discrete wheel/touch input into a
        continuous, jank-free motion (lower = smoother, higher = snappier). */
     const EASE = 0.19;

@@ -54,10 +54,21 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
 
   return (
     <section data-nav-shy data-nav-dark className="relative overflow-hidden pt-28 md:pt-32 pb-10 md:pb-12 px-6 md:px-12 bg-black">
+      {/* Soft white top-light: a gentle overhead glow that lifts the pure
+          black and gives the hero depth (the headline sits in the light).
+          Very low opacity so it reads as lighting, not as a grey wash. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(56% 44% at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.055) 40%, transparent 70%)",
+        }}
+      />
       {/* Header — Bending-Spoons-style: just an eyebrow + a big benefit line,
           then the carousel sits high so it's visible on arrival. */}
       <motion.div
-        className="relative z-10 text-center max-w-6xl mx-auto"
+        className="relative z-10 text-center max-w-[90rem] mx-auto"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-80px" }}
@@ -66,10 +77,18 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
         <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">
           {t({ fr: "Ora en action", en: "Ora in action" })}
         </span>
-        <h2 className="font-poppins font-normal text-[2.1rem] md:text-[2.9rem] lg:text-[3.5rem] tracking-[-0.03em] leading-[1.06] text-white mt-4 text-center">
-          <span className="block lg:whitespace-nowrap">{t({ fr: "On s'occupe de vos tâches répétitives,", en: "We handle the repetitive tasks," })}</span>
+        {/* Bending-Spoons-size hero type: huge white grotesque, key words in
+            brand blue (same font as the rest of the sentence). */}
+        <h2 className="font-inter font-normal text-[clamp(2.2rem,5vw,4.75rem)] tracking-[-0.035em] leading-[1.05] text-white mt-5 text-center">
           <span className="block lg:whitespace-nowrap">
-            <span className="inline-block text-brand-gradient">{t({ fr: "vous excellez dans votre métier.", en: "so you excel at what you do." })}</span>
+            {t({ fr: "On s'occupe de vos ", en: "We handle the " })}
+            <span className="text-brand-gradient">{t({ fr: "tâches répétitives", en: "repetitive tasks" })}</span>
+            {t({ fr: ",", en: "," })}
+          </span>
+          <span className="block lg:whitespace-nowrap">
+            {t({ fr: "vous ", en: "so you " })}
+            <span className="text-brand-gradient">{t({ fr: "excellez", en: "excel" })}</span>
+            {t({ fr: " dans votre métier.", en: " at what you do." })}
           </span>
         </h2>
         <p className="font-inter mt-4 text-[13px] text-gray-500">
@@ -79,16 +98,12 @@ export default function OraGallery({ theme, openBooking }: OraGalleryProps) {
 
       {/* Curved auto-rotating strip. Negative margins cancel the section's
           horizontal padding so the strip bleeds full-width to the viewport
-          edges — the section's overflow-hidden does the clipping. */}
-      <motion.div
-        className="relative z-10 mt-8 md:mt-10 -mx-6 md:-mx-12"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-60px" }}
-        variants={fadeUp}
-      >
+          edges — the section's overflow-hidden does the clipping.
+          No block-level entrance here: each card animates its own rise-up
+          (staggered) right after the headline — Bending-Spoons style. */}
+      <div className="relative z-10 mt-8 md:mt-10 -mx-6 md:-mx-12">
         <CurvedCarousel cards={cards} onOpen={setActive} />
-      </motion.div>
+      </div>
 
       {/* CTA */}
       <motion.div
@@ -184,7 +199,8 @@ function CurvedCarousel({
       // The cylinder pulls edge cards inward by up to ~0.33 × half the
       // viewport; the scroll window must stay that far inside the doubled
       // track on both sides or the screen edges go bare near the wrap point.
-      s.lead = 0.33 * (s.vpWidth / 2) + 30;
+      // Sized for PHI_MAX = 1.4: inward pull ≈ R(φc − sinφc) ≈ 0.46 × half.
+      s.lead = 0.5 * (s.vpWidth / 2) + 30;
       // On first measure, park the strip so the middle of the three hero clips
       // (index 3 = FEC Studio, flanked by Reporting and Tracking) sits dead
       // centre — that's the group we want most visible at rest. After that we
@@ -209,7 +225,9 @@ function CurvedCarousel({
       // the cylinder axis (rotateY −φ, outer edge closest to the viewer).
       // Gentler curvature on mobile: cards are near-viewport-width there, so
       // a tight cylinder would turn neighbors edge-on and open holes.
-      const PHI_MAX = isMd ? 1.15 : 0.7; // rad at the viewport edge
+      // Higher PHI_MAX = tighter cylinder = the visible side cards lean in
+      // much harder (Bending-Spoons reference), while the center stays flat.
+      const PHI_MAX = isMd ? 1.4 : 0.8; // rad at the viewport edge
       const CLAMP = PHI_MAX * 1.17;
       const R = half / PHI_MAX;
       const D = R * (1 - Math.cos(PHI_MAX)) + (isMd ? 80 : 40);
@@ -329,6 +347,11 @@ function CurvedCarousel({
         endDrag();
       }}
     >
+      {/* Soft side shadows: the tilted edge cards sink into darkness at the
+          screen borders (Bending-Spoons look). Untransformed overlays paint
+          above the receded 3D cards; pointer-events-none keeps drag/click. */}
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 md:w-44 bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 md:w-44 bg-gradient-to-l from-black/85 via-black/35 to-transparent" />
       <div
         ref={trackRef}
         className="relative flex items-center gap-2 md:gap-3 will-change-transform"
@@ -347,6 +370,9 @@ function CurvedCarousel({
             <div ref={(el) => { innerRefs.current[i] = el; }} className="will-change-transform">
               <VideoFrame
                 card={c}
+                // Rise-up entrance right after the headline, with a very light
+                // left-to-right stagger (clones share their original's delay).
+                enterDelay={0.35 + (i % cards.length) * 0.06}
                 onSelect={(rect) => {
                   if (!st.current.moved) onOpen({ src: c.src, label: c.label, rect });
                 }}
@@ -359,19 +385,34 @@ function CurvedCarousel({
   );
 }
 
-// ── A large auto-playing video inside a colored passe-partout frame ─────────
-function VideoFrame({ card, onSelect }: { card: Card; onSelect: (rect: DOMRect) => void }) {
+// ── A large auto-playing video card ─────────────────────────────────────────
+function VideoFrame({
+  card,
+  enterDelay,
+  onSelect,
+}: {
+  card: Card;
+  enterDelay: number;
+  onSelect: (rect: DOMRect) => void;
+}) {
   const { label, src } = card;
   const frameRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div
+    <motion.div
       onClick={() => {
         // Hand the frame's on-screen rect to the lightbox so the zoom-in
         // animation can start exactly from this card.
         const el = frameRef.current;
         if (el) onSelect(el.getBoundingClientRect());
       }}
+      // Bending-Spoons entrance: each card rises up softly on arrival, right
+      // after the headline, with a light per-card stagger. This wrapper is a
+      // CHILD of the 3D-transformed element the carousel writes to each frame,
+      // so the entrance never fights the curvature transforms.
+      initial={{ opacity: 0, y: 64 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.9, delay: enterDelay, ease: [0.22, 1, 0.36, 1] }}
       className="group w-[280px] md:w-[35vw] relative cursor-pointer pointer-events-auto"
     >
       {/* small white label — ABOVE the video, not inside it */}
@@ -401,7 +442,7 @@ function VideoFrame({ card, onSelect }: { card: Card; onSelect: (rect: DOMRect) 
           className="pointer-events-none absolute inset-0 h-full w-full object-cover"
         />
       </div>
-    </div>
+    </motion.div>
   );
 }
 

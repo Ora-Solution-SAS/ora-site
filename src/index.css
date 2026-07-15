@@ -149,6 +149,19 @@
    color: #3b82f6;
  }
 
+ /* Bending-Spoons-style italic-serif accent for hero keywords (the elegant
+    contrast against the big white grotesque). Instrument Serif is the closest
+    free stand-in for that look; slight optical upsize so its cap height sits
+    level with Inter's. */
+ .font-serif-accent {
+   font-family: "Instrument Serif", Georgia, serif;
+   font-style: italic;
+   font-weight: 400;
+   font-size: 1.05em;
+   line-height: 1;
+   letter-spacing: -0.01em;
+ }
+
  .bg-brand-gradient {
    background: linear-gradient(to right, #3b82f6, #0d9488);
  }
