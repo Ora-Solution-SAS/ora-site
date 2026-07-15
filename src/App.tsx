@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
+import { Analytics } from "@vercel/analytics/react";
 import ForBusinessPage from "./pages/ForBusinessPage";
 import OraExperiencePage from "./pages/OraExperiencePage";
 import SolutionTemplatePage from "./pages/SolutionTemplatePage";
@@ -1394,6 +1395,7 @@ const App = () => {
         </FadeInOnScroll>
       )}
 
+      <Analytics />
     </div>
   );
 };
