@@ -23,6 +23,7 @@ module.exports = {
             fontFamily: {
                 poppins: ["Poppins", "sans-serif"],
                 inter: ["Inter", "sans-serif"],
+                instrument: ["Instrument Sans", "Inter", "sans-serif"],
                 sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
             },
             animation: {

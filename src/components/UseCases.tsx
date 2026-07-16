@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import ReportingMockup from "./ReportingMockup";
 
 /**
  * UseCases — Bending-Spoons-style acquisition cards, adapted to Ora use cases:
@@ -33,6 +34,10 @@ type UseCase = {
   /** Decorative layer: peach circle (WeTransfer) or white outline rings
    *  (Streamyard). */
   decor?: "circle" | "rings";
+  /** Replace the video media zone with the custom Ora+PDF+Envoyer mockup
+   *  (Bending-Spoons-style static composition). The video is kept for the
+   *  "Voir la démo" lightbox. */
+  mockup?: boolean;
 };
 
 const fadeUp = {
@@ -46,15 +51,15 @@ export default function UseCases() {
 
   const cases: UseCase[] = [
     {
-      title: "FEC Studio",
+      title: t({ fr: "Automatisation FEC", en: "FEC automation" }),
       metaIcon: PieChart,
       meta: t({ fr: "Audit & commissariat aux comptes", en: "Audit & statutory engagements" }),
       bullets: [
         t({ fr: "Importez le FEC de vos clients, contrôlez son intégrité en quelques secondes", en: "Import your clients' FEC file and check its integrity in seconds" }),
         t({ fr: "Écritures atypiques repérées et documentées automatiquement", en: "Unusual entries flagged and documented automatically" }),
       ],
-      video: "/ora_fec_demo_v2.mp4",
-      poster: "/posters/ora_fec_demo_v2.jpg",
+      video: "/final-fec.mp4",
+      poster: "/posters/final-fec.jpg",
       // Sampled from the FEC clip's own canvas background so the card and the
       // video blend into one continuous surface.
       bg: "#d2e4fa",
@@ -72,13 +77,13 @@ export default function UseCases() {
       ],
       video: "/ora_reporting_v3.mp4",
       poster: "/posters/ora_reporting_v3.jpg",
-      // WeTransfer indigo, sampled from the reference — white text, peach
-      // circle behind the visual.
+      // WeTransfer indigo — white text. Media zone = custom Ora+PDF mockup
+      // (see `mockup`), so the decorative circle is dropped.
       bg: "#5865E3",
       ink: "#ffffff",
       sub: "rgba(255,255,255,0.78)",
       dark: true,
-      decor: "circle",
+      mockup: true,
     },
     {
       title: t({ fr: "Pointage de comptes", en: "Account matching" }),
@@ -108,9 +113,8 @@ export default function UseCases() {
       ],
       video: "/ora_pdf_extract.mp4",
       poster: "/posters/ora_pdf_extract.jpg",
-      // Sampled from the Extraction clip's own canvas so the video melts into
-      // the card (blend mode: bigger, edge-to-edge, no frame/shadow).
-      bg: "#d9e1f5",
+      // Light-blue card background (from the reference swatch).
+      bg: "#C3D5F5",
       ink: "#1c2a5e",
       sub: "#47548f",
       blend: true,
@@ -142,11 +146,13 @@ export default function UseCases() {
           return (
             <motion.div
               key={c.title}
-              className="relative overflow-hidden rounded-[28px] md:rounded-[36px] p-7 md:p-10"
+              className={`relative overflow-hidden rounded-[28px] md:rounded-[36px] p-7 md:p-10 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
               style={{ background: c.bg }}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-80px" }}
+              whileHover={{ y: -8 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22, mass: 0.6 }}
               variants={{
                 hidden: { opacity: 0, y: 32 },
                 visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: (i % 2) * 0.12 } },
@@ -208,36 +214,42 @@ export default function UseCases() {
                 ))}
               </ul>
 
-              {/* Demo clip — native 16:9 ratio (nothing cropped). When `blend`
-                  is set: no frame/shadow, and the clip BLEEDS to the card's
-                  side + bottom edges (bigger, clipped by the card's rounded
-                  corners), with a top gradient in the card colour that melts
-                  the clip's upper edge into the card (no visible seam). */}
-              <div
-                className={
-                  c.blend
-                    ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
-                    : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
-                }
-              >
-                <video
-                  src={c.video}
-                  poster={c.poster}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className="w-full aspect-video object-cover block"
-                />
-                {c.blend && (
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-x-0 top-0 h-8 md:h-10"
-                    style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }}
+              {/* Media zone. `mockup`: the static Ora+PDF+Envoyer composition
+                  bleeding to the card's side + bottom edges. Otherwise the demo
+                  clip in native 16:9 (nothing cropped); with `blend` it bleeds
+                  to the edges with a top gradient in the card colour so the
+                  clip's upper edge melts into the card (no visible seam). */}
+              {c.mockup ? (
+                <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-7 md:-mb-10">
+                  <ReportingMockup />
+                </div>
+              ) : (
+                <div
+                  className={
+                    c.blend
+                      ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
+                      : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
+                  }
+                >
+                  <video
+                    src={c.video}
+                    poster={c.poster}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="w-full aspect-video object-cover block"
                   />
-                )}
-              </div>
+                  {c.blend && (
+                    <div
+                      aria-hidden
+                      className="pointer-events-none absolute inset-x-0 top-0 h-8 md:h-10"
+                      style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }}
+                    />
+                  )}
+                </div>
+              )}
             </motion.div>
           );
         })}

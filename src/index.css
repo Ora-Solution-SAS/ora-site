@@ -142,6 +142,13 @@
    font-family: "Inter", system-ui, -apple-system, sans-serif;
  }
 
+ /* Instrument Sans — the Bending-Spoons display grotesque. Reserved for the
+    big scroll-reveal phrases (ExcelReveal); the rest of the site keeps
+    Poppins/Inter per the style guide. */
+ .font-instrument {
+   font-family: "Instrument Sans", "Inter", system-ui, -apple-system, sans-serif;
+ }
+
  /* Brand accent — solid blue (unified emphasis colour across the whole site).
     Kept the class name for compatibility with existing usages; it now renders
     a flat brand blue instead of a gradient for a cleaner, more consistent look. */
