@@ -21,8 +21,10 @@ interface OraHeroVideoProps {
   openBooking: () => void;
 }
 
+// Main product demo. Framed card on the black hero (this clip is not a
+// black-background export, so it gets a proper frame rather than blending in).
 const DEMO_VIDEO = "/ora-1.mp4";
-// Seek past the awkward opening moment of the clip (same as the old demo panel).
+// Seek past the awkward opening moment of the clip.
 const VIDEO_START = 0.5;
 
 const fadeUp = {

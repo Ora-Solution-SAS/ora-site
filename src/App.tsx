@@ -506,9 +506,12 @@ import { OraFooter } from "./components/Footer";
 // <OraHeroVideo> below with <OraGallery>). Temporarily replaced by a single
 // demo video via OraHeroVideo.
 // import OraGallery from "./components/OraGallery";
-import OraHeroVideo from "./components/OraHeroVideo";
-// DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: its video
-// now lives in the hero (OraHeroVideo). Component file kept for reference.
+// OraHeroVideo (single ora-1.mp4 demo) replaced by the scroll-driven demo
+// below. File kept for reference.
+// import OraHeroVideo from "./components/OraHeroVideo";
+import OraHeroDemo from "./components/OraHeroDemo";
+// DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: the main
+// demo (ora-1.mp4) now lives in the hero. Component file kept for reference.
 // import DemoVideoCurtain from "./components/DemoVideoCurtain";
 import { useLang } from "./lib/i18n";
 import {
@@ -981,15 +984,16 @@ const App = () => {
 
       {/* Right-edge scroll-spy nav removed at the client's request. */}
 
-      {/* HERO — black section at the very top. Currently a single product demo
-          video (OraHeroVideo); swap back to <OraGallery> for the 6-video curved
+      {/* HERO — black section at the very top. Scroll-driven product demo
+          (sticky scrub, fake Ora app + animated cursor) under the headline via
+          OraHeroDemo. Swap back to <OraGallery> for the 6-video curved
           carousel once the real clips are ready. */}
-      <OraHeroVideo theme={theme} openBooking={openBooking} />
+      <OraHeroDemo theme={theme} openBooking={openBooking} />
 
       {/* ── "Your time is your most valuable asset" scroll-reveal ──
-          ExcelReveal (black, `sticky top-0` z-10) plays its word-by-word
-          reveal under the hero. The demo-video curtain that used to rise over
-          it has been removed; ExcelReveal now stands on its own. */}
+          ExcelReveal (black, `sticky top-0` z-10) plays its accumulating
+          word-by-word reveal under the hero. The demo-video curtain that used
+          to rise over it has been removed; ExcelReveal stands on its own. */}
       <div className="relative">
         <ExcelReveal />
       </div>

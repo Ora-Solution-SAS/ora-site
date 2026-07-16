@@ -195,9 +195,8 @@ function PrivacyTile({
       <div
         className="relative aspect-[4/3] md:aspect-auto md:h-[280px] lg:h-[300px] rounded-[24px] overflow-hidden"
         style={{
-          background: dk
-            ? "linear-gradient(180deg, #23407a 0%, #182f5e 55%, #12224a 100%)"
-            : "linear-gradient(180deg, #b7d5fc 0%, #6ba3f7 55%, #4285f0 100%)",
+          // Flat solid blue (from the reference swatch), no gradient.
+          background: dk ? "#2b4bb0" : "#4169E1",
         }}
       >
         {/* soft top glow, like light coming from above */}
@@ -205,7 +204,7 @@ function PrivacyTile({
           aria-hidden
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(90% 60% at 50% -10%, rgba(255,255,255,0.35) 0%, transparent 60%)",
+            background: "radial-gradient(90% 60% at 50% -10%, rgba(255,255,255,0.14) 0%, transparent 60%)",
           }}
         />
         <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-110">

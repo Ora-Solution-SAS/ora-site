@@ -3,23 +3,24 @@ import { useMotionValue, useTransform, motion, type MotionValue } from "framer-m
 import { ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
-/* ── Word-by-word scroll-reveal ──────────────────────────────────
- *  A line whose words cascade in (blur + slide up), staggered, while
- *  the user scrolls. Driven by the shared `progress` MotionValue so it
- *  stays in lockstep with the scroll-lock. `range` = [in0, in1, out0, out1]:
- *  words fade IN staggered across [in0, in1], then the whole line fades
- *  OUT together across [out0, out1]. A keyword can be highlighted with the
- *  brand gradient by matching its text in `gradientWords`. */
+/* ── Bending-Spoons-style accumulating scroll-reveal ─────────────
+ *  One big paragraph whose words cascade in (blur + slide up), staggered,
+ *  as the user scrolls — and STAY on screen once revealed (they accumulate
+ *  and fill several lines, exactly like bendingspoons.com). Driven by the
+ *  shared `progress` MotionValue so it stays in lockstep with the scroll-lock.
+ *  A keyword can be highlighted (brand blue) via `gradientWords`. */
 function RevealWord({
-  progress, inStart, inEnd, outStart, outEnd, isGradient, children,
+  progress, inStart, inEnd, isGradient, children,
 }: {
   progress: MotionValue<number>;
-  inStart: number; inEnd: number; outStart: number; outEnd: number;
+  inStart: number; inEnd: number;
   isGradient: boolean; children: ReactNode;
 }) {
-  const opacity = useTransform(progress, [inStart, inEnd, outStart, outEnd], [0, 1, 1, 0]);
-  const y       = useTransform(progress, [inStart, inEnd], [22, 0]);
-  const blurPx  = useTransform(progress, [inStart, inEnd], [7, 0]);
+  // useTransform clamps by default: once past inEnd the word stays at opacity 1
+  // (no fade-out) — this is what makes the paragraph accumulate.
+  const opacity = useTransform(progress, [inStart, inEnd], [0, 1]);
+  const y       = useTransform(progress, [inStart, inEnd], [18, 0]);
+  const blurPx  = useTransform(progress, [inStart, inEnd], [8, 0]);
   const filter  = useTransform(blurPx, (b) => `blur(${b}px)`);
   return (
     <motion.span
@@ -31,29 +32,29 @@ function RevealWord({
   );
 }
 
-function RevealLine({
-  progress, range, text, gradientWords = [], className, style,
+function RevealParagraph({
+  progress, revealSpan, text, gradientWords = [], className, style,
 }: {
   progress: MotionValue<number>;
-  range: [number, number, number, number];
+  revealSpan: [number, number]; // [start, end] of scroll progress to reveal across
   text: string;
   gradientWords?: string[];
   className?: string;
   style?: CSSProperties;
 }) {
   const words = text.split(" ");
-  const [inS, inE, outS, outE] = range;
-  const span = inE - inS;
   const total = words.length;
-  /* Each word's fade-in occupies a sub-window; a light overlap keeps the
-     motion fluid while the words arrive clearly one by one (word-by-word). */
-  const per  = span * 0.28;
-  const step = total > 1 ? (span - per) / (total - 1) : 0;
+  const [start, end] = revealSpan;
+  const span = end - start;
+  // Evenly spaced word starts; each word's fade spans ~2.5 slots so 2-3 words
+  // are in transition at any moment (crisp "word by word" like Bending Spoons).
+  const step = total > 0 ? span / total : span;
+  const per = Math.min(step * 2.5, span);
   const grad = gradientWords.map((g) => g.toLowerCase());
   return (
     <p className={className} style={style}>
       {words.map((w, i) => {
-        const wInStart = inS + i * step;
+        const wInStart = start + i * step;
         const clean = w.replace(/[.,;:!?]/g, "").toLowerCase();
         return (
           <RevealWord
@@ -61,8 +62,6 @@ function RevealLine({
             progress={progress}
             inStart={wInStart}
             inEnd={wInStart + per}
-            outStart={outS}
-            outEnd={outE}
             isGradient={grad.includes(clean)}
           >
             {w}
@@ -128,24 +127,10 @@ export default function ExcelReveal() {
   const [isLocked, setIsLocked] = useState(false);
   const hasTextCompletedRef = useRef(false);
 
-  /* Diaporama avec de VRAIS intervalles vides entre les phrases : chaque phrase
-     entre, tient, sort ENTIÈREMENT, puis un blanc, puis la suivante entre. Les
-     fenêtres [in0,in1,out0,out1] ne se recouvrent jamais → jamais deux phrases
-     à l'écran en même temps (fini l'overlap). */
-  const LINE1_RANGE: [number, number, number, number] = [0, 0.10, 0.27, 0.33];
-  const LINE2_RANGE: [number, number, number, number] = [0.36, 0.48, 0.63, 0.69];
-
-  /* Ligne 3 « Découvrez Ora » : entre (0.72→0.81) après un micro-blanc,
-     grandit (0.75→0.96) et RESTE affichée. Elle ne s'efface pas : à la fin du
-     scrub, le scroll naturel fait monter la vidéo démo (fond blanc) par-dessus.
-     Les blancs entre phrases sont réduits à ~3% pour éviter tout temps mort. */
-  const l3o      = useTransform(revealProgress, [0.72, 0.81], [0, 1]);
-  const l3y      = useTransform(revealProgress, [0.72, 0.81], [28, 0]);
-  const l3Blur   = useTransform(revealProgress, [0.72, 0.81], [12, 0]);
-  const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
-  const l3Size    = useTransform(revealProgress, [0.75, 0.96], ["3.5rem", "6rem"]);
-  const l3Leading = useTransform(revealProgress, [0.75, 0.96], [1.4, 1.08]);
-  const l3Track   = useTransform(revealProgress, [0.75, 0.96], ["-0.025em", "-0.04em"]);
+  /* One accumulating paragraph (Bending-Spoons style): all words reveal across
+     the scroll and stay on screen. Reveal happens over [0, 0.92]; the last ~8%
+     is a hold before the lock releases and the demo panel rises over it. */
+  const REVEAL_SPAN: [number, number] = [0, 0.92];
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
   useEffect(() => {
@@ -178,34 +163,8 @@ export default function ExcelReveal() {
     return () => obs.disconnect();
   }, []);
 
-  /* ── Nav banner colour handoff ──────────────────────────────────
-     This section is black + [data-nav-dark] (white nav logo). But it stays
-     `sticky`-pinned behind the white demo panel as that panel rises over it,
-     so the nav would keep its dark look on a white screen. Fix: once the demo
-     panel has risen above the nav line, drop [data-nav-dark] so the nav flips
-     to its light look — matching the white background under it. */
-  useEffect(() => {
-    const el = lockRef.current;
-    if (!el) return;
-    let raf = 0;
-    const NAV_LINE = 34;
-    const update = () => {
-      raf = 0;
-      const demo = document.querySelector<HTMLElement>("[data-demo-curtain]");
-      const covered = demo ? demo.getBoundingClientRect().top <= NAV_LINE : false;
-      if (covered) el.removeAttribute("data-nav-dark");
-      else el.setAttribute("data-nav-dark", "");
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    update();
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
+  /* (Nav banner colour handoff removed: the section now runs on the site's
+     light/dark background, so the nav keeps its normal theme-aware look.) */
 
   /* ── Wheel + touch handlers drive the reveal while locked ── */
   useEffect(() => {
@@ -312,61 +271,27 @@ export default function ExcelReveal() {
           ExcelReveal + AtlasShowcase dans App.tsx. */}
       <section
         id="excel-reveal"
-        data-nav-dark
         ref={lockRef}
-        className="sticky top-0 z-[10] hidden md:flex items-center justify-center bg-black overflow-hidden min-h-screen"
+        className="sticky top-0 z-[10] hidden md:flex items-center bg-white dark:bg-black overflow-hidden min-h-screen"
       >
         {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
         <div className="excel-aurora" aria-hidden />
 
-        {/* Les 3 lignes sont superposées (absolute inset-0) et centrées :
-            une seule visible à la fois → effet diaporama, pas d'empilement. */}
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 lg:px-10 text-center h-[52vh] min-h-[300px] flex items-center justify-center">
-
-          {/* Ligne 1 — révélation mot par mot */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <RevealLine
-              progress={revealProgress}
-              range={LINE1_RANGE}
-              className="font-inter font-normal text-white"
-              style={{ fontSize: "clamp(2.6rem, 5vw, 4.25rem)", lineHeight: 1.18, letterSpacing: "-0.03em" }}
-              gradientWords={["temps", "time"]}
-              text={t({
-                fr: "Votre temps est votre actif le plus précieux.",
-                en: "Your time is your most valuable asset.",
-              })}
-            />
-          </div>
-
-          {/* Ligne 2 — révélation mot par mot */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <RevealLine
-              progress={revealProgress}
-              range={LINE2_RANGE}
-              className="font-inter font-normal text-white"
-              style={{ fontSize: "clamp(1.9rem, 3.6vw, 3rem)", lineHeight: 1.22, letterSpacing: "-0.025em" }}
-              gradientWords={["Excel"]}
-              text={t({
-                fr: "Cessez de gaspiller des heures sur des tâches répétitives à faible valeur ajoutée, sur Excel.",
-                en: "Stop wasting hours on repetitive, low-value tasks in Excel.",
-              })}
-            />
-          </div>
-
-          {/* Ligne 3 — grandit puis reste affichée comme conclusion. */}
-          <motion.div
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ opacity: l3o, y: l3y, filter: l3Filter }}
-          >
-            <motion.p
-              className="inline-block font-inter font-normal whitespace-nowrap"
-              style={{ fontSize: l3Size, lineHeight: l3Leading, letterSpacing: l3Track }}
-            >
-              <span className="text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
-              <span className="text-brand-gradient">Ora.</span>
-            </motion.p>
-          </motion.div>
-
+        {/* Un seul paragraphe aligné à gauche : les mots apparaissent au scroll
+            et RESTENT, remplissant plusieurs lignes — exactement comme
+            bendingspoons.com. */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-8 lg:px-16">
+          <RevealParagraph
+            progress={revealProgress}
+            revealSpan={REVEAL_SPAN}
+            className="font-instrument font-medium text-[#111827] dark:text-white text-center"
+            style={{ fontSize: "clamp(1.9rem, 4vw, 3.7rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
+            gradientWords={["temps", "time", "Excel", "Ora"]}
+            text={t({
+              fr: "Votre temps est votre actif le plus précieux. Cessez de gaspiller des heures sur des tâches répétitives à faible valeur ajoutée, sur Excel. Découvrez Ora.",
+              en: "Your time is your most valuable asset. Stop wasting hours on repetitive, low-value tasks in Excel. Meet Ora.",
+            })}
+          />
         </div>
       </section>
 
