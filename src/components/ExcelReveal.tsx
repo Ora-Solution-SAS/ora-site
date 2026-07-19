@@ -3,69 +3,84 @@ import { useMotionValue, useTransform, motion, type MotionValue } from "framer-m
 import { ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
-/* ── Bending-Spoons-style accumulating scroll-reveal ─────────────
- *  One big paragraph whose words cascade in (blur + slide up), staggered,
- *  as the user scrolls — and STAY on screen once revealed (they accumulate
- *  and fill several lines, exactly like bendingspoons.com). Driven by the
- *  shared `progress` MotionValue so it stays in lockstep with the scroll-lock.
- *  A keyword can be highlighted (brand blue) via `gradientWords`. */
-function RevealWord({
-  progress, inStart, inEnd, isGradient, children,
+/* ── Letter-by-letter scroll-reveal (diaporama) ──────────────────
+ *  A line whose LETTERS cascade in (blur + slide up), staggered, while
+ *  the user scrolls — a typing-like reveal driven by the shared `progress`
+ *  MotionValue so it stays in lockstep with the scroll-lock.
+ *  `range` = [in0, in1, out0, out1]: letters fade IN staggered across
+ *  [in0, in1], then the whole line fades OUT together across [out0, out1].
+ *  Letters are grouped inside per-word nowrap spans so line wrapping stays
+ *  word-based; a keyword is highlighted via `gradientWords` (word-level). */
+function RevealLetter({
+  progress, inStart, inEnd, outStart, outEnd, children,
 }: {
   progress: MotionValue<number>;
-  inStart: number; inEnd: number;
-  isGradient: boolean; children: ReactNode;
+  inStart: number; inEnd: number; outStart: number; outEnd: number;
+  children: ReactNode;
 }) {
-  // useTransform clamps by default: once past inEnd the word stays at opacity 1
-  // (no fade-out) — this is what makes the paragraph accumulate.
-  const opacity = useTransform(progress, [inStart, inEnd], [0, 1]);
-  const y       = useTransform(progress, [inStart, inEnd], [18, 0]);
-  const blurPx  = useTransform(progress, [inStart, inEnd], [8, 0]);
+  const opacity = useTransform(progress, [inStart, inEnd, outStart, outEnd], [0, 1, 1, 0]);
+  const y       = useTransform(progress, [inStart, inEnd], [10, 0]);
+  const blurPx  = useTransform(progress, [inStart, inEnd], [4, 0]);
   const filter  = useTransform(blurPx, (b) => `blur(${b}px)`);
   return (
     <motion.span
-      className={`inline-block ${isGradient ? "text-brand-gradient" : ""}`}
-      style={{ opacity, y, filter, marginRight: "0.28em", willChange: "transform, opacity, filter" }}
+      className="inline-block"
+      style={{ opacity, y, filter, willChange: "transform, opacity, filter" }}
     >
       {children}
     </motion.span>
   );
 }
 
-function RevealParagraph({
-  progress, revealSpan, text, gradientWords = [], className, style,
+function RevealLine({
+  progress, range, text, gradientWords = [], className, style,
 }: {
   progress: MotionValue<number>;
-  revealSpan: [number, number]; // [start, end] of scroll progress to reveal across
+  range: [number, number, number, number];
   text: string;
   gradientWords?: string[];
   className?: string;
   style?: CSSProperties;
 }) {
   const words = text.split(" ");
-  const total = words.length;
-  const [start, end] = revealSpan;
-  const span = end - start;
-  // Evenly spaced word starts; each word's fade spans ~2.5 slots so 2-3 words
-  // are in transition at any moment (crisp "word by word" like Bending Spoons).
-  const step = total > 0 ? span / total : span;
-  const per = Math.min(step * 2.5, span);
+  const [inS, inE, outS, outE] = range;
+  const span = inE - inS;
+  const totalLetters = words.reduce((n, w) => n + w.length, 0);
+  /* Each letter's fade occupies a sub-window; the wide overlap keeps the
+     typing cascade fluid instead of stroboscopic. */
+  const per  = span * 0.30;
+  const step = totalLetters > 1 ? (span - per) / (totalLetters - 1) : 0;
   const grad = gradientWords.map((g) => g.toLowerCase());
+  let li = 0;
   return (
     <p className={className} style={style}>
-      {words.map((w, i) => {
-        const wInStart = start + i * step;
+      {words.map((w, wi) => {
         const clean = w.replace(/[.,;:!?]/g, "").toLowerCase();
+        const isGradient = grad.includes(clean);
+        const letters = [...w].map((ch, ci) => {
+          const s = inS + li * step;
+          li += 1;
+          return (
+            <RevealLetter
+              key={ci}
+              progress={progress}
+              inStart={s}
+              inEnd={s + per}
+              outStart={outS}
+              outEnd={outE}
+            >
+              {ch}
+            </RevealLetter>
+          );
+        });
         return (
-          <RevealWord
-            key={i}
-            progress={progress}
-            inStart={wInStart}
-            inEnd={wInStart + per}
-            isGradient={grad.includes(clean)}
+          <span
+            key={wi}
+            className={`inline-block whitespace-nowrap ${isGradient ? "text-brand-gradient" : ""}`}
+            style={{ marginRight: "0.28em" }}
           >
-            {w}
-          </RevealWord>
+            {letters}
+          </span>
         );
       })}
     </p>
@@ -127,10 +142,23 @@ export default function ExcelReveal() {
   const [isLocked, setIsLocked] = useState(false);
   const hasTextCompletedRef = useRef(false);
 
-  /* One accumulating paragraph (Bending-Spoons style): all words reveal across
-     the scroll and stay on screen. Reveal happens over [0, 0.92]; the last ~8%
-     is a hold before the lock releases and the demo panel rises over it. */
-  const REVEAL_SPAN: [number, number] = [0, 0.92];
+  /* Diaporama avec de VRAIS intervalles vides entre les phrases : chaque phrase
+     entre, tient, sort ENTIÈREMENT, puis un blanc, puis la suivante entre. Les
+     fenêtres [in0,in1,out0,out1] ne se recouvrent jamais → jamais deux phrases
+     à l'écran en même temps. */
+  const LINE1_RANGE: [number, number, number, number] = [0, 0.13, 0.22, 0.27];
+  const LINE2_RANGE: [number, number, number, number] = [0.30, 0.46, 0.53, 0.58];
+  const LINE3_RANGE: [number, number, number, number] = [0.61, 0.77, 0.82, 0.86];
+
+  /* Finale « Découvrez Ora » : entre (0.88→0.93) après un micro-blanc,
+     grandit (0.90→0.99) et RESTE affichée comme conclusion. */
+  const l3o      = useTransform(revealProgress, [0.88, 0.93], [0, 1]);
+  const l3y      = useTransform(revealProgress, [0.88, 0.93], [28, 0]);
+  const l3Blur   = useTransform(revealProgress, [0.88, 0.93], [12, 0]);
+  const l3Filter = useTransform(l3Blur, (b) => `blur(${b}px)`);
+  const l3Size    = useTransform(revealProgress, [0.90, 0.99], ["3.5rem", "6rem"]);
+  const l3Leading = useTransform(revealProgress, [0.90, 0.99], [1.4, 1.08]);
+  const l3Track   = useTransform(revealProgress, [0.90, 0.99], ["-0.025em", "-0.04em"]);
 
   /* ── IntersectionObserver : lock the page when the section is in view ── */
   useEffect(() => {
@@ -168,13 +196,13 @@ export default function ExcelReveal() {
 
   /* ── Wheel + touch handlers drive the reveal while locked ── */
   useEffect(() => {
-    /* Higher SPEED = each wheel/touch delta advances the reveal LESS. 4200
-       keeps the word-by-word reveal clearly visible while shortening the
-       whole sequence (the user found 5200 dragged on too long). */
-    const SPEED = 4200;
+    /* Higher SPEED = each wheel/touch delta advances the reveal LESS. 5600
+       makes the 4-phrase sequence demand real scrolling: each phrase gets
+       time to type itself out before the next one arrives. */
+    const SPEED = 5600;
     /* Lerp factor per frame — smooths discrete wheel/touch input into a
        continuous, jank-free motion (lower = smoother, higher = snappier). */
-    const EASE = 0.19;
+    const EASE = 0.20;
     /* Below this gap we snap to target and stop the rAF loop. */
     const EPS = 0.0008;
 
@@ -277,21 +305,69 @@ export default function ExcelReveal() {
         {/* Fond vivant : halo bleu/teal qui dérive lentement (casse le vide) */}
         <div className="excel-aurora" aria-hidden />
 
-        {/* Un seul paragraphe aligné à gauche : les mots apparaissent au scroll
-            et RESTENT, remplissant plusieurs lignes — exactement comme
-            bendingspoons.com. */}
-        <div className="relative z-10 w-full max-w-6xl mx-auto px-8 lg:px-16">
-          <RevealParagraph
-            progress={revealProgress}
-            revealSpan={REVEAL_SPAN}
-            className="font-instrument font-medium text-[#111827] dark:text-white text-center"
-            style={{ fontSize: "clamp(1.9rem, 4vw, 3.7rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
-            gradientWords={["temps", "time", "Excel", "Ora"]}
-            text={t({
-              fr: "Votre temps est votre actif le plus précieux. Cessez de gaspiller des heures sur des tâches répétitives à faible valeur ajoutée, sur Excel. Découvrez Ora.",
-              en: "Your time is your most valuable asset. Stop wasting hours on repetitive, low-value tasks in Excel. Meet Ora.",
-            })}
-          />
+        {/* Les 3 phrases sont superposées (absolute inset-0) et centrées :
+            une seule visible à la fois → effet diaporama, phrase par phrase. */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 lg:px-10 text-center h-[52vh] min-h-[300px] flex items-center justify-center">
+
+          {/* Ligne 1 — révélation mot par mot */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <RevealLine
+              progress={revealProgress}
+              range={LINE1_RANGE}
+              className="font-instrument font-medium text-[#111827] dark:text-white"
+              style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
+              gradientWords={["temps", "time"]}
+              text={t({
+                fr: "Votre temps est votre actif le plus précieux.",
+                en: "Your time is your most valuable asset.",
+              })}
+            />
+          </div>
+
+          {/* Ligne 2 — révélation mot par mot */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <RevealLine
+              progress={revealProgress}
+              range={LINE2_RANGE}
+              className="font-instrument font-medium text-[#111827] dark:text-white"
+              style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
+              gradientWords={["Excel"]}
+              text={t({
+                fr: "Cessez de gaspiller des heures sur des tâches répétitives, chronophages et sans valeur ajoutée, sur Excel.",
+                en: "Stop wasting hours on repetitive, time-consuming, zero-value tasks in Excel.",
+              })}
+            />
+          </div>
+
+          {/* Ligne 3 — ce qu'Ora fait concrètement */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <RevealLine
+              progress={revealProgress}
+              range={LINE3_RANGE}
+              className="font-instrument font-medium text-[#111827] dark:text-white"
+              style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
+              gradientWords={["automatisons", "conseil", "automate", "advisory"]}
+              text={t({
+                fr: "Nous automatisons et optimisons le temps que vous passez sur Excel, pour l'allouer au conseil.",
+                en: "We automate and optimize the time you spend in Excel, so you can devote it to advisory.",
+              })}
+            />
+          </div>
+
+          {/* Ligne 3 — grandit puis reste affichée comme conclusion. */}
+          <motion.div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ opacity: l3o, y: l3y, filter: l3Filter }}
+          >
+            <motion.p
+              className="inline-block font-instrument font-medium whitespace-nowrap"
+              style={{ fontSize: l3Size, lineHeight: l3Leading, letterSpacing: l3Track }}
+            >
+              <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>
+              <span className="text-brand-gradient">Ora.</span>
+            </motion.p>
+          </motion.div>
+
         </div>
       </section>
 

@@ -146,7 +146,7 @@ export default function UseCases() {
           return (
             <motion.div
               key={c.title}
-              className={`relative overflow-hidden rounded-[28px] md:rounded-[36px] p-7 md:p-10 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
+              className={`group relative overflow-hidden rounded-[28px] md:rounded-[36px] p-7 md:p-10 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
               style={{ background: c.bg }}
               initial="hidden"
               whileInView="visible"
@@ -220,7 +220,7 @@ export default function UseCases() {
                   to the edges with a top gradient in the card colour so the
                   clip's upper edge melts into the card (no visible seam). */}
               {c.mockup ? (
-                <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-7 md:-mb-10">
+                <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-7 md:-mb-10 origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.05]">
                   <ReportingMockup />
                 </div>
               ) : (
