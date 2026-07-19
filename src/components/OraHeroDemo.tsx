@@ -5,28 +5,28 @@ import { useLang } from "@/lib/i18n";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
- * A tall wrapper (~3 screens) pins a full-viewport scene; the scroll progress
- * scrubs a story told inside a faithful reconstruction of the REAL Ora app
- * (sidebar Accueil/Atlas/Mon organisation, Atlas folder view, automation
- * panel with category chips + « SUGGESTIONS POUR CE FICHIER » + JOURNAL —
- * replicated from the demo-video posters in /public/posters):
+ * A tall wrapper (~5 screens) pins a full-viewport scene; the scroll progress
+ * scrubs the app's REAL journey, replicated from actual screenshots of Ora
+ * and of the real Excel side-by-side layout:
  *
- *   1. the cursor opens « Reporting janvier.xlsx » in the client folder,
- *   2. clicks « Lancer » on « Fiche de synthèse par valeur »,
- *   3. the JOURNAL logs the processing steps,
- *   4. a real Excel workbook (the generated synthesis) opens beside Ora,
- *      and ships with a pressed « Envoyer » + toast.
+ *   1. Login   — centred card, full-width pill « Se connecter → »
+ *   2. Welcome — brand mark + « Bon retour parmi nous, Raphaël »
+ *   3. Accueil — blue banner, ACCÈS RAPIDE, REPRENDRE → open the FEC file
+ *   4. Dual view — the REAL Excel (ribbon, formula bar, FEC columns, sheet
+ *      tab, status bar) on the left + the docked Ora panel on the right
+ *   5. « Lancer » on FEC Studio → the real config MODAL opens (MISSION seuil,
+ *      CONTRÔLES, BALANCES toggles) — the cursor flips three toggles then
+ *      clicks « Lancer maintenant »
+ *   6. The JOURNAL logs the run; the FEC workbook is replaced by the
+ *      generated audit workbook, and the cursor browses its SHEET TABS
+ *      (Synthèse → Balance générale → Balance âgée).
  *
- * Extras: the stage slightly GROWS and the title-to-demo gap OPENS as you
- * scroll (you feel you're "entering" the app). The cursor's click targets are
- * MEASURED at runtime (offsetLeft chains, transform-independent) so the tip
- * lands exactly on the buttons.
- *
- * IMPLEMENTATION — imperative scrub: element styles are written directly from
- * ONE `scrollYProgress.on("change")` subscription (framer opacity bindings
- * proved unreliable in this montage). Classes are prefixed `.hd-` (`.rm-`
- * belongs to ReportingMockup). prefers-reduced-motion → final state shown.
- * Swap back to <OraGallery> for the 6-video carousel when the clips arrive.
+ * Brand marks use the real logo assets from /public/logos. Cursor click
+ * targets are MEASURED at runtime (offsetLeft chains) so the tip lands
+ * exactly on buttons/toggles/tabs. Imperative scrub: one
+ * `scrollYProgress.on("change")` writes every style. Classes are prefixed
+ * `.hd-`. prefers-reduced-motion → final state. Swap back to <OraGallery>
+ * for the 6-video carousel when the real clips arrive.
  */
 
 interface OraHeroDemoProps {
@@ -37,7 +37,7 @@ interface OraHeroDemoProps {
 const W = 1040, H = 640;
 
 const HD_CSS = `
-/* ══ Hero scroll-demo — faithful Ora app, scenes driven by scroll ══ */
+/* ══ Hero scroll-demo — faithful Ora app + real Excel, scroll-driven ══ */
 .hd-stagebox{position:relative;flex:1;min-height:0;width:100%}
 .hd-stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;
   transform-origin:center center;
@@ -50,166 +50,448 @@ const HD_CSS = `
 .hd-win{position:absolute;border-radius:12px;background:#fff;overflow:hidden;
   box-shadow:0 1px 2px rgba(15,23,42,.10),0 24px 60px -18px rgba(15,23,42,.28),0 60px 120px -40px rgba(15,23,42,.20)}
 .dark .hd-win{box-shadow:0 1px 2px rgba(0,0,0,.45),0 30px 80px -20px rgba(0,0,0,.65),0 70px 150px -40px rgba(0,0,0,.55)}
-.hd-titlebar{position:relative;display:flex;align-items:center;height:36px;flex-shrink:0;
+.hd-titlebar{position:relative;display:flex;align-items:center;height:34px;flex-shrink:0;
   background:linear-gradient(#fbfbfa,#f4f4f3);border-bottom:1px solid #e6e6e3}
-.hd-lights{display:flex;gap:7px;padding:0 13px}
+.hd-lights{display:flex;gap:7px;padding:0 12px}
 .hd-lights span{width:11px;height:11px;border-radius:50%}
 .hd-lights .r{background:#ff5f57;border:.5px solid #e0443e}
 .hd-lights .y{background:#febc2e;border:.5px solid #d89c22}
 .hd-lights .g{background:#28c840;border:.5px solid #1eaa33}
-.hd-tbtitle{position:absolute;left:0;right:0;text-align:center;font-size:12px;font-weight:600;color:#4b5563}
-/* ── Ora window: sidebar + content ── */
+.hd-tbtitle{position:absolute;left:0;right:0;text-align:center;font-size:11.5px;font-weight:600;color:#4b5563}
+/* ── Ora full window (login / welcome / accueil) ── */
 .hd-orawin{left:240px;top:16px;width:560px;height:608px;display:flex;flex-direction:column}
 .hd-app{display:flex;flex:1;min-height:0}
-.hd-side{width:136px;flex-shrink:0;background:#fbfaf8;border-right:1px solid #eeedeb;
-  display:flex;flex-direction:column;padding:12px 10px}
-.hd-sidelogo{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#111827;padding:2px 4px 12px}
-.hd-sidelabel{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#9ca3af;text-transform:uppercase;padding:0 6px 6px}
-.hd-sideitem{position:relative;display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:500;color:#4b5563;
-  border-radius:8px;padding:7px 8px;margin-bottom:2px}
+.hd-side{width:126px;flex-shrink:0;background:#fff;border-right:1px solid #eeedeb;
+  display:flex;flex-direction:column;padding:12px 9px}
+.hd-sidelogo{display:flex;align-items:center;padding:2px 4px 12px}
+.hd-sidelogo img{height:22px;width:auto;display:block;margin-left:-2px}
+.hd-sidelabel{font-size:8px;font-weight:700;letter-spacing:.09em;color:#9ca3af;text-transform:uppercase;padding:0 6px 7px}
+.hd-sideitem{position:relative;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:500;color:#4b5563;
+  border-radius:8px;padding:7px 9px;margin-bottom:3px}
 .hd-sideitem.on{background:#eaf1fe;color:#2563eb;font-weight:600}
-.hd-sideitem.on::before{content:'';position:absolute;left:-10px;top:6px;bottom:6px;width:3px;border-radius:99px;background:#3b82f6}
-.hd-sidecard{margin-top:auto;background:#f6f7fb;border:1px solid #ebedf3;border-radius:10px;padding:10px 9px;text-align:center}
+.hd-sideitem.on::after{content:'';position:absolute;right:-9px;top:6px;bottom:6px;width:3px;border-radius:99px;background:#3b82f6}
+.hd-sidecard{margin-top:auto;background:#fbfaf8;border:1px solid #eeedeb;border-radius:10px;padding:10px 9px;text-align:center}
 .hd-sidecard .ic{width:20px;height:20px;margin:0 auto 6px;border-radius:6px;background:#eaf1fe;color:#3b82f6;display:grid;place-items:center}
-.hd-sidecard .t{font-size:9.5px;font-weight:700;color:#111827}
-.hd-sidecard .d{font-size:8px;line-height:1.35;color:#9ca3af;margin-top:3px}
-.hd-content{position:relative;flex:1;min-width:0;background:#fff;display:flex;flex-direction:column}
-.hd-topbar{display:flex;align-items:center;height:34px;flex-shrink:0;padding:0 14px;border-bottom:1px solid #f3f4f6}
-.hd-crumb{font-size:11px;color:#6b7280}
-.hd-crumb b{color:#111827;font-weight:700}
-.hd-topicons{margin-left:auto;display:flex;align-items:center;gap:9px;color:#9ca3af}
-.hd-avatar{width:18px;height:18px;border-radius:50%;background:#0d9488;color:#fff;font-size:8px;font-weight:700;display:grid;place-items:center}
-.hd-scenes{position:relative;flex:1;min-height:0}
-.hd-scene{position:absolute;inset:0;padding:14px 16px;overflow:hidden}
-/* ── scene A · Atlas folder (documents list) ── */
-.hd-back{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#6b7280;margin-bottom:10px}
-.hd-folderhead{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.hd-folderico{width:34px;height:34px;border-radius:9px;background:#eaf1fe;color:#3b82f6;display:grid;place-items:center;flex-shrink:0}
-.hd-foldertitle{font-size:16.5px;font-weight:700;letter-spacing:-.01em}
-.hd-foldermeta{display:flex;align-items:center;gap:7px;font-size:10px;color:#9ca3af;margin:6px 0 12px}
-.hd-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;color:#059669;background:#e7f6ef;border-radius:99px;padding:2px 8px}
-.hd-searchrow{display:flex;gap:8px;margin-bottom:12px}
-.hd-search{flex:1;display:flex;align-items:center;height:32px;background:#fff;border:1px solid #e5e7eb;border-radius:9px;
-  padding:0 10px;gap:8px;color:#9ca3af;font-size:11px}
-.hd-import{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:9px;
-  background:#3b82f6;color:#fff;font-size:10.5px;font-weight:600;white-space:nowrap;box-shadow:0 2px 8px rgba(59,130,246,.25)}
-.hd-doclabel{font-size:8.5px;font-weight:700;letter-spacing:.08em;color:#9ca3af;text-transform:uppercase;margin:2px 2px 8px}
-.hd-doc{position:relative;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #eef0f3;
-  border-radius:11px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(15,23,42,.03)}
-.hd-doc .nm{font-size:11.5px;font-weight:600}
-.hd-doc .mt{font-size:9.5px;color:#9ca3af;margin-top:2px}
-.hd-doc .chev{margin-left:6px;color:#c6cbd3}
-.hd-fico{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;font-size:8px;font-weight:800}
+.hd-sidecard .t{font-size:9px;font-weight:700;color:#111827}
+.hd-sidecard .d{font-size:7.5px;line-height:1.4;color:#9ca3af;margin-top:3px}
+.hd-content{position:relative;flex:1;min-width:0;background:#fcfbf7;display:flex;flex-direction:column}
+.hd-topbar{display:flex;align-items:center;gap:6px;height:38px;flex-shrink:0;padding:0 14px;
+  background:#fff;border-bottom:1px solid #f0efec}
+.hd-pagetitle{font-size:12.5px;font-weight:700;color:#111827}
+.hd-pills{margin-left:auto;display:flex;align-items:center;gap:6px}
+.hd-pillbtn{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px;border:1px solid #e5e7eb;
+  border-radius:99px;font-size:8.5px;font-weight:600;color:#374151;background:#fff}
+.hd-pillbtn .n{display:inline-grid;place-items:center;min-width:12px;height:12px;border-radius:99px;
+  background:#3b82f6;color:#fff;font-size:7px;font-weight:700;padding:0 3px}
+.hd-avatar{width:20px;height:20px;border-radius:50%;background:#3b82f6;color:#fff;font-size:9px;font-weight:700;
+  display:grid;place-items:center}
+.hd-body{flex:1;min-height:0;padding:13px 16px;overflow:hidden}
+.hd-h1{font-family:Poppins,'Inter',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:#111827}
+.hd-date{font-size:9.5px;color:#6b7280;margin-top:2px}
+.hd-banner{display:flex;align-items:center;gap:11px;background:#3b82f6;border-radius:13px;
+  padding:12px 14px;margin-top:11px;box-shadow:0 8px 22px -10px rgba(59,130,246,.5)}
+.hd-banner .ic{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.18);color:#fff;
+  display:grid;place-items:center;flex-shrink:0}
+.hd-banner .t{font-size:12px;font-weight:700;color:#fff}
+.hd-banner .s{font-size:9px;color:rgba(255,255,255,.85);margin-top:2px}
+.hd-banner .arrow{margin-left:auto;color:#fff}
+.hd-seclabel{font-size:8px;font-weight:700;letter-spacing:.09em;color:#9ca3af;text-transform:uppercase;margin:12px 2px 7px}
+.hd-quick{display:flex;gap:7px}
+.hd-qcard{flex:1;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #eeedeb;
+  border-radius:11px;padding:9px 9px;min-width:0}
+.hd-qcard .ic{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;flex-shrink:0}
+.hd-qcard .ic.blue{background:#eaf1fe;color:#3b82f6}
+.hd-qcard .ic.purple{background:#f3e8ff;color:#8b5cf6}
+.hd-qcard .t{font-size:9px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-qcard .s{font-size:7.5px;color:#9ca3af;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-row{position:relative;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #eeedeb;
+  border-radius:11px;padding:9px 11px;margin-bottom:7px}
+.hd-row .nm{font-size:10.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-row .mt{font-size:8.5px;color:#9ca3af;margin-top:1px}
+.hd-status{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:600;
+  color:#4b5563;white-space:nowrap}
+.hd-status .dot{width:5px;height:5px;border-radius:50%;background:#f59e0b}
+.hd-fico{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;flex-shrink:0;font-size:7px;font-weight:800}
 .hd-fico.x{background:#e7f6ef;color:#1d7044}
-.hd-fico.w{background:#eaf1fe;color:#2563eb}
+.hd-fico.t{background:#f3f4f6;color:#4b5563}
 .hd-fico.p{background:#fdecec;color:#dc2626}
 .hd-flash{position:absolute;inset:0;border-radius:11px;background:rgba(59,130,246,.12);
   box-shadow:inset 0 0 0 2px #3b82f6;pointer-events:none;opacity:0}
-/* ── scene B · automation panel ── */
-.hd-filehead{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.hd-filehead .nm{font-size:15px;font-weight:700;letter-spacing:-.01em}
-.hd-filehead .mt{display:flex;align-items:center;gap:6px;font-size:10px;color:#9ca3af;margin-top:2px}
-.hd-chips{display:flex;align-items:center;gap:5px;margin-bottom:10px;flex-wrap:nowrap}
-.hd-chip{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;color:#4b5563;
-  background:#fff;border:1px solid #e5e7eb;border-radius:99px;padding:4px 9px;white-space:nowrap}
+/* ── Login + Welcome overlays ── */
+.hd-login,.hd-welcome{position:absolute;inset:34px 0 0 0;z-index:5;background:#fbfaf6;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hd-authhalo{position:absolute;left:50%;top:50%;width:400px;height:320px;transform:translate(-50%,-50%);
+  border-radius:50%;background:radial-gradient(closest-side,rgba(59,130,246,.09),transparent 72%)}
+.hd-authcard{position:relative;width:308px;background:#fff;border-radius:16px;
+  padding:26px 28px 20px;box-shadow:0 18px 50px -18px rgba(15,23,42,.16);text-align:center}
+.hd-authlogo{display:flex;justify-content:center;margin-bottom:14px}
+.hd-authlogo img{height:30px;width:auto;display:block}
+.hd-authtitle{font-family:Poppins,'Inter',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:#111827}
+.hd-authsub{font-size:9.5px;color:#6b7280;margin-top:4px}
+.hd-field{text-align:left;margin-top:11px}
+.hd-fieldlabel{font-size:9px;font-weight:700;color:#111827;margin-bottom:4px}
+.hd-input{display:flex;align-items:center;height:31px;border:1px solid #e5e7eb;border-radius:10px;
+  background:#fff;padding:0 11px;font-size:9.5px;color:#111827}
+.hd-input.ph{color:#9ca3af;letter-spacing:.14em}
+.hd-btnauth{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:34px;margin-top:16px;
+  border-radius:999px;background:#3b82f6;color:#fff;font-size:10.5px;font-weight:700;
+  box-shadow:0 4px 14px rgba(59,130,246,.35)}
+.hd-btnauth .hd-flash{border-radius:999px}
+.hd-authlinks{margin-top:12px;font-size:8.5px;color:#6b7280;line-height:2}
+.hd-authlinks .b{color:#3b82f6;font-weight:700}
+.hd-authmuted{margin-top:2px;font-size:8px;color:#9ca3af}
+.hd-oramark{animation:hdMarkPulse 2.2s ease-in-out infinite}
+.hd-oramark img{height:44px;width:auto;display:block}
+@keyframes hdMarkPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.07);opacity:.85}}
+@media (prefers-reduced-motion:reduce){.hd-oramark{animation:none}}
+.hd-welcometitle{font-family:Poppins,'Inter',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;
+  color:#111827;margin-top:15px}
+.hd-welcomesub{font-size:10px;color:#6b7280;margin-top:5px}
+/* ── Docked Ora panel (right, dual view) ── */
+.hd-panel{left:656px;top:16px;width:368px;height:608px;display:flex;flex-direction:column;opacity:0}
+.hd-ptop{display:flex;align-items:center;height:30px;flex-shrink:0;padding:0 12px;background:#fff;border-bottom:1px solid #f0efec}
+.hd-ptop .t{font-size:11px;font-weight:700}
+.hd-pbody{flex:1;min-height:0;background:#fcfbf7;padding:10px 12px;overflow:hidden;position:relative}
+.hd-tabsbar{display:flex;align-items:center;gap:5px;height:24px;flex-shrink:0;padding:0 12px;
+  background:#fff;border-bottom:1px solid #f0efec}
+.hd-tabslabel{font-size:6.5px;font-weight:700;letter-spacing:.09em;color:#9ca3af;text-transform:uppercase}
+.hd-tab{display:inline-flex;align-items:center;gap:4px;height:16px;padding:0 6px;border-radius:6px;
+  font-size:7.5px;font-weight:600;white-space:nowrap}
+.hd-tab.on{background:#eaf1fe;border:1px solid #bfdbfe;color:#2563eb}
+.hd-tab.off{color:#6b7280}
+.hd-back{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:#6b7280;margin-bottom:7px}
+.hd-filehead{display:flex;align-items:center;gap:8px}
+.hd-filehead .nm{font-size:11px;font-weight:700;letter-spacing:-.01em;color:#111827}
+.hd-filehead .mt{display:flex;align-items:center;gap:5px;font-size:8px;color:#9ca3af;margin-top:2px}
+.hd-badge-todo{display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:600;color:#4b5563}
+.hd-badge-todo .dot{width:4px;height:4px;border-radius:50%;background:#f59e0b}
+.hd-badge-ok{display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:700;color:#059669;
+  background:#e7f6ef;border-radius:99px;padding:1.5px 6px}
+.hd-sendrow{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #eeedeb;border-radius:10px;
+  padding:6px 9px;margin-top:8px}
+.hd-sendrow .lbl{font-size:8px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-sendrow .lbl b{font-weight:700}
+.hd-sendbtn{margin-left:auto;display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 9px;
+  border-radius:7px;background:#3b82f6;color:#fff;font-size:8px;font-weight:700;flex-shrink:0;
+  box-shadow:0 2px 8px rgba(59,130,246,.30)}
+.hd-chips{display:flex;align-items:center;gap:3px;margin-top:8px;flex-wrap:nowrap}
+.hd-chip{display:inline-flex;align-items:center;gap:3px;font-size:7px;font-weight:600;color:#4b5563;
+  background:#fff;border:1px solid #e5e7eb;border-radius:99px;padding:3px 6px;white-space:nowrap}
 .hd-chip .n{color:#9ca3af;font-weight:700}
 .hd-chip.all{background:#111827;color:#fff;border-color:#111827}
 .hd-chip.all .n{color:#d1d5db}
-.hd-sugglabel{display:flex;align-items:center;gap:6px;font-size:8.5px;font-weight:700;letter-spacing:.08em;
-  color:#6b7280;text-transform:uppercase;margin:2px 2px 8px}
+.hd-search{display:flex;align-items:center;height:24px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;
+  padding:0 8px;gap:6px;color:#9ca3af;font-size:8px;margin-top:7px}
+.hd-sugglabel{display:flex;align-items:center;gap:4px;font-size:7px;font-weight:700;letter-spacing:.09em;
+  color:#6b7280;text-transform:uppercase;margin:8px 2px 6px}
 .hd-sugglabel svg{color:#3b82f6}
-.hd-hero-sugg{position:relative;display:flex;align-items:center;gap:10px;background:#eaf1fe;border:1px solid #d8e6fd;
-  border-radius:11px;padding:10px 12px;margin-bottom:8px}
-.hd-hero-sugg .t{font-size:11.5px;font-weight:700;color:#1e3a8a}
-.hd-hero-sugg .r{font-size:9.5px;color:#3b5bab;margin-top:2px}
-.hd-sugg{position:relative;display:flex;align-items:flex-start;gap:9px;background:#fff;border:1px solid #eef0f3;
-  border-radius:11px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(15,23,42,.03)}
-.hd-sugg .t{font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px}
-.hd-sugg .prod{font-size:7.5px;font-weight:800;letter-spacing:.06em;color:#3b82f6;margin-top:2px}
-.hd-sugg .d{font-size:9.5px;line-height:1.4;color:#6b7280;margin-top:3px}
-.hd-tag{font-size:7px;font-weight:800;letter-spacing:.05em;border-radius:4px;padding:2px 5px}
-.hd-tag.export{background:#fef4e6;color:#b45309}
-.hd-tag.finance{background:#eaf1fe;color:#2563eb}
-.hd-lancer{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;
-  border-radius:8px;padding:6px 11px;margin-left:auto;flex-shrink:0;white-space:nowrap}
-.hd-lancer.solid{background:#3b82f6;color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.30)}
-.hd-lancer.soft{background:#eaf1fe;color:#3b82f6}
-.hd-lancer .hd-flash{border-radius:8px}
-/* ── JOURNAL (bottom of content) ── */
-.hd-journal{flex-shrink:0;border-top:1px solid #f3f4f6;background:#fff;padding:7px 16px 9px}
-.hd-jhead{display:flex;align-items:center;gap:7px;font-size:8.5px;font-weight:700;letter-spacing:.08em;
+.hd-playic{width:19px;height:19px;border-radius:6px;border:1px solid;display:grid;place-items:center;flex-shrink:0}
+.hd-playic.blue{border-color:#bfdbfe;color:#3b82f6;background:#fff}
+.hd-playic.purple{border-color:#e9d5ff;color:#8b5cf6;background:#fff}
+.hd-playic.green{border-color:#bbe7cf;color:#059669;background:#fff}
+.hd-hero-sugg{position:relative;display:flex;align-items:center;gap:7px;background:#eff6ff;border:1px solid #bfdbfe;
+  border-radius:10px;padding:6px 8px;margin-bottom:5px}
+.hd-hero-sugg .t{font-size:8.5px;font-weight:700;color:#111827}
+.hd-hero-sugg .r{font-size:7.5px;color:#6b7280;margin-top:1px}
+.hd-sugg{position:relative;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #eeedeb;
+  border-radius:10px;padding:6px 8px;margin-bottom:5px}
+.hd-sugg .t{font-size:8.5px;font-weight:700;color:#111827;display:flex;align-items:center;gap:4px}
+.hd-sugg .d{font-size:7.5px;line-height:1.35;color:#6b7280;margin-top:1px}
+.hd-tag{font-size:6px;font-weight:800;letter-spacing:.05em;border-radius:4px;padding:1px 4px}
+.hd-tag.finance{background:#f3e8ff;color:#7c3aed}
+.hd-tag.qualite{background:#e7f6ef;color:#059669}
+.hd-tag.audit{background:#eaf1fe;color:#2563eb}
+.hd-lancer{position:relative;display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:700;
+  border-radius:7px;padding:4px 8px;margin-left:auto;flex-shrink:0;white-space:nowrap;
+  background:#3b82f6;color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.28)}
+.hd-lancer .hd-flash{border-radius:7px}
+.hd-journal{flex-shrink:0;border-top:1px solid #f0efec;background:#fff;padding:5px 12px 7px}
+.hd-jhead{display:flex;align-items:center;gap:5px;font-size:7px;font-weight:700;letter-spacing:.09em;
   color:#6b7280;text-transform:uppercase}
 .hd-jhead .st{font-weight:600;letter-spacing:0;text-transform:none;color:#9ca3af}
-.hd-jlines{margin-top:5px}
-.hd-jline{display:flex;align-items:center;gap:6px;font-size:9.5px;color:#374151;padding:2.5px 0;opacity:0}
+.hd-jhead .chev{margin-left:auto;color:#c6cbd3}
+.hd-jlines{margin-top:3px}
+.hd-jline{display:flex;align-items:center;gap:5px;font-size:7.5px;color:#374151;padding:1.5px 0;opacity:0}
 .hd-jline svg{color:#059669;flex-shrink:0}
-/* ── Excel window (generated workbook, scene C) ── */
-.hd-excel{left:36px;top:52px;width:520px;height:536px;z-index:6;opacity:0;display:flex;flex-direction:column}
-.hd-xlbar{display:flex;align-items:center;height:26px;flex-shrink:0;border-bottom:1px solid #e2e2e2;
-  font-size:10.5px;color:#3f3f3f;background:#fff}
-.hd-xlname{width:52px;text-align:center;border-right:1px solid #e2e2e2;font-weight:600;line-height:26px}
-.hd-xlfx{width:26px;text-align:center;border-right:1px solid #e2e2e2;color:#9a9a9a;font-style:italic;
-  font-family:Georgia,serif;line-height:26px}
-.hd-xlformula{padding-left:10px;color:#555;font-size:10px}
-.hd-xlgrid{display:grid;grid-template-columns:26px 1.55fr 1.05fr .8fr 1fr 1fr;font-size:10px;flex:1;align-content:start;background:#fff}
-.hd-xlL{background:#f6f6f6;color:#7a7a7a;text-align:center;font-weight:600;padding:3px 0;
-  border-right:1px solid #dedede;border-bottom:1px solid #d0d0d0;font-size:9px}
-.hd-xlN{background:#f6f6f6;color:#7a7a7a;text-align:center;font-weight:600;padding:6.5px 0;
-  border-right:1px solid #dedede;border-bottom:1px solid #ececec;font-size:9px}
-.hd-xlH{background:#e2efda;color:#375623;font-weight:700;padding:6.5px 8px;
-  border-right:1px solid #cfe0c4;border-bottom:1px solid #a9c99a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hd-xlH.num{text-align:right}
-.hd-xlC{background:#fff;color:#333;padding:6.5px 8px;border-right:1px solid #ececec;border-bottom:1px solid #ececec;
+/* ── FEC Studio config modal (over the panel) ── */
+.hd-mbackdrop{position:absolute;inset:34px 0 0 0;z-index:6;background:rgba(120,126,140,.35);opacity:0}
+.hd-modal{position:absolute;left:14px;right:14px;top:52px;z-index:7;background:#fff;border-radius:14px;
+  box-shadow:0 24px 60px -18px rgba(15,23,42,.35);padding:12px 13px 11px;opacity:0;transform-origin:center 30%}
+.hd-mhead{display:flex;align-items:flex-start;gap:8px}
+.hd-mhead .ic{width:24px;height:24px;border-radius:8px;background:#eaf1fe;color:#3b82f6;display:grid;place-items:center;flex-shrink:0}
+.hd-mhead .t{font-size:10px;font-weight:700;color:#111827}
+.hd-mhead .s{font-size:7.5px;color:#6b7280;margin-top:1px}
+.hd-mhead .x{margin-left:auto;color:#9ca3af;font-size:10px}
+.hd-mprofiles{display:flex;gap:5px;margin-top:8px}
+.hd-mprofile{display:inline-flex;align-items:center;gap:3px;font-size:7px;font-weight:600;color:#4b5563;
+  border:1px solid #e5e7eb;border-radius:99px;padding:3px 7px}
+.hd-mprofile.b{color:#3b82f6;border-color:#bfdbfe}
+.hd-msec{font-size:7px;font-weight:700;letter-spacing:.09em;color:#374151;text-transform:uppercase;
+  margin:9px 0 5px;display:flex;align-items:center;gap:4px}
+.hd-msec .link{margin-left:auto;color:#3b82f6;font-weight:600;letter-spacing:0;text-transform:none}
+.hd-mfieldlabel{font-size:6.5px;font-weight:700;letter-spacing:.07em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px}
+.hd-minput{display:flex;align-items:center;height:22px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;
+  padding:0 8px;font-size:7px;color:#9ca3af;white-space:nowrap;overflow:hidden}
+.hd-mrow{position:relative;display:flex;align-items:center;justify-content:space-between;padding:4.5px 0}
+.hd-mrow .l{font-size:7.5px;font-weight:700;letter-spacing:.06em;color:#6b7280;text-transform:uppercase}
+.hd-toggle{position:relative;width:26px;height:14px;border-radius:99px;background:#e5e7eb;flex-shrink:0}
+.hd-toggle .track{position:absolute;inset:0;border-radius:99px;background:#3b82f6;opacity:0}
+.hd-toggle .knob{position:absolute;left:2px;top:2px;width:10px;height:10px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(15,23,42,.25)}
+.hd-mfoot{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:10px}
+.hd-mcancel{font-size:8px;font-weight:600;color:#4b5563;border:1px solid #e5e7eb;border-radius:99px;padding:5px 10px}
+.hd-mrun{position:relative;display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:700;color:#fff;
+  background:#3b82f6;border-radius:99px;padding:5px 11px;box-shadow:0 3px 10px rgba(59,130,246,.35)}
+.hd-mrun .hd-flash{border-radius:99px}
+/* ── Real Excel windows (left) ── */
+.hd-xw{left:16px;top:30px;width:620px;height:580px;display:flex;flex-direction:column;opacity:0}
+.hd-xtitle{display:flex;align-items:center;height:30px;flex-shrink:0;background:linear-gradient(#fbfbfa,#f4f4f3);
+  border-bottom:1px solid #e6e6e3;padding:0 10px;gap:8px}
+.hd-xtitle .hd-lights{padding:0}
+.hd-xauto{display:flex;align-items:center;gap:4px;font-size:7px;color:#6b7280}
+.hd-xauto .sw{width:16px;height:9px;border-radius:99px;background:#d1d5db;position:relative}
+.hd-xauto .sw::after{content:'';position:absolute;left:1.5px;top:1.5px;width:6px;height:6px;border-radius:50%;background:#fff}
+.hd-xname{position:absolute;left:0;right:0;text-align:center;font-size:10px;font-weight:600;color:#374151;pointer-events:none}
+.hd-xribbontabs{display:flex;align-items:center;gap:11px;height:24px;flex-shrink:0;background:#fff;
+  padding:0 12px;border-bottom:1px solid #ececec;font-size:8.5px;color:#4b5563}
+.hd-xribbontabs .rt{padding:3px 0}
+.hd-xribbontabs .rt.on{color:#217346;font-weight:700;box-shadow:inset 0 -2px 0 #217346}
+.hd-xribbontabs .share{margin-left:auto;display:inline-flex;align-items:center;gap:3px;background:#217346;color:#fff;
+  border-radius:6px;padding:2.5px 8px;font-size:7.5px;font-weight:700}
+.hd-xribbontabs .comments{display:inline-flex;align-items:center;gap:3px;border:1px solid #e5e7eb;border-radius:6px;
+  padding:2.5px 7px;font-size:7.5px;font-weight:600;color:#4b5563}
+.hd-xribbon{display:flex;align-items:center;gap:10px;height:30px;flex-shrink:0;background:#fff;
+  padding:0 12px;border-bottom:1px solid #e2e2e2;color:#6b7280}
+.hd-xgroup{display:flex;align-items:center;gap:5px;font-size:6.5px;border-right:1px solid #efefef;padding-right:10px}
+.hd-xgroup svg{color:#374151}
+.hd-xfx{display:flex;align-items:center;height:22px;flex-shrink:0;border-bottom:1px solid #d7d7d7;
+  font-size:9px;color:#3f3f3f;background:#fff}
+.hd-xfx .nb{width:44px;text-align:center;border-right:1px solid #d7d7d7;font-weight:600;line-height:22px}
+.hd-xfx .fx{width:22px;text-align:center;border-right:1px solid #d7d7d7;color:#9a9a9a;font-style:italic;
+  font-family:Georgia,serif;line-height:22px}
+.hd-xsheet{flex:1;min-height:0;overflow:hidden;background:#fff;position:relative}
+.hd-xgrid{display:grid;font-size:8px;align-content:start}
+.hd-xL{background:#f6f6f6;color:#7a7a7a;text-align:center;font-weight:600;padding:2.5px 0;
+  border-right:1px solid #dedede;border-bottom:1px solid #d0d0d0;font-size:7.5px}
+.hd-xN{background:#f6f6f6;color:#7a7a7a;text-align:center;font-weight:600;padding:4.5px 0;
+  border-right:1px solid #dedede;border-bottom:1px solid #ededed;font-size:7.5px}
+.hd-xH{background:#fff;color:#111;font-weight:700;padding:4.5px 5px;
+  border-right:1px solid #ececec;border-bottom:1.5px solid #9a9a9a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-xC{background:#fff;color:#333;padding:4.5px 5px;border-right:1px solid #ececec;border-bottom:1px solid #ececec;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hd-xlC.num{text-align:right;font-variant-numeric:tabular-nums}
-.hd-xlC.name{font-weight:500;color:#1f1f1f}
-.hd-xlT{background:#fff;color:#111;font-weight:700;padding:7px 8px;border-right:1px solid #ececec;
-  border-top:2px solid #375623;border-bottom:1px solid #ececec}
-.hd-xlT.num{text-align:right;font-variant-numeric:tabular-nums}
-.hd-xlsel{box-shadow:inset 0 0 0 2px #217346}
-/* ── generated-file pill / send / toast / cursor / captions ── */
-.hd-pill{position:absolute;left:596px;top:70px;z-index:7;display:flex;align-items:center;gap:8px;background:#fff;
+.hd-xC.num{text-align:right;font-variant-numeric:tabular-nums}
+.hd-xC.sel{box-shadow:inset 0 0 0 2px #217346}
+.hd-xT{background:#f4f6f4;color:#111;font-weight:700;padding:4.5px 5px;border-right:1px solid #ececec;
+  border-top:2px solid #217346;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-xT.num{text-align:right;font-variant-numeric:tabular-nums}
+.hd-xtabs{display:flex;align-items:center;height:22px;flex-shrink:0;background:#f7f7f7;border-top:1px solid #d7d7d7;
+  padding:0 8px;gap:2px;font-size:8px;color:#4b5563}
+.hd-xtab{position:relative;display:inline-flex;align-items:center;height:22px;padding:0 9px;white-space:nowrap}
+.hd-xtab.on{background:#fff;font-weight:700;color:#217346;box-shadow:inset 0 2px 0 #217346}
+.hd-xtabplus{margin-left:4px;color:#9ca3af}
+.hd-xstatus{display:flex;align-items:center;height:18px;flex-shrink:0;background:#f7f7f7;border-top:1px solid #e2e2e2;
+  padding:0 10px;font-size:7px;color:#6b7280}
+.hd-xstatus .z{margin-left:auto}
+.hd-xflash{position:absolute;inset:0;background:rgba(33,115,70,.12);box-shadow:inset 0 0 0 1.5px #217346;
+  pointer-events:none;opacity:0}
+/* ── Generated audit workbook (FEC Studio output): blue headers, title row,
+     tighter rows, embedded chart sheet ── */
+.hd-hidden{display:none!important}
+.hd-xw2 .hd-xC,.hd-xw2 .hd-xN,.hd-xw2 .hd-xHb,.hd-xw2 .hd-xT{padding-top:3px;padding-bottom:3px;font-size:7.5px}
+.hd-xw2 .hd-xtab{font-size:7px;padding:0 6px}
+.hd-xTitle{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 6px 4px 5px;
+  font-weight:700;color:#111;font-size:9px;border-bottom:1px solid #ececec;white-space:nowrap;overflow:hidden}
+.hd-xTitle .meta{font-weight:600;color:#8a8f98;font-size:7px;flex-shrink:0}
+.hd-xHb{background:#4a86d6;color:#fff;font-weight:700;padding:4.5px 6px;
+  border-right:1px solid #6ea0e0;border-bottom:1px solid #3a76c6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-xHb.num{text-align:right}
+/* Monthly sheet with an embedded bar chart */
+.hd-xmonth{flex:1;min-height:0;padding:9px 11px;display:flex;flex-direction:column;background:#fff;overflow:hidden}
+.hd-xmtitle{display:flex;align-items:baseline;justify-content:space-between;font-weight:700;font-size:9.5px;color:#111;margin-bottom:8px}
+.hd-xmtitle .meta{font-weight:600;font-size:7px;color:#8a8f98}
+.hd-xmbody{flex:1;min-height:0;display:flex;gap:12px}
+.hd-xmtable{width:146px;flex-shrink:0;border:1px solid #e4e4e4;border-radius:2px;overflow:hidden;align-self:flex-start}
+.hd-xmtable .r{display:grid;grid-template-columns:1fr 1fr 1fr;font-size:7px;border-bottom:1px solid #f1f1f1}
+.hd-xmtable .r:last-child{border-bottom:none}
+.hd-xmtable .r.h{background:#4a86d6;color:#fff;font-weight:700}
+.hd-xmtable .r>span{padding:2.6px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hd-xmtable .r>span.num{text-align:right;font-variant-numeric:tabular-nums}
+.hd-xmchart{flex:1;min-width:0;border:1px solid #e4e4e4;border-radius:2px;padding:8px 12px 5px;display:flex;flex-direction:column}
+.hd-xmchart .ct{font-size:8.5px;font-weight:700;color:#333;text-align:center;margin-bottom:5px}
+.hd-xmchart svg{flex:1;width:100%;min-height:0}
+.hd-xmleg{display:flex;justify-content:center;gap:14px;font-size:7px;color:#555;margin-top:4px}
+.hd-xmleg i{display:inline-block;width:8px;height:8px;border-radius:1px;margin-right:4px;vertical-align:middle}
+/* ── Loading card (between « Lancer maintenant » and the result) ── */
+.hd-loading{position:absolute;left:34px;right:34px;top:200px;z-index:8;background:#fff;border-radius:14px;
+  box-shadow:0 24px 60px -18px rgba(15,23,42,.38);padding:16px 16px 14px;opacity:0;text-align:center;
+  transform-origin:center center}
+.hd-loading .sp{width:26px;height:26px;margin:0 auto 8px;border-radius:50%;border:3px solid #e5e7eb;
+  border-top-color:#3b82f6;animation:hdSpin .9s linear infinite}
+@keyframes hdSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.hd-loading .sp{animation:none}}
+.hd-loading .t{font-size:10px;font-weight:700;color:#111827}
+.hd-loading .s{font-size:8.5px;color:#6b7280;margin-top:2px}
+.hd-loading .bar{margin-top:9px;height:5px;border-radius:99px;background:#eef2f7;overflow:hidden}
+.hd-loading .barfill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#0d9488);
+  transform-origin:left center;transform:scaleX(0)}
+.hd-loading .pct{font-size:8px;color:#9ca3af;margin-top:5px;font-variant-numeric:tabular-nums}
+/* ── Result arrival glow (makes the generated workbook POP) ── */
+.hd-xwglow{position:absolute;inset:0;border-radius:12px;pointer-events:none;opacity:0;z-index:5;
+  box-shadow:0 0 0 3px rgba(59,130,246,.55),0 0 46px 8px rgba(59,130,246,.35)}
+/* ── generated-file pill / cursor / captions ── */
+.hd-pill{position:absolute;left:460px;top:150px;z-index:8;display:flex;align-items:center;gap:8px;background:#fff;
   border-radius:11px;padding:8px 12px;box-shadow:0 12px 34px -10px rgba(15,23,42,.30);opacity:0}
 .dark .hd-pill{box-shadow:0 12px 34px -10px rgba(0,0,0,.45)}
 .hd-pill .fico{width:26px;height:26px;border-radius:7px;background:#e7f6ef;color:#1d7044;display:grid;place-items:center;
   font-size:8px;font-weight:800;flex-shrink:0}
 .hd-pill .t1{font-size:10.5px;font-weight:700;color:#111827}
 .hd-pill .t2{font-size:9px;color:#9ca3af;margin-top:1px}
-.hd-send{position:absolute;left:392px;top:530px;z-index:8;display:inline-flex;align-items:center;gap:11px;height:58px;padding:0 30px;
-  border-radius:999px;background:#2563eb;color:#fff;font-size:19px;font-weight:700;letter-spacing:-.01em;
-  box-shadow:0 20px 50px -12px rgba(15,23,42,.45),0 6px 20px rgba(37,99,235,.40);opacity:0}
-.hd-ring{position:absolute;inset:-7px;border-radius:999px;box-shadow:0 0 0 7px rgba(96,165,250,.32);opacity:0}
-.hd-toast{position:absolute;left:640px;top:14px;z-index:9;display:flex;align-items:center;gap:9px;background:#fff;border-radius:12px;
-  padding:10px 15px;box-shadow:0 18px 44px -12px rgba(15,23,42,.30);font-size:12px;font-weight:600;color:#111827;opacity:0}
-.dark .hd-toast{box-shadow:0 18px 44px -12px rgba(0,0,0,.5)}
-.hd-toast .ck{width:21px;height:21px;border-radius:50%;background:#e7f6ef;color:#059669;display:grid;place-items:center;flex-shrink:0}
 .hd-cursor{position:absolute;z-index:12;left:0;top:0;width:52px;height:52px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.40))}
+.hd-ripple{position:absolute;z-index:11;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
+  border:2.5px solid #3b82f6;background:rgba(59,130,246,.16);opacity:0;pointer-events:none}
+/* ── Immersive dark takeover at zoom moments ── */
+.hd-sticky{transition:background-color .5s ease}
+.hd-sticky.immersive{background-color:#070b14}
+.hd-blob{transition:opacity .5s ease}
+.hd-sticky.immersive .hd-blob{opacity:0}
+.hd-sticky.immersive .hd-win{box-shadow:0 1px 2px rgba(0,0,0,.5),0 34px 90px -20px rgba(0,0,0,.75),0 80px 160px -40px rgba(0,0,0,.65)}
+.hd-cap>span{transition:color .5s ease,background-color .5s ease,box-shadow .5s ease}
+.hd-sticky.immersive .hd-cap>span:first-child{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.22);color:#fff}
+.hd-sticky.immersive .hd-cap>span:last-child{color:#d1d5db}
+/* ── Persistent scroll cue: the demo is driven by scrolling, not clicks ── */
+.hd-scrollcue{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
+  padding:7px 13px;border-radius:99px;background:rgba(17,24,39,.05);transition:background-color .5s ease}
+.hd-scrollcue .chev{color:#6b7280;animation:hdCueBounce 1.4s ease-in-out infinite;transition:color .5s ease}
+.hd-scrollcue .txt{font-size:11px;font-weight:600;color:#6b7280;transition:color .5s ease;white-space:nowrap}
+.hd-scrollcue .track{display:block;width:110px;height:3px;border-radius:99px;background:rgba(17,24,39,.12);overflow:hidden;transition:background-color .5s ease}
+.hd-scrollcue .fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#0d9488);
+  transform-origin:left center;transform:scaleX(0)}
+@keyframes hdCueBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+@media (prefers-reduced-motion:reduce){.hd-scrollcue .chev{animation:none}}
+.hd-sticky.immersive .hd-scrollcue{background:rgba(255,255,255,.10)}
+.hd-sticky.immersive .hd-scrollcue .chev,.hd-sticky.immersive .hd-scrollcue .txt{color:#cbd5e1}
+.hd-sticky.immersive .hd-scrollcue .track{background:rgba(255,255,255,.15)}
 .hd-cap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;opacity:0}
 `;
 
-// ── Generated Excel data (per-filiale synthesis) ────────────────────────────
-const XL_COLS = ["Filiale", "CA HT", "Marge", "EBE", "Résultat net"];
-const XL_ROWS: string[][] = [
-  ["Île-de-France", "4 280 000,00", "38,4 %", "1 120 000,00", "624 000,00"],
-  ["Auvergne-Rhône-Alpes", "3 150 000,00", "35,1 %", "780 000,00", "402 000,00"],
-  ["PACA", "2 640 000,00", "33,8 %", "610 000,00", "318 000,00"],
-  ["Grand Est", "1 980 000,00", "31,2 %", "420 000,00", "205 000,00"],
-  ["Hauts-de-France", "1 540 000,00", "29,7 %", "305 000,00", "148 000,00"],
-  ["Occitanie", "1 320 000,00", "30,5 %", "268 000,00", "131 000,00"],
-  ["Nouvelle-Aquitaine", "1 180 000,00", "31,8 %", "244 000,00", "119 000,00"],
+// ── Real FEC data (from the actual demo workbook) ───────────────────────────
+const FEC_COLS = ["JournalCode", "JournalLib", "EcritureNum", "EcritureDate", "CompteNum", "CompteLib", "PieceRef", "Debit", "Credit"];
+const FEC_GRID = "22px .85fr .75fr .8fr .85fr .8fr 1.25fr .75fr .8fr .8fr";
+const FEC_ROWS: string[][] = [
+  ["VE", "Ventes", "00001", "20241104", "411000", "Clients", "FA0001", "3621,47", "0,00"],
+  ["VE", "Ventes", "00001", "20241104", "707000", "Ventes de marchandises", "FA0001", "0,00", "3017,89"],
+  ["VE", "Ventes", "00001", "20241104", "44571000", "TVA collectée", "FA0001", "0,00", "603,58"],
+  ["BQ", "Banque", "00002", "20241215", "512000", "Banque", "FA0001", "3621,47", "0,00"],
+  ["BQ", "Banque", "00002", "20241215", "411000", "Clients", "FA0001", "0,00", "3621,47"],
+  ["VE", "Ventes", "00003", "20240324", "411000", "Clients", "FA0002", "3325,75", "0,00"],
+  ["VE", "Ventes", "00003", "20240324", "707000", "Ventes de marchandises", "FA0002", "0,00", "2771,46"],
+  ["VE", "Ventes", "00003", "20240324", "44571000", "TVA collectée", "FA0002", "0,00", "554,29"],
+  ["VE", "Ventes", "00004", "20240219", "411000", "Clients", "FA0003", "384,92", "0,00"],
+  ["VE", "Ventes", "00004", "20240219", "707000", "Ventes de marchandises", "FA0003", "0,00", "320,77"],
+  ["VE", "Ventes", "00004", "20240219", "44571000", "TVA collectée", "FA0003", "0,00", "64,15"],
+  ["BQ", "Banque", "00005", "20240315", "512000", "Banque", "FA0003", "384,92", "0,00"],
+  ["BQ", "Banque", "00005", "20240315", "411000", "Clients", "FA0003", "0,00", "384,92"],
+  ["VE", "Ventes", "00006", "20240417", "411000", "Clients", "FA0004", "361,01", "0,00"],
+  ["VE", "Ventes", "00006", "20240417", "707000", "Ventes de marchandises", "FA0004", "0,00", "300,84"],
+  ["VE", "Ventes", "00006", "20240417", "44571000", "TVA collectée", "FA0004", "0,00", "60,17"],
 ];
-const XL_TOTAL = ["Total groupe", "16 090 000,00", "34,9 %", "3 747 000,00", "1 947 000,00"];
 
-// JOURNAL log lines shown while the automation runs.
+// ── Generated audit workbook sheets (real FEC Studio output) ────────────────
+const BG_META = "FEC 2025 · 48 512 écritures";
+const BG_COLS = ["Compte", "Intitulé", "Mouvements débit", "Mouvements crédit", "Solde débiteur", "Solde créditeur"];
+const BG_ROWS: string[][] = [
+  ["101000", "Capital social", "", "800 000,00", "", "800 000,00"],
+  ["106100", "Réserve légale", "", "64 000,00", "", "64 000,00"],
+  ["164000", "Emprunts auprès des établissements de crédit", "96 000,00", "380 000,00", "", "284 000,00"],
+  ["211000", "Terrains", "120 000,00", "", "120 000,00", ""],
+  ["213000", "Constructions", "486 000,00", "", "486 000,00", ""],
+  ["281300", "Amortissements des constructions", "", "142 400,00", "", "142 400,00"],
+  ["401000", "Fournisseurs", "842 310,45", "897 465,20", "", "55 154,75"],
+  ["411000", "Clients", "1 264 890,30", "1 121 545,10", "143 345,20", ""],
+  ["421000", "Personnel - rémunérations dues", "359 400,00", "389 350,00", "", "29 950,00"],
+  ["431000", "Sécurité sociale", "268 015,00", "292 380,00", "", "24 365,00"],
+  ["445660", "TVA déductible sur ABS", "98 764,10", "96 214,10", "2 550,00", ""],
+  ["445710", "TVA collectée", "188 940,00", "204 148,00", "", "15 208,00"],
+  ["512000", "Banque BNP Paribas", "1 087 620,15", "998 435,60", "89 184,55", ""],
+  ["530000", "Caisse", "12 480,00", "11 940,00", "540,00", ""],
+  ["601100", "Achats de marchandises", "486 220,00", "", "486 220,00", ""],
+  ["613200", "Locations immobilières", "50 400,00", "", "50 400,00", ""],
+  ["641100", "Salaires bruts", "459 000,00", "", "459 000,00", ""],
+  ["645000", "Charges sociales", "192 780,00", "", "192 780,00", ""],
+  ["661100", "Intérêts des emprunts", "14 820,00", "", "14 820,00", ""],
+  ["706000", "Prestations de services", "", "598 400,00", "", "598 400,00"],
+  ["707000", "Ventes de marchandises", "", "892 610,00", "", "892 610,00"],
+];
+const BG_TOTAL = ["", "TOTAUX", "6 027 439,00", "6 888 888,00", "2 044 839,75", "2 906 087,75"];
+
+const BA_META = "au 31/12/2025";
+const BA_COLS = ["Compte", "Client", "Total", "Non échu", "0-30 j", "31-60 j", "61-90 j", "> 90 j"];
+const BA_ROWS: string[][] = [
+  ["411DURA", "DURAND SAS", "28 800,00", "19 200,00", "9 600,00", "", "", ""],
+  ["411MART", "MARTIN & CIE", "21 360,00", "21 360,00", "", "", "", ""],
+  ["411PETI", "PETIT SARL", "14 880,00", "7 440,00", "", "7 440,00", "", ""],
+  ["411LEGR", "LEGRAND SA", "9 120,00", "", "", "", "4 560,00", "4 560,00"],
+  ["411BOIS", "BOISSEAU SARL", "6 200,00", "", "3 100,00", "3 100,00", "", ""],
+  ["411HAVR", "TRANSPORTS DU HAVRE", "4 980,00", "4 980,00", "", "", "", ""],
+];
+const BA_TOTAL = ["", "TOTAUX", "85 340,00", "52 980,00", "12 700,00", "10 540,00", "4 560,00", "4 560,00"];
+
+// Balance mensuelle — data behind the embedded bar chart (k€).
+const BM_MONTHS = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"];
+const BM_DEBIT = [512, 468, 534, 498, 546, 588, 452, 398, 610, 642, 574, 690];
+const BM_CREDIT = [486, 502, 548, 472, 560, 572, 468, 412, 588, 620, 560, 672];
+const BM_MAX = 720;
+
+// JOURNAL lines during the FEC Studio run.
 const J_LINES = [
-  "Lecture du classeur — 8 filiales détectées",
-  "Consolidation des valeurs par filiale",
-  "Mise en forme du modèle du cabinet",
-  "Synthese_IDF_012026.xlsx généré",
+  "Lecture du FEC : 398 412 lignes",
+  "Contrôles de structure : 18/18 conformes",
+  "Balance générale construite",
+  "Balance âgée créances & dettes",
+  "Classeur d'audit généré",
 ];
 
 // 0→1 ramp of v across [a, b] (clamped).
 const seg = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
+
+// ── Heavy-scroll zones ──────────────────────────────────────────────────────
+// [demo-space end, weight]: higher weight = more physical scroll is needed to
+// cross that part of the demo, so key moments feel "heavy" (the user slows
+// down on them) while transitions stay light.
+const ZONES: { to: number; w: number }[] = [
+  { to: 0.12, w: 1.1 },  // login approach
+  { to: 0.155, w: 2.0 }, // « Se connecter » click
+  { to: 0.42, w: 0.8 },  // welcome → accueil (light)
+  { to: 0.465, w: 2.0 }, // opening the FEC file
+  { to: 0.545, w: 0.9 }, // dual view arrives
+  { to: 0.60, w: 2.2 },  // « Lancer » + the modal opens (zoom)
+  { to: 0.71, w: 3.0 },  // the three toggles + « Lancer maintenant » (heaviest)
+  { to: 0.84, w: 1.0 },  // journal run
+  { to: 0.90, w: 1.3 },  // workbook swap
+  { to: 1.0, w: 1.8 },   // sheet browsing
+];
+const ZONE_TABLE = (() => {
+  let from = 0, cum = 0;
+  const rows = ZONES.map((z) => {
+    const cost = (z.to - from) * z.w;
+    const row = { from, to: z.to, cum0: cum, cost };
+    cum += cost;
+    from = z.to;
+    return row;
+  });
+  return { rows, total: cum };
+})();
+// Maps RAW scroll progress (linear) to DEMO time (weighted).
+const remap = (r: number) => {
+  const target = Math.min(1, Math.max(0, r)) * ZONE_TABLE.total;
+  for (const row of ZONE_TABLE.rows) {
+    if (target <= row.cum0 + row.cost || row.to === 1) {
+      const t = row.cost > 0 ? (target - row.cum0) / row.cost : 1;
+      return row.from + (row.to - row.from) * Math.min(1, Math.max(0, t));
+    }
+  }
+  return 1;
+};
 // Piecewise-linear keyframe interpolation.
 const kf = (v: number, times: number[], vals: number[]) => {
   if (v <= times[0]) return vals[0];
@@ -222,6 +504,80 @@ const kf = (v: number, times: number[], vals: number[]) => {
   return vals[vals.length - 1];
 };
 
+// Simplified Excel ribbon groups (silhouette only, like the real ribbon).
+function XRibbon() {
+  return (
+    <div className="hd-xribbon">
+      {["Presse-papiers", "Police", "Alignement", "Numérique", "Cellules", "Édition"].map((g) => (
+        <span key={g} className="hd-xgroup">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+          {g}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// Excel window chrome shared by both workbooks.
+function XChrome({ name, cell, formula }: { name: string; cell: string; formula: string }) {
+  return (
+    <>
+      <div className="hd-xtitle">
+        <div className="hd-lights"><span className="r" /><span className="y" /><span className="g" /></div>
+        <span className="hd-xauto"><span className="sw" />Enregistrement automatique</span>
+        <span className="hd-xname">{name}</span>
+      </div>
+      <div className="hd-xribbontabs">
+        {["Accueil", "Insertion", "Dessin", "Mise en page", "Formules", "Données", "Révision", "Affichage"].map((rt, i) => (
+          <span key={rt} className={`rt${i === 0 ? " on" : ""}`}>{rt}</span>
+        ))}
+        <span className="comments">Commentaires</span>
+        <span className="share">Partager</span>
+      </div>
+      <XRibbon />
+      <div className="hd-xfx">
+        <span className="nb">{cell}</span>
+        <span className="fx">fx</span>
+        <span style={{ paddingLeft: 8, color: "#555", fontSize: 8.5 }}>{formula}</span>
+      </div>
+    </>
+  );
+}
+
+// One sheet of the generated audit workbook: title row (bold + right meta),
+// a blue header row (FEC Studio style), the data, then a TOTAUX row.
+function TableSheet({
+  sheet, hidden, title, meta, cols, rows, total, gridCols, firstNum,
+}: {
+  sheet: number; hidden?: boolean; title: string; meta: string;
+  cols: string[]; rows: string[][]; total?: string[]; gridCols: string; firstNum: number;
+}) {
+  return (
+    <div className={`hd-xgrid${hidden ? " hd-hidden" : ""}`} data-sheet={sheet} style={{ gridTemplateColumns: gridCols }}>
+      <div className="hd-xL" />
+      {cols.map((_, i) => <div key={`l${i}`} className="hd-xL">{String.fromCharCode(65 + i)}</div>)}
+      <div className="hd-xN">1</div>
+      <div className="hd-xTitle" style={{ gridColumn: `span ${cols.length}` }}>
+        <span>{title}</span><span className="meta">{meta}</span>
+      </div>
+      <div className="hd-xN">2</div>
+      {cols.map((h, i) => <div key={`h${i}`} className={`hd-xHb${i >= firstNum ? " num" : ""}`}>{h}</div>)}
+      {rows.map((row, r) => (
+        <div key={r} style={{ display: "contents" }}>
+          <div className="hd-xN">{r + 3}</div>
+          {row.map((cell, ci) => <div key={ci} className={`hd-xC${ci >= firstNum ? " num" : ""}`}>{cell}</div>)}
+        </div>
+      ))}
+      {total && (
+        <div style={{ display: "contents" }}>
+          <div className="hd-xN">{rows.length + 3}</div>
+          {total.map((cell, ci) => <div key={ci} className={`hd-xT${ci >= firstNum ? " num" : ""}`}>{cell}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const { t } = useLang();
   void theme;
@@ -231,12 +587,20 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const capsRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
+  const headlineRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const lastClickRef = useRef(-1);
 
   const fitScaleRef = useRef(1);
   const lastVRef = useRef(0);
   const applyRef = useRef<(v: number) => void>(() => {});
   // Cursor click targets, measured at runtime in STAGE coordinates.
-  const targetsRef = useRef({ doc: { x: 500, y: 220 }, lancer: { x: 700, y: 300 }, send: { x: 480, y: 560 } });
+  const targetsRef = useRef<Record<string, { x: number; y: number }>>({
+    connect: { x: 520, y: 430 }, doc: { x: 520, y: 430 }, lancerfec: { x: 940, y: 300 },
+    tg1: { x: 850, y: 330 }, tg2: { x: 850, y: 360 }, tg3: { x: 850, y: 390 },
+    run: { x: 940, y: 470 }, tab2: { x: 180, y: 590 }, tab3: { x: 300, y: 590 },
+    modalc: { x: 840, y: 320 }, result: { x: 326, y: 320 },
+  });
 
   // Scroll scrub: 0 → 1 across the tall wrapper.
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
@@ -248,8 +612,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   useEffect(() => {
     const box = boxRef.current, stage = stageRef.current;
     if (!box || !stage) return;
-    // offsetLeft/offsetTop chains are unaffected by the transforms we write,
-    // so targets stay valid whatever the current scrub position.
     const stagePos = (el: HTMLElement) => {
       let x = 0, y = 0;
       let n: HTMLElement | null = el;
@@ -260,26 +622,23 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       }
       return { x, y };
     };
-    const center = (sel: string, fallback: { x: number; y: number }) => {
-      const el = stage.querySelector<HTMLElement>(sel);
-      if (!el) return fallback;
-      const p = stagePos(el);
-      return { x: p.x + el.offsetWidth / 2, y: p.y + el.offsetHeight / 2 };
-    };
     const fit = () => {
       const s = Math.min(box.clientWidth / W, box.clientHeight / H);
       fitScaleRef.current = s;
-      targetsRef.current = {
-        doc: center('[data-cur="doc"]', targetsRef.current.doc),
-        lancer: center('[data-cur="lancer"]', targetsRef.current.lancer),
-        send: center('[data-cur="send"]', targetsRef.current.send),
-      };
+      const next: Record<string, { x: number; y: number }> = { ...targetsRef.current };
+      for (const key of Object.keys(next)) {
+        const el = stage.querySelector<HTMLElement>(`[data-cur="${key}"]`);
+        if (el) {
+          const p = stagePos(el);
+          next[key] = { x: p.x + el.offsetWidth / 2, y: p.y + el.offsetHeight / 2 };
+        }
+      }
+      targetsRef.current = next;
       applyRef.current(lastVRef.current);
     };
     const ro = new ResizeObserver(fit);
     ro.observe(box);
     fit();
-    // Re-measure once webfonts settle (text metrics shift layout slightly).
     (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready?.then(() => fit());
     return () => ro.disconnect();
   }, []);
@@ -290,86 +649,219 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     if (!stage || !caps || !hint || !box) return;
     const q = (sel: string) => stage.querySelector<HTMLElement>(sel);
     const el = {
-      sceneA: q('[data-hd="sceneA"]'), sceneB: q('[data-hd="sceneB"]'),
-      docFlash: q('[data-hd="doc-flash"]'), lancerFlash: q('[data-hd="lancer-flash"]'),
-      jstatus: q('[data-hd="jstatus"]'),
+      login: q('[data-hd="login"]'), welcome: q('[data-hd="welcome"]'),
+      connectFlash: q('[data-hd="connect-flash"]'), docFlash: q('[data-hd="doc-flash"]'),
+      orawin: q('[data-hd="orawin"]'), panel: q('[data-hd="panel"]'),
+      fecFlash: q('[data-hd="fec-flash"]'),
+      backdrop: q('[data-hd="mbackdrop"]'), modal: q('[data-hd="modal"]'),
+      runFlash: q('[data-hd="run-flash"]'),
+      toggles: [1, 2, 3].map((i) => ({
+        track: q(`[data-hd="tg${i}-track"]`), knob: q(`[data-hd="tg${i}-knob"]`),
+      })),
+      jstatus: q('[data-hd="jstatus"]'), jcount: q('[data-hd="jcount"]'),
       jlines: [...stage.querySelectorAll<HTMLElement>("[data-jline]")],
-      oraWin: q('[data-hd="orawin"]'), excel: q('[data-hd="excel"]'),
-      xlRows: [...stage.querySelectorAll<HTMLElement>("[data-xlrow]")],
-      pill: q('[data-hd="pill"]'), send: q('[data-hd="send"]'), ring: q('[data-hd="ring"]'), toast: q('[data-hd="toast"]'),
-      cursor: q('[data-hd="cursor"]'),
+      excel1: q('[data-hd="excel1"]'), excel2: q('[data-hd="excel2"]'),
+      loading: q('[data-hd="loading"]'), loadfill: q('[data-hd="loadfill"]'), loadpct: q('[data-hd="loadpct"]'),
+      xwglow: q('[data-hd="xwglow"]'),
+      sheets: [...stage.querySelectorAll<HTMLElement>("[data-sheet]")],
+      xtabs: [...stage.querySelectorAll<HTMLElement>("[data-xtab]")],
+      pill: q('[data-hd="pill"]'),
+      cursor: q('[data-hd="cursor"]'), ripple: q('[data-hd="ripple"]'),
       caps: [...caps.querySelectorAll<HTMLElement>(".hd-cap")],
+      cuefill: hint.querySelector<HTMLElement>('[data-hd="cuefill"]'),
     };
+    // Every click moment (progress time + target key) — drives the cursor
+    // dip, the ripple pulse and the vibration feedback.
+    const CLICKS: { t: number; k: string }[] = [
+      { t: 0.135, k: "connect" }, { t: 0.435, k: "doc" }, { t: 0.578, k: "lancerfec" },
+      { t: 0.641, k: "tg1" }, { t: 0.658, k: "tg2" }, { t: 0.675, k: "tg3" },
+      { t: 0.70, k: "run" }, { t: 0.935, k: "tab2" }, { t: 0.962, k: "tab3" },
+    ];
 
-    const apply = (v: number) => {
-      lastVRef.current = v;
+    const apply = (vRaw: number) => {
+      lastVRef.current = vRaw;
+      // Heavy-scroll remap: raw scroll (linear) → demo time (weighted zones).
+      const v = remap(vRaw);
+      const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
-      const grow = 1 + 0.05 * seg(v, 0, 0.3);
-      stage.style.transform = `translate(-50%, -50%) scale(${fitScaleRef.current * grow})`;
-      box.style.marginTop = `${14 + 26 * seg(v, 0, 0.3)}px`;
+      const grow = 1 + 0.04 * seg(v, 0, 0.20);
+      // Camera zooms. Zoom 1 (×2.0): the FEC Studio moment — « Lancer » click
+      // then the toggle run, focus FIXED on the modal centre (no side swing).
+      // Zoom 2 (×1.32): the RESULT — engages as the audit workbook lands and
+      // stays on for the sheet browsing, framed on the sheet + its tabs (the
+      // ribbon may crop, the content is the star). Windows are disjoint.
+      const Z1 = 2.0, Z2 = 1.12;
+      const zt1 = seg(v, 0.545, 0.575) * (1 - seg(v, 0.70, 0.74));
+      const zt2 = seg(v, 0.86, 0.895);
+      const zt = Math.max(zt1, zt2);
+      const rc = T.result ?? { x: 326, y: 320 };
+      const Z = zt2 > zt1 ? Z2 : Z1;
+      // Result close-up: centred EXACTLY on the workbook (dead centre of the
+      // viewport), zoom sized so the whole window incl. sheet tabs stays in
+      // frame.
+      const focus = zt2 > zt1 ? rc : (T.modalc ?? { x: 520, y: 320 });
+      // The dark ambiance persists through the LOADING beat and releases
+      // exactly when the generated workbook lands (lights back on = punch).
+      const dark = Math.max(zt1, seg(v, 0.72, 0.75) * (1 - seg(v, 0.845, 0.885)));
+      const zoom = 1 + (Z - 1) * zt;
+      const S = fitScaleRef.current * grow * zoom;
+      // Centre the focus in the VIEWPORT (not just the stage box): compensate
+      // the vertical offset between the stage box centre and the screen centre.
+      let centerDelta = 0;
+      if (window.innerHeight > 0) {
+        const boxR = box.getBoundingClientRect();
+        centerDelta = boxR.top + boxR.height / 2 - window.innerHeight / 2;
+      }
+      const dx = (520 - focus.x) * zt;
+      const dy = ((320 - focus.y) - centerDelta / S) * zt;
+      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy}px)`;
+      box.style.marginTop = `${14 + 26 * seg(v, 0, 0.20)}px`;
+      // Immersive takeover: at zoom moments the whole hero switches to a dark
+      // ambiance (background, captions, scroll cue, nav) and the app takes the
+      // spotlight, so the enlarged stage never fights the headline. The
+      // headline itself fades out completely.
+      const immersive = dark > 0.12;
+      const sticky = stickyRef.current;
+      if (sticky) sticky.classList.toggle("immersive", immersive);
+      const section = sticky ? sticky.closest("section") : null;
+      if (section) {
+        if (immersive) section.setAttribute("data-nav-dark", "");
+        else section.removeAttribute("data-nav-dark");
+      }
+      const headline = headlineRef.current;
+      if (headline) {
+        // Fades for BOTH the dark takeover and the result close-up.
+        const hf = Math.max(dark, zt2);
+        headline.style.opacity = String(Math.max(0, 1 - 1.2 * hf));
+        headline.style.transform = `translateY(${-18 * hf}px)`;
+      }
 
-      // Scene crossfade (content area of the Ora window)
-      if (el.sceneA) el.sceneA.style.opacity = String(1 - seg(v, 0.14, 0.19));
-      if (el.sceneB) el.sceneB.style.opacity = String(seg(v, 0.14, 0.19));
-      // Click flashes
-      if (el.docFlash) el.docFlash.style.opacity = String(seg(v, 0.115, 0.14) * (1 - seg(v, 0.14, 0.19)));
-      if (el.lancerFlash) el.lancerFlash.style.opacity = String(seg(v, 0.30, 0.325) * (1 - seg(v, 0.325, 0.38)));
-      // JOURNAL: status + staggered log lines
+      // 1 · Login (slower start) → Welcome → Accueil
+      if (el.login) el.login.style.opacity = String(1 - seg(v, 0.15, 0.20));
+      if (el.connectFlash) el.connectFlash.style.opacity = String(seg(v, 0.125, 0.14) * (1 - seg(v, 0.14, 0.19)));
+      if (el.welcome) el.welcome.style.opacity = String(seg(v, 0.15, 0.20) * (1 - seg(v, 0.30, 0.35)));
+      if (el.docFlash) el.docFlash.style.opacity = String(seg(v, 0.425, 0.44) * (1 - seg(v, 0.44, 0.50)));
+      // 2 · Accueil window → dual view (Excel left + docked panel right)
+      const dual = seg(v, 0.45, 0.51);
+      if (el.orawin) {
+        el.orawin.style.opacity = String(1 - dual);
+        el.orawin.style.transform = `translateX(${60 * dual}px)`;
+      }
+      if (el.panel) el.panel.style.opacity = String(dual);
+      if (el.excel1) {
+        el.excel1.style.opacity = String(seg(v, 0.45, 0.51) * (1 - seg(v, 0.78, 0.83)));
+        el.excel1.style.transform = `translateX(${-660 * (1 - seg(v, 0.45, 0.53)) - 80 * seg(v, 0.78, 0.83)}px)`;
+      }
+      // 3 · FEC Studio modal (snappy open, rapid-fire toggles, quick close)
+      if (el.fecFlash) el.fecFlash.style.opacity = String(seg(v, 0.568, 0.583) * (1 - seg(v, 0.583, 0.63)));
+      const modalIn = seg(v, 0.585, 0.61) * (1 - seg(v, 0.705, 0.73));
+      if (el.backdrop) el.backdrop.style.opacity = String(modalIn);
+      if (el.modal) {
+        el.modal.style.opacity = String(modalIn);
+        el.modal.style.transform = `scale(${0.96 + 0.04 * seg(v, 0.585, 0.61)})`;
+      }
+      // toggles flip in rapid succession under the cursor
+      const tgAt = [0.638, 0.655, 0.672];
+      el.toggles.forEach((tg, i) => {
+        const on = seg(v, tgAt[i], tgAt[i] + 0.010);
+        if (tg.track) tg.track.style.opacity = String(on);
+        if (tg.knob) tg.knob.style.transform = `translateX(${12 * on}px)`;
+      });
+      if (el.runFlash) el.runFlash.style.opacity = String(seg(v, 0.695, 0.71) * (1 - seg(v, 0.71, 0.755)));
+      // 4 · JOURNAL run
       if (el.jstatus) {
-        const next = v < 0.34 ? "Prêt." : v < 0.55 ? "En cours…" : "Terminé";
+        const next = v < 0.71 ? "Prêt." : v < 0.82 ? "En cours…" : "Terminé";
         if (el.jstatus.textContent !== next) el.jstatus.textContent = next;
+      }
+      if (el.jcount) {
+        const n = String(Math.round(5 * seg(v, 0.715, 0.81)));
+        if (el.jcount.textContent !== n) el.jcount.textContent = n;
       }
       el.jlines.forEach((l) => {
         const i = Number(l.dataset.jline);
-        const o = seg(v, 0.36 + i * 0.045, 0.395 + i * 0.045);
+        const o = seg(v, 0.715 + i * 0.018, 0.733 + i * 0.018);
         l.style.opacity = String(o);
         l.style.transform = `translateY(${4 * (1 - o)}px)`;
       });
-      // Scene C: Ora slides right, the generated Excel opens on the left
-      const slide = seg(v, 0.55, 0.68);
-      if (el.oraWin) el.oraWin.style.transform = `translateX(${190 * slide}px)`;
-      if (el.excel) {
-        el.excel.style.opacity = String(seg(v, 0.55, 0.60));
-        el.excel.style.transform = `translateX(${-640 * (1 - slide)}px)`;
+      // 5 · loading beat, then the audit workbook lands with a POP
+      const loadIn = seg(v, 0.73, 0.755) * (1 - seg(v, 0.825, 0.855));
+      if (el.loading) {
+        el.loading.style.opacity = String(loadIn);
+        el.loading.style.transform = `scale(${0.95 + 0.05 * seg(v, 0.73, 0.755)})`;
       }
-      el.xlRows.forEach((r) => {
-        const i = Number(r.dataset.xlrow);
-        r.style.opacity = String(seg(v, 0.60 + i * 0.02, 0.65 + i * 0.02));
-      });
-      if (el.pill) el.pill.style.opacity = String(seg(v, 0.70, 0.75));
-      // Send button (pop, then pressed) + ring + toast
-      if (el.send) {
-        el.send.style.opacity = String(seg(v, 0.74, 0.79));
-        const y = 20 * (1 - seg(v, 0.74, 0.79));
-        const s = 1 - 0.04 * seg(v, 0.82, 0.85);
-        el.send.style.transform = `translateY(${y}px) scale(${s})`;
+      const lp = seg(v, 0.755, 0.825);
+      if (el.loadfill) el.loadfill.style.transform = `scaleX(${lp})`;
+      if (el.loadpct) {
+        const n = `${Math.round(lp * 100)} %`;
+        if (el.loadpct.textContent !== n) el.loadpct.textContent = n;
       }
-      if (el.ring) el.ring.style.opacity = String(seg(v, 0.82, 0.87));
-      if (el.toast) {
-        el.toast.style.opacity = String(seg(v, 0.87, 0.92));
-        el.toast.style.transform = `translateY(${-16 * (1 - seg(v, 0.87, 0.92))}px)`;
+      // Punchy arrival: quick fade + ease-out rise-and-scale + a glow pulse.
+      const wp = seg(v, 0.85, 0.90);
+      const we = 1 - (1 - wp) * (1 - wp);
+      if (el.excel2) {
+        el.excel2.style.opacity = String(Math.min(1, wp * 1.8));
+        el.excel2.style.transform = `translateY(${34 * (1 - we)}px) scale(${0.94 + 0.06 * we})`;
       }
-      // Cursor: measured targets; the tip (not the svg corner) lands on them.
+      if (el.xwglow) el.xwglow.style.opacity = String(seg(v, 0.895, 0.915) * (1 - seg(v, 0.915, 0.96)));
+      const sheetIdx = v < 0.94 ? 0 : v < 0.972 ? 1 : 2;
+      el.sheets.forEach((s) => { s.classList.toggle("hd-hidden", Number(s.dataset.sheet) !== sheetIdx); });
+      el.xtabs.forEach((tab) => { tab.classList.toggle("on", Number(tab.dataset.xtab) === sheetIdx); });
+      if (el.pill) {
+        const pp = seg(v, 0.89, 0.93);
+        const pe = 1 - (1 - pp) * (1 - pp);
+        el.pill.style.opacity = String(pp);
+        el.pill.style.transform = `scale(${0.85 + 0.15 * pe})`;
+      }
+      // Cursor: measured targets; tip lands on them.
       if (el.cursor) {
-        const T = targetsRef.current;
-        const TIP_X = 14.6, TIP_Y = 6.5; // arrow-tip offset inside the 52px svg
-        const tx = (p: { x: number }) => p.x - TIP_X;
-        const ty = (p: { y: number }) => p.y - TIP_Y;
-        const times = [0, 0.10, 0.135, 0.29, 0.325, 0.55, 0.76, 0.82, 1];
-        const x = kf(v, times, [940, tx(T.doc), tx(T.doc), tx(T.lancer), tx(T.lancer), tx(T.lancer), tx(T.send), tx(T.send), tx(T.send)]);
-        const y = kf(v, times, [600, ty(T.doc), ty(T.doc), ty(T.lancer), ty(T.lancer), ty(T.lancer), ty(T.send), ty(T.send), ty(T.send)]);
-        const cs = kf(v, [0, 0.12, 0.135, 0.15, 0.31, 0.325, 0.34, 0.805, 0.82, 0.835, 1], [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1]);
+        const TIP_X = 14.6, TIP_Y = 6.5;
+        const tx = (k: string) => T[k].x - TIP_X;
+        const ty = (k: string) => T[k].y - TIP_Y;
+        const times = [0, 0.12, 0.32, 0.42, 0.47, 0.565, 0.60, 0.638, 0.655, 0.672, 0.695, 0.735, 0.91, 0.935, 0.962, 1];
+        const keys = ["connect", "connect", "doc", "doc", "lancerfec", "lancerfec", "tg1", "tg2", "tg3", "run", "run", "tab2", "tab2", "tab3", "tab3"];
+        const x = kf(v, times, [940, ...keys.map(tx)].slice(0, times.length));
+        const y = kf(v, times, [600, ...keys.map(ty)].slice(0, times.length));
+        const cs = kf(
+          v,
+          [0, 0.127, 0.135, 0.143, 0.427, 0.435, 0.443, 0.570, 0.578, 0.586, 0.633, 0.641, 0.649, 0.650, 0.658, 0.666, 0.667, 0.675, 0.683, 0.692, 0.70, 0.708, 0.927, 0.935, 0.943, 0.954, 0.962, 0.970, 1],
+          [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1]
+        );
         el.cursor.style.transform = `translate(${x}px, ${y}px) scale(${cs})`;
       }
+      // Click feedback: a ripple pulse at the click point + a short vibration
+      // where the platform supports it (mobile; desktops ignore silently).
+      if (el.ripple) {
+        const active = CLICKS.find((c) => v >= c.t && v <= c.t + 0.03);
+        if (active && T[active.k]) {
+          const p = (v - active.t) / 0.03;
+          el.ripple.style.left = `${T[active.k].x}px`;
+          el.ripple.style.top = `${T[active.k].y}px`;
+          el.ripple.style.transform = `scale(${0.4 + 1.3 * p})`;
+          el.ripple.style.opacity = String((1 - p) * 0.65);
+        } else {
+          el.ripple.style.opacity = "0";
+        }
+      }
+      let clickIdx = -1;
+      for (let i = 0; i < CLICKS.length; i++) if (v >= CLICKS[i].t) clickIdx = i;
+      if (clickIdx > lastClickRef.current && clickIdx >= 0 && v - CLICKS[clickIdx].t < 0.06) {
+        try { (navigator as { vibrate?: (ms: number) => void }).vibrate?.(10); } catch { /* unsupported */ }
+      }
+      lastClickRef.current = clickIdx;
       // Captions
       const capOp = [
-        1 - seg(v, 0.12, 0.18),
-        seg(v, 0.15, 0.21) * (1 - seg(v, 0.33, 0.39)),
-        seg(v, 0.35, 0.41) * (1 - seg(v, 0.54, 0.60)),
-        seg(v, 0.56, 0.62),
+        1 - seg(v, 0.13, 0.18),
+        seg(v, 0.16, 0.21) * (1 - seg(v, 0.30, 0.35)),
+        seg(v, 0.33, 0.38) * (1 - seg(v, 0.50, 0.55)),
+        seg(v, 0.55, 0.60) * (1 - seg(v, 0.71, 0.75)),
+        seg(v, 0.73, 0.78) * (1 - seg(v, 0.86, 0.90)),
+        seg(v, 0.89, 0.94),
       ];
       el.caps.forEach((c, i) => { c.style.opacity = String(capOp[i] ?? 0); });
-      hint.style.opacity = String(1 - seg(v, 0, 0.06));
+      // Scroll cue: the fill tracks the PHYSICAL scroll (linear), so the bar
+      // moves steadily under the finger even inside heavy zones.
+      if (el.cuefill) el.cuefill.style.transform = `scaleX(${Math.min(1, Math.max(0, vRaw))})`;
+      hint.style.opacity = String(1 - seg(vRaw, 0.955, 0.995));
     };
 
     applyRef.current = apply;
@@ -383,19 +875,21 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
-      {/* Tall scrub wrapper: the sticky screen inside pins while ~3 viewport
-          heights of scroll drive the demo timeline. */}
-      <div ref={wrapRef} className="relative h-[240vh] md:h-[320vh]">
-        <div className="sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-14 md:pb-16">
-          {/* Soft overhead light — only meaningful on the dark background */}
+      {/* Tall scrub wrapper: ~10 viewport heights of scroll drive the demo —
+          a quick trackpad flick only advances one beat, and the heavy-scroll
+          zones stretch the key moments even further. */}
+      <div ref={wrapRef} className="relative h-[620vh] md:h-[1000vh]">
+        <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-14 md:pb-16">
+          {/* Soft overhead light — dark mode only */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-0 hidden dark:block"
             style={{ background: "radial-gradient(56% 44% at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.055) 40%, transparent 70%)" }}
           />
 
-          {/* Headline */}
+          {/* Headline (fades out while the camera zoom is engaged) */}
           <motion.div
+            ref={headlineRef}
             className="relative z-10 text-center max-w-[90rem] mx-auto"
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
@@ -406,16 +900,17 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             </span>
             <h2 className="font-inter font-normal text-[clamp(1.9rem,4.2vw,3.9rem)] tracking-[-0.035em] leading-[1.06] text-[#111827] dark:text-white mt-4 text-center">
               <span className="block lg:whitespace-nowrap">
-                {t({ fr: "On s'occupe de vos ", en: "We handle the " })}
-                <span className="text-brand-gradient">{t({ fr: "tâches répétitives", en: "repetitive tasks" })}</span>
-                {t({ fr: ",", en: "," })}
-              </span>
-              <span className="block lg:whitespace-nowrap">
-                {t({ fr: "vous ", en: "so you " })}
-                <span className="text-brand-gradient">{t({ fr: "excellez", en: "excel" })}</span>
-                {t({ fr: " dans votre métier.", en: " at what you do." })}
+                {t({ fr: "On vous rend votre temps ", en: "We give you " })}
+                <span className="text-brand-gradient">{t({ fr: "d'analyse et de conseil", en: "analysis and advisory" })}</span>
+                {t({ fr: ".", en: " time back" })}
               </span>
             </h2>
+            <p className="mt-3 font-inter text-[clamp(0.95rem,1.5vw,1.3rem)] leading-snug text-gray-400 dark:text-gray-500 text-center">
+              {t({
+                fr: "On s'occupe de vos tâches répétitives, vous excellez dans votre métier.",
+                en: "We handle the repetitive tasks, so you excel at what you do.",
+              })}
+            </p>
           </motion.div>
 
           {/* Stage (auto-fitted 1040×640 scene) */}
@@ -423,31 +918,324 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             <div ref={stageRef} className="hd-stage">
               <div className="hd-blob" />
 
-              {/* ── Ora window (faithful app: sidebar + Atlas content) ── */}
+              {/* ══ Real Excel — the FEC workbook (left, dual view) ══ */}
+              <div className="hd-win hd-xw" data-hd="excel1">
+                <XChrome name="FEC_demo_2024_398k_lignes" cell="N8" formula="" />
+                <div className="hd-xsheet">
+                  <div className="hd-xgrid" style={{ gridTemplateColumns: FEC_GRID }}>
+                    <div className="hd-xL" />
+                    {FEC_COLS.map((_, i) => (
+                      <div key={`L${i}`} className="hd-xL">{String.fromCharCode(65 + i)}</div>
+                    ))}
+                    <div className="hd-xN">1</div>
+                    {FEC_COLS.map((h) => (
+                      <div key={h} className="hd-xH">{h}</div>
+                    ))}
+                    {FEC_ROWS.map((row, r) => (
+                      <div key={r} style={{ display: "contents" }}>
+                        <div className="hd-xN">{r + 2}</div>
+                        {row.map((cell, ci) => (
+                          <div key={ci} className={`hd-xC${ci >= 7 ? " num" : ""}${r === 1 && ci === 8 ? " sel" : ""}`}>{cell}</div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="hd-xtabs">
+                  <span className="hd-xtab on">Sheet1</span>
+                  <span className="hd-xtabplus">+</span>
+                </div>
+                <div className="hd-xstatus">Prêt · Accessibilité : vérification terminée<span className="z">100 %</span></div>
+              </div>
+
+              {/* ══ Real Excel — the generated AUDIT workbook (same slot) ══ */}
+              <div className="hd-win hd-xw hd-xw2" data-hd="excel2" data-cur="result">
+                <div className="hd-xwglow" data-hd="xwglow" />
+                <XChrome name="FEC 2025 - studio.xlsx" cell="A1" formula="Balance générale · Exercice 2025" />
+                <div className="hd-xsheet">
+                  {/* Sheet 0 · Balance générale (real data) */}
+                  <TableSheet
+                    sheet={0} title="Balance générale · Exercice 2025" meta={BG_META}
+                    cols={BG_COLS} rows={BG_ROWS} total={BG_TOTAL} firstNum={2}
+                    gridCols="20px .62fr 2.1fr 1fr 1fr 1fr 1fr"
+                  />
+                  {/* Sheet 1 · Balance mensuelle — embedded bar chart */}
+                  <div className="hd-xmonth hd-hidden" data-sheet={1}>
+                    <div className="hd-xmtitle">
+                      <span>Balance mensuelle · Exercice 2025</span>
+                      <span className="meta">Mouvements par mois (k€)</span>
+                    </div>
+                    <div className="hd-xmbody">
+                      <div className="hd-xmtable">
+                        <div className="r h"><span>Mois</span><span className="num">Débit</span><span className="num">Crédit</span></div>
+                        {BM_MONTHS.map((m, i) => (
+                          <div className="r" key={m}><span>{m}</span><span className="num">{BM_DEBIT[i]}</span><span className="num">{BM_CREDIT[i]}</span></div>
+                        ))}
+                      </div>
+                      <div className="hd-xmchart">
+                        <div className="ct">Débit / Crédit par mois</div>
+                        <svg viewBox="0 0 244 108" preserveAspectRatio="none">
+                          {[0, 0.25, 0.5, 0.75, 1].map((g) => (
+                            <line key={g} x1="0" x2="244" y1={98 - g * 90} y2={98 - g * 90} stroke="#eef0f2" strokeWidth="0.7" />
+                          ))}
+                          {BM_MONTHS.map((m, i) => {
+                            const gx = i * 20 + 4;
+                            const dh = (BM_DEBIT[i] / BM_MAX) * 90;
+                            const ch = (BM_CREDIT[i] / BM_MAX) * 90;
+                            return (
+                              <g key={m}>
+                                <rect x={gx} y={98 - dh} width="6.4" height={dh} fill="#4a86d6" />
+                                <rect x={gx + 7.2} y={98 - ch} width="6.4" height={ch} fill="#2bb3a3" />
+                                <text x={gx + 6.8} y="106" fontSize="3.6" textAnchor="middle" fill="#9098a2">{m}</text>
+                              </g>
+                            );
+                          })}
+                          <line x1="0" y1="98" x2="244" y2="98" stroke="#c9c9c9" strokeWidth="0.8" />
+                        </svg>
+                        <div className="hd-xmleg">
+                          <span><i style={{ background: "#4a86d6" }} />Débit</span>
+                          <span><i style={{ background: "#2bb3a3" }} />Crédit</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Sheet 2 · Balance âgée (real data) */}
+                  <TableSheet
+                    sheet={2} hidden title="Balance âgée · créances clients (411)" meta={BA_META}
+                    cols={BA_COLS} rows={BA_ROWS} total={BA_TOTAL} firstNum={2}
+                    gridCols="20px .7fr 1.5fr 1fr 1fr .9fr .9fr .9fr .9fr"
+                  />
+                </div>
+                <div className="hd-xtabs">
+                  <span className="hd-xtabplus">+</span>
+                  <span className="hd-xtab">FEC 2025</span>
+                  <span className="hd-xtab">Paramètres</span>
+                  <span className="hd-xtab">Contrôles</span>
+                  <span className="hd-xtab on" data-xtab={0}>Balance générale</span>
+                  <span className="hd-xtab" data-xtab={1} data-cur="tab2">Balance mensuelle</span>
+                  <span className="hd-xtab">Balance journaux</span>
+                  <span className="hd-xtab">Auxiliaires</span>
+                  <span className="hd-xtab" data-xtab={2} data-cur="tab3">Balance âgée</span>
+                </div>
+                <div className="hd-xstatus">Prêt<span className="z">100 %</span></div>
+              </div>
+
+              {/* ══ Docked Ora panel (right, dual view) ══ */}
+              <div className="hd-win hd-panel" data-hd="panel">
+                <div className="hd-titlebar">
+                  <div className="hd-lights"><span className="r" /><span className="y" /><span className="g" /></div>
+                  <div className="hd-tbtitle">Ora</div>
+                </div>
+                <div className="hd-ptop">
+                  <span className="t">Atlas</span>
+                  <div className="hd-pills"><span className="hd-avatar">R</span></div>
+                </div>
+                <div className="hd-tabsbar">
+                  <span className="hd-tabslabel">Classeurs ouverts</span>
+                  <span className="hd-tab on">
+                    <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z" /><path d="M14 2v6h6" /></svg>
+                    FEC_demo_2024_398k_li…
+                  </span>
+                  <span className="hd-tab off">Ora_Prospects_…</span>
+                </div>
+                <div className="hd-pbody">
+                  <div className="hd-back">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
+                    Dossier Groupe Méridian
+                  </div>
+                  <div className="hd-filehead">
+                    <span className="hd-fico x" style={{ width: 26, height: 26, fontSize: 7.5 }}>XLSX</span>
+                    <div>
+                      <div className="nm">FEC_demo_2024_398k_lignes (2)</div>
+                      <div className="mt">
+                        XLSX
+                        <span className="hd-badge-todo"><span className="dot" />À faire</span>
+                        <span className="hd-badge-ok">
+                          <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                          Approuvé
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="hd-sendrow">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z" /><path d="M14 2v6h6" /></svg>
+                    <span className="lbl">Ce classeur : <b>FEC_demo_2024_398k_lignes (2)</b></span>
+                    <span className="hd-sendbtn">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z" /></svg>
+                      Envoyer
+                    </span>
+                  </div>
+                  <div className="hd-chips">
+                    <span className="hd-chip">☆ Favoris <span className="n">0</span></span>
+                    <span className="hd-chip">Qualité <span className="n">11</span></span>
+                    <span className="hd-chip">Audit <span className="n">12</span></span>
+                    <span className="hd-chip">Finance <span className="n">7</span></span>
+                    <span className="hd-chip all">Tout <span className="n">33</span></span>
+                  </div>
+                  <div className="hd-search">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" strokeLinecap="round" /></svg>
+                    Rechercher une automatisation…
+                  </div>
+                  <div className="hd-sugglabel">
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
+                    Suggestions pour ce fichier
+                  </div>
+                  <div className="hd-hero-sugg">
+                    <span className="hd-playic blue">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">FEC Studio : le dossier d'audit à la carte</div>
+                      <div className="r">Déjà utilisée sur ce fichier</div>
+                    </div>
+                    <span className="hd-lancer" data-cur="lancerfec">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                      Lancer
+                      <span className="hd-flash" data-hd="fec-flash" />
+                    </span>
+                  </div>
+                  <div className="hd-hero-sugg">
+                    <span className="hd-playic purple">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Balance âgée 30/60/90</div>
+                      <div className="r">Correspond aux colonnes détectées</div>
+                    </div>
+                    <span className="hd-lancer">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                      Lancer
+                    </span>
+                  </div>
+                  <div className="hd-sugg">
+                    <span className="hd-playic green">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Agréger des fichiers identiques <span className="hd-tag qualite">Qualité</span></div>
+                      <div className="d">Empile des fichiers de même structure en un seul tableau.</div>
+                    </div>
+                    <span className="hd-lancer">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                      Lancer
+                    </span>
+                  </div>
+                  <div className="hd-sugg">
+                    <span className="hd-playic purple">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Tests sur le journal <span className="hd-tag audit">Audit</span></div>
+                      <div className="d">Batterie de revue d'écritures : week-end, montants ronds, fin de période.</div>
+                    </div>
+                    <span className="hd-lancer">
+                      <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                      Lancer
+                    </span>
+                  </div>
+
+                  {/* FEC Studio config modal */}
+                  <div className="hd-mbackdrop" data-hd="mbackdrop" style={{ inset: 0 }} />
+                  <div className="hd-modal" data-hd="modal" data-cur="modalc" style={{ top: 12 }}>
+                    <div className="hd-mhead">
+                      <span className="ic">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
+                      </span>
+                      <div>
+                        <div className="t">FEC Studio : le dossier d'audit à la carte</div>
+                        <div className="s">Renseignez les paramètres avant de lancer.</div>
+                      </div>
+                      <span className="x">✕</span>
+                    </div>
+                    <div className="hd-mprofiles">
+                      <span className="hd-mprofile">🕘 Dernière config</span>
+                      <span className="hd-mprofile b">💾 Enregistrer ce profil</span>
+                    </div>
+                    <div className="hd-msec">Mission</div>
+                    <div className="hd-mfieldlabel">Seuil de signification de la mission (€)</div>
+                    <div className="hd-minput">vide = suggestion NEP-320 (0,5 % du CA), propagé à la revue…</div>
+                    <div className="hd-msec">Contrôles</div>
+                    <div className="hd-mrow">
+                      <span className="l">Contrôles du FEC</span>
+                      <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
+                    </div>
+                    <div className="hd-msec">Balances <span className="link">Tout cocher</span></div>
+                    <div className="hd-mrow">
+                      <span className="l">Balance générale</span>
+                      <span className="hd-toggle" data-cur="tg1"><span className="track" data-hd="tg1-track" /><span className="knob" data-hd="tg1-knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
+                      <span className="l">Balance mensuelle</span>
+                      <span className="hd-toggle" data-cur="tg2"><span className="track" data-hd="tg2-track" /><span className="knob" data-hd="tg2-knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
+                      <span className="l">Balance âgée (créances &amp; dettes)</span>
+                      <span className="hd-toggle" data-cur="tg3"><span className="track" data-hd="tg3-track" /><span className="knob" data-hd="tg3-knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
+                      <span className="l">À-nouveaux</span>
+                      <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
+                    </div>
+                    <div className="hd-mfoot">
+                      <span className="hd-mcancel">Annuler</span>
+                      <span className="hd-mrun" data-cur="run">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                        Lancer maintenant
+                        <span className="hd-flash" data-hd="run-flash" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Loading card: shows while FEC Studio builds the workbook */}
+                  <div className="hd-loading" data-hd="loading">
+                    <div className="sp" />
+                    <div className="t">FEC Studio</div>
+                    <div className="s">Construction du dossier d'audit…</div>
+                    <div className="bar"><span className="barfill" data-hd="loadfill" /></div>
+                    <div className="pct" data-hd="loadpct">0 %</div>
+                  </div>
+                </div>
+                {/* JOURNAL */}
+                <div className="hd-journal">
+                  <div className="hd-jhead">
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 17l6-6-6-6M12 19h8" /></svg>
+                    Journal
+                    <span className="st">· <span data-hd="jcount">0</span></span>
+                    <span className="st" data-hd="jstatus">Prêt.</span>
+                    <span className="chev">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
+                    </span>
+                  </div>
+                  <div className="hd-jlines">
+                    {J_LINES.map((line, i) => (
+                      <div key={i} className="hd-jline" data-jline={i}>
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                        {line}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* ══ Ora full window (login → welcome → Accueil) ══ */}
               <div className="hd-win hd-orawin" data-hd="orawin">
                 <div className="hd-titlebar">
                   <div className="hd-lights"><span className="r" /><span className="y" /><span className="g" /></div>
                   <div className="hd-tbtitle">Ora</div>
                 </div>
                 <div className="hd-app">
-                  {/* Sidebar */}
                   <div className="hd-side">
                     <div className="hd-sidelogo">
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M3 8c5-3 13-3 18 0" stroke="#0d9488" strokeWidth="2.6" strokeLinecap="round" /><path d="M3 13c5-3 13-3 18 0" stroke="#3b82f6" strokeWidth="2.6" strokeLinecap="round" /><path d="M3 18c5-3 13-3 18 0" stroke="#60a5fa" strokeWidth="2.6" strokeLinecap="round" /></svg>
-                      Ora
+                      <img src="/logos/logo-color-light.png" alt="" />
                     </div>
                     <div className="hd-sidelabel">Navigation</div>
-                    <div className="hd-sideitem">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
+                    <div className="hd-sideitem on">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
                       Accueil
                     </div>
-                    <div className="hd-sideitem on">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9z" /></svg>
-                      Atlas
-                    </div>
                     <div className="hd-sideitem">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8" /></svg>
-                      Mon organisation
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9z" /></svg>
+                      Atlas
                     </div>
                     <div className="hd-sidecard">
                       <div className="ic">
@@ -457,193 +1245,133 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       <div className="d">Besoin d'une automatisation ? Décrivez-la, on vous livre un script sur mesure sous 48 h.</div>
                     </div>
                   </div>
-
-                  {/* Content */}
                   <div className="hd-content">
                     <div className="hd-topbar">
-                      <span className="hd-crumb"><b>Atlas</b> · Valmy &amp; Associés</span>
-                      <div className="hd-topicons">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.6a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3a8.4 8.4 0 0 1 8.5 8.5z" /></svg>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
-                        <span className="hd-avatar">RG</span>
+                      <span className="hd-pagetitle">Accueil</span>
+                      <div className="hd-pills">
+                        <span className="hd-pillbtn">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.6a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3a8.4 8.4 0 0 1 8.5 8.5z" /></svg>
+                          Messages
+                        </span>
+                        <span className="hd-pillbtn">
+                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+                          Notifications <span className="n">3</span>
+                        </span>
+                        <span className="hd-avatar">R</span>
                       </div>
                     </div>
-
-                    <div className="hd-scenes">
-                      {/* Scene A · folder documents */}
-                      <div className="hd-scene" data-hd="sceneA">
-                        <div className="hd-back">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                          Retour
+                    <div className="hd-body">
+                      <div className="hd-h1">Bon retour parmi nous, Raphaël</div>
+                      <div className="hd-date">Lundi 12 janvier</div>
+                      <div className="hd-banner">
+                        <span className="ic">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z" /><path d="M14 2v6h6M8 13h8M8 17h8" /></svg>
+                        </span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="t">Ouvrir un fichier</div>
+                          <div className="s">Excel ou CSV → lancez vos automatisations en un clic</div>
                         </div>
-                        <div className="hd-folderhead">
-                          <span className="hd-folderico">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9L9.2 3.9A2 2 0 0 0 7.5 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z" /></svg>
+                        <svg className="arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      </div>
+                      <div className="hd-seclabel">Accès rapide</div>
+                      <div className="hd-quick">
+                        <div className="hd-qcard">
+                          <span className="ic blue">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                           </span>
-                          <span className="hd-foldertitle">Groupe Méridian · 2026</span>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="t">Nouveau projet</div>
+                            <div className="s">Deal PE, audit, M&A…</div>
+                          </div>
                         </div>
-                        <div className="hd-foldermeta">
-                          <span className="hd-badge">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                            À jour
+                        <div className="hd-qcard">
+                          <span className="ic purple">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9z" /></svg>
                           </span>
-                          3 documents · 2 membres · modifié il y a 2 h
-                        </div>
-                        <div className="hd-searchrow">
-                          <div className="hd-search">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" strokeLinecap="round" /></svg>
-                            Rechercher un document…
+                          <div style={{ minWidth: 0 }}>
+                            <div className="t">Tous les Atlas</div>
+                            <div className="s">Liste de vos projets</div>
                           </div>
-                          <span className="hd-import">+ Importer un fichier</span>
                         </div>
-                        <div className="hd-doclabel">Documents</div>
-                        <div className="hd-doc" data-cur="doc">
-                          <span className="hd-fico x">XLSX</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="nm">Reporting janvier</div>
-                            <div className="mt">XLSX · 214 Ko · il y a 1 j</div>
+                        <div className="hd-qcard">
+                          <span className="ic blue">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
+                          </span>
+                          <div style={{ minWidth: 0 }}>
+                            <div className="t">Ora Engineering</div>
+                            <div className="s">Automatisation sur-mesure</div>
                           </div>
-                          <span className="hd-badge">À jour</span>
-                          <svg className="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                          <div className="hd-flash" data-hd="doc-flash" />
-                        </div>
-                        <div className="hd-doc">
-                          <span className="hd-fico w">DOCX</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="nm">Lettre de mission</div>
-                            <div className="mt">DOCX · 88 Ko · il y a 12 j</div>
-                          </div>
-                          <span className="hd-badge">À jour</span>
-                          <svg className="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-                        </div>
-                        <div className="hd-doc">
-                          <span className="hd-fico p">PDF</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="nm">Plaquette 2025</div>
-                            <div className="mt">PDF · 2,9 Mo · il y a 3 j</div>
-                          </div>
-                          <span className="hd-badge">À jour</span>
-                          <svg className="chev" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
                         </div>
                       </div>
-
-                      {/* Scene B · automation panel for the file */}
-                      <div className="hd-scene" data-hd="sceneB" style={{ opacity: 0 }}>
-                        <div className="hd-back">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                          Groupe Méridian · 2026
+                      <div className="hd-seclabel">Reprendre</div>
+                      <div className="hd-row" data-cur="doc">
+                        <span className="hd-fico x">XLSX</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="nm">FEC_demo_2024_398k_lignes</div>
+                          <div className="mt">XLSX · il y a 1 j</div>
                         </div>
-                        <div className="hd-filehead">
-                          <span className="hd-fico x" style={{ width: 32, height: 32, fontSize: 9 }}>XLSX</span>
-                          <div>
-                            <div className="nm">Reporting janvier</div>
-                            <div className="mt">XLSX · 214 Ko <span className="hd-badge">À jour</span></div>
-                          </div>
-                        </div>
-                        <div className="hd-chips">
-                          <span className="hd-chip">☆ Favoris <span className="n">2</span></span>
-                          <span className="hd-chip">Qualité <span className="n">3</span></span>
-                          <span className="hd-chip">Finance <span className="n">4</span></span>
-                          <span className="hd-chip">Export <span className="n">3</span></span>
-                          <span className="hd-chip all">Tout <span className="n">12</span></span>
-                        </div>
-                        <div className="hd-search" style={{ marginBottom: 10 }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" strokeLinecap="round" /></svg>
-                          Rechercher une automatisation…
-                        </div>
-                        <div className="hd-sugglabel">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
-                          Suggestions pour ce fichier
-                        </div>
-                        {/* Highlighted suggestion (detected match) */}
-                        <div className="hd-hero-sugg">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="t">Fiche de synthèse par valeur</div>
-                            <div className="r">Tableau de valeurs détecté · 8 filiales</div>
-                          </div>
-                          <span className="hd-lancer solid" data-cur="lancer">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5-13-7.5z" /></svg>
-                            Lancer
-                            <span className="hd-flash" data-hd="lancer-flash" />
-                          </span>
-                        </div>
-                        <div className="hd-sugg">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="t">Exporter une feuille en PDF <span className="hd-tag export">Export</span></div>
-                            <div className="prod">PRODUIT UN FICHIER</div>
-                            <div className="d">Transforme une feuille du classeur en PDF soigné, prêt à envoyer au client.</div>
-                          </div>
-                          <span className="hd-lancer soft">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5-13-7.5z" /></svg>
-                            Lancer
-                          </span>
-                        </div>
-                        <div className="hd-sugg">
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="t">Envoi automatique par mail <span className="hd-tag finance">Finance</span></div>
-                            <div className="prod">AUTOMATISATION</div>
-                            <div className="d">Le même livrable, envoyé aux mêmes destinataires, chaque mois.</div>
-                          </div>
-                          <span className="hd-lancer soft">
-                            <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5-13-7.5z" /></svg>
-                            Lancer
-                          </span>
-                        </div>
+                        <span className="hd-status"><span className="dot" />À faire</span>
+                        <div className="hd-flash" data-hd="doc-flash" />
                       </div>
-                    </div>
-
-                    {/* JOURNAL (persistent bottom bar; logs during processing) */}
-                    <div className="hd-journal">
-                      <div className="hd-jhead">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M4 6h16M4 12h16M4 18h10" /></svg>
-                        Journal
-                        <span className="st" data-hd="jstatus">Prêt.</span>
+                      <div className="hd-row">
+                        <span className="hd-fico t">TXT</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="nm">FEC_GFIL_conforme</div>
+                          <div className="mt">TXT · il y a 6 j</div>
+                        </div>
+                        <span className="hd-status"><span className="dot" />À faire</span>
                       </div>
-                      <div className="hd-jlines">
-                        {J_LINES.map((line, i) => (
-                          <div key={i} className="hd-jline" data-jline={i}>
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                            {line}
-                          </div>
-                        ))}
+                      <div className="hd-row">
+                        <span className="hd-fico p">PDF</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="nm">France SCPI - rapport-annuel-2025</div>
+                          <div className="mt">PDF · il y a 6 j</div>
+                        </div>
+                        <span className="hd-status"><span className="dot" />À faire</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* ── Generated Excel workbook (scene C, real-Excel look) ── */}
-              <div className="hd-win hd-excel" data-hd="excel">
-                <div className="hd-titlebar">
-                  <div className="hd-lights"><span className="r" /><span className="y" /><span className="g" /></div>
-                  <div className="hd-tbtitle">Synthese_IDF_012026.xlsx</div>
+                {/* Welcome splash */}
+                <div className="hd-welcome" data-hd="welcome" style={{ opacity: 0 }}>
+                  <div className="hd-authhalo" />
+                  <div className="relative flex flex-col items-center">
+                    <span className="hd-oramark"><img src="/logos/icon-color.png" alt="" /></span>
+                    <div className="hd-welcometitle">Bon retour parmi nous, Raphaël</div>
+                    <div className="hd-welcomesub">Préparation de votre espace…</div>
+                  </div>
                 </div>
-                <div className="hd-xlbar">
-                  <span className="hd-xlname">B9</span>
-                  <span className="hd-xlfx">fx</span>
-                  <span className="hd-xlformula">=SOMME(B2:B8)</span>
-                </div>
-                <div className="hd-xlgrid">
-                  <div className="hd-xlL" />
-                  {XL_COLS.map((_, i) => (
-                    <div key={`L${i}`} className="hd-xlL">{String.fromCharCode(65 + i)}</div>
-                  ))}
-                  <div className="hd-xlN">1</div>
-                  {XL_COLS.map((h, i) => (
-                    <div key={`H${i}`} className={`hd-xlH${i === 0 ? "" : " num"}`}>{h}</div>
-                  ))}
-                  {XL_ROWS.map((row, i) => (
-                    <div key={i} style={{ display: "contents" }}>
-                      <div className="hd-xlN" data-xlrow={i}>{i + 2}</div>
-                      {row.map((cell, ci) => (
-                        <div key={ci} className={`hd-xlC ${ci === 0 ? "name" : "num"}`} data-xlrow={i}>{cell}</div>
-                      ))}
+
+                {/* Login screen */}
+                <div className="hd-login" data-hd="login">
+                  <div className="hd-authhalo" />
+                  <div className="hd-authcard">
+                    <div className="hd-authlogo">
+                      <img src="/logos/logo-color-light.png" alt="Ora" />
                     </div>
-                  ))}
-                  <div className="hd-xlN" data-xlrow={XL_ROWS.length}>{XL_ROWS.length + 2}</div>
-                  {XL_TOTAL.map((cell, ci) => (
-                    <div key={`T${ci}`} className={`hd-xlT${ci === 0 ? "" : " num"}${ci === 1 ? " hd-xlsel" : ""}`} data-xlrow={XL_ROWS.length}>{cell}</div>
-                  ))}
+                    <div className="hd-authtitle">Bienvenue</div>
+                    <div className="hd-authsub">Connectez-vous à votre espace Ora.</div>
+                    <div className="hd-field">
+                      <div className="hd-fieldlabel">Email</div>
+                      <div className="hd-input">r.gaugain@valmy-associes.fr</div>
+                    </div>
+                    <div className="hd-field">
+                      <div className="hd-fieldlabel">Mot de passe</div>
+                      <div className="hd-input ph">••••••••</div>
+                    </div>
+                    <div className="hd-btnauth" data-cur="connect">
+                      Se connecter
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                      <span className="hd-flash" data-hd="connect-flash" />
+                    </div>
+                    <div className="hd-authlinks">
+                      <span className="b">Mot de passe oublié ?</span><br />
+                      Invité(e) ? <span className="b">Activer mon compte avec un code</span>
+                    </div>
+                    <div className="hd-authmuted">Contacter le support</div>
+                    <div className="hd-authmuted">Conditions générales · Confidentialité</div>
+                  </div>
                 </div>
               </div>
 
@@ -651,23 +1379,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               <div className="hd-pill" data-hd="pill">
                 <span className="fico">XLSX</span>
                 <div>
-                  <div className="t1">Synthese_IDF_012026.xlsx</div>
-                  <div className="t2">Généré par Ora · 96 Ko</div>
+                  <div className="t1">FEC 2025 - studio.xlsx</div>
+                  <div className="t2">Généré par Ora · 7 feuilles</div>
                 </div>
               </div>
 
-              {/* Send button + toast */}
-              <div className="hd-send" data-hd="send" data-cur="send">
-                <span className="hd-ring" data-hd="ring" />
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4 20-7z" /></svg>
-                Envoyer
-              </div>
-              <div className="hd-toast" data-hd="toast">
-                <span className="ck">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-                </span>
-                {t({ fr: "Synthèse envoyée à 3 destinataires", en: "Report sent to 3 recipients" })}
-              </div>
+              {/* Click ripple (feedback pulse at each click point) */}
+              <div className="hd-ripple" data-hd="ripple" />
 
               {/* Cursor */}
               <svg className="hd-cursor" data-hd="cursor" viewBox="0 0 32 32">
@@ -679,10 +1397,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           {/* Step captions */}
           <div ref={capsRef} className="relative z-10 h-10 md:h-12 flex-shrink-0">
             {[
-              t({ fr: "Ouvrez votre dossier client", en: "Open your client folder" }),
-              t({ fr: "Lancez l'automatisation suggérée", en: "Launch the suggested automation" }),
-              t({ fr: "Ora traite votre classeur", en: "Ora processes your workbook" }),
-              t({ fr: "La synthèse est prête, envoyée en un clic", en: "Your synthesis is ready, sent in one click" }),
+              t({ fr: "Connectez-vous à votre espace", en: "Sign in to your workspace" }),
+              t({ fr: "Ora prépare votre espace", en: "Ora prepares your workspace" }),
+              t({ fr: "Reprenez votre FEC là où il en était", en: "Pick up your FEC where you left it" }),
+              t({ fr: "Configurez FEC Studio en deux clics", en: "Configure FEC Studio in two clicks" }),
+              t({ fr: "Ora construit le dossier d'audit", en: "Ora builds the audit workbook" }),
+              t({ fr: "Explorez votre classeur, feuille par feuille", en: "Browse your workbook, sheet by sheet" }),
             ].map((label, i) => (
               <div key={i} className="hd-cap" style={{ opacity: i === 0 ? 1 : 0 }}>
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900/[0.06] ring-1 ring-gray-900/10 text-[13px] font-inter font-semibold text-gray-800 dark:bg-white/10 dark:ring-white/20 dark:text-white">{i + 1}</span>
@@ -691,14 +1411,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             ))}
           </div>
 
-          {/* Scroll hint */}
-          <div ref={hintRef} className="pointer-events-none absolute bottom-2 inset-x-0 flex flex-col items-center gap-1 text-gray-500">
-            <span className="text-[12px] font-inter font-medium tracking-wide">
-              {t({ fr: "Faites défiler pour voir Ora travailler", en: "Scroll to watch Ora work" })}
-            </span>
-            <motion.svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" animate={{ y: [0, 6, 0] }} transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}>
-              <path d="m6 9 6 6 6-6" />
-            </motion.svg>
+          {/* Scroll cue — PERSISTENT: chevron + demo progress bar, so the user
+              understands the whole animation is driven by scrolling. */}
+          <div ref={hintRef} className="hd-scrollcue pointer-events-none font-inter">
+            <svg className="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+            <span className="txt">{t({ fr: "Faites défiler", en: "Scroll" })}</span>
+            <span className="track"><span className="fill" data-hd="cuefill" /></span>
           </div>
         </div>
       </div>
