@@ -314,7 +314,7 @@ export default function ExcelReveal() {
             <RevealLine
               progress={revealProgress}
               range={LINE1_RANGE}
-              className="font-instrument font-medium text-[#111827] dark:text-white"
+              className="font-instrument font-normal text-[#111827] dark:text-white"
               style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
               gradientWords={["temps", "time"]}
               text={t({
@@ -329,7 +329,7 @@ export default function ExcelReveal() {
             <RevealLine
               progress={revealProgress}
               range={LINE2_RANGE}
-              className="font-instrument font-medium text-[#111827] dark:text-white"
+              className="font-instrument font-normal text-[#111827] dark:text-white"
               style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
               gradientWords={["Excel"]}
               text={t({
@@ -344,7 +344,7 @@ export default function ExcelReveal() {
             <RevealLine
               progress={revealProgress}
               range={LINE3_RANGE}
-              className="font-instrument font-medium text-[#111827] dark:text-white"
+              className="font-instrument font-normal text-[#111827] dark:text-white"
               style={{ fontSize: "clamp(2.1rem, 4vw, 3.4rem)", lineHeight: 1.16, letterSpacing: "-0.03em" }}
               gradientWords={["automatisons", "conseil", "automate", "advisory"]}
               text={t({
@@ -360,7 +360,7 @@ export default function ExcelReveal() {
             style={{ opacity: l3o, y: l3y, filter: l3Filter }}
           >
             <motion.p
-              className="inline-block font-instrument font-medium whitespace-nowrap"
+              className="inline-block font-instrument font-normal whitespace-nowrap"
               style={{ fontSize: l3Size, lineHeight: l3Leading, letterSpacing: l3Track }}
             >
               <span className="text-[#111827] dark:text-white">{t({ fr: "Découvrez ", en: "Meet " })}</span>

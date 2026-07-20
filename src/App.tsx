@@ -1012,8 +1012,8 @@ const App = () => {
           style={{
             background:
               theme === "dark"
-                ? "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.28) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.18) 0%, transparent 70%)"
-                : "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.21) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.26) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.18) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.18) 0%, transparent 70%)",
+                ? "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.30) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.22) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.28) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.08) 0%, transparent 70%)"
+                : "radial-gradient(34% 16% at 6% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(34% 16% at 94% 5%, rgba(59,130,246,0.28) 0%, transparent 72%), radial-gradient(50% 12% at 45% 28%, rgba(59,130,246,0.20) 0%, transparent 70%), radial-gradient(45% 12% at 85% 32%, rgba(59,130,246,0.21) 0%, transparent 70%), radial-gradient(55% 13% at 15% 58%, rgba(59,130,246,0.26) 0%, transparent 70%), radial-gradient(50% 12% at 50% 75%, rgba(59,130,246,0.18) 0%, transparent 70%), radial-gradient(45% 10% at 80% 88%, rgba(236,72,153,0.08) 0%, transparent 70%)",
             // Fade the tint layer in/out at the very top and bottom so its
             // edges never form a hard horizontal line against the adjacent
             // white sections (hero above, next section below).
@@ -1030,7 +1030,7 @@ const App = () => {
             what Ora automates (FEC Studio, monthly reporting), with the real
             demo clips. Placed right above the "coûte plus que du temps"
             problem section. */}
-        <UseCases />
+        <UseCases openBooking={openBooking} />
 
         {/* Problem — the "il me comprend" moment before the product. */}
         <ProblemSection />

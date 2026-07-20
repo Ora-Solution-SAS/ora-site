@@ -49,12 +49,12 @@ export function AnimatedHeroTitle() {
       >
         <motion.span variants={titleLine} className="block">
           {t({
-            fr: "Prenez le contrôle de vos dossiers.",
+            fr: "Automatisez vos dossiers les plus sensibles.",
             en: "Take control of every file.",
           })}
         </motion.span>
         <motion.span variants={titleLine} className="block mt-1 text-brand-gradient">
-          {t({ fr: "Automatisés, orchestrés, et à vous.", en: "Automated, orchestrated, and yours." })}
+          {t({ fr: "Vos données vous appartiennent.", en: "Automated, orchestrated, and yours." })}
         </motion.span>
       </motion.h1>
 
@@ -62,7 +62,7 @@ export function AnimatedHeroTitle() {
       <h1 className="hidden md:block hero-stagger hero-d1 font-poppins font-normal text-[clamp(2.2rem,3.6vw,2.9rem)] leading-[1.15] tracking-[-0.03em] text-[#111827] dark:text-white text-center max-w-4xl mx-auto [text-wrap:balance]">
         <span className="block">
           {t({
-            fr: "Vos dossiers financiers les plus sensibles, automatisés et orchestrés.",
+            fr: "Automatisez vos dossiers financiers les plus sensibles.",
             en: "Your most sensitive financial dossiers, automated and orchestrated.",
           })}
         </span>

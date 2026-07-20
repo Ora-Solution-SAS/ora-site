@@ -5,21 +5,21 @@ import { useLang } from "@/lib/i18n";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
- * A tall wrapper (~5 screens) pins a full-viewport scene; the scroll progress
- * scrubs the app's REAL journey, replicated from actual screenshots of Ora
- * and of the real Excel side-by-side layout:
+ * A tall wrapper pins a full-viewport scene; the scroll progress scrubs the
+ * app's REAL journey, replicated from actual screenshots of Ora and of the
+ * real Excel side-by-side layout (v2 flow, 2026-07-20 — the longer v1
+ * login→accueil flow lives in git history and in memory):
  *
- *   1. Login   — centred card, full-width pill « Se connecter → »
- *   2. Welcome — brand mark + « Bon retour parmi nous, Raphaël »
- *   3. Accueil — blue banner, ACCÈS RAPIDE, REPRENDRE → open the FEC file
- *   4. Dual view — the REAL Excel (ribbon, formula bar, FEC columns, sheet
- *      tab, status bar) on the left + the docked Ora panel on the right
- *   5. « Lancer » on FEC Studio → the real config MODAL opens (MISSION seuil,
+ *   1. Excel — the real FEC workbook alone, centred, with an « Ora » tab in
+ *      the ribbon (replica of the real Excel add-in). The cursor clicks it.
+ *   2. Dual view — the Ora panel docks on the right, Excel slides left:
+ *      straight onto the automation page, no login/onboarding.
+ *   3. « Lancer » on FEC Studio → the real config MODAL opens (MISSION seuil,
  *      CONTRÔLES, BALANCES toggles) — the cursor flips three toggles then
  *      clicks « Lancer maintenant »
- *   6. The JOURNAL logs the run; the FEC workbook is replaced by the
- *      generated audit workbook, and the cursor browses its SHEET TABS
- *      (Synthèse → Balance générale → Balance âgée).
+ *   4. The JOURNAL logs the run; the loading card flips to a green-check
+ *      success; the FEC workbook is replaced by the generated audit workbook,
+ *      and the cursor browses its SHEET TABS.
  *
  * Brand marks use the real logo assets from /public/logos. Cursor click
  * targets are MEASURED at runtime (offsetLeft chains) so the tip lands
@@ -59,7 +59,6 @@ const HD_CSS = `
 .hd-lights .g{background:#28c840;border:.5px solid #1eaa33}
 .hd-tbtitle{position:absolute;left:0;right:0;text-align:center;font-size:11.5px;font-weight:600;color:#4b5563}
 /* ── Ora full window (login / welcome / accueil) ── */
-.hd-orawin{left:240px;top:16px;width:560px;height:608px;display:flex;flex-direction:column}
 .hd-app{display:flex;flex:1;min-height:0}
 .hd-side{width:126px;flex-shrink:0;background:#fff;border-right:1px solid #eeedeb;
   display:flex;flex-direction:column;padding:12px 9px}
@@ -117,36 +116,6 @@ const HD_CSS = `
 .hd-fico.p{background:#fdecec;color:#dc2626}
 .hd-flash{position:absolute;inset:0;border-radius:11px;background:rgba(59,130,246,.12);
   box-shadow:inset 0 0 0 2px #3b82f6;pointer-events:none;opacity:0}
-/* ── Login + Welcome overlays ── */
-.hd-login,.hd-welcome{position:absolute;inset:34px 0 0 0;z-index:5;background:#fbfaf6;
-  display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hd-authhalo{position:absolute;left:50%;top:50%;width:400px;height:320px;transform:translate(-50%,-50%);
-  border-radius:50%;background:radial-gradient(closest-side,rgba(59,130,246,.09),transparent 72%)}
-.hd-authcard{position:relative;width:308px;background:#fff;border-radius:16px;
-  padding:26px 28px 20px;box-shadow:0 18px 50px -18px rgba(15,23,42,.16);text-align:center}
-.hd-authlogo{display:flex;justify-content:center;margin-bottom:14px}
-.hd-authlogo img{height:30px;width:auto;display:block}
-.hd-authtitle{font-family:Poppins,'Inter',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:#111827}
-.hd-authsub{font-size:9.5px;color:#6b7280;margin-top:4px}
-.hd-field{text-align:left;margin-top:11px}
-.hd-fieldlabel{font-size:9px;font-weight:700;color:#111827;margin-bottom:4px}
-.hd-input{display:flex;align-items:center;height:31px;border:1px solid #e5e7eb;border-radius:10px;
-  background:#fff;padding:0 11px;font-size:9.5px;color:#111827}
-.hd-input.ph{color:#9ca3af;letter-spacing:.14em}
-.hd-btnauth{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;height:34px;margin-top:16px;
-  border-radius:999px;background:#3b82f6;color:#fff;font-size:10.5px;font-weight:700;
-  box-shadow:0 4px 14px rgba(59,130,246,.35)}
-.hd-btnauth .hd-flash{border-radius:999px}
-.hd-authlinks{margin-top:12px;font-size:8.5px;color:#6b7280;line-height:2}
-.hd-authlinks .b{color:#3b82f6;font-weight:700}
-.hd-authmuted{margin-top:2px;font-size:8px;color:#9ca3af}
-.hd-oramark{animation:hdMarkPulse 2.2s ease-in-out infinite}
-.hd-oramark img{height:44px;width:auto;display:block}
-@keyframes hdMarkPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.07);opacity:.85}}
-@media (prefers-reduced-motion:reduce){.hd-oramark{animation:none}}
-.hd-welcometitle{font-family:Poppins,'Inter',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;
-  color:#111827;margin-top:15px}
-.hd-welcomesub{font-size:10px;color:#6b7280;margin-top:5px}
 /* ── Docked Ora panel (right, dual view) ── */
 .hd-panel{left:656px;top:16px;width:368px;height:608px;display:flex;flex-direction:column;opacity:0}
 .hd-ptop{display:flex;align-items:center;height:30px;flex-shrink:0;padding:0 12px;background:#fff;border-bottom:1px solid #f0efec}
@@ -159,11 +128,18 @@ const HD_CSS = `
   font-size:7.5px;font-weight:600;white-space:nowrap}
 .hd-tab.on{background:#eaf1fe;border:1px solid #bfdbfe;color:#2563eb}
 .hd-tab.off{color:#6b7280}
-.hd-back{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:#6b7280;margin-bottom:7px}
+.hd-back{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:#6b7280;margin-bottom:7px}
+.hd-backicons{margin-left:auto;display:flex;gap:4px}
+.hd-iconbtn{width:17px;height:17px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;color:#3b82f6;
+  display:grid;place-items:center}
+.hd-fileicons{margin-left:auto;display:flex;gap:4px}
+.hd-rowactions{margin-left:auto;display:flex;align-items:center;gap:5px;flex-shrink:0}
+.hd-rowactions .hd-lancer{margin-left:0}
+.hd-star{color:#c6cbd3;display:grid;place-items:center}
 .hd-filehead{display:flex;align-items:center;gap:8px}
 .hd-filehead .nm{font-size:11px;font-weight:700;letter-spacing:-.01em;color:#111827}
 .hd-filehead .mt{display:flex;align-items:center;gap:5px;font-size:8px;color:#9ca3af;margin-top:2px}
-.hd-badge-todo{display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:600;color:#4b5563}
+.hd-badge-todo{display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:600;color:#4b5563;background:#f3f4f6;border-radius:99px;padding:1.5px 6px}
 .hd-badge-todo .dot{width:4px;height:4px;border-radius:50%;background:#f59e0b}
 .hd-badge-ok{display:inline-flex;align-items:center;gap:3px;font-size:7.5px;font-weight:700;color:#059669;
   background:#e7f6ef;border-radius:99px;padding:1.5px 6px}
@@ -178,8 +154,6 @@ const HD_CSS = `
 .hd-chip{display:inline-flex;align-items:center;gap:3px;font-size:7px;font-weight:600;color:#4b5563;
   background:#fff;border:1px solid #e5e7eb;border-radius:99px;padding:3px 6px;white-space:nowrap}
 .hd-chip .n{color:#9ca3af;font-weight:700}
-.hd-chip.all{background:#111827;color:#fff;border-color:#111827}
-.hd-chip.all .n{color:#d1d5db}
 .hd-search{display:flex;align-items:center;height:24px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;
   padding:0 8px;gap:6px;color:#9ca3af;font-size:8px;margin-top:7px}
 .hd-sugglabel{display:flex;align-items:center;gap:4px;font-size:7px;font-weight:700;letter-spacing:.09em;
@@ -214,7 +188,6 @@ const HD_CSS = `
 .hd-jline{display:flex;align-items:center;gap:5px;font-size:7.5px;color:#374151;padding:1.5px 0;opacity:0}
 .hd-jline svg{color:#059669;flex-shrink:0}
 /* ── FEC Studio config modal (over the panel) ── */
-.hd-mbackdrop{position:absolute;inset:34px 0 0 0;z-index:6;background:rgba(120,126,140,.35);opacity:0}
 .hd-modal{position:absolute;left:14px;right:14px;top:52px;z-index:7;background:#fff;border-radius:14px;
   box-shadow:0 24px 60px -18px rgba(15,23,42,.35);padding:12px 13px 11px;opacity:0;transform-origin:center 30%}
 .hd-mhead{display:flex;align-items:flex-start;gap:8px}
@@ -225,14 +198,15 @@ const HD_CSS = `
 .hd-mprofiles{display:flex;gap:5px;margin-top:8px}
 .hd-mprofile{display:inline-flex;align-items:center;gap:3px;font-size:7px;font-weight:600;color:#4b5563;
   border:1px solid #e5e7eb;border-radius:99px;padding:3px 7px}
-.hd-mprofile.b{color:#3b82f6;border-color:#bfdbfe}
+.hd-mprofile.b{color:#3b82f6;border-color:#93c5fd;border-style:dashed}
 .hd-msec{font-size:7px;font-weight:700;letter-spacing:.09em;color:#374151;text-transform:uppercase;
   margin:9px 0 5px;display:flex;align-items:center;gap:4px}
 .hd-msec .link{margin-left:auto;color:#3b82f6;font-weight:600;letter-spacing:0;text-transform:none}
 .hd-mfieldlabel{font-size:6.5px;font-weight:700;letter-spacing:.07em;color:#9ca3af;text-transform:uppercase;margin-bottom:3px}
 .hd-minput{display:flex;align-items:center;height:22px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;
   padding:0 8px;font-size:7px;color:#9ca3af;white-space:nowrap;overflow:hidden}
-.hd-mrow{position:relative;display:flex;align-items:center;justify-content:space-between;padding:4.5px 0}
+.hd-minput .stp{margin-left:auto;color:#c6cbd3;flex-shrink:0;display:grid;place-items:center}
+.hd-mrow{position:relative;display:flex;align-items:center;justify-content:space-between;padding:3.5px 0}
 .hd-mrow .l{font-size:7.5px;font-weight:700;letter-spacing:.06em;color:#6b7280;text-transform:uppercase}
 .hd-toggle{position:relative;width:26px;height:14px;border-radius:99px;background:#e5e7eb;flex-shrink:0}
 .hd-toggle .track{position:absolute;inset:0;border-radius:99px;background:#3b82f6;opacity:0}
@@ -256,6 +230,8 @@ const HD_CSS = `
   padding:0 12px;border-bottom:1px solid #ececec;font-size:8.5px;color:#4b5563}
 .hd-xribbontabs .rt{padding:3px 0}
 .hd-xribbontabs .rt.on{color:#217346;font-weight:700;box-shadow:inset 0 -2px 0 #217346}
+.hd-xribbontabs .rt.ora{position:relative;display:inline-flex;align-items:center;gap:3px;color:#2563eb;font-weight:700}
+.hd-xribbontabs .rt.ora .hd-flash{border-radius:5px;inset:-2px -4px}
 .hd-xribbontabs .share{margin-left:auto;display:inline-flex;align-items:center;gap:3px;background:#217346;color:#fff;
   border-radius:6px;padding:2.5px 8px;font-size:7.5px;font-weight:700}
 .hd-xribbontabs .comments{display:inline-flex;align-items:center;gap:3px;border:1px solid #e5e7eb;border-radius:6px;
@@ -321,20 +297,24 @@ const HD_CSS = `
 .hd-xmchart svg{flex:1;width:100%;min-height:0}
 .hd-xmleg{display:flex;justify-content:center;gap:14px;font-size:7px;color:#555;margin-top:4px}
 .hd-xmleg i{display:inline-block;width:8px;height:8px;border-radius:1px;margin-right:4px;vertical-align:middle}
-/* ── Loading card (between « Lancer maintenant » and the result) ── */
-.hd-loading{position:absolute;left:34px;right:34px;top:200px;z-index:8;background:#fff;border-radius:14px;
-  box-shadow:0 24px 60px -18px rgba(15,23,42,.38);padding:16px 16px 14px;opacity:0;text-align:center;
+/* ── Loading popup (replica of the real app) + success recap ── */
+.hd-loading{position:absolute;left:26px;right:26px;top:150px;z-index:8;background:#fff;border-radius:14px;
+  box-shadow:0 24px 60px -18px rgba(15,23,42,.38);padding:16px 15px 12px;opacity:0;text-align:center;
   transform-origin:center center}
-.hd-loading .sp{width:26px;height:26px;margin:0 auto 8px;border-radius:50%;border:3px solid #e5e7eb;
-  border-top-color:#3b82f6;animation:hdSpin .9s linear infinite}
-@keyframes hdSpin{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion:reduce){.hd-loading .sp{animation:none}}
-.hd-loading .t{font-size:10px;font-weight:700;color:#111827}
-.hd-loading .s{font-size:8.5px;color:#6b7280;margin-top:2px}
-.hd-loading .bar{margin-top:9px;height:5px;border-radius:99px;background:#eef2f7;overflow:hidden}
-.hd-loading .barfill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#3b82f6,#0d9488);
+.hd-loading .icwrap{position:relative;width:34px;height:34px;margin:0 auto 9px}
+.hd-loading .lg{position:absolute;inset:0}
+.hd-loading .lg img{width:100%;height:100%;object-fit:contain;display:block}
+.hd-loading .ok{position:absolute;inset:-1px;border-radius:50%;background:#22c55e;color:#fff;
+  display:grid;place-items:center;opacity:0;box-shadow:0 4px 12px rgba(34,197,94,.45)}
+.hd-loading .t{font-size:10.5px;font-weight:800;letter-spacing:-.01em;color:#111827}
+.hd-loading .bar{margin-top:10px;height:6px;border-radius:99px;background:#e8f1fd;overflow:hidden}
+.hd-loading .barfill{display:block;height:100%;border-radius:99px;background:#3b82f6;
   transform-origin:left center;transform:scaleX(0)}
-.hd-loading .pct{font-size:8px;color:#9ca3af;margin-top:5px;font-variant-numeric:tabular-nums}
+.hd-loading .tip{font-size:7.5px;line-height:1.55;color:#9ca3af;margin-top:9px;padding:0 6px}
+.hd-loading .cancel{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:600;color:#6b7280;margin-top:8px}
+.hd-loading .done{display:none;margin:9px auto 0;width:fit-content;text-align:left}
+.hd-loading .done .dl{display:flex;align-items:center;gap:5px;font-size:7.8px;font-weight:600;color:#374151;padding:2px 0}
+.hd-loading .done .dl svg{color:#059669;flex-shrink:0}
 /* ── Result arrival glow (makes the generated workbook POP) ── */
 .hd-xwglow{position:absolute;inset:0;border-radius:12px;pointer-events:none;opacity:0;z-index:5;
   box-shadow:0 0 0 3px rgba(59,130,246,.55),0 0 46px 8px rgba(59,130,246,.35)}
@@ -347,14 +327,16 @@ const HD_CSS = `
 .hd-pill .t1{font-size:10.5px;font-weight:700;color:#111827}
 .hd-pill .t2{font-size:9px;color:#9ca3af;margin-top:1px}
 .hd-cursor{position:absolute;z-index:12;left:0;top:0;width:52px;height:52px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.40))}
-.hd-ripple{position:absolute;z-index:11;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
-  border:2.5px solid #3b82f6;background:rgba(59,130,246,.16);opacity:0;pointer-events:none}
+.hd-ripple{position:absolute;z-index:11;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;
+  border:2px solid #3b82f6;background:rgba(59,130,246,.18);opacity:0;pointer-events:none}
 /* ── Immersive dark takeover at zoom moments ── */
 .hd-sticky{transition:background-color .5s ease}
 .hd-sticky.immersive{background-color:#070b14}
 .hd-blob{transition:opacity .5s ease}
 .hd-sticky.immersive .hd-blob{opacity:0}
 .hd-sticky.immersive .hd-win{box-shadow:0 1px 2px rgba(0,0,0,.5),0 34px 90px -20px rgba(0,0,0,.75),0 80px 160px -40px rgba(0,0,0,.65)}
+.hd-headline{transition:opacity .5s ease}
+.hd-sticky.immersive .hd-headline{opacity:0!important}
 .hd-cap>span{transition:color .5s ease,background-color .5s ease,box-shadow .5s ease}
 .hd-sticky.immersive .hd-cap>span:first-child{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.22);color:#fff}
 .hd-sticky.immersive .hd-cap>span:last-child{color:#d1d5db}
@@ -459,14 +441,13 @@ const seg = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a)
 // cross that part of the demo, so key moments feel "heavy" (the user slows
 // down on them) while transitions stay light.
 const ZONES: { to: number; w: number }[] = [
-  { to: 0.12, w: 1.1 },  // login approach
-  { to: 0.155, w: 2.0 }, // « Se connecter » click
-  { to: 0.42, w: 0.8 },  // welcome → accueil (light)
-  { to: 0.465, w: 2.0 }, // opening the FEC file
-  { to: 0.545, w: 0.9 }, // dual view arrives
+  { to: 0.15, w: 0.8 },  // Excel alone, cursor heads to the Ora ribbon tab
+  { to: 0.28, w: 2.2 },  // zoom on the cursor + Ora click + camera pull-back
+  { to: 0.36, w: 1.2 },  // the panel docks, Excel slides left (« bam »)
+  { to: 0.545, w: 0.6 }, // dual view settles (light)
   { to: 0.60, w: 2.2 },  // « Lancer » + the modal opens (zoom)
-  { to: 0.71, w: 3.0 },  // the three toggles + « Lancer maintenant » (heaviest)
-  { to: 0.84, w: 1.0 },  // journal run
+  { to: 0.71, w: 3.2 },  // the three toggles + « Lancer maintenant » (heaviest)
+  { to: 0.84, w: 1.6 },  // journal run + loading card + green-check success
   { to: 0.90, w: 1.3 },  // workbook swap
   { to: 1.0, w: 1.8 },   // sheet browsing
 ];
@@ -518,8 +499,9 @@ function XRibbon() {
   );
 }
 
-// Excel window chrome shared by both workbooks.
-function XChrome({ name, cell, formula }: { name: string; cell: string; formula: string }) {
+// Excel window chrome shared by both workbooks. `oraTarget` marks THIS
+// window's « Ora » ribbon tab as the cursor's click target (excel1 only).
+function XChrome({ name, cell, formula, oraTarget }: { name: string; cell: string; formula: string; oraTarget?: boolean }) {
   return (
     <>
       <div className="hd-xtitle">
@@ -528,9 +510,14 @@ function XChrome({ name, cell, formula }: { name: string; cell: string; formula:
         <span className="hd-xname">{name}</span>
       </div>
       <div className="hd-xribbontabs">
-        {["Accueil", "Insertion", "Dessin", "Mise en page", "Formules", "Données", "Révision", "Affichage"].map((rt, i) => (
+        {["Accueil", "Insertion", "Mise en page", "Formules", "Données", "Révision", "Affichage"].map((rt, i) => (
           <span key={rt} className={`rt${i === 0 ? " on" : ""}`}>{rt}</span>
         ))}
+        <span className="rt ora" {...(oraTarget ? { "data-cur": "oratab" } : {})}>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
+          Ora
+          {oraTarget && <span className="hd-flash" data-hd="oratab-flash" />}
+        </span>
         <span className="comments">Commentaires</span>
         <span className="share">Partager</span>
       </div>
@@ -596,7 +583,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const applyRef = useRef<(v: number) => void>(() => {});
   // Cursor click targets, measured at runtime in STAGE coordinates.
   const targetsRef = useRef<Record<string, { x: number; y: number }>>({
-    connect: { x: 520, y: 430 }, doc: { x: 520, y: 430 }, lancerfec: { x: 940, y: 300 },
+    oratab: { x: 600, y: 96 }, lancerfec: { x: 940, y: 300 }, loadc: { x: 856, y: 330 },
     tg1: { x: 850, y: 330 }, tg2: { x: 850, y: 360 }, tg3: { x: 850, y: 390 },
     run: { x: 940, y: 470 }, tab2: { x: 180, y: 590 }, tab3: { x: 300, y: 590 },
     modalc: { x: 840, y: 320 }, result: { x: 326, y: 320 },
@@ -649,11 +636,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     if (!stage || !caps || !hint || !box) return;
     const q = (sel: string) => stage.querySelector<HTMLElement>(sel);
     const el = {
-      login: q('[data-hd="login"]'), welcome: q('[data-hd="welcome"]'),
-      connectFlash: q('[data-hd="connect-flash"]'), docFlash: q('[data-hd="doc-flash"]'),
-      orawin: q('[data-hd="orawin"]'), panel: q('[data-hd="panel"]'),
+      oratabFlash: q('[data-hd="oratab-flash"]'), panel: q('[data-hd="panel"]'),
       fecFlash: q('[data-hd="fec-flash"]'),
-      backdrop: q('[data-hd="mbackdrop"]'), modal: q('[data-hd="modal"]'),
+      modal: q('[data-hd="modal"]'),
       runFlash: q('[data-hd="run-flash"]'),
       toggles: [1, 2, 3].map((i) => ({
         track: q(`[data-hd="tg${i}-track"]`), knob: q(`[data-hd="tg${i}-knob"]`),
@@ -661,7 +646,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       jstatus: q('[data-hd="jstatus"]'), jcount: q('[data-hd="jcount"]'),
       jlines: [...stage.querySelectorAll<HTMLElement>("[data-jline]")],
       excel1: q('[data-hd="excel1"]'), excel2: q('[data-hd="excel2"]'),
-      loading: q('[data-hd="loading"]'), loadfill: q('[data-hd="loadfill"]'), loadpct: q('[data-hd="loadpct"]'),
+      loading: q('[data-hd="loading"]'), loadfill: q('[data-hd="loadfill"]'),
+      loadlogo: q('[data-hd="loadlogo"]'), loadok: q('[data-hd="loadok"]'),
+      loadtitle: q('[data-hd="loadtitle"]'), loadtip: q('[data-hd="loadtip"]'),
+      loadcancel: q('[data-hd="loadcancel"]'), loaddone: q('[data-hd="loaddone"]'),
       xwglow: q('[data-hd="xwglow"]'),
       sheets: [...stage.querySelectorAll<HTMLElement>("[data-sheet]")],
       xtabs: [...stage.querySelectorAll<HTMLElement>("[data-xtab]")],
@@ -673,7 +661,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     // Every click moment (progress time + target key) — drives the cursor
     // dip, the ripple pulse and the vibration feedback.
     const CLICKS: { t: number; k: string }[] = [
-      { t: 0.135, k: "connect" }, { t: 0.435, k: "doc" }, { t: 0.578, k: "lancerfec" },
+      { t: 0.20, k: "oratab" }, { t: 0.578, k: "lancerfec" },
       { t: 0.641, k: "tg1" }, { t: 0.658, k: "tg2" }, { t: 0.675, k: "tg3" },
       { t: 0.70, k: "run" }, { t: 0.935, k: "tab2" }, { t: 0.962, k: "tab3" },
     ];
@@ -685,24 +673,37 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
       const grow = 1 + 0.04 * seg(v, 0, 0.20);
+      // Zoom 0 (×2.5): camera dives HARD on the cursor clicking the « Ora »
+      // ribbon tab, then pulls back while the panel docks (the « bam » moment).
+      const Z0 = 2.5;
+      const zt0 = seg(v, 0.155, 0.19) * (1 - seg(v, 0.215, 0.27));
       // Camera zooms. Zoom 1 (×2.0): the FEC Studio moment — « Lancer » click
       // then the toggle run, focus FIXED on the modal centre (no side swing).
       // Zoom 2 (×1.32): the RESULT — engages as the audit workbook lands and
       // stays on for the sheet browsing, framed on the sheet + its tabs (the
       // ribbon may crop, the content is the star). Windows are disjoint.
-      const Z1 = 2.0, Z2 = 1.12;
+      const Z1 = 2.0, Z2 = 1.2;
       const zt1 = seg(v, 0.545, 0.575) * (1 - seg(v, 0.70, 0.74));
+      // Success-recap zoom: dive on the popup as the green check lands and the
+      // list of what was built appears; release before the result close-up.
+      const ztS = seg(v, 0.803, 0.825) * (1 - seg(v, 0.838, 0.858));
       const zt2 = seg(v, 0.86, 0.895);
-      const zt = Math.max(zt1, zt2);
       const rc = T.result ?? { x: 326, y: 320 };
-      const Z = zt2 > zt1 ? Z2 : Z1;
+      const cams = [
+        { t: zt0, z: Z0, f: T.oratab ?? { x: 577, y: 71 } },
+        { t: zt1, z: Z1, f: T.modalc ?? { x: 520, y: 320 } },
+        { t: ztS, z: 1.6, f: T.loadc ?? { x: 856, y: 330 } },
+        { t: zt2, z: Z2, f: rc },
+      ];
+      const cam = cams.reduce((a, b) => (b.t > a.t ? b : a));
+      const zt = cam.t, Z = cam.z;
       // Result close-up: centred EXACTLY on the workbook (dead centre of the
       // viewport), zoom sized so the whole window incl. sheet tabs stays in
       // frame.
-      const focus = zt2 > zt1 ? rc : (T.modalc ?? { x: 520, y: 320 });
+      const focus = cam.f;
       // The dark ambiance persists through the LOADING beat and releases
       // exactly when the generated workbook lands (lights back on = punch).
-      const dark = Math.max(zt1, seg(v, 0.72, 0.75) * (1 - seg(v, 0.845, 0.885)));
+      const dark = Math.max(zt0, zt1, seg(v, 0.72, 0.75) * (1 - seg(v, 0.845, 0.885)));
       const zoom = 1 + (Z - 1) * zt;
       const S = fitScaleRef.current * grow * zoom;
       // Centre the focus in the VIEWPORT (not just the stage box): compensate
@@ -736,34 +737,31 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         headline.style.transform = `translateY(${-18 * hf}px)`;
       }
 
-      // 1 · Login (slower start) → Welcome → Accueil
-      if (el.login) el.login.style.opacity = String(1 - seg(v, 0.15, 0.20));
-      if (el.connectFlash) el.connectFlash.style.opacity = String(seg(v, 0.125, 0.14) * (1 - seg(v, 0.14, 0.19)));
-      if (el.welcome) el.welcome.style.opacity = String(seg(v, 0.15, 0.20) * (1 - seg(v, 0.30, 0.35)));
-      if (el.docFlash) el.docFlash.style.opacity = String(seg(v, 0.425, 0.44) * (1 - seg(v, 0.44, 0.50)));
-      // 2 · Accueil window → dual view (Excel left + docked panel right)
-      const dual = seg(v, 0.45, 0.51);
-      if (el.orawin) {
-        el.orawin.style.opacity = String(1 - dual);
-        el.orawin.style.transform = `translateX(${60 * dual}px)`;
+      // 1 · Excel alone (centred), the cursor clicks the « Ora » ribbon tab
+      if (el.oratabFlash) el.oratabFlash.style.opacity = String(seg(v, 0.192, 0.206) * (1 - seg(v, 0.21, 0.28)));
+      // 2 · Right after the click, while the camera pulls back: the Ora panel
+      //     docks on the right and Excel slides to its dual slot (« bam »)
+      const dual = seg(v, 0.26, 0.34);
+      if (el.panel) {
+        el.panel.style.opacity = String(dual);
+        el.panel.style.transform = `translateX(${390 * (1 - dual)}px)`;
       }
-      if (el.panel) el.panel.style.opacity = String(dual);
       if (el.excel1) {
-        el.excel1.style.opacity = String(seg(v, 0.45, 0.51) * (1 - seg(v, 0.78, 0.83)));
-        el.excel1.style.transform = `translateX(${-660 * (1 - seg(v, 0.45, 0.53)) - 80 * seg(v, 0.78, 0.83)}px)`;
+        el.excel1.style.opacity = String(1 - seg(v, 0.78, 0.83));
+        el.excel1.style.transform = `translateX(${-194 * seg(v, 0.26, 0.36) - 80 * seg(v, 0.78, 0.83)}px)`;
       }
       // 3 · FEC Studio modal (snappy open, rapid-fire toggles, quick close)
       if (el.fecFlash) el.fecFlash.style.opacity = String(seg(v, 0.568, 0.583) * (1 - seg(v, 0.583, 0.63)));
       const modalIn = seg(v, 0.585, 0.61) * (1 - seg(v, 0.705, 0.73));
-      if (el.backdrop) el.backdrop.style.opacity = String(modalIn);
       if (el.modal) {
         el.modal.style.opacity = String(modalIn);
         el.modal.style.transform = `scale(${0.96 + 0.04 * seg(v, 0.585, 0.61)})`;
       }
-      // toggles flip in rapid succession under the cursor
-      const tgAt = [0.638, 0.655, 0.672];
+      // toggles flip in rapid succession under the cursor — exactly ON the
+      // click beat (same instant as the cursor dip + ripple, no lag)
+      const tgAt = [0.641, 0.658, 0.675];
       el.toggles.forEach((tg, i) => {
-        const on = seg(v, tgAt[i], tgAt[i] + 0.010);
+        const on = seg(v, tgAt[i], tgAt[i] + 0.008);
         if (tg.track) tg.track.style.opacity = String(on);
         if (tg.knob) tg.knob.style.transform = `translateX(${12 * on}px)`;
       });
@@ -783,17 +781,33 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         l.style.opacity = String(o);
         l.style.transform = `translateY(${4 * (1 - o)}px)`;
       });
-      // 5 · loading beat, then the audit workbook lands with a POP
-      const loadIn = seg(v, 0.73, 0.755) * (1 - seg(v, 0.825, 0.855));
+      // 5 · loading beat: the bar fills, the spinner flips to a green check
+      //     (« Automatisation réussie »), then the audit workbook lands
+      const loadIn = seg(v, 0.73, 0.755) * (1 - seg(v, 0.85, 0.88));
       if (el.loading) {
         el.loading.style.opacity = String(loadIn);
         el.loading.style.transform = `scale(${0.95 + 0.05 * seg(v, 0.73, 0.755)})`;
       }
-      const lp = seg(v, 0.755, 0.825);
+      const lp = seg(v, 0.755, 0.805);
       if (el.loadfill) el.loadfill.style.transform = `scaleX(${lp})`;
-      if (el.loadpct) {
-        const n = `${Math.round(lp * 100)} %`;
-        if (el.loadpct.textContent !== n) el.loadpct.textContent = n;
+      const okIn = seg(v, 0.805, 0.822);
+      const success = v >= 0.805;
+      if (el.loadlogo) el.loadlogo.style.opacity = String(1 - okIn);
+      if (el.loadok) {
+        el.loadok.style.opacity = String(okIn);
+        el.loadok.style.transform = `scale(${0.5 + 0.5 * okIn})`;
+      }
+      if (el.loadtitle) {
+        const tt = success ? "Automatisation réussie" : "Chasse aux écritures fantômes…";
+        if (el.loadtitle.textContent !== tt) el.loadtitle.textContent = tt;
+      }
+      // Success recap: the FEC tip + Annuler give way to the list of what was
+      // actually built (balances + generated workbook).
+      if (el.loadtip) el.loadtip.style.display = success ? "none" : "";
+      if (el.loadcancel) el.loadcancel.style.display = success ? "none" : "";
+      if (el.loaddone) {
+        el.loaddone.style.display = success ? "block" : "none";
+        el.loaddone.style.opacity = String(okIn);
       }
       // Punchy arrival: quick fade + ease-out rise-and-scale + a glow pulse.
       const wp = seg(v, 0.85, 0.90);
@@ -817,27 +831,30 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         const TIP_X = 14.6, TIP_Y = 6.5;
         const tx = (k: string) => T[k].x - TIP_X;
         const ty = (k: string) => T[k].y - TIP_Y;
-        const times = [0, 0.12, 0.32, 0.42, 0.47, 0.565, 0.60, 0.638, 0.655, 0.672, 0.695, 0.735, 0.91, 0.935, 0.962, 1];
-        const keys = ["connect", "connect", "doc", "doc", "lancerfec", "lancerfec", "tg1", "tg2", "tg3", "run", "run", "tab2", "tab2", "tab3", "tab3"];
+        const times = [0, 0.15, 0.38, 0.565, 0.60, 0.638, 0.655, 0.672, 0.695, 0.735, 0.91, 0.935, 0.962, 1];
+        const keys = ["oratab", "oratab", "lancerfec", "lancerfec", "tg1", "tg2", "tg3", "run", "run", "tab2", "tab2", "tab3", "tab3"];
         const x = kf(v, times, [940, ...keys.map(tx)].slice(0, times.length));
         const y = kf(v, times, [600, ...keys.map(ty)].slice(0, times.length));
         const cs = kf(
           v,
-          [0, 0.127, 0.135, 0.143, 0.427, 0.435, 0.443, 0.570, 0.578, 0.586, 0.633, 0.641, 0.649, 0.650, 0.658, 0.666, 0.667, 0.675, 0.683, 0.692, 0.70, 0.708, 0.927, 0.935, 0.943, 0.954, 0.962, 0.970, 1],
-          [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1]
+          [0, 0.192, 0.20, 0.208, 0.570, 0.578, 0.586, 0.633, 0.641, 0.649, 0.650, 0.658, 0.666, 0.667, 0.675, 0.683, 0.692, 0.70, 0.708, 0.927, 0.935, 0.943, 0.954, 0.962, 0.970, 1],
+          [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1]
         );
         el.cursor.style.transform = `translate(${x}px, ${y}px) scale(${cs})`;
       }
       // Click feedback: a ripple pulse at the click point + a short vibration
       // where the platform supports it (mobile; desktops ignore silently).
       if (el.ripple) {
-        const active = CLICKS.find((c) => v >= c.t && v <= c.t + 0.03);
+        // Short + eased-out pulse: expands fast then dies, so it reads as a
+        // snappy tap instead of a slow drifting ring.
+        const active = CLICKS.find((c) => v >= c.t && v <= c.t + 0.014);
         if (active && T[active.k]) {
-          const p = (v - active.t) / 0.03;
+          const p = (v - active.t) / 0.014;
+          const pe = 1 - (1 - p) * (1 - p);
           el.ripple.style.left = `${T[active.k].x}px`;
           el.ripple.style.top = `${T[active.k].y}px`;
-          el.ripple.style.transform = `scale(${0.4 + 1.3 * p})`;
-          el.ripple.style.opacity = String((1 - p) * 0.65);
+          el.ripple.style.transform = `scale(${0.35 + 0.95 * pe})`;
+          el.ripple.style.opacity = String((1 - pe) * 0.75);
         } else {
           el.ripple.style.opacity = "0";
         }
@@ -850,9 +867,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       lastClickRef.current = clickIdx;
       // Captions
       const capOp = [
-        1 - seg(v, 0.13, 0.18),
-        seg(v, 0.16, 0.21) * (1 - seg(v, 0.30, 0.35)),
-        seg(v, 0.33, 0.38) * (1 - seg(v, 0.50, 0.55)),
+        1 - seg(v, 0.50, 0.55),
         seg(v, 0.55, 0.60) * (1 - seg(v, 0.71, 0.75)),
         seg(v, 0.73, 0.78) * (1 - seg(v, 0.86, 0.90)),
         seg(v, 0.89, 0.94),
@@ -875,10 +890,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
-      {/* Tall scrub wrapper: ~10 viewport heights of scroll drive the demo —
-          a quick trackpad flick only advances one beat, and the heavy-scroll
-          zones stretch the key moments even further. */}
-      <div ref={wrapRef} className="relative h-[620vh] md:h-[1000vh]">
+      {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
+          (v2: shortened — the flow starts directly in Excel). Heavy-scroll
+          zones still stretch the key moments. */}
+      <div ref={wrapRef} className="relative h-[440vh] md:h-[700vh]">
         <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-14 md:pb-16">
           {/* Soft overhead light — dark mode only */}
           <div
@@ -890,7 +905,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           {/* Headline (fades out while the camera zoom is engaged) */}
           <motion.div
             ref={headlineRef}
-            className="relative z-10 text-center max-w-[90rem] mx-auto"
+            className="hd-headline relative z-10 text-center max-w-[90rem] mx-auto"
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -900,8 +915,8 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             </span>
             <h2 className="font-inter font-normal text-[clamp(1.9rem,4.2vw,3.9rem)] tracking-[-0.035em] leading-[1.06] text-[#111827] dark:text-white mt-4 text-center">
               <span className="block lg:whitespace-nowrap">
-                {t({ fr: "On vous rend votre temps ", en: "We give you " })}
-                <span className="text-brand-gradient">{t({ fr: "d'analyse et de conseil", en: "analysis and advisory" })}</span>
+                {t({ fr: "Moins d'Excel, ", en: "We give you " })}
+                <span className="text-brand-gradient">{t({ fr: "plus d'analyse et de conseil", en: "analysis and advisory" })}</span>
                 {t({ fr: ".", en: " time back" })}
               </span>
             </h2>
@@ -918,9 +933,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             <div ref={stageRef} className="hd-stage">
               <div className="hd-blob" />
 
-              {/* ══ Real Excel — the FEC workbook (left, dual view) ══ */}
-              <div className="hd-win hd-xw" data-hd="excel1">
-                <XChrome name="FEC_demo_2024_398k_lignes" cell="N8" formula="" />
+              {/* ══ Real Excel — the FEC workbook. Starts CENTRED (layout
+                  left:210 so the measured Ora-tab click target matches the
+                  untransformed position), then slides -194px to its dual-view
+                  slot (left:16) when the panel docks. ══ */}
+              <div className="hd-win hd-xw" data-hd="excel1" style={{ left: 210 }}>
+                <XChrome name="FEC_demo_2024_398k_lignes" cell="N8" formula="" oraTarget />
                 <div className="hd-xsheet">
                   <div className="hd-xgrid" style={{ gridTemplateColumns: FEC_GRID }}>
                     <div className="hd-xL" />
@@ -1041,7 +1059,15 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 <div className="hd-pbody">
                   <div className="hd-back">
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7" /></svg>
-                    Dossier Groupe Méridian
+                    Dossier Client ABCD
+                    <span className="hd-backicons">
+                      <span className="hd-iconbtn">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M12 4v16" /></svg>
+                      </span>
+                      <span className="hd-iconbtn">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" /></svg>
+                      </span>
+                    </span>
                   </div>
                   <div className="hd-filehead">
                     <span className="hd-fico x" style={{ width: 26, height: 26, fontSize: 7.5 }}>XLSX</span>
@@ -1056,6 +1082,14 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                         </span>
                       </div>
                     </div>
+                    <span className="hd-fileicons">
+                      <span className="hd-iconbtn" style={{ width: 20, height: 20, color: "#6b7280" }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l3 3" /></svg>
+                      </span>
+                      <span className="hd-iconbtn" style={{ width: 20, height: 20, color: "#6b7280" }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8c0-1.1.9-2 2-2h6" /><path d="M15 3h6v6M10 14 21 3" /></svg>
+                      </span>
+                    </span>
                   </div>
                   <div className="hd-sendrow">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z" /><path d="M14 2v6h6" /></svg>
@@ -1070,7 +1104,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                     <span className="hd-chip">Qualité <span className="n">11</span></span>
                     <span className="hd-chip">Audit <span className="n">12</span></span>
                     <span className="hd-chip">Finance <span className="n">7</span></span>
-                    <span className="hd-chip all">Tout <span className="n">33</span></span>
+                    <span className="hd-chip">Export <span className="n">3</span></span>
                   </div>
                   <div className="hd-search">
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" strokeLinecap="round" /></svg>
@@ -1085,7 +1119,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="t">FEC Studio : le dossier d'audit à la carte</div>
+                      <div className="t">FEC Studio — le dossier d'audit à la carte</div>
                       <div className="r">Déjà utilisée sur ce fichier</div>
                     </div>
                     <span className="hd-lancer" data-cur="lancerfec">
@@ -1107,13 +1141,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       Lancer
                     </span>
                   </div>
-                  <div className="hd-sugg">
+                  <div className="hd-hero-sugg">
                     <span className="hd-playic green">
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div className="t">Agréger des fichiers identiques <span className="hd-tag qualite">Qualité</span></div>
-                      <div className="d">Empile des fichiers de même structure en un seul tableau.</div>
+                      <div className="t">Agréger des fichiers identiques</div>
+                      <div className="r">Correspond aux colonnes détectées</div>
                     </div>
                     <span className="hd-lancer">
                       <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
@@ -1125,24 +1159,82 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Balance âgée 30/60/90 <span className="hd-tag finance">Finance</span></div>
+                      <div className="d">Ventile les encours par ancienneté et par tiers à partir des échéances.</div>
+                    </div>
+                    <span className="hd-rowactions">
+                      <span className="hd-star">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2z" /></svg>
+                      </span>
+                      <span className="hd-lancer">
+                        <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                        Lancer
+                      </span>
+                    </span>
+                  </div>
+                  <div className="hd-sugg">
+                    <span className="hd-playic green">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Agréger des fichiers identiques <span className="hd-tag qualite">Qualité</span></div>
+                      <div className="d">Empile des fichiers de même structure en un seul tableau, avec la trace du fichier…</div>
+                    </div>
+                    <span className="hd-rowactions">
+                      <span className="hd-star">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2z" /></svg>
+                      </span>
+                      <span className="hd-lancer">
+                        <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                        Lancer
+                      </span>
+                    </span>
+                  </div>
+                  <div className="hd-sugg">
+                    <span className="hd-playic green">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="t">Anonymiser des colonnes <span className="hd-tag qualite">Qualité</span></div>
+                      <div className="d">Remplace les données nominatives par des pseudonymes stables avant de partager un…</div>
+                    </div>
+                    <span className="hd-rowactions">
+                      <span className="hd-star">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2z" /></svg>
+                      </span>
+                      <span className="hd-lancer">
+                        <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                        Lancer
+                      </span>
+                    </span>
+                  </div>
+                  <div className="hd-sugg">
+                    <span className="hd-playic blue">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="t">Tests sur le journal <span className="hd-tag audit">Audit</span></div>
                       <div className="d">Batterie de revue d'écritures : week-end, montants ronds, fin de période.</div>
                     </div>
-                    <span className="hd-lancer">
-                      <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
-                      Lancer
+                    <span className="hd-rowactions">
+                      <span className="hd-star">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1L12 2z" /></svg>
+                      </span>
+                      <span className="hd-lancer">
+                        <svg width="7" height="7" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7-11-7z" /></svg>
+                        Lancer
+                      </span>
                     </span>
                   </div>
 
-                  {/* FEC Studio config modal */}
-                  <div className="hd-mbackdrop" data-hd="mbackdrop" style={{ inset: 0 }} />
+                  {/* FEC Studio config modal — replica of the real app dialog */}
                   <div className="hd-modal" data-hd="modal" data-cur="modalc" style={{ top: 12 }}>
                     <div className="hd-mhead">
                       <span className="ic">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
                       </span>
                       <div>
-                        <div className="t">FEC Studio : le dossier d'audit à la carte</div>
+                        <div className="t">FEC Studio — le dossier d'audit à la carte</div>
                         <div className="s">Renseignez les paramètres avant de lancer.</div>
                       </div>
                       <span className="x">✕</span>
@@ -1151,15 +1243,20 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       <span className="hd-mprofile">🕘 Dernière config</span>
                       <span className="hd-mprofile b">💾 Enregistrer ce profil</span>
                     </div>
-                    <div className="hd-msec">Mission</div>
+                    <div className="hd-msec"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg> Mission</div>
                     <div className="hd-mfieldlabel">Seuil de signification de la mission (€)</div>
-                    <div className="hd-minput">vide = suggestion NEP-320 (0,5 % du CA), propagé à la revue…</div>
+                    <div className="hd-minput">
+                      vide = suggestion NEP-320 (0,5 % du CA) — propagé à la revue…
+                      <span className="stp">
+                        <svg width="7" height="11" viewBox="0 0 12 20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m2 7 4-4 4 4M2 13l4 4 4-4" /></svg>
+                      </span>
+                    </div>
                     <div className="hd-msec">Contrôles</div>
                     <div className="hd-mrow">
                       <span className="l">Contrôles du FEC</span>
                       <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
                     </div>
-                    <div className="hd-msec">Balances <span className="link">Tout cocher</span></div>
+                    <div className="hd-msec"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg> Balances <span className="link">Tout cocher</span></div>
                     <div className="hd-mrow">
                       <span className="l">Balance générale</span>
                       <span className="hd-toggle" data-cur="tg1"><span className="track" data-hd="tg1-track" /><span className="knob" data-hd="tg1-knob" /></span>
@@ -1169,11 +1266,23 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                       <span className="hd-toggle" data-cur="tg2"><span className="track" data-hd="tg2-track" /><span className="knob" data-hd="tg2-knob" /></span>
                     </div>
                     <div className="hd-mrow">
+                      <span className="l">Balance par journal</span>
+                      <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
+                      <span className="l">Auxiliaires clients &amp; fournisseurs</span>
+                      <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
                       <span className="l">Balance âgée (créances &amp; dettes)</span>
                       <span className="hd-toggle" data-cur="tg3"><span className="track" data-hd="tg3-track" /><span className="knob" data-hd="tg3-knob" /></span>
                     </div>
                     <div className="hd-mrow">
                       <span className="l">À-nouveaux</span>
+                      <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
+                    </div>
+                    <div className="hd-mrow">
+                      <span className="l">Comparatif N / N-1</span>
                       <span className="hd-toggle"><span className="track" /><span className="knob" /></span>
                     </div>
                     <div className="hd-mfoot">
@@ -1186,13 +1295,26 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                     </div>
                   </div>
 
-                  {/* Loading card: shows while FEC Studio builds the workbook */}
-                  <div className="hd-loading" data-hd="loading">
-                    <div className="sp" />
-                    <div className="t">FEC Studio</div>
-                    <div className="s">Construction du dossier d'audit…</div>
+                  {/* Loading popup — replica of the real app (Ora mark, witty
+                      status, progress bar, FEC tip, Annuler); flips to the
+                      green-check success recap of the work that was done */}
+                  <div className="hd-loading" data-hd="loading" data-cur="loadc">
+                    <div className="icwrap">
+                      <div className="lg" data-hd="loadlogo"><img src="/logos/icon-color.png" alt="" /></div>
+                      <div className="ok" data-hd="loadok">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                      </div>
+                    </div>
+                    <div className="t" data-hd="loadtitle">Chasse aux écritures fantômes…</div>
                     <div className="bar"><span className="barfill" data-hd="loadfill" /></div>
-                    <div className="pct" data-hd="loadpct">0 %</div>
+                    <div className="tip" data-hd="loadtip">💡 Le FEC est un format légal normé depuis 2014 (art. A47 A-1 du LPF).</div>
+                    <div className="done" data-hd="loaddone">
+                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance générale construite</div>
+                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance mensuelle construite</div>
+                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance âgée (créances &amp; dettes)</div>
+                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Classeur Excel créé : FEC 2025 - studio.xlsx</div>
+                    </div>
+                    <div className="cancel" data-hd="loadcancel">✕ Annuler</div>
                   </div>
                 </div>
                 {/* JOURNAL */}
@@ -1213,164 +1335,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                         {line}
                       </div>
                     ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* ══ Ora full window (login → welcome → Accueil) ══ */}
-              <div className="hd-win hd-orawin" data-hd="orawin">
-                <div className="hd-titlebar">
-                  <div className="hd-lights"><span className="r" /><span className="y" /><span className="g" /></div>
-                  <div className="hd-tbtitle">Ora</div>
-                </div>
-                <div className="hd-app">
-                  <div className="hd-side">
-                    <div className="hd-sidelogo">
-                      <img src="/logos/logo-color-light.png" alt="" />
-                    </div>
-                    <div className="hd-sidelabel">Navigation</div>
-                    <div className="hd-sideitem on">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>
-                      Accueil
-                    </div>
-                    <div className="hd-sideitem">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9z" /></svg>
-                      Atlas
-                    </div>
-                    <div className="hd-sidecard">
-                      <div className="ic">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
-                      </div>
-                      <div className="t">Ora Engineering</div>
-                      <div className="d">Besoin d'une automatisation ? Décrivez-la, on vous livre un script sur mesure sous 48 h.</div>
-                    </div>
-                  </div>
-                  <div className="hd-content">
-                    <div className="hd-topbar">
-                      <span className="hd-pagetitle">Accueil</span>
-                      <div className="hd-pills">
-                        <span className="hd-pillbtn">
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.6a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3a8.4 8.4 0 0 1 8.5 8.5z" /></svg>
-                          Messages
-                        </span>
-                        <span className="hd-pillbtn">
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
-                          Notifications <span className="n">3</span>
-                        </span>
-                        <span className="hd-avatar">R</span>
-                      </div>
-                    </div>
-                    <div className="hd-body">
-                      <div className="hd-h1">Bon retour parmi nous, Raphaël</div>
-                      <div className="hd-date">Lundi 12 janvier</div>
-                      <div className="hd-banner">
-                        <span className="ic">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z" /><path d="M14 2v6h6M8 13h8M8 17h8" /></svg>
-                        </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="t">Ouvrir un fichier</div>
-                          <div className="s">Excel ou CSV → lancez vos automatisations en un clic</div>
-                        </div>
-                        <svg className="arrow" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                      </div>
-                      <div className="hd-seclabel">Accès rapide</div>
-                      <div className="hd-quick">
-                        <div className="hd-qcard">
-                          <span className="ic blue">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                          </span>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="t">Nouveau projet</div>
-                            <div className="s">Deal PE, audit, M&A…</div>
-                          </div>
-                        </div>
-                        <div className="hd-qcard">
-                          <span className="ic purple">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 4 5.6 4 9s-1.5 6.4-4 9c-2.5-2.6-4-5.6-4-9s1.5-6.4 4-9z" /></svg>
-                          </span>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="t">Tous les Atlas</div>
-                            <div className="s">Liste de vos projets</div>
-                          </div>
-                        </div>
-                        <div className="hd-qcard">
-                          <span className="ic blue">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4L12 3z" /></svg>
-                          </span>
-                          <div style={{ minWidth: 0 }}>
-                            <div className="t">Ora Engineering</div>
-                            <div className="s">Automatisation sur-mesure</div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="hd-seclabel">Reprendre</div>
-                      <div className="hd-row" data-cur="doc">
-                        <span className="hd-fico x">XLSX</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="nm">FEC_demo_2024_398k_lignes</div>
-                          <div className="mt">XLSX · il y a 1 j</div>
-                        </div>
-                        <span className="hd-status"><span className="dot" />À faire</span>
-                        <div className="hd-flash" data-hd="doc-flash" />
-                      </div>
-                      <div className="hd-row">
-                        <span className="hd-fico t">TXT</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="nm">FEC_GFIL_conforme</div>
-                          <div className="mt">TXT · il y a 6 j</div>
-                        </div>
-                        <span className="hd-status"><span className="dot" />À faire</span>
-                      </div>
-                      <div className="hd-row">
-                        <span className="hd-fico p">PDF</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="nm">France SCPI - rapport-annuel-2025</div>
-                          <div className="mt">PDF · il y a 6 j</div>
-                        </div>
-                        <span className="hd-status"><span className="dot" />À faire</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Welcome splash */}
-                <div className="hd-welcome" data-hd="welcome" style={{ opacity: 0 }}>
-                  <div className="hd-authhalo" />
-                  <div className="relative flex flex-col items-center">
-                    <span className="hd-oramark"><img src="/logos/icon-color.png" alt="" /></span>
-                    <div className="hd-welcometitle">Bon retour parmi nous, Raphaël</div>
-                    <div className="hd-welcomesub">Préparation de votre espace…</div>
-                  </div>
-                </div>
-
-                {/* Login screen */}
-                <div className="hd-login" data-hd="login">
-                  <div className="hd-authhalo" />
-                  <div className="hd-authcard">
-                    <div className="hd-authlogo">
-                      <img src="/logos/logo-color-light.png" alt="Ora" />
-                    </div>
-                    <div className="hd-authtitle">Bienvenue</div>
-                    <div className="hd-authsub">Connectez-vous à votre espace Ora.</div>
-                    <div className="hd-field">
-                      <div className="hd-fieldlabel">Email</div>
-                      <div className="hd-input">r.gaugain@valmy-associes.fr</div>
-                    </div>
-                    <div className="hd-field">
-                      <div className="hd-fieldlabel">Mot de passe</div>
-                      <div className="hd-input ph">••••••••</div>
-                    </div>
-                    <div className="hd-btnauth" data-cur="connect">
-                      Se connecter
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-                      <span className="hd-flash" data-hd="connect-flash" />
-                    </div>
-                    <div className="hd-authlinks">
-                      <span className="b">Mot de passe oublié ?</span><br />
-                      Invité(e) ? <span className="b">Activer mon compte avec un code</span>
-                    </div>
-                    <div className="hd-authmuted">Contacter le support</div>
-                    <div className="hd-authmuted">Conditions générales · Confidentialité</div>
                   </div>
                 </div>
               </div>
@@ -1397,9 +1361,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           {/* Step captions */}
           <div ref={capsRef} className="relative z-10 h-10 md:h-12 flex-shrink-0">
             {[
-              t({ fr: "Connectez-vous à votre espace", en: "Sign in to your workspace" }),
-              t({ fr: "Ora prépare votre espace", en: "Ora prepares your workspace" }),
-              t({ fr: "Reprenez votre FEC là où il en était", en: "Pick up your FEC where you left it" }),
+              t({ fr: "Depuis Excel, cliquez sur l'onglet Ora", en: "From Excel, click the Ora tab" }),
               t({ fr: "Configurez FEC Studio en deux clics", en: "Configure FEC Studio in two clicks" }),
               t({ fr: "Ora construit le dossier d'audit", en: "Ora builds the audit workbook" }),
               t({ fr: "Explorez votre classeur, feuille par feuille", en: "Browse your workbook, sheet by sheet" }),
