@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, X, type LucideIcon } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, Sparkles, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
+import PointageMockup from "./PointageMockup";
 
 /**
  * UseCases — Bending-Spoons-style acquisition cards, adapted to Ora use cases:
@@ -34,10 +35,10 @@ type UseCase = {
   /** Decorative layer: peach circle (WeTransfer) or white outline rings
    *  (Streamyard). */
   decor?: "circle" | "rings";
-  /** Replace the video media zone with the custom Ora+PDF+Envoyer mockup
-   *  (Bending-Spoons-style static composition). The video is kept for the
-   *  "Voir la démo" lightbox. */
-  mockup?: boolean;
+  /** Replace the video media zone with a custom static mockup composition
+   *  (Bending-Spoons style). The video is kept for the "Voir la démo"
+   *  lightbox. */
+  mockup?: "reporting" | "pointage";
 };
 
 const fadeUp = {
@@ -45,7 +46,7 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
-export default function UseCases() {
+export default function UseCases({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
   const [active, setActive] = useState<UseCase | null>(null);
 
@@ -83,7 +84,7 @@ export default function UseCases() {
       ink: "#ffffff",
       sub: "rgba(255,255,255,0.78)",
       dark: true,
-      mockup: true,
+      mockup: "reporting",
     },
     {
       title: t({ fr: "Pointage de comptes", en: "Account matching" }),
@@ -95,13 +96,13 @@ export default function UseCases() {
       ],
       video: "/ora_pointage_v3.mp4",
       poster: "/posters/ora_pointage_v3.jpg",
-      // Streamyard royal blue, sampled from the reference — white text,
-      // concentric white outline rings.
+      // Streamyard royal blue — white text. Media zone = custom PDF-bilan
+      // pointage mockup (see `mockup`); the video stays in the lightbox.
       bg: "#1E63E6",
       ink: "#ffffff",
       sub: "rgba(255,255,255,0.78)",
       dark: true,
-      decor: "rings",
+      mockup: "pointage",
     },
     {
       title: t({ fr: "Extraction", en: "Extraction" }),
@@ -113,8 +114,8 @@ export default function UseCases() {
       ],
       video: "/ora_pdf_extract.mp4",
       poster: "/posters/ora_pdf_extract.jpg",
-      // Light-blue card background (from the reference swatch).
-      bg: "#C3D5F5",
+      // Same pale blue as the FEC card (client swatch, 2026-07-19).
+      bg: "#d2e4fa",
       ink: "#1c2a5e",
       sub: "#47548f",
       blend: true,
@@ -122,7 +123,7 @@ export default function UseCases() {
   ];
 
   return (
-    <div className="relative mb-24 md:mb-32">
+    <div className="relative mb-40 md:mb-64">
       {/* Header */}
       <motion.div
         className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
@@ -221,7 +222,7 @@ export default function UseCases() {
                   clip's upper edge melts into the card (no visible seam). */}
               {c.mockup ? (
                 <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-7 md:-mb-10 origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.05]">
-                  <ReportingMockup />
+                  {c.mockup === "reporting" ? <ReportingMockup /> : <PointageMockup />}
                 </div>
               ) : (
                 <div
@@ -253,7 +254,41 @@ export default function UseCases() {
             </motion.div>
           );
         })}
+
       </div>
+
+      {/* Closing block — frameless, directly on the page background. The 4
+          cases above are only SAMPLES: any Excel workflow can be automated
+          (library + Ora Engineering custom scripts). Turns "my case isn't
+          listed" into the site's #1 action: booking a call. */}
+      <motion.div
+        className="relative mt-14 md:mt-20 max-w-3xl mx-auto text-center"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-80px" }}
+        variants={{
+          hidden: { opacity: 0, y: 32 },
+          visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
+        }}
+      >
+        <div className="flex items-center justify-center gap-2.5 text-blue-600 dark:text-blue-400">
+          <Sparkles className="w-[18px] h-[18px]" />
+          <span className="font-inter font-semibold text-[15px] md:text-base">
+            {t({ fr: "Ora Engineering, automatisation sur mesure", en: "Ora Engineering, custom automation" })}
+          </span>
+        </div>
+        <h3 className="font-poppins font-semibold text-3xl md:text-[2.5rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-3">
+          {t({ fr: "Et votre workflow ?", en: "What about your workflow?" })}
+        </h3>
+        <button
+          type="button"
+          onClick={openBooking}
+          className="group mt-7 inline-flex items-center gap-2.5 rounded-full bg-[#3b82f6] hover:bg-[#2563eb] px-9 py-4 font-inter font-semibold text-[15px] md:text-base text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+        >
+          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          <ArrowRight className="w-4 h-4 opacity-80 transition-transform duration-150 group-hover:translate-x-[3px]" />
+        </button>
+      </motion.div>
 
       {active && <UseCaseLightbox item={active} onClose={() => setActive(null)} />}
     </div>
