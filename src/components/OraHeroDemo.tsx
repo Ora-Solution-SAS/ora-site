@@ -332,6 +332,8 @@ const HD_CSS = `
 /* ── Immersive dark takeover at zoom moments ── */
 .hd-sticky{transition:background-color .5s ease}
 .hd-sticky.immersive{background-color:#070b14}
+/* End-of-demo hand-off to the always-black text section: pure black. */
+.hd-sticky.endblack{background-color:#000!important}
 .hd-blob{transition:opacity .5s ease}
 .hd-sticky.immersive .hd-blob{opacity:0}
 .hd-sticky.immersive .hd-win{box-shadow:0 1px 2px rgba(0,0,0,.5),0 34px 90px -20px rgba(0,0,0,.75),0 80px 160px -40px rgba(0,0,0,.65)}
@@ -701,9 +703,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // viewport), zoom sized so the whole window incl. sheet tabs stays in
       // frame.
       const focus = cam.f;
-      // The dark ambiance persists through the LOADING beat and releases
-      // exactly when the generated workbook lands (lights back on = punch).
-      const dark = Math.max(zt0, zt1, seg(v, 0.72, 0.75) * (1 - seg(v, 0.845, 0.885)));
       const zoom = 1 + (Z - 1) * zt;
       const S = fitScaleRef.current * grow * zoom;
       // Centre the focus in the VIEWPORT (not just the stage box): compensate
@@ -717,13 +716,18 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const dy = ((320 - focus.y) - centerDelta / S) * zt;
       stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy}px)`;
       box.style.marginTop = `${14 + 26 * seg(v, 0, 0.20)}px`;
-      // Immersive takeover: at zoom moments the whole hero switches to a dark
-      // ambiance (background, captions, scroll cue, nav) and the app takes the
-      // spotlight, so the enlarged stage never fights the headline. The
-      // headline itself fades out completely.
-      const immersive = dark > 0.12;
+      // End-of-demo hand-off: fade the whole scene to pure black over the last
+      // stretch of scroll (the software stays visible, just darkened) so it
+      // flows seamlessly into the always-black text-reveal section below.
+      // ONE clean light→black passage only: the demo stays LIGHT through all
+      // the zoom moments (no repeated dark flashes).
+      const endDark = seg(v, 0.92, 0.99);
+      const immersive = endDark > 0.12;
       const sticky = stickyRef.current;
-      if (sticky) sticky.classList.toggle("immersive", immersive);
+      if (sticky) {
+        sticky.classList.toggle("immersive", immersive);
+        sticky.classList.toggle("endblack", endDark > 0.5);
+      }
       const section = sticky ? sticky.closest("section") : null;
       if (section) {
         if (immersive) section.setAttribute("data-nav-dark", "");
@@ -731,9 +735,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       }
       const headline = headlineRef.current;
       if (headline) {
-        // Fades for BOTH the dark takeover and the result close-up.
-        const hf = Math.max(dark, zt2);
-        headline.style.opacity = String(Math.max(0, 1 - 1.2 * hf));
+        // The headline leaves FOR GOOD as soon as the story starts (camera
+        // dive on the Ora tab) — it must never ghost behind the enlarged
+        // windows later in the demo.
+        const hf = seg(v, 0.10, 0.20);
+        headline.style.opacity = String(1 - hf);
         headline.style.transform = `translateY(${-18 * hf}px)`;
       }
 
@@ -1383,16 +1389,15 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         </div>
       </div>
 
-      {/* CTA — after the demo releases */}
-      <motion.div
-        className="relative z-10 pb-16 md:pb-24 px-6 md:px-12 flex justify-center"
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-60px" }}
-        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      >
+      {/* CTA — after the demo releases. The CONTAINER is a plain always-black
+          div (never animated: an opacity-0 entrance here used to let the
+          section's white bg flash through). Only the button itself animates. */}
+      <div className="relative z-10 bg-black pt-16 md:pt-20 pb-16 md:pb-24 px-6 md:px-12 flex justify-center">
         <motion.button
           onClick={openBooking}
+          initial={{ opacity: 0, y: 28 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
           whileHover={{ y: -3, scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 24, mass: 0.6 }}
@@ -1401,7 +1406,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           {t({ fr: "Réserver un appel", en: "Book a call" })}
           <ArrowRight className="w-5 h-5 transition-transform duration-300 ease-out group-hover:translate-x-1" />
         </motion.button>
-      </motion.div>
+      </div>
     </section>
   );
 }

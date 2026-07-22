@@ -713,9 +713,18 @@ const App = () => {
     setBookingPhase("result");
   };
 
-  // Result screen → gift reveal (reciprocity), then the calendar.
+  // Result screen → calendar. The "gift" reveal step is temporarily skipped
+  // (not finished yet). To restore it, replace this body with
+  // `setBookingPhase("gift")` — the gift phase, its handlers, the GiftReveal
+  // render branch and the left-panel copy are all still in place below.
   const handleResultContinue = () => {
-    setBookingPhase("gift");
+    setBookingPhase("calendar");
+    setBookingReady(false);
+    setBookingFading(false);
+    setTimeout(() => {
+      setBookingFading(true);
+      setTimeout(() => setBookingReady(true), 500);
+    }, 900);
   };
 
   // Allow stepping back from the result screen to the last qualifier question.
@@ -991,10 +1000,10 @@ const App = () => {
       <OraHeroDemo theme={theme} openBooking={openBooking} />
 
       {/* ── "Your time is your most valuable asset" scroll-reveal ──
-          ExcelReveal (black, `sticky top-0` z-10) plays its accumulating
-          word-by-word reveal under the hero. The demo-video curtain that used
-          to rise over it has been removed; ExcelReveal stands on its own. */}
-      <div className="relative">
+          ExcelReveal: pure-black Bending-Spoons progressive-blur reveal, normal
+          flow (no scroll-lock). `bg-black` on the wrapper keeps the seam from
+          the (darkened) demo above pure black — no white flash. */}
+      <div className="relative bg-black">
         <ExcelReveal />
       </div>
 
