@@ -297,24 +297,24 @@ const HD_CSS = `
 .hd-xmchart svg{flex:1;width:100%;min-height:0}
 .hd-xmleg{display:flex;justify-content:center;gap:14px;font-size:7px;color:#555;margin-top:4px}
 .hd-xmleg i{display:inline-block;width:8px;height:8px;border-radius:1px;margin-right:4px;vertical-align:middle}
-/* ── Loading popup (replica of the real app) + success recap ── */
-.hd-loading{position:absolute;left:26px;right:26px;top:150px;z-index:8;background:#fff;border-radius:14px;
-  box-shadow:0 24px 60px -18px rgba(15,23,42,.38);padding:16px 15px 12px;opacity:0;text-align:center;
+/* ── Loading popup: FEC Studio 4-step progress (replica of the real app) ── */
+.hd-loading{position:absolute;left:26px;right:26px;top:120px;z-index:8;background:#fff;border-radius:16px;
+  box-shadow:0 24px 60px -18px rgba(15,23,42,.38);padding:18px 18px 14px;opacity:0;text-align:center;
   transform-origin:center center}
-.hd-loading .icwrap{position:relative;width:34px;height:34px;margin:0 auto 9px}
-.hd-loading .lg{position:absolute;inset:0}
-.hd-loading .lg img{width:100%;height:100%;object-fit:contain;display:block}
-.hd-loading .ok{position:absolute;inset:-1px;border-radius:50%;background:#22c55e;color:#fff;
-  display:grid;place-items:center;opacity:0;box-shadow:0 4px 12px rgba(34,197,94,.45)}
-.hd-loading .t{font-size:10.5px;font-weight:800;letter-spacing:-.01em;color:#111827}
-.hd-loading .bar{margin-top:10px;height:6px;border-radius:99px;background:#e8f1fd;overflow:hidden}
-.hd-loading .barfill{display:block;height:100%;border-radius:99px;background:#3b82f6;
+.hd-loading .lgwrap{width:34px;height:34px;margin:0 auto 10px}
+.hd-loading .lgwrap img{width:100%;height:100%;object-fit:contain;display:block}
+.hd-loading .t{font-size:11px;font-weight:800;letter-spacing:-.01em;color:#111827;margin-bottom:13px}
+.hd-loading .step{text-align:left;margin-bottom:11px}
+.hd-loading .step:last-of-type{margin-bottom:2px}
+.hd-loading .step .head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.hd-loading .step .ic{position:relative;width:13px;height:13px;flex-shrink:0}
+.hd-loading .step .ic .ck{position:absolute;inset:0;color:#3b82f6;display:grid;place-items:center;opacity:0}
+.hd-loading .step .ic .dt{position:absolute;left:3px;top:3px;width:7px;height:7px;border-radius:50%;background:#3b82f6;opacity:.35}
+.hd-loading .step .lbl{font-size:9.5px;font-weight:600;color:#9ca3af}
+.hd-loading .step .bar{height:5px;border-radius:99px;background:#eaf1fd;overflow:hidden}
+.hd-loading .step .barfill{display:block;height:100%;border-radius:99px;background:#3b82f6;
   transform-origin:left center;transform:scaleX(0)}
-.hd-loading .tip{font-size:7.5px;line-height:1.55;color:#9ca3af;margin-top:9px;padding:0 6px}
-.hd-loading .cancel{display:inline-flex;align-items:center;gap:4px;font-size:8px;font-weight:600;color:#6b7280;margin-top:8px}
-.hd-loading .done{display:none;margin:9px auto 0;width:fit-content;text-align:left}
-.hd-loading .done .dl{display:flex;align-items:center;gap:5px;font-size:7.8px;font-weight:600;color:#374151;padding:2px 0}
-.hd-loading .done .dl svg{color:#059669;flex-shrink:0}
+.hd-loading .cancel{display:inline-flex;align-items:center;gap:5px;font-size:9px;font-weight:600;color:#6b7280;margin-top:11px}
 /* ── Result arrival glow (makes the generated workbook POP) ── */
 .hd-xwglow{position:absolute;inset:0;border-radius:12px;pointer-events:none;opacity:0;z-index:5;
   box-shadow:0 0 0 3px rgba(59,130,246,.55),0 0 46px 8px rgba(59,130,246,.35)}
@@ -648,10 +648,8 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       jstatus: q('[data-hd="jstatus"]'), jcount: q('[data-hd="jcount"]'),
       jlines: [...stage.querySelectorAll<HTMLElement>("[data-jline]")],
       excel1: q('[data-hd="excel1"]'), excel2: q('[data-hd="excel2"]'),
-      loading: q('[data-hd="loading"]'), loadfill: q('[data-hd="loadfill"]'),
-      loadlogo: q('[data-hd="loadlogo"]'), loadok: q('[data-hd="loadok"]'),
-      loadtitle: q('[data-hd="loadtitle"]'), loadtip: q('[data-hd="loadtip"]'),
-      loadcancel: q('[data-hd="loadcancel"]'), loaddone: q('[data-hd="loaddone"]'),
+      loading: q('[data-hd="loading"]'),
+      loadsteps: [...stage.querySelectorAll<HTMLElement>("[data-loadstep]")],
       xwglow: q('[data-hd="xwglow"]'),
       sheets: [...stage.querySelectorAll<HTMLElement>("[data-sheet]")],
       xtabs: [...stage.querySelectorAll<HTMLElement>("[data-xtab]")],
@@ -695,7 +693,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         { t: zt0, z: Z0, f: T.oratab ?? { x: 577, y: 71 } },
         { t: zt1, z: Z1, f: T.modalc ?? { x: 520, y: 320 } },
         { t: ztS, z: 1.6, f: T.loadc ?? { x: 856, y: 330 } },
-        { t: zt2, z: Z2, f: rc },
+        // Centre the RESULT on the whole Excel+panel pair (stage centre x=520),
+        // not on the Excel window alone (x≈326) — otherwise the pair sits off
+        // to the right. Keep the measured vertical centre.
+        { t: zt2, z: Z2, f: { x: 520, y: rc.y } },
       ];
       const cam = cams.reduce((a, b) => (b.t > a.t ? b : a));
       const zt = cam.t, Z = cam.z;
@@ -787,34 +788,30 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         l.style.opacity = String(o);
         l.style.transform = `translateY(${4 * (1 - o)}px)`;
       });
-      // 5 · loading beat: the bar fills, the spinner flips to a green check
-      //     (« Automatisation réussie »), then the audit workbook lands
+      // 5 · loading beat: FEC Studio runs 4 steps (Préparation → Récupération →
+      //     Exécution → Enregistrement) that fill one after another, each dot
+      //     turning into a check when its bar completes; then the audit
+      //     workbook lands.
       const loadIn = seg(v, 0.73, 0.755) * (1 - seg(v, 0.85, 0.88));
       if (el.loading) {
         el.loading.style.opacity = String(loadIn);
         el.loading.style.transform = `scale(${0.95 + 0.05 * seg(v, 0.73, 0.755)})`;
       }
-      const lp = seg(v, 0.755, 0.805);
-      if (el.loadfill) el.loadfill.style.transform = `scaleX(${lp})`;
-      const okIn = seg(v, 0.805, 0.822);
-      const success = v >= 0.805;
-      if (el.loadlogo) el.loadlogo.style.opacity = String(1 - okIn);
-      if (el.loadok) {
-        el.loadok.style.opacity = String(okIn);
-        el.loadok.style.transform = `scale(${0.5 + 0.5 * okIn})`;
-      }
-      if (el.loadtitle) {
-        const tt = success ? "Automatisation réussie" : "Chasse aux écritures fantômes…";
-        if (el.loadtitle.textContent !== tt) el.loadtitle.textContent = tt;
-      }
-      // Success recap: the FEC tip + Annuler give way to the list of what was
-      // actually built (balances + generated workbook).
-      if (el.loadtip) el.loadtip.style.display = success ? "none" : "";
-      if (el.loadcancel) el.loadcancel.style.display = success ? "none" : "";
-      if (el.loaddone) {
-        el.loaddone.style.display = success ? "block" : "none";
-        el.loaddone.style.opacity = String(okIn);
-      }
+      const lp = seg(v, 0.755, 0.82); // 0→1 across the 4 steps
+      const nSteps = el.loadsteps.length || 4;
+      el.loadsteps.forEach((step, i) => {
+        const sp = Math.min(1, Math.max(0, (lp - i / nSteps) / (1 / nSteps)));
+        const done = sp >= 0.999;
+        const running = sp > 0 && !done;
+        const fill = step.querySelector<HTMLElement>(".barfill");
+        const ck = step.querySelector<HTMLElement>(".ck");
+        const dt = step.querySelector<HTMLElement>(".dt");
+        const lbl = step.querySelector<HTMLElement>(".lbl");
+        if (fill) fill.style.transform = `scaleX(${sp})`;
+        if (ck) ck.style.opacity = done ? "1" : "0";
+        if (dt) dt.style.opacity = done ? "0" : running ? "1" : "0.35";
+        if (lbl) lbl.style.color = done || running ? "#111827" : "#9ca3af";
+      });
       // Punchy arrival: quick fade + ease-out rise-and-scale + a glow pulse.
       const wp = seg(v, 0.85, 0.90);
       const we = 1 - (1 - wp) * (1 - wp);
@@ -921,7 +918,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             </span>
             <h2 className="font-inter font-normal text-[clamp(1.9rem,4.2vw,3.9rem)] tracking-[-0.035em] leading-[1.06] text-[#111827] dark:text-white mt-4 text-center">
               <span className="block lg:whitespace-nowrap">
-                {t({ fr: "Moins d'Excel, ", en: "We give you " })}
+                {t({ fr: "Moins de saisie, ", en: "We give you " })}
                 <span className="text-brand-gradient">{t({ fr: "plus d'analyse et de conseil", en: "analysis and advisory" })}</span>
                 {t({ fr: ".", en: " time back" })}
               </span>
@@ -1301,26 +1298,27 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                     </div>
                   </div>
 
-                  {/* Loading popup — replica of the real app (Ora mark, witty
-                      status, progress bar, FEC tip, Annuler); flips to the
-                      green-check success recap of the work that was done */}
+                  {/* Loading popup — FEC Studio, 4 steps filling in sequence
+                      (Préparation → Récupération → Exécution → Enregistrement),
+                      each with a dot (running) that becomes a check (done). */}
                   <div className="hd-loading" data-hd="loading" data-cur="loadc">
-                    <div className="icwrap">
-                      <div className="lg" data-hd="loadlogo"><img src="/logos/icon-color.png" alt="" /></div>
-                      <div className="ok" data-hd="loadok">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                    <div className="lgwrap"><img src="/logos/icon-color.png" alt="" /></div>
+                    <div className="t">FEC Studio — le dossier d'audit à la carte</div>
+                    {["Préparation", "Récupération du fichier", "Exécution", "Enregistrement"].map((label, i) => (
+                      <div className="step" key={i} data-loadstep={i}>
+                        <div className="head">
+                          <span className="ic">
+                            <span className="ck">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+                            </span>
+                            <span className="dt" />
+                          </span>
+                          <span className="lbl">{label}</span>
+                        </div>
+                        <div className="bar"><span className="barfill" /></div>
                       </div>
-                    </div>
-                    <div className="t" data-hd="loadtitle">Chasse aux écritures fantômes…</div>
-                    <div className="bar"><span className="barfill" data-hd="loadfill" /></div>
-                    <div className="tip" data-hd="loadtip">💡 Le FEC est un format légal normé depuis 2014 (art. A47 A-1 du LPF).</div>
-                    <div className="done" data-hd="loaddone">
-                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance générale construite</div>
-                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance mensuelle construite</div>
-                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Balance âgée (créances &amp; dettes)</div>
-                      <div className="dl"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Classeur Excel créé : FEC 2025 - studio.xlsx</div>
-                    </div>
-                    <div className="cancel" data-hd="loadcancel">✕ Annuler</div>
+                    ))}
+                    <div className="cancel">✕ Annuler</div>
                   </div>
                 </div>
                 {/* JOURNAL */}

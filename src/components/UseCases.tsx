@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, Sparkles, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, ScanText, Sparkles, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
@@ -120,6 +120,71 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
       sub: "#47548f",
       blend: true,
     },
+    // ── Additional automations — WORK IN PROGRESS. Shown ONLY in local dev
+    // (`import.meta.env.DEV`), hidden in the production build until reworked
+    // with real demos. The demo clips below are placeholders for now. ──
+    ...(import.meta.env.DEV ? ([
+    {
+      title: t({ fr: "Réconciliation", en: "Reconciliation" }),
+      metaIcon: ArrowLeftRight,
+      meta: t({ fr: "Trésorerie & lettrage", en: "Treasury & matching" }),
+      bullets: [
+        t({ fr: "Vos écritures sont rapprochées et lettrées automatiquement", en: "Your entries are reconciled and matched automatically" }),
+        t({ fr: "Les écarts ressortent immédiatement, prêts à justifier", en: "Discrepancies stand out immediately, ready to justify" }),
+      ],
+      video: "/ora_pointage_v3.mp4",
+      poster: "/posters/ora_pointage_v3.jpg",
+      bg: "#5865E3",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.78)",
+      dark: true,
+    },
+    {
+      title: t({ fr: "Nettoyage de données", en: "Data cleaning" }),
+      metaIcon: Wand2,
+      meta: t({ fr: "Fichiers désordonnés & doublons", en: "Messy files & duplicates" }),
+      bullets: [
+        t({ fr: "Vos fichiers sont remis en forme, doublons et erreurs supprimés", en: "Your files are cleaned up, duplicates and errors removed" }),
+        t({ fr: "Des données propres et cohérentes, prêtes à exploiter", en: "Clean, consistent data, ready to work with" }),
+      ],
+      video: "/final-fec.mp4",
+      poster: "/posters/final-fec.jpg",
+      bg: "#d2e4fa",
+      ink: "#0c2d4d",
+      sub: "#2f5474",
+      blend: true,
+    },
+    {
+      title: t({ fr: "Ressaisie PDF", en: "PDF re-keying" }),
+      metaIcon: ScanText,
+      meta: t({ fr: "Relevés, factures & liasses", en: "Statements, invoices & files" }),
+      bullets: [
+        t({ fr: "Vos PDF deviennent des tableaux Excel, sans une seule ressaisie", en: "Your PDFs become Excel tables, without a single re-key" }),
+        t({ fr: "Chaque montant et référence repris fidèlement", en: "Every amount and reference carried over faithfully" }),
+      ],
+      video: "/ora_pdf_extract.mp4",
+      poster: "/posters/ora_pdf_extract.jpg",
+      bg: "#1E63E6",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.78)",
+      dark: true,
+    },
+    {
+      title: t({ fr: "Prévisionnel", en: "Forecasting" }),
+      metaIcon: TrendingUp,
+      meta: t({ fr: "Budgets & projections", en: "Budgets & projections" }),
+      bullets: [
+        t({ fr: "Budgets et prévisionnels générés à partir de vos historiques", en: "Budgets and forecasts built from your history" }),
+        t({ fr: "Un modèle à jour, prêt à présenter au client", en: "An up-to-date model, ready to present to the client" }),
+      ],
+      video: "/ora_reporting_v3.mp4",
+      poster: "/posters/ora_reporting_v3.jpg",
+      bg: "#d2e4fa",
+      ink: "#1c2a5e",
+      sub: "#47548f",
+      blend: true,
+    },
+    ] as UseCase[]) : []),
   ];
 
   return (
@@ -136,18 +201,18 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
           {t({ fr: "Cas d'usage", en: "Use cases" })}
         </span>
         <h2 className="font-poppins font-medium text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-4">
-          {t({ fr: "Concrètement, ce qu'Ora automatise", en: "Concretely, what Ora automates" })}
+          {t({ fr: "Concrètement, ce qu'Ora peut automatiser", en: "Concretely, what Ora can automate" })}
         </h2>
       </motion.div>
 
       {/* Cards */}
-      <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-7xl mx-auto">
+      <div className="grid md:grid-cols-2 gap-7 lg:gap-10 max-w-[94rem] mx-auto">
         {cases.map((c, i) => {
           const Icon = c.metaIcon;
           return (
             <motion.div
               key={c.title}
-              className={`group relative overflow-hidden rounded-[28px] md:rounded-[36px] p-7 md:p-10 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
+              className={`group relative overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
               style={{ background: c.bg }}
               initial="hidden"
               whileInView="visible"
@@ -257,7 +322,7 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
 
       </div>
 
-      {/* Closing block — frameless, directly on the page background. The 4
+      {/* Closing block — frameless, directly on the page background. The
           cases above are only SAMPLES: any Excel workflow can be automated
           (library + Ora Engineering custom scripts). Turns "my case isn't
           listed" into the site's #1 action: booking a call. */}
