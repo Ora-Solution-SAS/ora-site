@@ -28,7 +28,7 @@ import PrivacyShowcase from "./components/PrivacyShowcase";
 import ExcelReveal from "./components/ExcelReveal";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
-import ProblemSection from "./components/ProblemSection";
+// import ProblemSection from "./components/ProblemSection"; // masqué pour l'instant
 import UseCases from "./components/UseCases";
 import FAQ from "./components/FAQ";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
@@ -1007,8 +1007,10 @@ const App = () => {
         <ExcelReveal />
       </div>
 
-      {/* FEATURES — alternating video + text rows */}
-      <section id="features" className="relative pt-32 md:pt-44 pb-0 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
+      {/* FEATURES — use-cases. Flows right after the black reveal (which ends
+          on « Découvrez Ora »); generous top padding gives « Concrètement, ce
+          qu'Ora peut automatiser » plenty of breathing room. */}
+      <section id="features" className="relative pt-[22vh] md:pt-[26vh] pb-0 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1041,8 +1043,10 @@ const App = () => {
             problem section. */}
         <UseCases openBooking={openBooking} />
 
-        {/* Problem — the "il me comprend" moment before the product. */}
-        <ProblemSection />
+        {/* Problem — « Votre Excel vous coûte plus que du temps » : masqué
+            pour l'instant (à replacer ailleurs / en FAQ plus tard). Réactiver :
+            décommenter cette ligne.
+        <ProblemSection /> */}
 
         {/* Finance use-cases — masqué pour l'instant. Réactiver : décommenter
             l'import en haut, ce bloc, et l'entrée "cas-usage" dans SectionNav.

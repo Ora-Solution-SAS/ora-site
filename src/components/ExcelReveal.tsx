@@ -24,7 +24,7 @@ const BLUR_MAX = 14; //  px on unread letters
 const OP_MIN = 0.08; //  faintest opacity (upcoming text barely ghosted)
 const RISE_EM = 0.12; // unread letters sit slightly low and rise into place
 
-type Unit = { el: HTMLElement; yPage: number; colShift: number };
+type Unit = { el: HTMLElement; yInSec: number; colShift: number; lastB: number; lastO: number };
 
 type Phrase = { text: string; gradient: string[] };
 
@@ -43,17 +43,26 @@ export default function ExcelReveal() {
     },
     {
       text: t({
-        fr: "Cessez de gaspiller des heures sur des tâches répétitives, chronophages et sans valeur ajoutée, sur Excel.",
-        en: "Stop wasting hours on repetitive, time-consuming, zero-value tasks in Excel.",
+        fr: "Des relevés PDF à ressaisir, des balances Excel brutes à retraiter, des comptes à rapprocher. À chaque clôture.",
+        en: "PDF statements to re-key, raw Excel balances to rework, accounts to reconcile. Every close.",
       }),
-      gradient: ["Excel"],
+      // Highlight the manual TASK verbs — the action the accountant does by
+      // hand is more telling than the file format.
+      gradient: ["ressaisir", "retraiter", "rapprocher", "re-key", "rework", "reconcile"],
     },
     {
       text: t({
-        fr: "Nous automatisons et optimisons le temps que vous passez sur Excel, pour l'allouer au conseil.",
-        en: "We automate and optimize the time you spend in Excel, so you can devote it to advisory.",
+        fr: "On automatise cette chaîne de bout en bout, de la ressaisie au livrable, pour que vous consacriez votre expertise au conseil.",
+        en: "We automate that chain end to end, from data entry to deliverable, so your expertise goes to advisory.",
       }),
-      gradient: ["automatisons", "conseil", "automate", "advisory"],
+      gradient: ["expertise", "conseil", "advisory"],
+    },
+    {
+      text: t({
+        fr: "Nous accompagnons les cabinets d'expertise comptable et d'audit. Gain de temps, confidentialité, meilleure organisation.",
+        en: "We work with accounting and audit firms. Time saved, confidentiality, better organisation.",
+      }),
+      gradient: ["temps", "confidentialité", "organisation", "time", "confidentiality"],
     },
   ];
 
@@ -69,14 +78,16 @@ export default function ExcelReveal() {
     let units: Unit[] = [];
     let raf = 0;
     let active = false;
-    let measured = false;
+    let lastSecTop = Number.NaN; // skip the whole loop when nothing scrolled
 
-    /* Measure every letter once: its page-Y centre, plus a horizontal shift
-       (fraction of the line advanced × line height) so the frontier flows in
-       READING ORDER — end of a line lines up with the start of the next. */
+    /* Measure every letter ONCE, relative to the SECTION (not the page): its
+       centre offset inside the section + a horizontal shift (fraction of the
+       line advanced × line height) so the frontier flows in READING ORDER.
+       Section-relative offsets stay valid even if content above the section
+       reflows (which, with page-Y offsets, caused the reveal to "jump"). */
     const measure = () => {
       const els = unitElsRef.current;
-      const sy = window.scrollY;
+      const secTop = section.getBoundingClientRect().top;
       units = els.map((el) => {
         const r = el.getBoundingClientRect();
         const p = el.closest("p");
@@ -85,34 +96,52 @@ export default function ExcelReveal() {
         const colP = pr.width > 0 ? (r.left + r.width / 2 - pr.left) / pr.width : 0;
         return {
           el,
-          yPage: r.top + r.height / 2 + sy,
+          yInSec: r.top - secTop + r.height / 2,
           colShift: (colP - 0.5) * lineH,
+          lastB: -1,
+          lastO: -1,
         };
       });
-      measured = units.length > 0 && units.some((u) => u.yPage > 0);
+      lastSecTop = Number.NaN; // force a repaint on the next frame
     };
 
+    /* One getBoundingClientRect per frame (the section), then pure math per
+       letter. We only WRITE styles that actually changed (quantised), so at a
+       steady scroll only the ~one line crossing the band repaints — the blur
+       filter is never re-rasterised on the hundreds of already-settled
+       letters. That is what keeps it buttery. */
     const frame = () => {
-      const sy = window.scrollY;
-      const vh = window.innerHeight || 1;
-      const lo = FOCUS - BAND / 2;
-      for (let i = 0; i < units.length; i++) {
-        const u = units[i];
-        const pEff = (u.yPage - sy + u.colShift) / vh;
-        let x = (pEff - lo) / BAND;
-        x = x < 0 ? 0 : x > 1 ? 1 : x;
-        const e = x * x * (3 - 2 * x); // smoothstep — buttery ramp
-        u.el.style.filter = e < 0.01 ? "none" : `blur(${(e * BLUR_MAX).toFixed(2)}px)`;
-        u.el.style.opacity = (1 - e * (1 - OP_MIN)).toFixed(3);
-        // Subtle settle: unread letters sit a touch low, rise as they sharpen.
-        u.el.style.transform = e < 0.01 ? "none" : `translateY(${(e * RISE_EM).toFixed(3)}em)`;
+      const secTop = section.getBoundingClientRect().top;
+      if (secTop !== lastSecTop) {
+        lastSecTop = secTop;
+        const vh = window.innerHeight || 1;
+        const lo = FOCUS - BAND / 2;
+        for (let i = 0; i < units.length; i++) {
+          const u = units[i];
+          const pEff = (secTop + u.yInSec + u.colShift) / vh;
+          let x = (pEff - lo) / BAND;
+          x = x < 0 ? 0 : x > 1 ? 1 : x;
+          const e = x * x * (3 - 2 * x); // smoothstep — buttery ramp
+          const bQ = Math.round(e * BLUR_MAX * 4) / 4; // 0.25px steps
+          const oQ = Math.round((1 - e * (1 - OP_MIN)) * 50) / 50; // 0.02 steps
+          if (bQ === u.lastB && oQ === u.lastO) continue; // nothing to do
+          u.lastB = bQ;
+          u.lastO = oQ;
+          const s = u.el.style;
+          s.filter = bQ < 0.06 ? "" : `blur(${bQ}px)`;
+          s.opacity = oQ >= 0.999 ? "" : String(oQ);
+          s.transform = e < 0.01 ? "" : `translateY(${(e * RISE_EM).toFixed(3)}em)`;
+        }
       }
       if (active) raf = requestAnimationFrame(frame);
     };
 
     const start = () => {
       if (active) return;
-      if (!measured) measure();
+      // Always re-measure when the section comes into view: offsets are
+      // section-relative (scroll-independent) and cheap at word granularity,
+      // so this is robust to any layout that wasn't final at mount.
+      measure();
       active = true;
       raf = requestAnimationFrame(frame);
     };
@@ -144,38 +173,23 @@ export default function ExcelReveal() {
     };
   }, [t]);
 
-  /* Render a word: letter-by-letter spans inside a nowrap word wrapper so
-     line wrapping stays word-based. Gradient keywords stay ONE span (splitting
-     a background-clip:text gradient per letter would restripe it). */
-  const renderWord = (w: string, isGrad: boolean, key: number) => {
-    if (isGrad) {
-      return (
-        <span key={key} className="inline-block whitespace-nowrap" style={{ marginRight: "0.26em" }}>
-          <span
-            ref={collect}
-            className="inline-block text-brand-gradient"
-            style={{ willChange: "opacity, filter, transform" }}
-          >
-            {w}
-          </span>
-        </span>
-      );
-    }
-    return (
-      <span key={key} className="inline-block whitespace-nowrap" style={{ marginRight: "0.26em" }}>
-        {[...w].map((ch, ci) => (
-          <span
-            key={ci}
-            ref={collect}
-            className="inline-block"
-            style={{ willChange: "opacity, filter, transform" }}
-          >
-            {ch}
-          </span>
-        ))}
-      </span>
-    );
-  };
+  /* Render a word as ONE animated span (blur + opacity + rise applied at the
+     WORD level). Far fewer elements than per-letter → only ~35 composited
+     layers instead of 250+, so scrolling stays buttery. The reading-order
+     cascade (colShift per word) still sweeps word after word left→right, which
+     at this font size reads as a continuous reveal — and matches how Bending
+     Spoons blurs (by word/region, not per glyph). */
+  const wordStyle = { marginRight: "0.26em", willChange: "opacity, filter, transform" } as const;
+  const renderWord = (w: string, isGrad: boolean, key: number) => (
+    <span
+      key={key}
+      ref={collect}
+      className={`inline-block whitespace-nowrap ${isGrad ? "text-brand-gradient" : ""}`}
+      style={wordStyle}
+    >
+      {w}
+    </span>
+  );
 
   return (
     <section
@@ -184,18 +198,25 @@ export default function ExcelReveal() {
       data-nav-dark
       className="relative hidden md:block bg-black"
     >
-      <div className="mx-auto max-w-5xl px-6 lg:px-10 py-[38vh]">
+      {/* Bending-Spoons layout: LEFT-aligned, full-width, big type. Stacked
+          with a gap so ~2 phrases are on screen at once (previous crisp above,
+          next blurred below). pb = black breathing space after the last line.
+          PADDING, not a child margin (a margin collapses out → white line). */}
+      <div className="px-6 md:px-[5.5vw] pt-[30vh] pb-[16vh]">
         {phrases.map((phrase, pi) => {
           const grad = phrase.gradient.map((g) => g.toLowerCase());
           return (
             <p
               key={pi}
-              className="font-instrument font-normal text-white text-center"
+              className="font-instrument font-normal text-white text-left text-balance"
               style={{
-                fontSize: "clamp(2.3rem, 5vw, 4.1rem)",
-                lineHeight: 1.14,
-                letterSpacing: "-0.03em",
-                marginBottom: pi < phrases.length - 1 ? "24vh" : "20vh",
+                fontSize: "clamp(2.1rem, 4.4vw, 5rem)",
+                lineHeight: 1.1,
+                letterSpacing: "-0.035em",
+                // Balance the wrapped lines so no lone word is left on the last
+                // line (a widow) — complete, even lines read much better.
+                textWrap: "balance",
+                marginBottom: "14vh",
               }}
             >
               {phrase.text.split(" ").map((w, wi) => {
@@ -206,17 +227,14 @@ export default function ExcelReveal() {
           );
         })}
 
-        {/* Conclusion */}
+        {/* Conclusion — « Découvrez Ora » scrolls with the flow and reveals
+            word-by-word LAST, like the phrases (no pinned panel). */}
         <p
-          className="font-instrument font-normal text-white text-center"
-          style={{ fontSize: "clamp(2.6rem, 6vw, 5rem)", lineHeight: 1.1, letterSpacing: "-0.035em" }}
+          className="font-instrument font-normal text-white text-left"
+          style={{ fontSize: "clamp(2.6rem, 6vw, 6.5rem)", lineHeight: 1.05, letterSpacing: "-0.04em", marginBottom: 0 }}
         >
-          {renderWord(t({ fr: "Découvrez", en: "Meet" }), false, 0)}
-          <span className="inline-block whitespace-nowrap">
-            <span ref={collect} className="inline-block text-brand-gradient" style={{ willChange: "opacity, filter, transform" }}>
-              Ora.
-            </span>
-          </span>
+          {renderWord(t({ fr: "Découvrez", en: "Meet" }), false, 90)}
+          {renderWord("Ora.", true, 91)}
         </p>
       </div>
     </section>
