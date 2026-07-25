@@ -2,13 +2,15 @@ import type { Localized } from "./data";
 
 // Front-end API layer for the online demo. Two modes behind one surface:
 //
-// - REAL mode: talks to ora-demo-service (FastAPI). Enabled when
-//   VITE_DEMO_API_URL is set at build time, or, in dev only, when
-//   localStorage["ora-demo-api-url"] is set (handy toggle without restarting
-//   Vite: localStorage.setItem("ora-demo-api-url", "http://127.0.0.1:8900")).
-// - MOCK mode (default): simulates everything in the browser, persisting
-//   jobs in localStorage so the magic-link URL (/demo?ml=<job_id>) survives
-//   reloads, exactly like a real email link would.
+// - REAL mode: talks to ora-demo-service (FastAPI). In dev this is the
+//   DEFAULT (http://127.0.0.1:8900, run `uvicorn app.main:app --port 8900`
+//   in ora-demo-service). In production it requires VITE_DEMO_API_URL at
+//   build time. localStorage["ora-demo-api-url"] overrides the URL in dev.
+// - MOCK mode: simulates everything in the browser, persisting jobs in
+//   localStorage so the magic-link URL (/demo?ml=<job_id>) survives reloads.
+//   Default in production builds without VITE_DEMO_API_URL; in dev, force it
+//   with localStorage.setItem("ora-demo-api-url", "mock") for pure
+//   front-end work without the service running.
 //
 // HTTP contract (ora-demo-service/app/main.py — keep both in sync):
 //   POST /demo/jobs                multipart {file, automation_key, lead...}
@@ -75,15 +77,17 @@ export const JOB_STEPS: { key: string; label: Localized }[] = [
 // ── Mode resolution ──────────────────────────────────────────────────────────
 
 function resolveApiUrl(): string | null {
+  const env = import.meta.env.VITE_DEMO_API_URL as string | undefined;
   if (import.meta.env.DEV) {
     try {
       const override = window.localStorage.getItem("ora-demo-api-url");
+      if (override === "mock") return null;
       if (override) return override.replace(/\/+$/, "");
     } catch {
-      // Storage unavailable: fall through to the env variable.
+      // Storage unavailable: fall through to the defaults.
     }
+    return env ? env.replace(/\/+$/, "") : "http://127.0.0.1:8900";
   }
-  const env = import.meta.env.VITE_DEMO_API_URL as string | undefined;
   return env ? env.replace(/\/+$/, "") : null;
 }
 
