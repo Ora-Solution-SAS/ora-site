@@ -81,6 +81,15 @@ export default function RunView({ automation, job, status, onSimulateMagicLink }
             })}
           </ul>
 
+          {status.status === "error" && (
+            <p className="mt-5 font-inter text-[13px] font-medium text-red-500">
+              {t({
+                fr: "✗ Le traitement n'a pas abouti. Vérifiez le contenu du fichier et réessayez.",
+                en: "✗ The run did not complete. Check the file content and try again.",
+              })}
+            </p>
+          )}
+
           <p className="mt-6 flex items-center gap-1.5 font-inter text-[12px] text-gray-400 dark:text-gray-500">
             <Lock size={12} />
             {t({

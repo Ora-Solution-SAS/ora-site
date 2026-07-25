@@ -9,6 +9,7 @@ import RunView from "@/components/demo/RunView";
 import DeliveryView from "@/components/demo/DeliveryView";
 import { getAutomation } from "@/components/demo/data";
 import {
+  DemoApiError,
   createDemoJob,
   getJobStatus,
   type DemoJob,
@@ -59,6 +60,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<DemoApiError["code"] | null>(null);
   const [job, setJob] = useState<DemoJob | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
 
@@ -103,19 +105,34 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   // Poll the job while the processing screen is shown.
   useEffect(() => {
     if (phase !== "processing" || !job) return;
-    setStatus(getJobStatus(job.jobId));
-    const id = setInterval(() => setStatus(getJobStatus(job.jobId)), 800);
-    return () => clearInterval(id);
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const s = await getJobStatus(job.jobId);
+        if (!cancelled) setStatus(s);
+      } catch {
+        // Network hiccup: keep the last status, the next tick retries.
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [phase, job]);
 
   const handleSubmit = async (lead: DemoLead) => {
     if (!file || !automation || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const created = await createDemoJob({ file, automationKey: automation.key, lead });
       setJob(created);
       setPhase("processing");
       scrollTop();
+    } catch (err) {
+      setSubmitError(err instanceof DemoApiError ? err.code : "network");
     } finally {
       setSubmitting(false);
     }
@@ -329,6 +346,33 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 onSubmit={handleSubmit}
                 onOpenPrivacy={() => onNavigate("politique-confidentialite")}
               />
+
+              {submitError && (
+                <p className="mx-auto mt-5 max-w-xl text-center font-inter text-[13.5px] font-medium text-red-500">
+                  ✗{" "}
+                  {t(
+                    submitError === "no_credits"
+                      ? {
+                          fr: "Vous avez utilisé vos 5 essais gratuits. Réservez un appel pour aller plus loin.",
+                          en: "You have used your 5 free runs. Book a call to go further.",
+                        }
+                      : submitError === "file_too_large"
+                        ? {
+                            fr: "Fichier trop volumineux : 50 Mo maximum.",
+                            en: "File too large: 50 MB maximum.",
+                          }
+                        : submitError === "rejected"
+                          ? {
+                              fr: "Le fichier n'a pas été accepté. Vérifiez le format et réessayez.",
+                              en: "The file was not accepted. Check the format and try again.",
+                            }
+                          : {
+                              fr: "Le service de démonstration est injoignable. Réessayez dans un instant.",
+                              en: "The demo service is unreachable. Try again in a moment.",
+                            }
+                  )}
+                </p>
+              )}
             </div>
           </motion.section>
         )}

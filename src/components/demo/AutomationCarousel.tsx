@@ -68,6 +68,15 @@ function Illustration({ automation }: { automation: DemoAutomation }) {
               PDF
             </span>
           )}
+          {variant === "chart" && (
+            <div className="absolute bottom-2 left-2.5 flex items-end gap-1" aria-hidden>
+              <span className="h-2 w-1.5 rounded-sm bg-[#3b82f6]/50" />
+              <span className="h-3.5 w-1.5 rounded-sm bg-[#3b82f6]/70" />
+              <span className="h-2.5 w-1.5 rounded-sm bg-[#0d9488]/60" />
+              <span className="h-4 w-1.5 rounded-sm bg-[#0d9488]/90" />
+              <span className="h-3 w-1.5 rounded-sm bg-[#3b82f6]/80" />
+            </div>
+          )}
           <span className="absolute -bottom-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-[#3b82f6] to-[#0d9488] text-white shadow">
             <Check size={13} strokeWidth={3.5} />
           </span>
@@ -183,10 +192,16 @@ export default function AutomationCarousel({ onSelect }: { onSelect: (key: strin
   const [vw, setVw] = useState(0);
 
   useLayoutEffect(() => {
-    const measure = () => setVw(viewportRef.current?.clientWidth ?? 0);
+    const el = viewportRef.current;
+    if (!el) return;
+    // ResizeObserver instead of a one-shot measure: on a cold page load the
+    // element can report width 0 at mount time; the observer fires as soon as
+    // layout settles (and on every later resize).
+    const measure = () => setVw(el.clientWidth);
     measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const n = DEMO_AUTOMATIONS.length;

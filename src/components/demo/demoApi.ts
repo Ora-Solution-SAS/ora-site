@@ -1,24 +1,23 @@
 import type { Localized } from "./data";
 
-// Front-end API layer for the online demo.
+// Front-end API layer for the online demo. Two modes behind one surface:
 //
-// MOCK IMPLEMENTATION: the real backend (ora-demo-service, FastAPI on
-// Infomaniak Jelastic) is not deployed yet. This module simulates it entirely
-// in the browser so the whole UX can be built and reviewed. The exported
-// surface mirrors the future HTTP contract 1:1; swapping to the real service
-// means reimplementing these functions with fetch() calls. Nothing else in
-// the flow components changes.
+// - REAL mode: talks to ora-demo-service (FastAPI). Enabled when
+//   VITE_DEMO_API_URL is set at build time, or, in dev only, when
+//   localStorage["ora-demo-api-url"] is set (handy toggle without restarting
+//   Vite: localStorage.setItem("ora-demo-api-url", "http://127.0.0.1:8900")).
+// - MOCK mode (default): simulates everything in the browser, persisting
+//   jobs in localStorage so the magic-link URL (/demo?ml=<job_id>) survives
+//   reloads, exactly like a real email link would.
 //
-// Mirrored contract:
+// HTTP contract (ora-demo-service/app/main.py — keep both in sync):
 //   POST /demo/jobs                multipart {file, automation_key, lead...}
-//                                  -> {job_id} + sends the magic-link email
-//   GET  /demo/jobs/:id            -> {status, step_index, progress, credits_left}
-//   GET  /demo/jobs/:id/download   -> result file (gated by magic-link session)
-//
-// Jobs are persisted in localStorage so the simulated magic-link URL
-// (/demo?ml=<job_id>) keeps working after a reload or in a new tab, exactly
-// like a real email link would. Progress is derived from elapsed time, so no
-// timer state needs to survive navigation.
+//                                  -> {job_id, credits_left}
+//   GET  /demo/jobs/:id            -> {status, step_index, progress,
+//                                      credits_left, automation_key,
+//                                      source_name, source_size, output_name,
+//                                      email}
+//   GET  /demo/jobs/:id/download   -> result file (Content-Disposition)
 
 export type DemoLead = {
   firstName: string;
@@ -40,14 +39,28 @@ export type DemoJob = {
 };
 
 export type JobStatus = {
-  status: "running" | "done" | "not_found";
+  status: "running" | "done" | "error" | "not_found";
   /** Index into JOB_STEPS of the step currently running (or last step when done). */
   stepIndex: number;
   /** 0..1 overall progress. */
   progress: number;
   creditsLeft: number;
-  job?: DemoJob;
+  /** Display metadata (present unless status is "not_found"). */
+  automationKey?: string;
+  sourceName?: string;
+  sourceSize?: number;
+  email?: string;
+  outputName?: string | null;
 };
+
+/** Typed error so the UI can localize the message. */
+export class DemoApiError extends Error {
+  code: "no_credits" | "file_too_large" | "rejected" | "network";
+  constructor(code: DemoApiError["code"], message: string) {
+    super(message);
+    this.code = code;
+  }
+}
 
 export const CREDITS_TOTAL = 5;
 
@@ -58,6 +71,28 @@ export const JOB_STEPS: { key: string; label: Localized }[] = [
   { key: "output", label: { fr: "Génération du fichier de sortie", en: "Generating the output file" } },
   { key: "cleanup", label: { fr: "Suppression du fichier source", en: "Deleting the source file" } },
 ];
+
+// ── Mode resolution ──────────────────────────────────────────────────────────
+
+function resolveApiUrl(): string | null {
+  if (import.meta.env.DEV) {
+    try {
+      const override = window.localStorage.getItem("ora-demo-api-url");
+      if (override) return override.replace(/\/+$/, "");
+    } catch {
+      // Storage unavailable: fall through to the env variable.
+    }
+  }
+  const env = import.meta.env.VITE_DEMO_API_URL as string | undefined;
+  return env ? env.replace(/\/+$/, "") : null;
+}
+
+const API_URL = resolveApiUrl();
+
+/** True when the page talks to a real ora-demo-service instance. */
+export const usingRealApi = API_URL !== null;
+
+// ── Mock internals ───────────────────────────────────────────────────────────
 
 // Simulated duration of each step, in seconds (total ~27s: long enough to
 // showcase the "still running after the magic link" state).
@@ -89,13 +124,79 @@ function creditsLeftFor(jobs: DemoJob[]): number {
   return Math.max(0, CREDITS_TOTAL - jobs.length);
 }
 
+function mockResultName(sourceName: string): string {
+  const base = sourceName.replace(/\.[^.]+$/, "") || "resultat";
+  return `${base}_ora.txt`;
+}
+
+function mockStatus(jobId: string): JobStatus {
+  const jobs = readJobs();
+  const job = jobs.find((j) => j.jobId === jobId);
+  if (!job) {
+    return { status: "not_found", stepIndex: 0, progress: 0, creditsLeft: creditsLeftFor(jobs) };
+  }
+  const elapsed = (Date.now() - job.startedAt) / 1000;
+  const progress = Math.min(1, elapsed / TOTAL_DURATION);
+  let stepIndex = 0;
+  let acc = 0;
+  for (let i = 0; i < STEP_DURATIONS.length; i++) {
+    acc += STEP_DURATIONS[i];
+    stepIndex = i;
+    if (elapsed < acc) break;
+  }
+  return {
+    status: progress >= 1 ? "done" : "running",
+    stepIndex,
+    progress,
+    creditsLeft: creditsLeftFor(jobs),
+    automationKey: job.automationKey,
+    sourceName: job.fileName,
+    sourceSize: job.fileSize,
+    email: job.lead.email,
+    outputName: progress >= 1 ? mockResultName(job.fileName) : null,
+  };
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
+
 /** POST /demo/jobs — uploads the file, creates the lead, starts the run and
- * triggers the magic-link email. The mock only records metadata. */
+ * triggers the magic-link email. */
 export async function createDemoJob(input: {
   file: File;
   automationKey: string;
   lead: DemoLead;
 }): Promise<DemoJob> {
+  if (API_URL) {
+    const form = new FormData();
+    form.append("file", input.file);
+    form.append("automation_key", input.automationKey);
+    form.append("first_name", input.lead.firstName);
+    form.append("last_name", input.lead.lastName);
+    form.append("email", input.lead.email);
+    form.append("time_spent", input.lead.timeSpent);
+    if (input.lead.phone) form.append("phone", input.lead.phone);
+    if (input.lead.sector) form.append("sector", input.lead.sector);
+
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/demo/jobs`, { method: "POST", body: form });
+    } catch {
+      throw new DemoApiError("network", "Demo service unreachable");
+    }
+    if (res.status === 402) throw new DemoApiError("no_credits", "No credits left");
+    if (res.status === 413) throw new DemoApiError("file_too_large", "File too large");
+    if (!res.ok) throw new DemoApiError("rejected", `Upload rejected (${res.status})`);
+    const data = (await res.json()) as { job_id: string };
+    return {
+      jobId: data.job_id,
+      automationKey: input.automationKey,
+      fileName: input.file.name,
+      fileSize: input.file.size,
+      lead: input.lead,
+      startedAt: Date.now(),
+    };
+  }
+
   const job: DemoJob = {
     jobId: `job_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
     automationKey: input.automationKey,
@@ -112,49 +213,60 @@ export async function createDemoJob(input: {
   return job;
 }
 
-/** GET /demo/jobs/:id — progress is derived from elapsed time. */
-export function getJobStatus(jobId: string): JobStatus {
-  const jobs = readJobs();
-  const job = jobs.find((j) => j.jobId === jobId);
-  if (!job) {
-    return { status: "not_found", stepIndex: 0, progress: 0, creditsLeft: creditsLeftFor(jobs) };
-  }
-  const elapsed = (Date.now() - job.startedAt) / 1000;
-  const progress = Math.min(1, elapsed / TOTAL_DURATION);
-  let stepIndex = 0;
-  let acc = 0;
-  for (let i = 0; i < STEP_DURATIONS.length; i++) {
-    acc += STEP_DURATIONS[i];
-    if (elapsed < acc) {
-      stepIndex = i;
-      break;
+/** GET /demo/jobs/:id */
+export async function getJobStatus(jobId: string): Promise<JobStatus> {
+  if (API_URL) {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/demo/jobs/${encodeURIComponent(jobId)}`);
+    } catch {
+      throw new DemoApiError("network", "Demo service unreachable");
     }
-    stepIndex = i;
+    if (res.status === 404) {
+      return { status: "not_found", stepIndex: 0, progress: 0, creditsLeft: 0 };
+    }
+    const d = await res.json();
+    return {
+      status: d.status,
+      stepIndex: d.step_index ?? 0,
+      progress: d.progress ?? 0,
+      creditsLeft: d.credits_left ?? 0,
+      automationKey: d.automation_key,
+      sourceName: d.source_name,
+      sourceSize: d.source_size,
+      email: d.email,
+      outputName: d.output_name ?? null,
+    };
   }
-  return {
-    status: progress >= 1 ? "done" : "running",
-    stepIndex,
-    progress,
-    creditsLeft: creditsLeftFor(jobs),
-    job,
-  };
+  return mockStatus(jobId);
 }
 
-/** Name of the produced file. The mock always produces a .txt placeholder;
- * the real service returns the automation's actual output (.xlsx / .pdf). */
-export function resultFileName(job: DemoJob): string {
-  const base = job.fileName.replace(/\.[^.]+$/, "") || "resultat";
-  return `${base}_ora.txt`;
+/** Name of the produced file, for display before/after completion. */
+export function resultFileName(status: JobStatus): string {
+  if (status.outputName) return status.outputName;
+  return mockResultName(status.sourceName ?? "resultat");
 }
 
-/** GET /demo/jobs/:id/download — the mock generates a small placeholder file
- * client-side; the real service streams the automation output. */
-export function buildResultBlob(job: DemoJob): Blob {
+/** GET /demo/jobs/:id/download — triggers the browser download.
+ * Real mode navigates an anchor to the endpoint (Content-Disposition does the
+ * rest; once Supabase auth lands this becomes an authenticated fetch). Mock
+ * mode fabricates a small placeholder file client-side. */
+export function downloadResult(jobId: string, status: JobStatus): void {
+  if (API_URL) {
+    const a = document.createElement("a");
+    a.href = `${API_URL}/demo/jobs/${encodeURIComponent(jobId)}/download`;
+    a.download = resultFileName(status);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+
   const content = [
     "Ora, démonstration en ligne",
     "",
-    `Automatisation : ${job.automationKey}`,
-    `Fichier source : ${job.fileName}`,
+    `Automatisation : ${status.automationKey ?? ""}`,
+    `Fichier source : ${status.sourceName ?? ""}`,
     "",
     "Ce fichier est un aperçu généré par la maquette du site.",
     "Le résultat réel sera produit par le service de démonstration Ora.",
@@ -162,7 +274,14 @@ export function buildResultBlob(job: DemoJob): Blob {
     "This file is a placeholder generated by the website mockup.",
     "The real output will be produced by the Ora demo service.",
   ].join("\n");
-  return new Blob([content], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = resultFileName(status);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
 
 export function formatFileSize(bytes: number): string {

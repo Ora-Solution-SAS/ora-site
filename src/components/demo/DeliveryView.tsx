@@ -15,7 +15,7 @@ import { getAutomation } from "./data";
 import {
   CREDITS_TOTAL,
   JOB_STEPS,
-  buildResultBlob,
+  downloadResult,
   formatFileSize,
   getJobStatus,
   resultFileName,
@@ -30,32 +30,45 @@ type Props = {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-// Landing view of the magic link (/demo?ml=<job_id>). Three states:
-//  - the job is still running: live progress, auto-flips to "ready"
-//  - the job is done: download card + credits + booking CTA
-//  - unknown job id: expired-link message
+// Landing view of the magic link (/demo?ml=<job_id>). States:
+//  - loading: first status fetch in flight
+//  - running: live progress, auto-flips to "done"
+//  - done: download card + credits + booking CTA
+//  - error: the automation failed server-side
+//  - not_found: unknown/purged job id (expired link)
 export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
   const { t } = useLang();
-  const [status, setStatus] = useState<JobStatus>(() => getJobStatus(jobId));
+  const [status, setStatus] = useState<JobStatus | null>(null);
 
   useEffect(() => {
-    if (status.status === "done" || status.status === "not_found") return;
-    const id = setInterval(() => setStatus(getJobStatus(jobId)), 800);
-    return () => clearInterval(id);
-  }, [jobId, status.status]);
+    let cancelled = false;
+    let timer: number | undefined;
+    const tick = async () => {
+      try {
+        const s = await getJobStatus(jobId);
+        if (cancelled) return;
+        setStatus(s);
+        if (s.status === "running") timer = window.setTimeout(tick, 1000);
+      } catch {
+        // Network hiccup: keep the last state and retry.
+        if (!cancelled) timer = window.setTimeout(tick, 2000);
+      }
+    };
+    tick();
+    return () => {
+      cancelled = true;
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [jobId]);
 
-  const download = () => {
-    const job = status.job;
-    if (!job) return;
-    const url = URL.createObjectURL(buildResultBlob(job));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = resultFileName(job);
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-  };
+  // ── First fetch in flight ─────────────────────────────────────────────────
+  if (status === null) {
+    return (
+      <div className="flex justify-center py-24">
+        <OraLogoSpinner size={64} gradientId="g-demo-delivery-loading" />
+      </div>
+    );
+  }
 
   // ── Expired / unknown link ────────────────────────────────────────────────
   if (status.status === "not_found") {
@@ -82,20 +95,49 @@ export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
     );
   }
 
-  const job = status.job!;
-  const automation = getAutomation(job.automationKey);
+  const automation = getAutomation(status.automationKey ?? null);
+  const automationName = automation ? t(automation.title) : status.automationKey ?? "";
+
+  // ── Automation failed server-side ─────────────────────────────────────────
+  if (status.status === "error") {
+    return (
+      <div className="mx-auto max-w-lg rounded-[24px] border border-gray-200/60 bg-white p-10 text-center dark:border-white/[0.06] dark:bg-white/[0.02]">
+        <h2 className="font-poppins text-[24px] font-semibold tracking-[-0.03em]">
+          {t({ fr: "Le traitement n'a pas abouti", en: "The run did not complete" })}
+        </h2>
+        <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+          {automationName}
+          {t({
+            fr: " n'a pas pu traiter ce fichier. Votre essai n'est pas décompté : vérifiez le contenu du fichier et réessayez.",
+            en: " could not process this file. Your run is not counted: check the file content and try again.",
+          })}
+        </p>
+        <button
+          type="button"
+          onClick={onRestart}
+          className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-7 py-3.5 font-inter text-[15px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
+        >
+          <RefreshCcw size={16} />
+          {t({ fr: "Réessayer", en: "Try again" })}
+        </button>
+      </div>
+    );
+  }
+
   const running = status.status === "running";
   const currentStep = JOB_STEPS[Math.min(status.stepIndex, JOB_STEPS.length - 1)];
 
   return (
     <div className="mx-auto max-w-xl">
       {/* Verified-email chip: the magic link itself proves the address */}
-      <div className="mb-6 flex justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-400">
-          <BadgeCheck size={13} />
-          {t({ fr: "Adresse vérifiée", en: "Address verified" })} · {job.lead.email}
-        </span>
-      </div>
+      {status.email && (
+        <div className="mb-6 flex justify-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-teal-100 bg-teal-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-400">
+            <BadgeCheck size={13} />
+            {t({ fr: "Adresse vérifiée", en: "Address verified" })} · {status.email}
+          </span>
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {running ? (
@@ -115,7 +157,7 @@ export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
               {t({ fr: "Encore quelques instants", en: "Just a few more moments" })}
             </h2>
             <p className="mt-2 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-              {automation ? t(automation.title) : job.automationKey}
+              {automationName}
               {t({
                 fr: " travaille encore sur votre fichier. Cette page se mettra à jour toute seule dès qu'il est prêt.",
                 en: " is still working on your file. This page will refresh by itself as soon as it is ready.",
@@ -156,7 +198,7 @@ export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
               {t({ fr: "Votre fichier est prêt", en: "Your file is ready" })}
             </h2>
             <p className="mt-2 font-inter text-[14.5px] text-gray-500 dark:text-gray-400">
-              {automation ? t(automation.title) : job.automationKey}
+              {automationName}
               {t({ fr: " a terminé en quelques secondes.", en: " finished in seconds." })}
             </p>
 
@@ -167,19 +209,26 @@ export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-inter text-[14px] font-semibold">
-                  {resultFileName(job)}
+                  {resultFileName(status)}
                 </p>
                 <p className="font-inter text-[12px] text-gray-500 dark:text-gray-400">
-                  {automation ? t(automation.outputLabel) : ""} ·{" "}
-                  {t({ fr: "généré depuis", en: "generated from" })} {job.fileName} (
-                  {formatFileSize(job.fileSize)})
+                  {automation ? t(automation.outputLabel) : ""}
+                  {status.sourceName ? (
+                    <>
+                      {" "}
+                      · {t({ fr: "généré depuis", en: "generated from" })} {status.sourceName}
+                      {typeof status.sourceSize === "number"
+                        ? ` (${formatFileSize(status.sourceSize)})`
+                        : ""}
+                    </>
+                  ) : null}
                 </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={download}
+              onClick={() => downloadResult(jobId, status)}
               className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#3b82f6] px-7 py-3.5 font-inter text-[15px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
             >
               <Download size={17} />
