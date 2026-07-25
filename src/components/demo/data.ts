@@ -1,11 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  FileSpreadsheet,
-  BookOpenCheck,
-  Stethoscope,
-  Sparkles,
-  FileText,
-} from "lucide-react";
+import { FileSpreadsheet, BookOpenCheck, Sparkles, FileText } from "lucide-react";
 
 // Catalog of the automations offered in the online demo (/demo page).
 //
@@ -29,64 +23,13 @@ export type DemoAutomation = {
   acceptsLabel: Localized;
   outputLabel: Localized;
   /** Drives the drawn before/after placeholder when no image is provided. */
-  previewVariant: "import" | "workbook" | "diagnostic" | "clean" | "pdf";
+  previewVariant: "import" | "workbook" | "diagnostic" | "clean" | "pdf" | "chart";
   /** Real illustration (public/ path, e.g. a screenshot of the output).
    * When set, the carousel shows it instead of the drawn placeholder. */
   image?: string;
 };
 
 export const DEMO_AUTOMATIONS: DemoAutomation[] = [
-  {
-    key: "fec_import",
-    Icon: FileSpreadsheet,
-    title: { fr: "FEC vers Excel", en: "FEC to Excel" },
-    tagline: {
-      fr: "Votre FEC brut devient un classeur propre et formaté.",
-      en: "Your raw FEC becomes a clean, formatted workbook.",
-    },
-    desc: {
-      fr: "Déposez le FEC tel qu'il sort de votre logiciel : séparateurs, dates AAAAMMJJ et montants en texte sont convertis automatiquement en un Excel lisible, filtrable et prêt à travailler.",
-      en: "Drop the FEC exactly as your software exports it: delimiters, AAAAMMJJ dates and text amounts are automatically converted into a readable, filterable, ready-to-use Excel file.",
-    },
-    accepts: [".txt", ".csv"],
-    acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
-    outputLabel: { fr: "Classeur Excel formaté", en: "Formatted Excel workbook" },
-    previewVariant: "import",
-  },
-  {
-    key: "fec_studio",
-    Icon: BookOpenCheck,
-    title: { fr: "Classeur d'audit", en: "Audit workbook" },
-    tagline: {
-      fr: "Un dossier d'audit complet généré depuis votre FEC.",
-      en: "A complete audit binder generated from your FEC.",
-    },
-    desc: {
-      fr: "Balances, revue analytique, contrôles et synthèses : Ora construit en une fois un classeur d'audit à votre charte, prêt à présenter en mission.",
-      en: "Balances, analytical review, controls and summaries: Ora builds in one pass a branded audit workbook, ready to present.",
-    },
-    accepts: [".txt"],
-    acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
-    outputLabel: { fr: "Classeur d'audit Excel", en: "Excel audit workbook" },
-    previewVariant: "workbook",
-  },
-  {
-    key: "fec_diagnostic",
-    Icon: Stethoscope,
-    title: { fr: "Diagnostic d'équilibre", en: "Balance diagnostic" },
-    tagline: {
-      fr: "Trouve le déséquilibre et propose la correction.",
-      en: "Finds the imbalance and suggests the fix.",
-    },
-    desc: {
-      fr: "FEC déséquilibré ? Ora localise l'écriture en cause, explique la cause probable et propose l'écriture correctrice, avec un niveau de confiance.",
-      en: "Unbalanced FEC? Ora locates the faulty entry, explains the probable cause and suggests the correcting entry, with a confidence level.",
-    },
-    accepts: [".txt"],
-    acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
-    outputLabel: { fr: "Rapport Excel + PDF", en: "Excel + PDF report" },
-    previewVariant: "diagnostic",
-  },
   {
     key: "clean_file",
     Icon: Sparkles,
@@ -105,21 +48,55 @@ export const DEMO_AUTOMATIONS: DemoAutomation[] = [
     previewVariant: "clean",
   },
   {
-    key: "export_pdf",
-    Icon: FileText,
-    title: { fr: "Excel vers PDF", en: "Excel to PDF" },
+    key: "fec_studio_light",
+    Icon: BookOpenCheck,
+    title: { fr: "FEC Studio", en: "FEC Studio" },
     tagline: {
-      fr: "Une feuille Excel devient un PDF de présentation.",
-      en: "An Excel sheet becomes a presentation-ready PDF.",
+      fr: "L'essentiel de l'analyse d'un FEC, en un classeur.",
+      en: "The essentials of FEC analysis, in one workbook.",
     },
     desc: {
-      fr: "Transformez une feuille de calcul en PDF soigné : orientation, mise en page et en-têtes gérés automatiquement, à votre charte.",
-      en: "Turn a spreadsheet into a polished PDF: orientation, layout and headers handled automatically, in your brand style.",
+      fr: "Balances en tableaux croisés dynamiques, top 10 des postes de charges et leur saisonnalité en graphiques, saisonnalité du chiffre d'affaires : un classeur d'analyse à la charte Ora, généré depuis votre FEC.",
+      en: "Balances as pivot tables, top 10 expense accounts with seasonality charts, and revenue seasonality: an Ora-branded analysis workbook generated from your FEC.",
     },
-    accepts: [".xlsx"],
-    acceptsLabel: { fr: "Excel (.xlsx)", en: "Excel (.xlsx)" },
-    outputLabel: { fr: "Document PDF", en: "PDF document" },
-    previewVariant: "pdf",
+    accepts: [".txt"],
+    acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
+    outputLabel: { fr: "Classeur d'analyse Excel", en: "Excel analysis workbook" },
+    previewVariant: "workbook",
+  },
+  {
+    key: "ca_saisonnalite",
+    Icon: FileSpreadsheet,
+    title: { fr: "Saisonnalité du CA", en: "Revenue seasonality" },
+    tagline: {
+      fr: "La saisonnalité de votre CA, en graphiques.",
+      en: "Your revenue seasonality, in charts.",
+    },
+    desc: {
+      fr: "À partir du FEC, Ora construit la saisonnalité de votre chiffre d'affaires et le classement du CA par poste, avec des graphiques prêts à présenter.",
+      en: "From the FEC, Ora builds your revenue seasonality and the ranking of revenue by account, with presentation-ready charts.",
+    },
+    accepts: [".txt"],
+    acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
+    outputLabel: { fr: "Classeur Excel + graphiques", en: "Excel workbook + charts" },
+    previewVariant: "chart",
+  },
+  {
+    key: "pdf_tableaux_excel",
+    Icon: FileText,
+    title: { fr: "PDF vers Excel", en: "PDF to Excel" },
+    tagline: {
+      fr: "Les tableaux d'un PDF deviennent un classeur Excel.",
+      en: "PDF tables become an Excel workbook.",
+    },
+    desc: {
+      fr: "Extraction des tableaux d'un PDF, même scanné (OCR), vers un classeur Excel structuré : un tableau par feuille, montants et dates convertis en vraies valeurs.",
+      en: "Extracts the tables of a PDF, even scanned (OCR), into a structured Excel workbook: one table per sheet, amounts and dates converted into real values.",
+    },
+    accepts: [".pdf"],
+    acceptsLabel: { fr: "PDF (.pdf)", en: "PDF (.pdf)" },
+    outputLabel: { fr: "Classeur Excel", en: "Excel workbook" },
+    previewVariant: "import",
   },
 ];
 
