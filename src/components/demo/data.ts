@@ -28,8 +28,11 @@ export type DemoAutomation = {
   accepts: string[];
   acceptsLabel: Localized;
   outputLabel: Localized;
-  /** Drives the small illustrated before/after placeholder. */
+  /** Drives the drawn before/after placeholder when no image is provided. */
   previewVariant: "import" | "workbook" | "diagnostic" | "clean" | "pdf";
+  /** Real illustration (public/ path, e.g. a screenshot of the output).
+   * When set, the carousel shows it instead of the drawn placeholder. */
+  image?: string;
 };
 
 export const DEMO_AUTOMATIONS: DemoAutomation[] = [

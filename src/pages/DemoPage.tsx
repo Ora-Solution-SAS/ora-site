@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Gift, Lock, MousePointerClick, Zap } from "lucide-react";
+import { ArrowRight, Lock, MousePointerClick, Zap } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import AutomationPicker from "@/components/demo/AutomationPicker";
+import AutomationCarousel, { SelectedAutomationCard } from "@/components/demo/AutomationCarousel";
 import DropZone from "@/components/demo/DropZone";
 import LeadForm from "@/components/demo/LeadForm";
 import RunView from "@/components/demo/RunView";
 import DeliveryView from "@/components/demo/DeliveryView";
 import { getAutomation } from "@/components/demo/data";
 import {
-  CREDITS_TOTAL,
   createDemoJob,
   getJobStatus,
   type DemoJob,
@@ -17,10 +16,11 @@ import {
   type JobStatus,
 } from "@/components/demo/demoApi";
 
-// Online demo funnel (/demo). The visitor picks an automation, drops a file,
-// fills the progressive lead form, then the run starts while the magic-link
-// email is sent; the download itself lives behind the magic link
-// (/demo?ml=<job_id>), which doubles as the email verification.
+// Online demo funnel (/demo). The visitor picks an automation in the
+// carousel, drops a file, fills the progressive lead form, then the run
+// starts while the magic-link email is sent; the download itself lives
+// behind the magic link (/demo?ml=<job_id>), which doubles as the email
+// verification.
 //
 // The page currently runs on the mocked API in components/demo/demoApi.ts;
 // swapping to the real ora-demo-service backend only touches that module.
@@ -62,7 +62,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   const [job, setJob] = useState<DemoJob | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
 
-  const dropRef = useRef<HTMLElement>(null);
   const formRef = useRef<HTMLElement>(null);
 
   const automation = getAutomation(selectedKey);
@@ -86,14 +85,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
-
-  // Reveal-then-scroll: wait one frame so the section has mounted.
-  useEffect(() => {
-    if (selectedKey) {
-      const id = setTimeout(() => scrollToEl(dropRef.current), 80);
-      return () => clearTimeout(id);
-    }
-  }, [selectedKey]);
 
   useEffect(() => {
     if (formOpen) {
@@ -191,15 +182,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       {/* HERO */}
       <section className="px-6 pb-16 pt-36 text-center md:px-12 md:pb-20">
         <div className="mx-auto max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-700 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-400">
-            <Gift size={13} />
-            {t({
-              fr: `Démo en ligne · ${CREDITS_TOTAL} essais offerts`,
-              en: `Online demo · ${CREDITS_TOTAL} free runs`,
-            })}
-          </span>
-
-          <h1 className="mt-6 font-poppins text-[clamp(2rem,4.5vw,3.6rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
+          <h1 className="font-poppins text-[clamp(2rem,4.5vw,3.6rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
             <span className="block">{t({ fr: "Testez Ora sur", en: "Try Ora on" })}</span>
             <span className="block text-brand-gradient">
               {t({ fr: "vos propres fichiers", en: "your own files" })}
@@ -217,7 +200,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
             {[
               { Icon: Lock, label: { fr: "Fichiers jamais stockés", en: "Files never stored" } },
               { Icon: MousePointerClick, label: { fr: "Sans installation", en: "No install needed" } },
-              { Icon: Zap, label: { fr: "Résultat en minutes", en: "Results in minutes" } },
+              { Icon: Zap, label: { fr: "Résultat instantané", en: "Instant results" } },
             ].map(({ Icon, label }) => (
               <span
                 key={label.en}
@@ -231,82 +214,88 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
         </div>
       </section>
 
-      {/* STEP 1: pick the automation */}
+      {/* STEPS 1 + 2 share one stage: the carousel picks the automation, then
+          collapses into a compact summary card with the drop zone below. */}
       <section className="px-6 py-16 md:px-12 md:py-20" style={{ backgroundColor: bgContrast }}>
-        <div className="mx-auto max-w-7xl">
-          <div className="mx-auto mb-10 max-w-2xl text-center">
-            <StepBadge label={t({ fr: "Étape 1 · Choisissez", en: "Step 1 · Choose" })} />
-            <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-              {t({ fr: "Quelle tâche voulez-vous automatiser ?", en: "Which task should we automate?" })}
-            </h2>
-            <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-              {t({
-                fr: "Cinq automatisations phares, offertes pour découvrir Ora. Survolez une carte pour voir ce qu'elle fait.",
-                en: "Five flagship automations, free to discover Ora. Hover a card to see what it does.",
-              })}
-            </p>
-          </div>
-          <AutomationPicker theme={theme} selectedKey={selectedKey} onSelect={setSelectedKey} />
+        <div className="mx-auto max-w-6xl">
+          <AnimatePresence mode="wait" initial={false}>
+            {!automation ? (
+              <motion.div
+                key="picker"
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.985 }}
+                transition={{ duration: 0.45, ease: EASE }}
+              >
+                <div className="mx-auto mb-10 max-w-2xl text-center">
+                  <StepBadge label={t({ fr: "Étape 1 · Choisissez", en: "Step 1 · Choose" })} />
+                  <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
+                    {t({ fr: "Quelle tâche voulez-vous automatiser ?", en: "Which task should we automate?" })}
+                  </h2>
+                  <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+                    {t({
+                      fr: "Découvrez quelques automatisations proposées par Ora.",
+                      en: "Discover a few of the automations Ora offers.",
+                    })}
+                  </p>
+                </div>
+                <AutomationCarousel onSelect={setSelectedKey} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="selected"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.985 }}
+                transition={{ duration: 0.45, ease: EASE }}
+              >
+                <div className="mx-auto mb-8 max-w-2xl text-center">
+                  <StepBadge label={t({ fr: "Étape 2 · Déposez", en: "Step 2 · Drop" })} />
+                  <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
+                    {t({ fr: "À vous de jouer", en: "Your turn" })}
+                  </h2>
+                </div>
+
+                <SelectedAutomationCard
+                  automation={automation}
+                  onChange={() => {
+                    setSelectedKey(null);
+                    setFile(null);
+                    setFormOpen(false);
+                  }}
+                />
+
+                <div className="mt-8">
+                  <DropZone automation={automation} file={file} onFile={setFile} />
+                </div>
+
+                {/* Launch button appears once a file is in */}
+                <AnimatePresence>
+                  {file && !formOpen && (
+                    <motion.div
+                      key="launch"
+                      initial={{ opacity: 0, y: 16 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.45, ease: EASE }}
+                      className="mt-8 text-center"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setFormOpen(true)}
+                        className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-8 py-4 font-inter text-[15.5px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
+                      >
+                        {t({ fr: "Lancer l'automatisation", en: "Run the automation" })}
+                        <ArrowRight size={17} />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
-
-      {/* STEP 2: drop the file (revealed once an automation is selected) */}
-      <AnimatePresence>
-        {automation && (
-          <motion.section
-            ref={dropRef}
-            key="drop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="px-6 py-16 md:px-12 md:py-20"
-            style={{ backgroundColor: bg }}
-          >
-            <div className="mx-auto max-w-4xl">
-              <div className="mx-auto mb-10 max-w-2xl text-center">
-                <StepBadge label={t({ fr: "Étape 2 · Déposez", en: "Step 2 · Drop" })} />
-                <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                  {t({ fr: "À vous de jouer", en: "Your turn" })}
-                </h2>
-                <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                  {t(automation.title)}
-                  {t({
-                    fr: " attend votre fichier ",
-                    en: " is waiting for your ",
-                  })}
-                  {t(automation.acceptsLabel)}.
-                </p>
-              </div>
-
-              <DropZone automation={automation} file={file} onFile={setFile} />
-
-              {/* Launch button appears once a file is in */}
-              <AnimatePresence>
-                {file && !formOpen && (
-                  <motion.div
-                    key="launch"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    transition={{ duration: 0.45, ease: EASE }}
-                    className="mt-8 text-center"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setFormOpen(true)}
-                      className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-8 py-4 font-inter text-[15.5px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
-                    >
-                      {t({ fr: "Lancer l'automatisation", en: "Run the automation" })}
-                      <ArrowRight size={17} />
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
 
       {/* STEP 3: progressive lead form */}
       <AnimatePresence>
@@ -319,7 +308,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
             className="px-6 pb-24 pt-16 md:px-12 md:pt-20"
-            style={{ backgroundColor: bgContrast }}
+            style={{ backgroundColor: bg }}
           >
             <div className="mx-auto max-w-4xl">
               <div className="mx-auto mb-10 max-w-2xl text-center">
