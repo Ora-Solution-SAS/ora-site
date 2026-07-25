@@ -56,8 +56,8 @@ export const DEMO_AUTOMATIONS: DemoAutomation[] = [
       en: "The essentials of FEC analysis, in one workbook.",
     },
     desc: {
-      fr: "Balances en tableaux croisés dynamiques, top 10 des postes de charges et leur saisonnalité en graphiques, saisonnalité du chiffre d'affaires : un classeur d'analyse à la charte Ora, généré depuis votre FEC.",
-      en: "Balances as pivot tables, top 10 expense accounts with seasonality charts, and revenue seasonality: an Ora-branded analysis workbook generated from your FEC.",
+      fr: "Synthèse du dossier, balances en tableaux croisés dynamiques vivants, top 10 des postes de charges et leur saisonnalité en graphiques : un classeur d'analyse à la charte Ora, généré depuis votre FEC.",
+      en: "Key figures, balances as live pivot tables, and the top 10 expense accounts with seasonality charts: an Ora-branded analysis workbook generated from your FEC.",
     },
     accepts: [".txt"],
     acceptsLabel: { fr: "FEC (.txt)", en: "FEC (.txt)" },
