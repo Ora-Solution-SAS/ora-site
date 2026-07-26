@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Check, Loader2, Lock, MailCheck, Wand2 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import type { DemoAutomation } from "./data";
-import { JOB_STEPS, type DemoJob, type JobStatus } from "./demoApi";
+import { JOB_STEPS, usingRealApi, type DemoJob, type JobStatus } from "./demoApi";
 
 type Props = {
   automation: DemoAutomation;
@@ -81,6 +81,15 @@ export default function RunView({ automation, job, status, onSimulateMagicLink }
             })}
           </ul>
 
+          {done && (
+            <p className="mt-5 font-inter text-[13px] font-medium text-[#0d9488]">
+              {t({
+                fr: "✓ Traitement terminé. Votre fichier vous attend derrière le lien envoyé par email.",
+                en: "✓ Processing finished. Your file is waiting behind the emailed link.",
+              })}
+            </p>
+          )}
+
           {status.status === "error" && (
             <p className="mt-5 font-inter text-[13px] font-medium text-red-500">
               {t({
@@ -131,18 +140,20 @@ export default function RunView({ automation, job, status, onSimulateMagicLink }
             })}
           </p>
 
-          {/* MOCK ONLY: replaces the click on the email link until the
-              backend sends real magic links. Remove when going live. */}
-          <button
-            type="button"
-            onClick={onSimulateMagicLink}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-dashed border-blue-300 px-5 py-2.5 font-inter text-[13px] font-semibold text-blue-600 transition-all duration-150 hover:bg-blue-100/60 dark:border-blue-500/40 dark:text-blue-400 dark:hover:bg-blue-500/[0.10]"
-          >
-            {t({
-              fr: "Simuler le clic sur le lien (maquette)",
-              en: "Simulate the link click (mockup)",
-            })}
-          </button>
+          {/* Mock mode only (front-end dev without the service): stands in
+              for clicking the real email link. Never rendered in real mode. */}
+          {!usingRealApi && (
+            <button
+              type="button"
+              onClick={onSimulateMagicLink}
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-dashed border-blue-300 px-5 py-2.5 font-inter text-[13px] font-semibold text-blue-600 transition-all duration-150 hover:bg-blue-100/60 dark:border-blue-500/40 dark:text-blue-400 dark:hover:bg-blue-500/[0.10]"
+            >
+              {t({
+                fr: "Simuler le clic sur le lien (maquette)",
+                en: "Simulate the link click (mockup)",
+              })}
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
