@@ -88,6 +88,20 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
+  // The magic-link redirect appends the Supabase session as a URL fragment
+  // (#access_token=...). It is not used yet: scrub it so the token never
+  // lingers in the address bar or browser history. When download-auth
+  // enforcement lands, capture the session here before scrubbing.
+  useEffect(() => {
+    if (mlJobId && window.location.hash.includes("access_token")) {
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname + window.location.search
+      );
+    }
+  }, [mlJobId]);
+
   useEffect(() => {
     if (formOpen) {
       const id = setTimeout(() => scrollToEl(formRef.current), 80);
@@ -208,8 +222,8 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
 
           <p className="mx-auto mt-5 max-w-xl font-inter text-[15.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             {t({
-              fr: "Choisissez une automatisation, déposez un fichier et récupérez le résultat en quelques minutes. Directement dans votre navigateur.",
-              en: "Pick an automation, drop a file and get the result back in minutes. Right in your browser.",
+              fr: "Choisissez une automatisation, déposez un fichier et récupérez le résultat en quelques instants. Directement dans votre navigateur.",
+              en: "Pick an automation, drop a file and get the result back in moments. Right in your browser.",
             })}
           </p>
 
