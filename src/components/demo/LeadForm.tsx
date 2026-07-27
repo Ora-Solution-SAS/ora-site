@@ -9,6 +9,8 @@ type Props = {
   submitting: boolean;
   onSubmit: (lead: DemoLead) => void;
   onOpenPrivacy: () => void;
+  /** CTA label override (defaults to "Lancer maintenant"). */
+  submitLabel?: Localized;
 };
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -91,7 +93,7 @@ function ChipSelect({
 // time spent (the four mandatory answers), then the optional block with the
 // submit button. Once a stage has been revealed it stays visible, even if the
 // visitor clears a field afterwards.
-export default function LeadForm({ submitting, onSubmit, onOpenPrivacy }: Props) {
+export default function LeadForm({ submitting, onSubmit, onOpenPrivacy, submitLabel }: Props) {
   const { t } = useLang();
 
   const [firstName, setFirstName] = useState("");
@@ -246,7 +248,7 @@ export default function LeadForm({ submitting, onSubmit, onOpenPrivacy }: Props)
                 </>
               ) : (
                 <>
-                  {t({ fr: "Lancer maintenant", en: "Run it now" })}
+                  {t(submitLabel ?? { fr: "Lancer maintenant", en: "Run it now" })}
                   <ArrowRight size={16} />
                 </>
               )}

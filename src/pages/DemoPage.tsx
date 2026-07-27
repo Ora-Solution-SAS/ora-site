@@ -1,30 +1,33 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Lock, MousePointerClick, Zap } from "lucide-react";
+import { ArrowRight, Download, Lock, MousePointerClick, RefreshCcw, Zap } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import AutomationCarousel, { SelectedAutomationCard } from "@/components/demo/AutomationCarousel";
 import DropZone from "@/components/demo/DropZone";
-import LeadForm from "@/components/demo/LeadForm";
+import FormModal from "@/components/demo/FormModal";
+import PreviewWindow from "@/components/demo/PreviewWindow";
 import RunView from "@/components/demo/RunView";
+import SentView from "@/components/demo/SentView";
 import DeliveryView from "@/components/demo/DeliveryView";
 import { getAutomation } from "@/components/demo/data";
 import {
   DemoApiError,
+  claimDemoJob,
   createDemoJob,
+  getJobPreview,
   getJobStatus,
   type DemoJob,
   type DemoLead,
   type JobStatus,
+  type PreviewData,
 } from "@/components/demo/demoApi";
 
-// Online demo funnel (/demo). The visitor picks an automation in the
-// carousel, drops a file, fills the progressive lead form, then the run
-// starts while the magic-link email is sent; the download itself lives
-// behind the magic link (/demo?ml=<job_id>), which doubles as the email
-// verification.
+// Online demo funnel (/demo), preview-first flow:
+//   pick automation -> drop file -> anonymous run -> Excel-window preview
+//   -> "download" opens the lead form popup (claim: credit + magic link)
+//   -> check-your-inbox -> magic link -> delivery (/demo?ml=<job_id>).
 //
-// The page currently runs on the mocked API in components/demo/demoApi.ts;
-// swapping to the real ora-demo-service backend only touches that module.
+// The page talks to ora-demo-service (or its browser mock, see demoApi.ts).
 
 type Props = {
   theme: "light" | "dark";
@@ -55,31 +58,28 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   // Magic-link landing (delivery space) vs the funnel itself.
   const [mlJobId, setMlJobId] = useState<string | null>(() => readMagicLinkParam());
 
-  const [phase, setPhase] = useState<"funnel" | "processing">("funnel");
+  const [phase, setPhase] = useState<"funnel" | "processing" | "preview" | "sent">("funnel");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<DemoApiError["code"] | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
   const [job, setJob] = useState<DemoJob | null>(null);
   const [status, setStatus] = useState<JobStatus | null>(null);
+  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
+  const [lead, setLead] = useState<DemoLead | null>(null);
+  const [creditsLeft, setCreditsLeft] = useState<number>(0);
 
-  const formRef = useRef<HTMLElement>(null);
-
+  const previewFetched = useRef(false);
   const automation = getAutomation(selectedKey);
 
-  const scrollToEl = (el: HTMLElement | null) => {
-    if (!el) return;
-    const lenis = (window as any).__lenis;
-    if (lenis) lenis.scrollTo(el, { offset: -96, duration: 1.05 });
-    else el.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const scrollTop = () => {
+  const scrollTop = useCallback(() => {
     const lenis = (window as any).__lenis;
     if (lenis) lenis.scrollTo(0, { immediate: true });
     else window.scrollTo({ top: 0 });
-  };
+  }, []);
 
   // Keep the delivery view in sync with browser back/forward on /demo?ml=...
   useEffect(() => {
@@ -102,13 +102,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     }
   }, [mlJobId]);
 
-  useEffect(() => {
-    if (formOpen) {
-      const id = setTimeout(() => scrollToEl(formRef.current), 80);
-      return () => clearTimeout(id);
-    }
-  }, [formOpen]);
-
   // If the visitor switches automation, drop a file that is no longer valid.
   useEffect(() => {
     if (!automation || !file) return;
@@ -116,39 +109,103 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     if (!automation.accepts.includes(ext)) setFile(null);
   }, [automation, file]);
 
-  // Poll the job while the processing screen is shown.
+  // Poll the job while processing; swap to the preview once it completes.
   useEffect(() => {
     if (phase !== "processing" || !job) return;
     let cancelled = false;
+    let timer: number | undefined;
     const tick = async () => {
       try {
         const s = await getJobStatus(job.jobId);
-        if (!cancelled) setStatus(s);
+        if (cancelled) return;
+        setStatus(s);
+        if (s.status === "done") {
+          if (s.previewReady && !previewFetched.current) {
+            previewFetched.current = true;
+            try {
+              const p = await getJobPreview(job.jobId);
+              if (!cancelled) setPreview(p);
+            } catch {
+              // Preview unavailable: the fallback card still allows claiming.
+            }
+          }
+          if (!cancelled) {
+            setPhase("preview");
+            scrollTop();
+          }
+          return;
+        }
+        if (s.status === "running") timer = window.setTimeout(tick, 800);
       } catch {
-        // Network hiccup: keep the last status, the next tick retries.
+        if (!cancelled) timer = window.setTimeout(tick, 2000);
       }
     };
     tick();
-    const id = setInterval(tick, 1000);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      if (timer) window.clearTimeout(timer);
     };
-  }, [phase, job]);
+  }, [phase, job, scrollTop]);
 
-  const handleSubmit = async (lead: DemoLead) => {
-    if (!file || !automation || submitting) return;
-    setSubmitting(true);
-    setSubmitError(null);
+  const handleLaunch = async () => {
+    if (!file || !automation || launching) return;
+    setLaunching(true);
+    setLaunchError(null);
     try {
-      const created = await createDemoJob({ file, automationKey: automation.key, lead });
+      const created = await createDemoJob({ file, automationKey: automation.key });
+      previewFetched.current = false;
+      setPreview(null);
       setJob(created);
+      setStatus(null);
       setPhase("processing");
       scrollTop();
     } catch (err) {
-      setSubmitError(err instanceof DemoApiError ? err.code : "network");
+      if (err instanceof DemoApiError && err.code === "rate_limited") {
+        setLaunchError(t({
+          fr: "Limite d'essais atteinte pour aujourd'hui depuis votre connexion. Revenez demain, ou réservez une démo complète.",
+          en: "Daily trial limit reached from your connection. Come back tomorrow, or book a full demo.",
+        }));
+      } else if (err instanceof DemoApiError && err.code === "file_too_large") {
+        setLaunchError(t({
+          fr: "Fichier trop volumineux (50 Mo maximum).",
+          en: "File too large (50 MB max).",
+        }));
+      } else {
+        setLaunchError(t({
+          fr: "Le service de démonstration est injoignable. Réessayez dans un instant.",
+          en: "The demo service is unreachable. Try again in a moment.",
+        }));
+      }
     } finally {
-      setSubmitting(false);
+      setLaunching(false);
+    }
+  };
+
+  const handleClaim = async (submitted: DemoLead) => {
+    if (!job || claiming) return;
+    setClaiming(true);
+    setClaimError(null);
+    try {
+      const res = await claimDemoJob(job.jobId, submitted);
+      setLead(submitted);
+      setCreditsLeft(res.creditsLeft);
+      setModalOpen(false);
+      setPhase("sent");
+      scrollTop();
+    } catch (err) {
+      if (err instanceof DemoApiError && err.code === "no_credits") {
+        setClaimError(t({
+          fr: "Cette adresse a épuisé ses 5 fichiers offerts. Réservez une démo pour aller plus loin.",
+          en: "This address has used its 5 free files. Book a demo to go further.",
+        }));
+      } else {
+        setClaimError(t({
+          fr: "L'envoi n'a pas abouti. Vérifiez votre connexion et réessayez.",
+          en: "Submission failed. Check your connection and try again.",
+        }));
+      }
+    } finally {
+      setClaiming(false);
     }
   };
 
@@ -164,9 +221,14 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     setPhase("funnel");
     setSelectedKey(null);
     setFile(null);
-    setFormOpen(false);
+    setLaunchError(null);
     setJob(null);
     setStatus(null);
+    setPreview(null);
+    setModalOpen(false);
+    setClaimError(null);
+    setLead(null);
+    previewFetched.current = false;
     scrollTop();
   };
 
@@ -179,8 +241,9 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     );
   }
 
-  // ── Processing screen: run in progress + "check your inbox" ──────────────
+  // ── Processing screen: anonymous run in progress ──────────────────────────
   if (phase === "processing" && job && automation) {
+    const failed = status?.status === "error";
     return (
       <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
         <div className="mx-auto mb-10 max-w-3xl text-center">
@@ -190,19 +253,117 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
           </h1>
           <p className="mx-auto mt-3 max-w-xl font-inter text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
             {t({
-              fr: "Pendant que votre fichier est traité, confirmez votre adresse email : c'est là que tout se passe ensuite.",
-              en: "While your file is being processed, confirm your email address: that is where everything happens next.",
+              fr: "Quelques instants : l'aperçu de votre fichier s'affichera automatiquement.",
+              en: "A few moments: the preview of your file will appear automatically.",
             })}
           </p>
         </div>
-        {status && (
-          <RunView
-            automation={automation}
-            job={job}
-            status={status}
-            onSimulateMagicLink={() => openDelivery(job.jobId)}
-          />
+        {status && <RunView automation={automation} job={job} status={status} />}
+        {failed && (
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={restart}
+              className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-7 py-3.5 font-inter text-[15px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] active:translate-y-0"
+            >
+              <RefreshCcw size={16} />
+              {t({ fr: "Réessayer avec un autre fichier", en: "Try again with another file" })}
+            </button>
+          </div>
         )}
+      </div>
+    );
+  }
+
+  // ── Preview: the Excel window + the download CTA ──────────────────────────
+  if (phase === "preview" && job && automation) {
+    return (
+      <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
+        <div className="mx-auto mb-8 max-w-3xl text-center">
+          <StepBadge label={t({ fr: "Traitement terminé", en: "Run complete" })} />
+          <h1 className="mt-5 font-poppins text-[clamp(1.9rem,3.5vw,2.75rem)] font-semibold tracking-[-0.03em]">
+            {t({ fr: "Votre fichier est prêt", en: "Your file is ready" })}
+          </h1>
+          <p className="mx-auto mt-3 max-w-xl font-inter text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
+            {t({
+              fr: "Parcourez l'aperçu ci-dessous, feuille par feuille. Le fichier complet (tableaux croisés dynamiques vivants, graphiques natifs, formules) vous attend au téléchargement.",
+              en: "Browse the preview below, sheet by sheet. The full file (live pivot tables, native charts, formulas) awaits at download.",
+            })}
+          </p>
+        </div>
+
+        <div className="mx-auto max-w-5xl">
+          {preview ? (
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: EASE }}
+            >
+              <PreviewWindow preview={preview} />
+            </motion.div>
+          ) : (
+            <div className="mx-auto max-w-xl rounded-[24px] border border-gray-200/60 bg-white p-10 text-center dark:border-white/[0.06] dark:bg-white/[0.02]">
+              <p className="font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+                {t({
+                  fr: "L'aperçu n'est pas disponible pour ce fichier, mais votre résultat est bien prêt au téléchargement.",
+                  en: "No preview is available for this file, but your result is ready to download.",
+                })}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-8 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setClaimError(null);
+                setModalOpen(true);
+              }}
+              className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-8 py-4 font-inter text-[15.5px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
+            >
+              <Download size={17} />
+              {t({ fr: "Télécharger le fichier complet", en: "Download the full file" })}
+            </button>
+            <p className="mt-3 flex items-center justify-center gap-1.5 font-inter text-[12.5px] text-gray-400 dark:text-gray-500">
+              <Lock size={13} />
+              {t({
+                fr: "Gratuit : 5 fichiers offerts par adresse email, lien envoyé par email.",
+                en: "Free: 5 files per email address, link sent by email.",
+              })}
+            </p>
+          </div>
+        </div>
+
+        <FormModal
+          open={modalOpen}
+          submitting={claiming}
+          error={claimError}
+          onClose={() => setModalOpen(false)}
+          onSubmit={handleClaim}
+          onOpenPrivacy={() => onNavigate("politique-confidentialite")}
+        />
+      </div>
+    );
+  }
+
+  // ── Email sent: the magic link gates the download ─────────────────────────
+  if (phase === "sent" && job && lead) {
+    return (
+      <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
+        <div className="mx-auto mb-8 max-w-3xl text-center">
+          <StepBadge label={t({ fr: "Dernière étape", en: "Final step" })} />
+          <h1 className="mt-5 font-poppins text-[clamp(1.9rem,3.5vw,2.75rem)] font-semibold tracking-[-0.03em]">
+            {t({ fr: "Votre fichier arrive", en: "Your file is on its way" })}
+          </h1>
+        </div>
+        <SentView
+          email={lead.email}
+          creditsLeft={creditsLeft}
+          onResend={async () => {
+            await claimDemoJob(job.jobId, lead);
+          }}
+          onSimulateMagicLink={() => openDelivery(job.jobId)}
+        />
       </div>
     );
   }
@@ -222,8 +383,8 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
 
           <p className="mx-auto mt-5 max-w-xl font-inter text-[15.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             {t({
-              fr: "Choisissez une automatisation, déposez un fichier et récupérez le résultat en quelques instants. Directement dans votre navigateur.",
-              en: "Pick an automation, drop a file and get the result back in moments. Right in your browser.",
+              fr: "Choisissez une automatisation, déposez un fichier et regardez le résultat en quelques instants. Directement dans votre navigateur.",
+              en: "Pick an automation, drop a file and see the result in moments. Right in your browser.",
             })}
           </p>
 
@@ -261,7 +422,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 <div className="mx-auto mb-10 max-w-2xl text-center">
                   <StepBadge label={t({ fr: "Étape 1 · Choisissez", en: "Step 1 · Choose" })} />
                   <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                    {t({ fr: "Quelle tâche voulez-vous automatiser ?", en: "Which task should we automate?" })}
+                    {t({ fr: "Quelle tâche voulez-vous automatiser ?", en: "Which task should we automate?" })}
                   </h2>
                   <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
                     {t({
@@ -292,7 +453,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                   onChange={() => {
                     setSelectedKey(null);
                     setFile(null);
-                    setFormOpen(false);
+                    setLaunchError(null);
                   }}
                 />
 
@@ -300,9 +461,10 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                   <DropZone automation={automation} file={file} onFile={setFile} />
                 </div>
 
-                {/* Launch button appears once a file is in */}
+                {/* Launch: the run starts anonymously, the form comes at
+                    download time, after the preview. */}
                 <AnimatePresence>
-                  {file && !formOpen && (
+                  {file && (
                     <motion.div
                       key="launch"
                       initial={{ opacity: 0, y: 16 }}
@@ -313,12 +475,24 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                     >
                       <button
                         type="button"
-                        onClick={() => setFormOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-8 py-4 font-inter text-[15.5px] font-semibold text-white shadow-[0_2px_12px_rgba(59,130,246,0.30)] transition-all duration-150 hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
+                        disabled={launching}
+                        onClick={handleLaunch}
+                        className={`inline-flex items-center gap-2 rounded-full px-8 py-4 font-inter text-[15.5px] font-semibold text-white transition-all duration-150 ${
+                          launching
+                            ? "cursor-wait bg-[#3b82f6]/70"
+                            : "bg-[#3b82f6] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:-translate-y-px hover:bg-[#2563eb] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] active:translate-y-0"
+                        }`}
                       >
-                        {t({ fr: "Lancer l'automatisation", en: "Run the automation" })}
+                        {launching
+                          ? t({ fr: "Envoi du fichier...", en: "Uploading..." })
+                          : t({ fr: "Lancer l'automatisation", en: "Run the automation" })}
                         <ArrowRight size={17} />
                       </button>
+                      {launchError && (
+                        <p className="mx-auto mt-4 max-w-md font-inter text-[13px] font-medium text-red-500">
+                          ✗ {launchError}
+                        </p>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -327,70 +501,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
           </AnimatePresence>
         </div>
       </section>
-
-      {/* STEP 3: progressive lead form */}
-      <AnimatePresence>
-        {automation && formOpen && (
-          <motion.section
-            ref={formRef}
-            key="form"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="px-6 pb-24 pt-16 md:px-12 md:pt-20"
-            style={{ backgroundColor: bg }}
-          >
-            <div className="mx-auto max-w-4xl">
-              <div className="mx-auto mb-10 max-w-2xl text-center">
-                <StepBadge label={t({ fr: "Étape 3 · Dernière ligne droite", en: "Step 3 · Final stretch" })} />
-                <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                  {t({ fr: "Dites-nous où envoyer le résultat", en: "Tell us where to send the result" })}
-                </h2>
-                <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                  {t({
-                    fr: "Votre compte démo se crée automatiquement, avec vos essais gratuits.",
-                    en: "Your demo account is created automatically, with your free runs.",
-                  })}
-                </p>
-              </div>
-
-              <LeadForm
-                submitting={submitting}
-                onSubmit={handleSubmit}
-                onOpenPrivacy={() => onNavigate("politique-confidentialite")}
-              />
-
-              {submitError && (
-                <p className="mx-auto mt-5 max-w-xl text-center font-inter text-[13.5px] font-medium text-red-500">
-                  ✗{" "}
-                  {t(
-                    submitError === "no_credits"
-                      ? {
-                          fr: "Vous avez utilisé vos 5 essais gratuits. Réservez un appel pour aller plus loin.",
-                          en: "You have used your 5 free runs. Book a call to go further.",
-                        }
-                      : submitError === "file_too_large"
-                        ? {
-                            fr: "Fichier trop volumineux : 50 Mo maximum.",
-                            en: "File too large: 50 MB maximum.",
-                          }
-                        : submitError === "rejected"
-                          ? {
-                              fr: "Le fichier n'a pas été accepté. Vérifiez le format et réessayez.",
-                              en: "The file was not accepted. Check the format and try again.",
-                            }
-                          : {
-                              fr: "Le service de démonstration est injoignable. Réessayez dans un instant.",
-                              en: "The demo service is unreachable. Try again in a moment.",
-                            }
-                  )}
-                </p>
-              )}
-            </div>
-          </motion.section>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

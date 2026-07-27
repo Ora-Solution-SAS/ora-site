@@ -245,13 +245,15 @@ export default function DeliveryView({ jobId, openBooking, onRestart }: Props) {
 
             {/* Credits + next actions */}
             <div className="mt-8 border-t border-gray-100 pt-6 dark:border-white/[0.06]">
-              <p className="font-inter text-[13.5px] text-gray-600 dark:text-gray-300">
-                {t({ fr: "Il vous reste ", en: "You have " })}
-                <span className="font-semibold text-[#111827] dark:text-white">
-                  {status.creditsLeft} {t({ fr: "essais gratuits", en: "free runs" })}
-                </span>
-                {t({ fr: ` sur ${CREDITS_TOTAL}.`, en: ` left out of ${CREDITS_TOTAL}.` })}
-              </p>
+              {typeof status.creditsLeft === "number" && (
+                <p className="font-inter text-[13.5px] text-gray-600 dark:text-gray-300">
+                  {t({ fr: "Il vous reste ", en: "You have " })}
+                  <span className="font-semibold text-[#111827] dark:text-white">
+                    {status.creditsLeft} {t({ fr: "fichiers offerts", en: "free files" })}
+                  </span>
+                  {t({ fr: ` sur ${CREDITS_TOTAL}.`, en: ` left out of ${CREDITS_TOTAL}.` })}
+                </p>
+              )}
               <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
