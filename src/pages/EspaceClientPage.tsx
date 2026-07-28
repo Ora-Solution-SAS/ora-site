@@ -28,18 +28,27 @@ type EspaceClientPageProps = {
 export default function EspaceClientPage({ theme, onNavigate, openBooking }: EspaceClientPageProps) {
   const { t } = useLang();
   const [view, setView] = useState<"login" | "space">("login");
-  const [userEmail, setUserEmail] = useState("");
+  // setUserEmail volontairement ignoré tant que le bypass est bloqué — la
+  // SpaceView (et son état) restent prêts pour la vraie authentification.
+  const [userEmail] = useState("");
   const [showPwd, setShowPwd] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const logo = theme === "dark" ? "/logos/logo-color-light.png" : "/logos/logo-color-dark.png";
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // TEMPORARY bypass: accept anything, enter the placeholder space.
-    // No credentials leave the page.
-    const email = (new FormData(e.currentTarget as HTMLFormElement).get("email") as string) || "";
-    setUserEmail(email);
-    setView("space");
+    // Bypass BLOQUÉ (client 2026-07-28) : l'espace démo ne doit plus être
+    // accessible en ligne tant que la vraie authentification n'existe pas.
+    // Aucune donnée ne quitte la page ; la SpaceView reste dans le fichier,
+    // prête à être rebranchée — pour rouvrir : setUserEmail(email) puis
+    // setView("space") comme avant.
+    setLoginError(
+      t({
+        fr: "L'accès à l'espace Ora est réservé aux clients. Contactez-nous pour ouvrir votre compte.",
+        en: "Access to the Ora space is reserved for clients. Contact us to open your account.",
+      }),
+    );
   };
 
   // ── Demo dashboard (post-"login") ───────────────────────────────────
@@ -134,6 +143,12 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
               {t({ fr: "Se connecter", en: "Sign in" })}
               <ArrowRight className="w-4 h-4 opacity-80 transition-transform duration-150 group-hover:translate-x-0.5" />
             </button>
+
+            {loginError && (
+              <p role="alert" className="font-inter text-[13px] font-medium leading-relaxed text-red-500">
+                ✗ {loginError}
+              </p>
+            )}
 
           </form>
 

@@ -105,8 +105,8 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
           </h2>
           <p className="font-inter text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             {t({
-              fr: "Vos fichiers sont chiffrés sur votre appareil avant d'être stockés en Suisse. Sur nos serveurs, ils n'existent que sous forme de données illisibles.",
-              en: "Your files are encrypted on your device before being stored in Switzerland. On our servers, they exist only as unreadable data.",
+              fr: "Le traitement s'exécute en local, sur votre machine. Avec Atlas, notre solution d'orchestration de fichiers, vos fichiers sont chiffrés sur votre appareil puis hébergés exclusivement en Suisse : sur nos serveurs, ils n'existent que sous forme de données illisibles.",
+              en: "Processing runs locally, on your machine. With Atlas, our file-orchestration solution, your files are encrypted on your device then hosted exclusively in Switzerland: on our servers, they exist only as unreadable data.",
             })}
           </p>
         </motion.div>
