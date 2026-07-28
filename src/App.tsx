@@ -15,6 +15,7 @@ import MentionsLegalesPage from "./pages/MentionsLegalesPage";
 import PolitiqueConfidentialitePage from "./pages/PolitiqueConfidentialitePage";
 import CGUPage from "./pages/CGUPage";
 import DownloadPage from "./pages/DownloadPage";
+import EspaceClientPage from "./pages/EspaceClientPage";
 import DemoPage from "./pages/DemoPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { animatedScrollToId } from "./lib/scrollTo";
@@ -22,7 +23,7 @@ import OraLogoSpinner from "./components/OraLogoSpinner";
 import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
 import QualifierResult from "./components/QualifierResult";
 import GiftReveal from "./components/GiftReveal";
-import StackingCards from "./components/StackingCards";
+import StackingCards, { FileChipStrip } from "./components/StackingCards";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
@@ -617,6 +618,7 @@ type Page =
   | "mentions-legales"
   | "politique-confidentialite"
   | "cgu"
+  | "espace-client"
   | "telechargement"
   | "demo"
   | "not-found";
@@ -635,6 +637,7 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "mentions-legales": "/mentions-legales",
   "politique-confidentialite": "/politique-confidentialite",
   "cgu": "/cgu",
+  "espace-client": "/espace-client",
   // Hidden client download page: reachable only via this private direct link.
   // NOT added to HIDDEN_PAGES (that would 404 it) and NOT linked in nav/footer.
   "telechargement": "/telechargement/ora-app",
@@ -986,6 +989,8 @@ const App = () => {
         <PolitiqueConfidentialitePage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "cgu" ? (
         <CGUPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
+      ) : page === "espace-client" ? (
+        <EspaceClientPage theme={theme} onNavigate={navigateTo} openBooking={openBooking} />
       ) : page === "demo" ? (
         <DemoPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "telechargement" ? (
@@ -1074,7 +1079,46 @@ const App = () => {
           card rises up and fully covers the previous one, then a spacer keeps
           the last card on screen a while, and finally AtlasShowcase (z-20)
           rises up over the whole stack. */}
-      <div className="relative bg-white dark:bg-[#0f172a] pt-16 md:pt-24">
+      <div className="relative bg-white dark:bg-black pt-16 md:pt-24">
+        {/* ── Monday-style intro header above the stacking cards: giant
+            three-line headline left; file-format chips + the end-to-end
+            chain pitch + CTA right (reference: monday.com hero).
+            PINNED (sticky, z-0) so the FIRST card rises up and covers it
+            while the user scrolls — the monday effect. ────────────────── */}
+        <div className="px-4 md:px-6 lg:px-10 mb-16 md:mb-[26vh] md:sticky md:top-[calc(50vh-260px)] md:z-0">
+          <div className="w-full max-w-[1480px] mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-12 lg:gap-16 items-center">
+            {/* Same display face as the ExcelReveal scroll phrases (Instrument
+                Sans, normal weight) — deliberately thin, not Poppins bold. */}
+            <h2 className="font-instrument font-normal text-[#111827] dark:text-white tracking-[-0.035em] leading-[0.98] text-[clamp(3.2rem,7.5vw,6.5rem)]">
+              <span className="block">{t({ fr: "Automatisez", en: "Automate," })}</span>
+              <span className="block">{t({ fr: "de bout", en: "start" })}</span>
+              <span className="block">{t({ fr: "en bout.", en: "to finish." })}</span>
+            </h2>
+            <div>
+              <FileChipStrip />
+              <p className="mt-8 font-inter font-bold text-lg md:text-xl leading-snug text-[#111827] dark:text-white max-w-xl">
+                {t({
+                  fr: "Une seule chaîne, du document brut au livrable final",
+                  en: "One chain, from raw document to final deliverable",
+                })}
+              </p>
+              <p className="mt-2 font-inter text-base md:text-lg leading-relaxed text-gray-600 dark:text-gray-300 max-w-xl">
+                {t({
+                  fr: "Ora extrait les données de vos PDF, les retraite dans Excel et met en forme votre livrable, prêt à envoyer. Un clic, la chaîne entière est exécutée.",
+                  en: "Ora extracts the data from your PDFs, reworks it in Excel and formats your deliverable, ready to send. One click runs the whole chain.",
+                })}
+              </p>
+              <button
+                onClick={openBooking}
+                className="group mt-8 inline-flex items-center gap-2.5 rounded-full bg-[#111827] hover:bg-black dark:bg-white dark:hover:bg-gray-100 px-8 py-4 font-inter font-semibold text-[15px] md:text-base text-white dark:text-[#111827] transition-all duration-150 hover:-translate-y-px active:translate-y-0"
+              >
+                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-[3px]" />
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* FEC Studio / "Vos tâches Excel automatisées" cards removed for now.
             The stack starts directly with the three feature cards. */}
         <StackingCards />
@@ -1082,6 +1126,11 @@ const App = () => {
         <div aria-hidden className="h-[40vh] md:h-[95vh]" />
         <AtlasShowcase />
       </div>
+
+      {/* La section « Nos technologies » (moteur déterministe / RPA natif /
+          modèles locaux) a été retirée : le sujet RPA sera traité plus tard,
+          ailleurs. Le composant reste dans OraTechnologies.tsx, prêt à être
+          remonté ici le jour où on en reparle. */}
 
       {/* L'expérience Ora (carousel) + l'offre « tout inclus » ont été
           retirés pour l'instant. La section Industries prend leur place,
@@ -1101,13 +1150,17 @@ const App = () => {
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
       <FAQ />
 
+      {/* La démo complète (ora-1.mp4, ex-ClosingDemo) vit désormais DANS la
+          section Atlas, sous le paragraphe « Le dossier complet, orchestré et
+          traçable » (client 2026-07-28) — voir AtlasShowcase.tsx. */}
+
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
        *  gradient), dual CTA, subtle grid + floating decorative cards.    *
        *  TEMPORAIREMENT MASQUÉ — repasser `false` à `true` pour réactiver. *
        * ───────────────────────────────────────────────────────────────── */}
       {false && (
-      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-black md:dark:bg-[#111827]">
+      <section className="relative overflow-hidden px-6 md:px-12 pt-40 md:pt-56 pb-24 md:pb-32 min-h-[70vh] flex items-center bg-white dark:bg-black md:dark:bg-black">
         {/* Subtle grid, fading at the edges */}
         <div
           className="cta-grid absolute inset-0 pointer-events-none"
@@ -1226,7 +1279,7 @@ const App = () => {
 
       {/* ── CTA FINAL (provisoire) — un seul bouton centré, collé à la phrase
           "Ora, c'est automatiser sans renoncer à vos données" du pont. ──── */}
-      <section className="relative px-6 md:px-12 pt-16 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-[#111827]">
+      <section className="relative px-6 md:px-12 pt-16 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-black">
         <button
           onClick={openBooking}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
@@ -1246,7 +1299,7 @@ const App = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
           <div className="relative w-full max-w-3xl">
-            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black md:dark:bg-[#111827]">
+            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black md:dark:bg-black">
               {/* Close button */}
               <button
                 type="button"
@@ -1341,7 +1394,7 @@ const App = () => {
                     <>
                       {/* Short loading transition between result and calendar */}
                       {!bookingReady && (
-                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-black md:dark:bg-[#111827] ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
+                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-black md:dark:bg-black ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
                           <OraLogoSpinner gradientId="g-booking" size={64} />
                           <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
                             {t({ fr: "Préparation de votre créneau...", en: "Preparing your slot..." })}

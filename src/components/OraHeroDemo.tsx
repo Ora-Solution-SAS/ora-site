@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, useScroll } from "framer-motion";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
@@ -336,6 +336,19 @@ const HD_CSS = `
 .hd-sticky.endblack{background-color:#000!important}
 .hd-blob{transition:opacity .5s ease}
 .hd-sticky.immersive .hd-blob{opacity:0}
+/* ── Aurora veil — premium-SaaS light washes (Stripe/Linear style) ──
+   Pure radial-gradients, NO blur filter (expensive to repaint while
+   scrolling). Ellipses of brand light at 10-16% that drift with the scrub.
+   Fades out with the headline when the demo goes immersive. */
+.hd-aurora{transition:opacity .5s ease}
+.hd-sticky.immersive .hd-aurora{opacity:0}
+.hd-aw{position:absolute;pointer-events:none;border-radius:50%}
+.hd-aw.a1{background:radial-gradient(closest-side,rgba(59,130,246,.14),rgba(59,130,246,.05) 55%,transparent 100%)}
+.hd-aw.a2{background:radial-gradient(closest-side,rgba(96,165,250,.12),rgba(96,165,250,.04) 55%,transparent 100%)}
+.hd-aw.a3{background:radial-gradient(closest-side,rgba(59,130,246,.08),transparent 72%)}
+.dark .hd-aw.a1{background:radial-gradient(closest-side,rgba(59,130,246,.17),rgba(59,130,246,.06) 55%,transparent 100%)}
+.dark .hd-aw.a2{background:radial-gradient(closest-side,rgba(96,165,250,.13),rgba(96,165,250,.05) 55%,transparent 100%)}
+.dark .hd-aw.a3{background:radial-gradient(closest-side,rgba(59,130,246,.09),transparent 72%)}
 .hd-sticky.immersive .hd-win{box-shadow:0 1px 2px rgba(0,0,0,.5),0 34px 90px -20px rgba(0,0,0,.75),0 80px 160px -40px rgba(0,0,0,.65)}
 .hd-headline{transition:opacity .5s ease}
 .hd-sticky.immersive .hd-headline{opacity:0!important}
@@ -567,6 +580,39 @@ function TableSheet({
   );
 }
 
+// ── HeroAurora — scroll-driven brand-light veil ─────────────────────────────
+// The premium-SaaS background treatment: three huge, ultra-soft washes of
+// brand light (blue / teal / sky) that drift slowly as the demo is scrubbed.
+// No geometry, no blur filters — just pure gradients moving on transform
+// (GPU-cheap). Hidden below md, faded out in immersive mode via `.hd-aurora`.
+function HeroAurora({ progress }: { progress: MotionValue<number> }) {
+  const y1 = useTransform(progress, [0, 1], ["5vh", "-14vh"]);
+  const y2 = useTransform(progress, [0, 1], ["-4vh", "10vh"]);
+  const x2 = useTransform(progress, [0, 1], ["0vw", "-6vw"]);
+  const y3 = useTransform(progress, [0, 1], ["8vh", "-6vh"]);
+
+  return (
+    <div aria-hidden className="hd-aurora pointer-events-none absolute inset-0 z-0 hidden md:block">
+      {/* Blue wash — top-left, drifts up as you scroll */}
+      <motion.div
+        className="hd-aw a1 w-[72rem] h-[52rem] -left-[22rem] -top-[16rem]"
+        style={{ y: y1, willChange: "transform" }}
+      />
+      {/* Light-blue wash — right side, drifts down + inward */}
+      <motion.div
+        className="hd-aw a2 w-[60rem] h-[46rem] -right-[20rem] top-[6%]"
+        style={{ y: y2, x: x2, willChange: "transform" }}
+      />
+      {/* Wide blue wash — grounding the bottom of the hero */}
+      <motion.div
+        className="hd-aw a3 w-[80rem] h-[36rem] left-1/2 -bottom-[10rem]"
+        style={{ x: "-50%", y: y3, willChange: "transform" }}
+      />
+
+    </div>
+  );
+}
+
 export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const { t } = useLang();
   void theme;
@@ -672,6 +718,22 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const v = remap(vRaw);
       const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
+      // Intro boost (client 2026-07-28) : au repos, le classeur Excel est
+      // affiché ~15 % plus grand pour que ses textes soient lisibles ; le
+      // surplus se résorbe AVANT le premier plongeon caméra (v=0.155), donc
+      // toute l'animation scrollée garde exactement ses tailles d'avant.
+      // Layout d'ouverture façon monday.com (client 2026-07-28) : au repos le
+      // logiciel est affiché quasi pleine largeur, posé BAS — on n'en voit que
+      // le haut. Séquence corrigée (client, même jour : « pas d'animation
+      // direct, pas de texte coupé ni de flou ») :
+      //   v 0-0.03   zone morte : on scrolle, rien ne bouge encore ;
+      //   v 0.03-0.09 le titre s'efface (opacité seule, aucune coupe) ;
+      //   v 0.09-0.15 le titre étant INVISIBLE, son espace se replie et
+      //               l'Excel remonte en pleine vue à la taille du récit ;
+      //   v 0.155+    les zooms / clics du récit démarrent.
+      const fadeT = seg(v, 0.03, 0.09);
+      const collapseT = seg(v, 0.09, 0.15);
+      const introT = 1 - collapseT;
       const grow = 1 + 0.04 * seg(v, 0, 0.20);
       // Zoom 0 (×2.5): camera dives HARD on the cursor clicking the « Ora »
       // ribbon tab, then pulls back while the panel docks (the « bam » moment).
@@ -705,17 +767,28 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // frame.
       const focus = cam.f;
       const zoom = 1 + (Z - 1) * zt;
-      const S = fitScaleRef.current * grow * zoom;
+      // Échelle « monday » au repos : largeur quasi pleine. Sur mobile la
+      // largeur contraint déjà le fit → bigK≈1, pas de sur-zoom.
+      const bigK = Math.max(1, (box.clientWidth * 0.99) / W / (fitScaleRef.current || 1));
+      const S = fitScaleRef.current * grow * zoom * (1 + (bigK - 1) * introT);
       // Centre the focus in the VIEWPORT (not just the stage box): compensate
       // the vertical offset between the stage box centre and the screen centre.
+      const boxR = box.getBoundingClientRect();
       let centerDelta = 0;
       if (window.innerHeight > 0) {
-        const boxR = box.getBoundingClientRect();
         centerDelta = boxR.top + boxR.height / 2 - window.innerHeight / 2;
       }
       const dx = (520 - focus.x) * zt;
       const dy = ((320 - focus.y) - centerDelta / S) * zt;
-      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy}px)`;
+      // Au repos, la scène agrandie est posée BAS : son bord haut s'aligne
+      // juste sous le bloc titre, et le bas déborde sous l'écran (rogné par
+      // l'overflow du sticky) — on ne voit que le haut du logiciel.
+      let dyIntro = 0;
+      if (introT > 0 && S > 0) {
+        const stageTopScreen = boxR.top + boxR.height / 2 - (H / 2) * S;
+        dyIntro = ((boxR.top + 6 - stageTopScreen) / S) * introT;
+      }
+      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy + dyIntro}px)`;
       box.style.marginTop = `${14 + 26 * seg(v, 0, 0.20)}px`;
       // End-of-demo hand-off: fade the whole scene to pure black over the last
       // stretch of scroll (the software stays visible, just darkened) so it
@@ -739,9 +812,24 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         // The headline leaves FOR GOOD as soon as the story starts (camera
         // dive on the Ora tab) — it must never ghost behind the enlarged
         // windows later in the demo.
-        const hf = seg(v, 0.10, 0.20);
-        headline.style.opacity = String(1 - hf);
-        headline.style.transform = `translateY(${-18 * hf}px)`;
+        // Deux temps stricts pour éviter le rendu « bugué » (texte coupé +
+        // flou) : le titre disparaît d'abord EN OPACITÉ SEULE, puis — une
+        // fois invisible — son espace se replie et la stagebox (flex:1)
+        // regagne la hauteur, le ResizeObserver refit la scène.
+        headline.style.opacity = String(1 - fadeT);
+        headline.style.transform = `translateY(${-14 * fadeT}px)`;
+        // Le bouton « Commencer » vit dans ce bloc : une fois le titre
+        // évanoui, il ne doit plus capter de clics invisibles.
+        headline.style.pointerEvents = fadeT > 0.6 ? "none" : "";
+        if (collapseT === 0) {
+          headline.style.height = "";
+          headline.style.overflow = "";
+        } else {
+          // scrollHeight = hauteur naturelle du contenu, insensible au height
+          // déjà posé — pas besoin de mémoriser une mesure initiale.
+          headline.style.height = `${Math.round(headline.scrollHeight * (1 - collapseT))}px`;
+          headline.style.overflow = "hidden";
+        }
       }
 
       // 1 · Excel alone (centred), the cursor clicks the « Ora » ribbon tab
@@ -870,7 +958,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       lastClickRef.current = clickIdx;
       // Captions
       const capOp = [
-        1 - seg(v, 0.50, 0.55),
+        // Au repos (layout monday, logiciel plein cadre) la légende n'a pas
+        // encore de sens et chevaucherait le classeur : elle n'apparaît que
+        // quand le récit démarre.
+        (1 - introT) * (1 - seg(v, 0.50, 0.55)),
         seg(v, 0.55, 0.60) * (1 - seg(v, 0.71, 0.75)),
         seg(v, 0.73, 0.78) * (1 - seg(v, 0.86, 0.90)),
         seg(v, 0.89, 0.94),
@@ -905,6 +996,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             style={{ background: "radial-gradient(56% 44% at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.055) 40%, transparent 70%)" }}
           />
 
+          {/* Aurora veil — brand-light washes drifting with the scrub. */}
+          {!reduced && <HeroAurora progress={scrollYProgress} />}
+
           {/* Headline (fades out while the camera zoom is engaged) */}
           <motion.div
             ref={headlineRef}
@@ -913,20 +1007,39 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           >
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">
-              {t({ fr: "Ora en action", en: "Ora in action" })}
+            {/* Ouverture calquée sur monday.com (client 2026-07-28) : ligne de
+                marque en dégradé discret (comme « monday AI work platform »),
+                titre massif en Poppins, sous-titre même famille, bouton court
+                « Commencer » vers la démo web, légende dessous. */}
+            {/* Même visage fin que monday.com : Instrument Sans en graisse
+                normale (la face déjà utilisée pour « Automatisez de bout en
+                bout » — exception documentée à la règle Poppins). */}
+            <span className="font-instrument font-medium text-[clamp(1rem,1.5vw,1.3rem)] tracking-[-0.01em] text-brand-gradient">
+              {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
             </span>
-            <h2 className="font-inter font-normal text-[clamp(1.9rem,4.2vw,3.9rem)] tracking-[-0.035em] leading-[1.06] text-[#111827] dark:text-white mt-4 text-center">
-              <span className="block lg:whitespace-nowrap">
-                {t({ fr: "Moins de saisie, ", en: "We give you " })}
-                <span className="text-brand-gradient">{t({ fr: "plus d'analyse et de conseil", en: "analysis and advisory" })}</span>
-                {t({ fr: ".", en: " time back" })}
-              </span>
+            <h2 className="font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-[#111827] dark:text-white mt-3 text-center">
+              <span className="block">{t({ fr: "Moins de saisie.", en: "Less data entry." })}</span>
+              <span className="block text-brand-gradient">{t({ fr: "Plus d'analyse et de conseil.", en: "More analysis and advisory." })}</span>
             </h2>
-            <p className="mt-3 font-inter text-[clamp(0.95rem,1.5vw,1.3rem)] leading-snug text-gray-400 dark:text-gray-500 text-center">
+            <p className="mt-3 mx-auto max-w-[36rem] font-instrument font-normal text-[clamp(1rem,1.6vw,1.35rem)] leading-normal text-gray-500 dark:text-gray-400 text-center">
               {t({
                 fr: "On s'occupe de vos tâches répétitives, vous excellez dans votre métier.",
                 en: "We handle the repetitive tasks, so you excel at what you do.",
+              })}
+            </p>
+            <a
+              href="https://ora-solution.com/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#3b82f6] hover:bg-[#2f6fe0] px-6 py-2.5 font-inter font-semibold text-white text-[15px] shadow-[0_12px_28px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200"
+            >
+              {t({ fr: "Commencer", en: "Get started" })}
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <p className="mt-3 font-inter text-[13px] text-gray-400 dark:text-gray-500 text-center">
+              {t({
+                fr: "Testez Ora sur vos fichiers · Sans installation · Directement dans votre navigateur",
+                en: "Try Ora on your own files · No install · Right in your browser",
               })}
             </p>
           </motion.div>

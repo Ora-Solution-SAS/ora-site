@@ -13,7 +13,7 @@ import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "demo" | "not-found";
+type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -195,7 +195,7 @@ const Navigation: React.FC<NavigationProps> = ({
         overDark
           ? "bg-black/70 backdrop-blur-md border-b border-white/10"
           : scrolled
-          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-[#111827]/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-black/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
           : "bg-transparent"
       )}
     >
@@ -302,6 +302,20 @@ const Navigation: React.FC<NavigationProps> = ({
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
+          {/* Espace client — secondary, desktop. Client login: routes to the
+              404 placeholder until the real login page / app URL exists. */}
+          <button
+            onClick={() => onNavigate("espace-client")}
+            className={cn(
+              "hidden md:inline-flex items-center px-4 py-2.5 rounded-full text-[13.5px] font-semibold font-inter transition-colors duration-150",
+              overDark
+                ? "text-white/85 hover:text-white hover:bg-white/10"
+                : "text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
+            )}
+          >
+            {t({ fr: "Mon espace Ora", en: "My Ora space" })}
+          </button>
+
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
@@ -353,6 +367,12 @@ const Navigation: React.FC<NavigationProps> = ({
                 links are temporarily hidden until those pages go live. */}
 
             <div className="mt-4 flex flex-col gap-2">
+              <button
+                onClick={() => { setMobileOpen(false); onNavigate("espace-client"); }}
+                className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/15 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150"
+              >
+                {t({ fr: "Mon espace Ora", en: "My Ora space" })}
+              </button>
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
                 className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_14px_rgba(59,130,246,0.22)] transition-colors duration-150"

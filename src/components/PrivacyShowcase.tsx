@@ -68,7 +68,7 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       id="securite"
       data-nav-shy
       className="relative px-6 md:px-12 pt-44 md:pt-64 pb-20 md:pb-28"
-      style={{ background: dk ? "#0f172a" : "#ffffff" }}
+      style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       {/* Very soft blue ambient glows so the tiles lift off the flat background. */}
       <div
@@ -195,8 +195,9 @@ function PrivacyTile({
       <div
         className="relative aspect-[4/3] md:aspect-auto md:h-[280px] lg:h-[300px] rounded-[24px] overflow-hidden"
         style={{
-          // Flat solid blue (from the reference swatch), no gradient.
-          background: dk ? "#2b4bb0" : "#4169E1",
+          // Flat solid blue — lightened from the royal #4169E1 swatch
+          // (client request 2026-07-24): brand blue, softer and brighter.
+          background: dk ? "#3566d6" : "#3b82f6",
         }}
       >
         {/* soft top glow, like light coming from above */}

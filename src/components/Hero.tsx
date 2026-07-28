@@ -325,7 +325,7 @@ function CallbackBadge({ openBooking }: { openBooking: () => void }) {
       </button>
 
       {open && (
-        <div className="absolute left-1/2 top-full z-50 mt-3 w-[300px] -translate-x-1/2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0f172a] p-4 text-left shadow-xl">
+        <div className="absolute left-1/2 top-full z-50 mt-3 w-[300px] -translate-x-1/2 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-black p-4 text-left shadow-xl">
           {status === "ok" ? (
             <div className="py-2 text-center">
               <p className="font-poppins font-semibold text-sm text-gray-900 dark:text-white">
@@ -520,7 +520,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
         >
           {/* Background blobs — overflow-hidden ici pour clipper les cercles hors-section */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden>
-            <div className="absolute inset-0 bg-white dark:bg-black md:dark:bg-[#111827]" />
+            <div className="absolute inset-0 bg-white dark:bg-black md:dark:bg-black" />
             <div className="absolute -top-32 -right-32 w-[700px] h-[700px] rounded-full"
               style={{ background: "radial-gradient(circle,rgba(59,130,246,0.07) 0%,transparent 65%)", filter: "blur(60px)" }} />
             <div className="absolute top-1/2 -left-20 w-[600px] h-[600px] rounded-full"

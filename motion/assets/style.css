@@ -1,0 +1,345 @@
+/* ============================================================
+   ORA — Motion design / animations de texte
+   Vidéo 1 : Automatisation — format 9:16 (1080×1920)
+   Charte : Poppins (titres) / Inter (UI), dégradé #3b82f6 → #0d9488
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap");
+
+:root {
+  /* Brand */
+  --blue: #3b82f6;
+  --teal: #0d9488;
+  --ora-dark: #111827;
+  --ora-dark-alt: #0f172a;
+  --grad: linear-gradient(120deg, #3b82f6 0%, #0d9488 100%);
+
+  /* Chroma key (fond à incruster sur les phases 1/2/4).
+     Magenta pur : aucun risque de conflit avec le bleu/teal de la marque.
+     Pour passer au vert classique : remplace par #00b140 */
+  --chroma: #ff00ff;
+
+  /* Easing signature Ora (expo-out) */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.6, 0, 0.8, 0.2);
+
+  --stageW: 1080px;
+  --stageH: 1920px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* ---- Cadrage : la scène fait exactement 1080×1920,
+        on la met à l'échelle pour l'aperçu écran ---- */
+#fit {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#stage {
+  position: relative;
+  width: var(--stageW);
+  height: var(--stageH);
+  flex: 0 0 auto;        /* NE PAS rétrécir : garder 1080×1920, c'est la mise à l'échelle (transform) qui adapte l'aperçu */
+  overflow: hidden;
+  transform-origin: center center;
+  /* fond par défaut = chroma (incrustation) */
+  background: var(--chroma);
+  transition: background-color 0s;
+}
+
+/* Mode fond Ora (phases 3 & 5) — coupure NETTE, pas de fondu */
+#stage.bg-ora {
+  background:
+    radial-gradient(120% 90% at 50% 18%, #16213a 0%, var(--ora-dark) 46%, var(--ora-dark-alt) 100%);
+}
+
+/* Mode transparent (capture alpha via OBS) : ?bg=transparent */
+body.transparent #stage { background: transparent; }
+body.transparent #stage.bg-ora {
+  background:
+    radial-gradient(120% 90% at 50% 18%, #16213a 0%, var(--ora-dark) 46%, var(--ora-dark-alt) 100%);
+}
+
+/* ============================================================
+   SCÈNES (une par phase, superposées, plein cadre)
+   ============================================================ */
+.scene {
+  position: absolute;
+  inset: 0;
+  display: none;
+  padding: 120px 96px;
+}
+.scene.active { display: flex; }
+
+/* Alignements par phase */
+.scene[data-align="lower"]  { flex-direction: column; justify-content: flex-end;  align-items: flex-start; padding-bottom: 360px; }
+.scene[data-align="center"] { flex-direction: column; justify-content: center;     align-items: center; text-align: center; }
+.scene[data-align="bottom"] { flex-direction: column; justify-content: flex-end;   align-items: center; text-align: center; padding-bottom: 220px; }
+
+/* Phase 2 : les 3 punchs se relaient au MÊME emplacement (bas-gauche) */
+.scene.stack .line {
+  position: absolute;
+  left: 96px; right: 96px;
+  bottom: 360px;
+}
+
+/* Phase 5 : chaque groupe (dream / logo / CTA) centré indépendamment,
+   pour qu'ils se relaient sans décaler la mise en page */
+.scene .group {
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 96px;
+}
+
+/* ============================================================
+   TYPOGRAPHIE
+   ============================================================ */
+.line {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  color: #fff;
+  display: block;
+  /* ombre de lisibilité : le texte reste lisible même superposé
+     sur une capture Excel claire ; discrète sur fond Ora sombre */
+  text-shadow: 0 6px 34px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.line + .line { margin-top: 0.32em; }
+
+/* tailles */
+.t-xxl { font-size: 118px; }
+.t-xl  { font-size: 96px; }
+.t-l   { font-size: 78px; }
+.t-m   { font-size: 60px; }
+.t-s   { font-size: 46px; font-weight: 500; }
+
+/* couleurs / effets de texte
+   NB : couleur OPAQUE (pas d'alpha) pour une incrustation chroma nette */
+.muted   { color: #cdd3df; font-weight: 500; }
+.grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+/* le dégradé doit s'appliquer aux .word (les glyphes sont dans les spans,
+   pas en texte direct de la .line) sinon background-clip:text rend transparent */
+.line.grad .word {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+.glow { filter: drop-shadow(0 0 38px rgba(59,130,246,0.45)); }
+/* le texte en dégradé a un fill transparent : text-shadow ne s'affiche pas,
+   on utilise donc filter:drop-shadow (halo bleu + ombre sombre pour la lisibilité) */
+.line.grad.glow { filter: drop-shadow(0 0 34px rgba(59,130,246,0.45)) drop-shadow(0 4px 16px rgba(0,0,0,0.42)); }
+.line.grad.shimmer { filter: drop-shadow(0 4px 16px rgba(0,0,0,0.42)); }
+
+/* texte barré animé (ex : "Plus sur la saisie.") */
+.strike { position: relative; color: rgba(255,255,255,0.5); }
+.strike::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  top: 52%;
+  width: 0%;
+  height: 7px;
+  border-radius: 4px;
+  background: var(--grad);
+  transition: width 0.5s var(--ease) 0.15s;
+}
+.active .strike.struck::after { width: 104%; }
+
+/* ============================================================
+   RÉVÉLATION MOT À MOT
+   chaque .word a --i (index) → délai progressif
+   ============================================================ */
+.word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.62em);
+  filter: blur(14px);
+  transition:
+    opacity 0.62s var(--ease),
+    transform 0.62s var(--ease),
+    filter 0.62s var(--ease);
+  transition-delay: calc(var(--i, 0) * var(--stagger, 70ms));
+  white-space: pre;
+}
+.line.in .word { opacity: 1; transform: translateY(0); filter: blur(0); }
+.line.out .word {
+  opacity: 0;
+  transform: translateY(-0.34em);
+  filter: blur(8px);
+  transition-duration: 0.34s, 0.34s, 0.34s;
+  transition-delay: calc(var(--i, 0) * 26ms);
+}
+
+/* variante "punch" (phase 2) : arrive serré, plus sec */
+.line.punch .word {
+  transform: translateY(0) scale(1.28);
+  filter: blur(6px);
+  transition-duration: 0.34s;
+  transition-timing-function: cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+.line.punch.in .word { transform: scale(1); filter: blur(0); }
+
+/* ============================================================
+   ACCENTS DESIGN
+   ============================================================ */
+
+/* P1 — horloge discrète qui tourne (tension) */
+.clock {
+  position: absolute;
+  top: 150px; right: 110px;
+  width: 96px; height: 96px;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+}
+.scene.active .clock { opacity: 0.5; }
+.clock circle { fill: none; stroke: rgba(255,255,255,0.55); stroke-width: 5; }
+.clock .hand {
+  stroke: #fff; stroke-width: 6; stroke-linecap: round;
+  transform-origin: 48px 48px;
+}
+.clock .hand.sec { animation: tick 6s steps(12) infinite; }
+.clock .hand.min { stroke-width: 7; animation: tick 36s linear infinite; }
+@keyframes tick { to { transform: rotate(360deg); } }
+
+/* P2 — petit symbole "boucle" sur Recommencer */
+.loop-ico {
+  display: inline-block;
+  width: 0.92em; height: 0.92em;
+  margin-left: 0.18em;
+  vertical-align: -0.08em;
+  opacity: 0;
+  transform: rotate(-90deg);
+  transition: opacity 0.4s var(--ease), transform 0.7s var(--ease);
+}
+.line.in .loop-ico { opacity: 0.85; transform: rotate(0deg); }
+.loop-ico svg { width: 100%; height: 100%; display: block; }
+
+/* P4 — lower third premium */
+.lower-bar {
+  display: flex; align-items: center; gap: 26px;
+  padding: 30px 40px;
+  border-radius: 22px;
+  background: rgba(10,16,28,0.0);
+}
+.dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--grad);
+  box-shadow: 0 0 22px rgba(59,130,246,0.7);
+  flex: none;
+  opacity: 0; transform: scale(0);
+  transition: opacity 0.4s var(--ease), transform 0.5s var(--ease);
+}
+.scene.active .dot.show { opacity: 1; transform: scale(1); }
+
+/* P4 — éclat qui balaie "en un clic" au moment satisfaisant */
+.shimmer { position: relative; overflow: hidden; }
+.shimmer::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.85) 50%, transparent 65%);
+  transform: translateX(-130%);
+}
+.shimmer.go::after { animation: sweep 0.9s var(--ease) forwards; }
+@keyframes sweep { to { transform: translateX(130%); } }
+
+/* P5 — logo Ora animé */
+.logo-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 40px;
+  opacity: 0;
+  transform: translateY(28px) scale(0.96);
+  transition: opacity 0.7s var(--ease), transform 0.9s var(--ease);
+}
+.logo-wrap.in { opacity: 1; transform: translateY(0) scale(1); }
+.logo-wrap.out {
+  opacity: 0; transform: translateY(-46px) scale(0.9);
+  transition-duration: 0.5s;
+}
+.logo-svg { width: 196px; height: 196px; filter: drop-shadow(0 0 40px rgba(59,130,246,0.3)); overflow: visible; }
+.logo-bar {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.55s var(--ease);
+}
+.logo-wrap.in .logo-bar { stroke-dashoffset: 0; }
+.logo-wrap .logo-bar { transition-delay: calc(var(--b) * 80ms); }
+.logo-word {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 150px;
+  letter-spacing: -0.04em;
+  color: #fff;
+  line-height: 1;
+}
+
+/* P5 — pill CTA */
+.cta {
+  display: inline-flex; align-items: center; gap: 18px;
+  margin-top: 56px;
+  padding: 30px 54px;
+  border-radius: 999px;
+  background: var(--grad);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 44px;
+  box-shadow: 0 10px 50px rgba(59,130,246,0.4);
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.5s var(--ease) 0.25s, transform 0.6s var(--ease) 0.25s, box-shadow 0.3s ease;
+}
+.scene.active .cta.show { opacity: 1; transform: translateY(0); }
+.cta .arrow { transition: transform 0.4s var(--ease); }
+.cta.show .arrow { animation: nudge 1.6s var(--ease) 0.9s infinite; }
+@keyframes nudge { 0%,100%{transform:translateX(0)} 50%{transform:translateX(10px)} }
+
+/* ============================================================
+   HUD aperçu (masqué à l'enregistrement)
+   ============================================================ */
+#hud {
+  position: fixed;
+  left: 50%; bottom: 18px; transform: translateX(-50%);
+  z-index: 50;
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.62);
+  backdrop-filter: blur(8px);
+  color: #fff; font-size: 13px; font-family: "Inter", sans-serif;
+  user-select: none;
+}
+#hud .bar { width: 220px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.2); overflow: hidden; }
+#hud .bar > i { display: block; height: 100%; width: 0%; background: var(--grad); }
+#hud button {
+  border: none; background: rgba(255,255,255,0.14); color: #fff;
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 14px;
+}
+#hud.hidden { display: none; }
+#hud .lbl { opacity: 0.7; font-variant-numeric: tabular-nums; }

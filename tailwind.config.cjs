@@ -11,8 +11,8 @@ module.exports = {
                 // Brand palette
                 "brand-blue": "#3b82f6",
                 "brand-teal": "#0d9488",
-                // Backgrounds
-                background: "#111827",
+                // Backgrounds — dark mode primary is pure black (client request)
+                background: "#000000",
                 "bg-light": "#fcfbf7",
                 // Legacy (kept for backward compat)
                 "gray-medium": "#9CA3AF",

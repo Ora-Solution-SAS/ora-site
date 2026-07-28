@@ -19,8 +19,8 @@ const FOCUS = 0.56; //   viewport fraction where the frontier sits
 // Hyper-sensitive to scroll: a TIGHT transition band (~one line of reading
 // distance) so the reveal edge is crisp and each letter flips blurred→sharp
 // with only a few px of scroll — the sweep tracks the finger letter by letter.
-const BAND = 0.10; //    height of the sharp→blurred transition band
-const BLUR_MAX = 14; //  px on unread letters
+const BAND = 0.085; //   height of the sharp→blurred transition band
+const BLUR_MAX = 11; //  px on unread letters (lighter = cheaper to repaint)
 const OP_MIN = 0.08; //  faintest opacity (upcoming text barely ghosted)
 const RISE_EM = 0.12; // unread letters sit slightly low and rise into place
 
@@ -202,7 +202,7 @@ export default function ExcelReveal() {
           with a gap so ~2 phrases are on screen at once (previous crisp above,
           next blurred below). pb = black breathing space after the last line.
           PADDING, not a child margin (a margin collapses out → white line). */}
-      <div className="px-6 md:px-[5.5vw] pt-[30vh] pb-[16vh]">
+      <div className="px-6 md:px-[5.5vw] pt-[20vh] pb-[11vh]">
         {phrases.map((phrase, pi) => {
           const grad = phrase.gradient.map((g) => g.toLowerCase());
           return (
@@ -216,7 +216,9 @@ export default function ExcelReveal() {
                 // Balance the wrapped lines so no lone word is left on the last
                 // line (a widow) — complete, even lines read much better.
                 textWrap: "balance",
-                marginBottom: "14vh",
+                // Tighter spacing = the next phrase reaches the reveal line
+                // after much less scrolling (client: "plus rapide").
+                marginBottom: "8.5vh",
               }}
             >
               {phrase.text.split(" ").map((w, wi) => {

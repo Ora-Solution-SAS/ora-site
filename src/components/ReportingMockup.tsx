@@ -34,9 +34,12 @@ const SEL_ROW = 0, SEL_COL = 1;
 const RM_CSS = `
 /* ══ Visuel « Reporting mensuel » — Excel + automatisations Ora + PDF ══ */
 /* Transparent : la composition flotte directement sur le fond indigo de la
-   carte (pas de panneau navy). overflow:hidden rogne la fenêtre en bas. */
+   carte (pas de panneau navy). PAS d'overflow:hidden ici : il tranchait les
+   ombres des fenêtres au bord de la zone media (démarcation verticale nette
+   à ~24px du bord de la carte). C'est l'overflow-hidden + coins arrondis de
+   la CARTE qui rognent la fenêtre en bas, au ras du bord. */
 .rm-media{position:relative;aspect-ratio:1040/640;
-  overflow:hidden;isolation:isolate;background:transparent}
+  isolation:isolate;background:transparent}
 .rm-fit{position:absolute;inset:0;z-index:1}
 .rm-stage{position:absolute;left:50%;top:0;width:1040px;height:640px;
   transform-origin:top center;

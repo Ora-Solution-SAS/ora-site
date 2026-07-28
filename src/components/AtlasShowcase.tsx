@@ -12,6 +12,7 @@ import { MockupHome, MockupManager } from "./AtlasMockups";
 import AtlasSimulation from "./atlas-sim";
 import InViewVideo from "./InViewVideo";
 import ScaleToFit from "./ScaleToFit";
+import ClosingDemo from "./ClosingDemo";
 
 /**
  * Atlas showcase section — Monday.com "Un vrai impact" layout.
@@ -245,6 +246,11 @@ export default function AtlasShowcase() {
             })}
           </p>
         </motion.div>
+
+        {/* Démo complète (ora-1.mp4) — déplacée ici depuis le bas de la
+            landing (client 2026-07-28) : juste sous le paragraphe, sur le
+            fond noir de la section. */}
+        <ClosingDemo embedded />
 
         {/* Lower tabbed demo (TabPills + 3 video/mockup carousel) — hidden for
             now at the client's request. Flip `false` to `true` to restore. */}

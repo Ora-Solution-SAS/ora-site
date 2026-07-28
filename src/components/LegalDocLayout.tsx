@@ -39,7 +39,7 @@ const LegalDocLayout: React.FC<Props> = ({
   return (
     <main
       className="min-h-screen px-6 md:px-12 pt-32 md:pt-40 pb-24 md:pb-32"
-      style={{ backgroundColor: dk ? "#111827" : "#fcfbf7" }}
+      style={{ backgroundColor: dk ? "#000000" : "#fcfbf7" }}
     >
       <div className="max-w-3xl mx-auto">
         <button
