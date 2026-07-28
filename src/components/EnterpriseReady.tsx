@@ -94,7 +94,7 @@ export default function EnterpriseReady() {
   return (
     <section
       id="enterprise"
-      className="relative py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-[#0f172a]"
+      className="relative py-24 md:py-32 px-6 md:px-12 bg-[#fcfbf7] dark:bg-black"
     >
       <div className="max-w-6xl mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-14 md:mb-20">

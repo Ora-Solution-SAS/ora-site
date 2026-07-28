@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, ArrowRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, ScanText, Sparkles, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, ArrowRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, Sparkles, Wand2, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
+import FormatageMockup from "./FormatageMockup";
 
 /**
  * UseCases — Bending-Spoons-style acquisition cards, adapted to Ora use cases:
@@ -38,7 +39,7 @@ type UseCase = {
   /** Replace the video media zone with a custom static mockup composition
    *  (Bending-Spoons style). The video is kept for the "Voir la démo"
    *  lightbox. */
-  mockup?: "reporting" | "pointage";
+  mockup?: "reporting" | "pointage" | "formatage";
 };
 
 const fadeUp = {
@@ -112,18 +113,23 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
         t({ fr: "Vos PDF sont lus et transformés en tableau Excel exploitable, sans ressaisie", en: "Your PDFs are read and turned into a usable Excel table, no re-keying" }),
         t({ fr: "Chaque ligne, montant et référence extraits fidèlement, prêts à traiter", en: "Every line, amount and reference extracted faithfully, ready to work with" }),
       ],
-      video: "/ora_pdf_extract.mp4",
+      video: "/ora_pdf_extract_v2.mp4",
       poster: "/posters/ora_pdf_extract.jpg",
-      // Same pale blue as the FEC card (client swatch, 2026-07-19).
-      bg: "#d2e4fa",
-      ink: "#1c2a5e",
-      sub: "#47548f",
+      // Lavande fournie par le client (2026-07-27). NB : le fond propre de la
+      // vidéo est un bleu pâle #dbe3f7, donc la jonction entre la carte et le
+      // clip reste visible tant que la vidéo n'est pas réexportée sur ce fond.
+      bg: "#eae6fb",
+      ink: "#241d4d",
+      sub: "#544c86",
       blend: true,
     },
     // ── Additional automations — WORK IN PROGRESS. Shown ONLY in local dev
     // (`import.meta.env.DEV`), hidden in the production build until reworked
     // with real demos. The demo clips below are placeholders for now. ──
     ...(import.meta.env.DEV ? ([
+    // Ordre re-permuté (client 2026-07-28) : « Réconciliation » d'abord,
+    // « Formatage » ensuite. Les couleurs suivent désormais le CONTENU (le
+    // damier reste régulier : colonne gauche pâle, colonne droite saturée).
     {
       title: t({ fr: "Réconciliation", en: "Reconciliation" }),
       metaIcon: ArrowLeftRight,
@@ -134,55 +140,30 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
       ],
       video: "/ora_pointage_v3.mp4",
       poster: "/posters/ora_pointage_v3.jpg",
-      bg: "#5865E3",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.78)",
-      dark: true,
-    },
-    {
-      title: t({ fr: "Nettoyage de données", en: "Data cleaning" }),
-      metaIcon: Wand2,
-      meta: t({ fr: "Fichiers désordonnés & doublons", en: "Messy files & duplicates" }),
-      bullets: [
-        t({ fr: "Vos fichiers sont remis en forme, doublons et erreurs supprimés", en: "Your files are cleaned up, duplicates and errors removed" }),
-        t({ fr: "Des données propres et cohérentes, prêtes à exploiter", en: "Clean, consistent data, ready to work with" }),
-      ],
-      video: "/final-fec.mp4",
-      poster: "/posters/final-fec.jpg",
-      bg: "#d2e4fa",
+      // Fond EXACTEMENT égal au canvas de la vidéo (#d9e2f6, mesuré sur les
+      // coins du clip, swatch client 2026-07-28) : le clip fond dans la carte.
+      bg: "#d9e2f6",
       ink: "#0c2d4d",
       sub: "#2f5474",
       blend: true,
     },
     {
-      title: t({ fr: "Ressaisie PDF", en: "PDF re-keying" }),
-      metaIcon: ScanText,
-      meta: t({ fr: "Relevés, factures & liasses", en: "Statements, invoices & files" }),
+      title: t({ fr: "Formatage pour logiciel métier", en: "Formatting for your software" }),
+      metaIcon: Wand2,
+      // Volontairement générique : aucun éditeur n'est nommé (choix client
+      // 2026-07-27), ni ici ni dans le visuel.
+      meta: t({ fr: "Imports vers votre logiciel métier", en: "Imports into your software" }),
       bullets: [
-        t({ fr: "Vos PDF deviennent des tableaux Excel, sans une seule ressaisie", en: "Your PDFs become Excel tables, without a single re-key" }),
-        t({ fr: "Chaque montant et référence repris fidèlement", en: "Every amount and reference carried over faithfully" }),
+        t({ fr: "Vos fichiers sont mis au format attendu par votre logiciel, prêts à importer", en: "Your files are converted to the format your software expects, ready to import" }),
+        t({ fr: "Colonnes, séparateurs et libellés alignés sur la maquette d'import", en: "Columns, separators and labels aligned with the import template" }),
       ],
-      video: "/ora_pdf_extract.mp4",
-      poster: "/posters/ora_pdf_extract.jpg",
-      bg: "#1E63E6",
+      video: "/final-fec.mp4",
+      poster: "/posters/final-fec.jpg",
+      bg: "#5865E3",
       ink: "#ffffff",
       sub: "rgba(255,255,255,0.78)",
       dark: true,
-    },
-    {
-      title: t({ fr: "Prévisionnel", en: "Forecasting" }),
-      metaIcon: TrendingUp,
-      meta: t({ fr: "Budgets & projections", en: "Budgets & projections" }),
-      bullets: [
-        t({ fr: "Budgets et prévisionnels générés à partir de vos historiques", en: "Budgets and forecasts built from your history" }),
-        t({ fr: "Un modèle à jour, prêt à présenter au client", en: "An up-to-date model, ready to present to the client" }),
-      ],
-      video: "/ora_reporting_v3.mp4",
-      poster: "/posters/ora_reporting_v3.jpg",
-      bg: "#d2e4fa",
-      ink: "#1c2a5e",
-      sub: "#47548f",
-      blend: true,
+      mockup: "formatage",
     },
     ] as UseCase[]) : []),
   ];
@@ -286,8 +267,14 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
                   to the edges with a top gradient in the card colour so the
                   clip's upper edge melts into the card (no visible seam). */}
               {c.mockup ? (
-                <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-7 md:-mb-10 origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.05]">
-                  {c.mockup === "reporting" ? <ReportingMockup /> : <PointageMockup />}
+                <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-8 md:-mb-12 origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.05]">
+                  {c.mockup === "reporting" ? (
+                    <ReportingMockup />
+                  ) : c.mockup === "formatage" ? (
+                    <FormatageMockup />
+                  ) : (
+                    <PointageMockup />
+                  )}
                 </div>
               ) : (
                 <div
@@ -308,11 +295,17 @@ export default function UseCases({ openBooking }: { openBooking: () => void }) {
                     className="w-full aspect-video object-cover block"
                   />
                   {c.blend && (
-                    <div
-                      aria-hidden
-                      className="pointer-events-none absolute inset-x-0 top-0 h-8 md:h-10"
-                      style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }}
-                    />
+                    /* Voile de fusion sur les QUATRE bords (client 2026-07-28) :
+                       certains passages du clip poussent du contenu blanc
+                       jusqu'au cadre, ce qui créait une démarcation nette avec
+                       la couleur de la carte. Chaque bord fond maintenant vers
+                       le fond de la carte. */
+                    <div aria-hidden className="pointer-events-none absolute inset-0">
+                      <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }} />
+                      <div className="absolute inset-x-0 bottom-0 h-10 md:h-12" style={{ background: `linear-gradient(to top, ${c.bg} 0%, transparent 100%)` }} />
+                      <div className="absolute inset-y-0 left-0 w-10 md:w-14" style={{ background: `linear-gradient(to right, ${c.bg} 0%, transparent 100%)` }} />
+                      <div className="absolute inset-y-0 right-0 w-10 md:w-14" style={{ background: `linear-gradient(to left, ${c.bg} 0%, transparent 100%)` }} />
+                    </div>
                   )}
                 </div>
               )}

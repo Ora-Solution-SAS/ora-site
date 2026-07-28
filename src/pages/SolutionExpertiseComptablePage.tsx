@@ -400,8 +400,8 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
   }, []);
 
   /* ── Design tokens ─────────────────────────────────────────────── */
-  const bg             = dk ? "#111827" : "#ffffff";
-  const bgContrast     = dk ? "#0f172a" : "#ffffff";
+  const bg             = dk ? "#000000" : "#ffffff";
+  const bgContrast     = dk ? "#000000" : "#ffffff";
   const textPrimary    = dk ? "text-white"    : "text-gray-900";
   const textSecondary  = dk ? "text-gray-400" : "text-gray-500";
   const borderMuted    = dk ? "border-white/[0.07]" : "border-gray-200/70";

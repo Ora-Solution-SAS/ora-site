@@ -18,7 +18,7 @@ export default function YourDataCurtain() {
   return (
     <section
       data-nav-shy
-      className="sticky top-0 z-[10] min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-[#111827] px-6 md:px-12 py-20 md:py-0"
+      className="sticky top-0 z-[10] min-h-screen flex items-center justify-center overflow-hidden bg-white dark:bg-black px-6 md:px-12 py-20 md:py-0"
     >
       <motion.div
         className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-10 md:gap-16 items-center"

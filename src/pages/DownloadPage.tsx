@@ -277,8 +277,8 @@ export default function DownloadPage({ theme, openBooking, onNavigate, onToggleT
   }, []);
 
   const dk = theme === "dark";
-  const bg = dk ? "#111827" : "#fcfbf7";
-  const bgContrast = dk ? "#0f172a" : "#ffffff";
+  const bg = dk ? "#000000" : "#fcfbf7";
+  const bgContrast = dk ? "#000000" : "#ffffff";
 
   // Show the detected platform first, and badge it as recommended.
   const order: ("windows" | "mac")[] = os === "mac" ? ["mac", "windows"] : ["windows", "mac"];

@@ -184,8 +184,8 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
 
   // ── Shared design tokens ─────────────────────────────────────────────────
   // Alternating backgrounds — same palette as the welcome page
-  const bg         = dk ? "#111827" : "#ffffff";
-  const bgContrast = dk ? "#0f172a" : "#ffffff";
+  const bg         = dk ? "#000000" : "#ffffff";
+  const bgContrast = dk ? "#000000" : "#ffffff";
   const border     = dk ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.07)";
   const cardBg     = dk ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.85)";
 
