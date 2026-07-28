@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ora — Automatisation (FR) · 9:16</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div id="fit">
+    <div id="stage"></div>
+  </div>
+
+  <div id="hud">
+    <button title="Lecture / Pause">❚❚</button>
+    <div class="bar"><i></i></div>
+    <span class="lbl">0.0s</span>
+    <span style="opacity:.5">· Espace = play/pause · R = rejouer · H = masquer</span>
+  </div>
+
+  <script>
+    window.ORA_COPY = {
+      brand: "Ora",
+      p1: ["Lundi matin.", "Encore le reporting mensuel."],
+      p2: [
+        "Copier. Coller. Vérifier.",
+        "Recommencer.",
+        "Des heures sur des tâches que personne ne devrait faire à la main."
+      ],
+      p3: ["Et si tout ça…", "se faisait en un clic ?"],
+      p4: ["Vos tâches Excel répétitives,", "exécutées en un clic."],
+      p5: ["Concentrez-vous sur l'analyse.", "Plus sur la saisie.", "Décrivez-nous votre workflow."]
+    };
+  </script>
+  <script src="assets/engine.js"></script>
+</body>
+</html>

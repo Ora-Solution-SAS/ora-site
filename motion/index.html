@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ora — Motion / Animations de texte</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap");
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Inter", sans-serif;
+      background: radial-gradient(120% 90% at 50% 0%, #16213a 0%, #111827 55%, #0f172a 100%);
+      color: #fff; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 80px 24px;
+    }
+    h1 { font-family: "Poppins", sans-serif; font-weight: 600; letter-spacing: -0.03em; font-size: 40px; }
+    .grad { background: linear-gradient(120deg,#3b82f6,#0d9488); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    p.sub { color: rgba(255,255,255,.6); margin-top: 12px; font-size: 16px; }
+    .grid { display: flex; gap: 24px; margin-top: 48px; flex-wrap: wrap; justify-content: center; }
+    .card {
+      width: 300px; padding: 28px; border-radius: 22px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+      text-decoration: none; color: #fff; transition: transform .2s, border-color .2s, background .2s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(59,130,246,.5); background: rgba(255,255,255,.07); }
+    .card h2 { font-family: "Poppins", sans-serif; font-weight: 600; font-size: 22px; }
+    .card .flag { font-size: 30px; }
+    .card p { color: rgba(255,255,255,.6); font-size: 14px; margin-top: 8px; line-height: 1.5; }
+    .row { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .row a { font-size: 12px; color: #9cc4ff; text-decoration: none; padding: 4px 10px; border-radius: 999px; background: rgba(59,130,246,.12); }
+    .row a:hover { background: rgba(59,130,246,.25); }
+    .tip { margin-top: 56px; max-width: 640px; font-size: 14px; color: rgba(255,255,255,.55); line-height: 1.7; text-align: center; }
+    .tip b { color: #fff; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Ora · Motion <span class="grad">Vidéo 1 — Automatisation</span></h1>
+  <p class="sub">Animations de texte 9:16 (1080×1920) à superposer sur tes captures Excel.</p>
+
+  <div class="grid">
+    <a class="card" href="automatisation-fr.html">
+      <div class="flag">🇫🇷</div>
+      <h2>Version Française</h2>
+      <p>Séquence complète ~35s, fonds mixtes (chroma + Ora).</p>
+      <div class="row">
+        <a href="automatisation-fr.html?phase=1">P1</a>
+        <a href="automatisation-fr.html?phase=2">P2</a>
+        <a href="automatisation-fr.html?phase=3">P3</a>
+        <a href="automatisation-fr.html?phase=4">P4</a>
+        <a href="automatisation-fr.html?phase=5">P5</a>
+      </div>
+    </a>
+    <a class="card" href="automatisation-en.html">
+      <div class="flag">🇬🇧</div>
+      <h2>English Version</h2>
+      <p>Full ~35s sequence, mixed backgrounds (chroma + Ora).</p>
+      <div class="row">
+        <a href="automatisation-en.html?phase=1">P1</a>
+        <a href="automatisation-en.html?phase=2">P2</a>
+        <a href="automatisation-en.html?phase=3">P3</a>
+        <a href="automatisation-en.html?phase=4">P4</a>
+        <a href="automatisation-en.html?phase=5">P5</a>
+      </div>
+    </a>
+  </div>
+
+  <p class="tip">
+    <b>Raccourcis :</b> Espace = play/pause · R = rejouer · H = masquer l'interface.<br />
+    <b>Options URL :</b> <code>?clean</code> (sans interface) · <code>?loop</code> (boucle) ·
+    <code>?phase=N</code> (1 phase en boucle) · <code>?bg=transparent</code> (capture alpha OBS) ·
+    <code>?raw</code> (1:1, sans mise à l'échelle).<br />
+    Détails d'enregistrement dans <b>README.md</b>.
+  </p>
+</body>
+</html>

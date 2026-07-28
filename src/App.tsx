@@ -16,6 +16,7 @@ import PolitiqueConfidentialitePage from "./pages/PolitiqueConfidentialitePage";
 import CGUPage from "./pages/CGUPage";
 import DownloadPage from "./pages/DownloadPage";
 import EspaceClientPage from "./pages/EspaceClientPage";
+import DemoPage from "./pages/DemoPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
@@ -619,6 +620,7 @@ type Page =
   | "cgu"
   | "espace-client"
   | "telechargement"
+  | "demo"
   | "not-found";
 
 const PAGE_TO_PATH: Record<Page, string> = {
@@ -639,6 +641,9 @@ const PAGE_TO_PATH: Record<Page, string> = {
   // Hidden client download page: reachable only via this private direct link.
   // NOT added to HIDDEN_PAGES (that would 404 it) and NOT linked in nav/footer.
   "telechargement": "/telechargement/ora-app",
+  // Online demo funnel (lead-gen): not linked in the nav yet, reachable at /demo.
+  // The magic-link delivery space lives at /demo?ml=<job_id> (same page key).
+  "demo": "/demo",
   "not-found": "/not-found",
 };
 
@@ -986,6 +991,8 @@ const App = () => {
         <CGUPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "espace-client" ? (
         <EspaceClientPage theme={theme} onNavigate={navigateTo} openBooking={openBooking} />
+      ) : page === "demo" ? (
+        <DemoPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "telechargement" ? (
         <DownloadPage
           theme={theme}
