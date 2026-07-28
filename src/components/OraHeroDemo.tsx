@@ -44,8 +44,25 @@ const HD_CSS = `
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   color:#111827;-webkit-font-smoothing:antialiased}
 .hd-blob{position:absolute;z-index:0;left:420px;top:70px;width:590px;height:590px;border-radius:50%;
-  background:radial-gradient(circle at 38% 30%,#ffffff,#eef2fb 70%,#e0e7f6)}
+  background:radial-gradient(circle at 38% 30%,#ffffff,#eef2fb 70%,#e0e7f6);
+  animation:hdBlobFloat 16s ease-in-out infinite alternate}
 .dark .hd-blob{background:radial-gradient(circle at 38% 30%,rgba(255,255,255,.10),rgba(255,255,255,.035) 60%,transparent 75%)}
+/* Dérive lente du rond (client 2026-07-28 : « le rond derrière s'anime ») —
+   translation + léger gonflement, aller-retour continu. */
+@keyframes hdBlobFloat{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  50%{transform:translate3d(-42px,26px,0) scale(1.05)}
+  100%{transform:translate3d(24px,-18px,0) scale(0.97)}}
+/* Ligne de marque : logo + texte en dégradé dont la teinte GLISSE lentement
+   (l'effet monday.com — le changement est continu mais presque subliminal).
+   hue-rotate sur le conteneur : le dégradé du texte ET le logo dérivent
+   ensemble. */
+.hd-brandline{display:inline-flex;align-items:center;gap:10px;
+  animation:hdBrandHue 9s ease-in-out infinite alternate}
+@keyframes hdBrandHue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-45deg)}}
+@media (prefers-reduced-motion:reduce){
+  .hd-blob{animation:none}
+  .hd-brandline{animation:none}}
 /* ── macOS window chrome ── */
 .hd-win{position:absolute;border-radius:12px;background:#fff;overflow:hidden;
   box-shadow:0 1px 2px rgba(15,23,42,.10),0 24px 60px -18px rgba(15,23,42,.28),0 60px 120px -40px rgba(15,23,42,.20)}
@@ -585,7 +602,8 @@ function TableSheet({
 // brand light (blue / teal / sky) that drift slowly as the demo is scrubbed.
 // No geometry, no blur filters — just pure gradients moving on transform
 // (GPU-cheap). Hidden below md, faded out in immersive mode via `.hd-aurora`.
-function HeroAurora({ progress }: { progress: MotionValue<number> }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- gardé pour restauration
+export function HeroAurora({ progress }: { progress: MotionValue<number> }) {
   const y1 = useTransform(progress, [0, 1], ["5vh", "-14vh"]);
   const y2 = useTransform(progress, [0, 1], ["-4vh", "10vh"]);
   const x2 = useTransform(progress, [0, 1], ["0vw", "-6vw"]);
@@ -997,7 +1015,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           />
 
           {/* Aurora veil — brand-light washes drifting with the scrub. */}
-          {!reduced && <HeroAurora progress={scrollYProgress} />}
+          {/* Voile aurora retiré (client 2026-07-28 : « enlève les ombres
+              bleues du haut de la landing »). Le composant HeroAurora reste
+              défini plus bas, prêt à être remonté ici si on en reparle. */}
 
           {/* Headline (fades out while the camera zoom is engaged) */}
           <motion.div
@@ -1014,8 +1034,17 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             {/* Même visage fin que monday.com : Instrument Sans en graisse
                 normale (la face déjà utilisée pour « Automatisez de bout en
                 bout » — exception documentée à la règle Poppins). */}
-            <span className="font-instrument font-medium text-[clamp(1rem,1.5vw,1.3rem)] tracking-[-0.01em] text-brand-gradient">
-              {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
+            <span className="hd-brandline font-instrument font-medium text-[clamp(1rem,1.5vw,1.3rem)] tracking-[-0.01em]">
+              <img
+                src="/logos/icon-color.png"
+                alt=""
+                aria-hidden
+                className="h-[1.25em] w-auto select-none"
+                draggable={false}
+              />
+              <span className="text-brand-gradient">
+                {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
+              </span>
             </span>
             <h2 className="font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-[#111827] dark:text-white mt-3 text-center">
               <span className="block">{t({ fr: "Moins de saisie.", en: "Less data entry." })}</span>

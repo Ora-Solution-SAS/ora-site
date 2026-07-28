@@ -329,8 +329,10 @@ export default function StackingCards() {
       tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
       title: t({ fr: "Vos données restent chez vous", en: "Your data stays with you" }),
       desc: t({
-        fr: "Le traitement s'exécute en local, sur votre machine. Vos fichiers sont chiffrés sur votre appareil avant tout envoi, puis stockés en Suisse, illisibles sur nos serveurs.",
-        en: "Processing runs locally, on your machine. Your files are encrypted on your device before anything is sent, then stored in Switzerland, unreadable on our servers.",
+        // Précision client 2026-07-28 : l'hébergement suisse ne concerne QUE
+        // Atlas (l'orchestration de fichiers) ; le reste ne quitte pas le poste.
+        fr: "Le traitement s'exécute en local, sur votre machine, rien ne quitte votre poste. Et si vous adoptez Atlas, notre solution d'orchestration de fichiers, vos fichiers sont chiffrés sur votre appareil avant tout envoi, puis hébergés exclusivement en Suisse, illisibles sur nos serveurs.",
+        en: "Processing runs locally, on your machine, nothing leaves your computer. And if you adopt Atlas, our file-orchestration solution, your files are encrypted on your device before anything is sent, then hosted exclusively in Switzerland, unreadable on our servers.",
       }),
       video: "/feature-secure.mp4",
       visual: "local",

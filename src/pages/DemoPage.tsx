@@ -49,6 +49,51 @@ function StepBadge({ label }: { label: string }) {
   );
 }
 
+/** Horizontal 3-step trail (Choose · Drop · Download) shown at the top of the
+ *  funnel stage — replaces the isolated "Étape N" badge so the visitor sees
+ *  the WHOLE journey and where they stand in it (layout redesign 2026-07-28). */
+function StepTrail({ active, labels }: { active: 1 | 2 | 3; labels: string[] }) {
+  return (
+    <div className="flex items-center justify-center gap-3 md:gap-4">
+      {labels.map((label, i) => {
+        const n = (i + 1) as 1 | 2 | 3;
+        const done = n < active;
+        const current = n === active;
+        return (
+          <div key={label} className="flex items-center gap-3 md:gap-4">
+            {i > 0 && (
+              <span
+                aria-hidden
+                className={`h-px w-8 md:w-14 ${done || current ? "bg-blue-300 dark:bg-blue-500/50" : "bg-gray-200 dark:bg-white/10"}`}
+              />
+            )}
+            <span className="inline-flex items-center gap-2">
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full font-inter text-[12px] font-semibold transition-colors ${
+                  current
+                    ? "bg-[#3b82f6] text-white shadow-[0_2px_10px_rgba(59,130,246,0.35)]"
+                    : done
+                      ? "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
+                      : "border border-gray-300 text-gray-400 dark:border-white/20 dark:text-gray-500"
+                }`}
+              >
+                {n}
+              </span>
+              <span
+                className={`font-inter text-[13px] font-semibold ${
+                  current ? "text-[#111827] dark:text-white" : "text-gray-400 dark:text-gray-500"
+                }`}
+              >
+                {label}
+              </span>
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   const { t } = useLang();
   const dk = theme === "dark";
@@ -369,26 +414,36 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   }
 
   // ── The funnel ────────────────────────────────────────────────────────────
+  const stepLabels = [
+    t({ fr: "Choisissez", en: "Choose" }),
+    t({ fr: "Déposez", en: "Drop" }),
+    t({ fr: "Téléchargez", en: "Download" }),
+  ];
   return (
     <div className="min-h-screen" style={{ backgroundColor: bg }}>
-      {/* HERO */}
-      <section className="px-6 pb-16 pt-36 text-center md:px-12 md:pb-20">
+      {/* HERO — compact (layout redesign 2026-07-28) : the headline block is
+          tightened so the automation picker is visible without scrolling; the
+          whole journey is announced by the 3-step trail just below. */}
+      <section className="px-6 pb-10 pt-32 text-center md:px-12 md:pb-12 md:pt-36">
         <div className="mx-auto max-w-3xl">
-          <h1 className="font-poppins text-[clamp(2rem,4.5vw,3.6rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
-            <span className="block">{t({ fr: "Testez Ora sur", en: "Try Ora on" })}</span>
-            <span className="block text-brand-gradient">
+          <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+            {t({ fr: "Démo interactive", en: "Interactive demo" })}
+          </span>
+          <h1 className="mt-5 font-poppins text-[clamp(2rem,4.2vw,3.4rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
+            {t({ fr: "Testez Ora sur ", en: "Try Ora on " })}
+            <span className="text-brand-gradient whitespace-nowrap">
               {t({ fr: "vos propres fichiers", en: "your own files" })}
             </span>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-xl font-inter text-[15.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="mx-auto mt-4 max-w-xl font-inter text-[15.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             {t({
               fr: "Choisissez une automatisation, déposez un fichier et regardez le résultat en quelques instants. Directement dans votre navigateur.",
               en: "Pick an automation, drop a file and see the result in moments. Right in your browser.",
             })}
           </p>
 
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             {[
               { Icon: Lock, label: { fr: "Fichiers jamais stockés", en: "Files never stored" } },
               { Icon: MousePointerClick, label: { fr: "Sans installation", en: "No install needed" } },
@@ -407,9 +462,13 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       </section>
 
       {/* STEPS 1 + 2 share one stage: the carousel picks the automation, then
-          collapses into a compact summary card with the drop zone below. */}
-      <section className="px-6 py-16 md:px-12 md:py-20" style={{ backgroundColor: bgContrast }}>
+          collapses into a compact summary card with the drop zone below. The
+          step trail on top tracks the visitor through the whole journey. */}
+      <section className="px-6 pb-16 pt-10 md:px-12 md:pb-20 md:pt-12" style={{ backgroundColor: bgContrast }}>
         <div className="mx-auto max-w-6xl">
+          <div className="mb-10 md:mb-12">
+            <StepTrail active={automation ? 2 : 1} labels={stepLabels} />
+          </div>
           <AnimatePresence mode="wait" initial={false}>
             {!automation ? (
               <motion.div
@@ -420,9 +479,9 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 transition={{ duration: 0.45, ease: EASE }}
               >
                 <div className="mx-auto mb-10 max-w-2xl text-center">
-                  <StepBadge label={t({ fr: "Étape 1 · Choisissez", en: "Step 1 · Choose" })} />
-                  <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                    {t({ fr: "Quelle tâche voulez-vous automatiser ?", en: "Which task should we automate?" })}
+                  <h2 className="font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
+                    {t({ fr: "Quelle tâche voulez-vous ", en: "Which task should we " })}
+                    <span className="whitespace-nowrap">{t({ fr: "automatiser ?", en: "automate?" })}</span>
                   </h2>
                   <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
                     {t({
@@ -442,8 +501,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 transition={{ duration: 0.45, ease: EASE }}
               >
                 <div className="mx-auto mb-8 max-w-2xl text-center">
-                  <StepBadge label={t({ fr: "Étape 2 · Déposez", en: "Step 2 · Drop" })} />
-                  <h2 className="mt-5 font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
+                  <h2 className="font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
                     {t({ fr: "À vous de jouer", en: "Your turn" })}
                   </h2>
                 </div>
