@@ -195,11 +195,16 @@ const Navigation: React.FC<NavigationProps> = ({
         overDark
           ? "bg-black/70 backdrop-blur-md border-b border-white/10"
           : scrolled
-          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-black/95 backdrop-blur-md border-b border-gray-200/60 dark:border-white/[0.08] shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+          // Ni ombre ni liseré au scroll (client 2026-07-28, référence
+          // monday.com) : le bandeau se fond dans la page au lieu de créer une
+          // démarcation. Seul le fond translucide + flou le détache.
+          ? "bg-[#ffffff]/95 dark:bg-black/95 md:dark:bg-black/95 backdrop-blur-md"
           : "bg-transparent"
       )}
     >
-      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-10 h-[68px]">
+      {/* Bandeau plus large et logo calé à gauche (monday.com) : plus de
+          max-w-7xl centré qui décollait le logo du bord. */}
+      <nav className="max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 h-[68px]">
 
         {/* ── Left: Logo + NavigationMenu ─────────────────── */}
         <div className="flex items-center">
@@ -306,11 +311,14 @@ const Navigation: React.FC<NavigationProps> = ({
               404 placeholder until the real login page / app URL exists. */}
           <button
             onClick={() => onNavigate("espace-client")}
+            /* Bouton blanc cerclé de bleu (réplique du « Contact commercial »
+               de monday.com, client 2026-07-28) : contour et texte bleus, fond
+               transparent, qui se remplit très légèrement au survol. */
             className={cn(
-              "hidden md:inline-flex items-center px-4 py-2.5 rounded-full text-[13.5px] font-semibold font-inter transition-colors duration-150",
+              "hidden md:inline-flex items-center px-5 py-2.5 rounded-full border text-[13.5px] font-semibold font-inter transition-colors duration-150",
               overDark
-                ? "text-white/85 hover:text-white hover:bg-white/10"
-                : "text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
+                ? "border-white/45 text-white hover:bg-white/10"
+                : "border-[#3b82f6] text-[#3b82f6] hover:bg-[#3b82f6]/[0.07] dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
             )}
           >
             {t({ fr: "Mon espace Ora", en: "My Ora space" })}

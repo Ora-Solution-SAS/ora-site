@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import OraAppScene from "./OraAppScene";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
@@ -36,9 +37,49 @@ interface OraHeroDemoProps {
 
 const W = 1040, H = 640;
 
+/** Emplacement de la réplique du logiciel Ora dans le repère de la scène
+ *  (elle ouvre la démo, avant le passage de relais vers Excel + panneau). */
+const APP_LEFT = 155, APP_TOP = 66, APP_W = 730, APP_H = 512;
+
+/** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
+ *  il est visible dès la première image et son trajet vers la carte « Ouvrir
+ *  un fichier » traverse l'écran en diagonale, donc il se remarque. */
+const REST_CUR = { x: 330, y: 498 };
+
+/** Carte bleue « Ouvrir un fichier », dans le repère de la scène (la réplique
+ *  du logiciel a sa propre mise à l'échelle interne, ces valeurs sont donc
+ *  posées à la main comme les cibles du curseur). */
+const OPEN_CARD = { left: 328, top: 189, width: 538, height: 54 };
+
 const HD_CSS = `
 /* ══ Hero scroll-demo — faithful Ora app + real Excel, scroll-driven ══ */
-.hd-stagebox{position:relative;flex:1;min-height:0;width:100%}
+/* ── Sélecteur de fichier de l'ouverture ── */
+.hd-picker{position:absolute;z-index:8;left:520px;top:322px;width:420px;
+  transform:translate(-50%,-50%);opacity:0;border-radius:14px;background:#fff;overflow:hidden;
+  box-shadow:0 2px 8px rgba(15,23,42,.18),0 40px 80px -24px rgba(15,23,42,.6)}
+.hd-pkhead{position:relative;height:36px;display:flex;align-items:center;justify-content:center;
+  background:#f7f7f8;border-bottom:1px solid #ececef;font-size:12px;font-weight:600;color:#3f4652}
+.hd-pkdots{position:absolute;left:12px;top:12px;display:flex;gap:6px}
+.hd-pkdots i{width:9px;height:9px;border-radius:50%;display:block;background:#d8dade}
+.hd-pkpath{display:flex;align-items:center;gap:7px;padding:10px 14px 8px;font-size:11px;
+  font-weight:600;color:#8b909b}
+.hd-pkrow{display:flex;align-items:center;gap:10px;padding:9px 14px;transition:background .18s ease}
+.hd-pkrow .ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;
+  background:#e9f7ee;color:#177245;flex-shrink:0}
+.hd-pkrow b{font-size:12.5px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.hd-pkrow .sz{margin-left:auto;font-size:10.5px;color:#9aa0aa;flex-shrink:0}
+.hd-pkfoot{display:flex;justify-content:flex-end;gap:9px;padding:11px 14px;border-top:1px solid #f1f2f4}
+.hd-pkcancel{font-size:12px;font-weight:600;color:#6b7280;padding:6px 13px;border-radius:8px;
+  border:1px solid #e6e7ea}
+.hd-pkok{font-size:12px;font-weight:600;color:#fff;padding:6px 15px;border-radius:8px;background:#2f6ff0}
+
+.hd-stagebox{position:relative;flex:1;min-height:0;width:100%;
+  animation:hdStageIn 900ms cubic-bezier(.22,1,.36,1) 560ms both}
+/* Fondu SEUL (pas de transform) : le moteur de scrub mesure la boîte au
+   pixel près, un transform pendant l'arrivée fausserait le cadrage. */
+@keyframes hdStageIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.hd-stagebox{animation:none}}
 .hd-stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;
   transform-origin:center center;
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -468,15 +509,28 @@ const J_LINES = [
 // 0→1 ramp of v across [a, b] (clamped).
 const seg = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
 
+/** Adoucit une progression 0→1 (cubique in-out) : départ et arrivée
+ *  progressifs au lieu du démarrage/arrêt net de `seg`. Utilisé sur les
+ *  transitions d'ouverture du hero. */
+const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+
 // ── Heavy-scroll zones ──────────────────────────────────────────────────────
 // [demo-space end, weight]: higher weight = more physical scroll is needed to
 // cross that part of the demo, so key moments feel "heavy" (the user slows
 // down on them) while transitions stay light.
 const ZONES: { to: number; w: number }[] = [
-  { to: 0.15, w: 0.8 },  // Excel alone, cursor heads to the Ora ribbon tab
-  { to: 0.28, w: 2.2 },  // zoom on the cursor + Ora click + camera pull-back
-  { to: 0.36, w: 1.2 },  // the panel docks, Excel slides left (« bam »)
-  { to: 0.545, w: 0.6 }, // dual view settles (light)
+  // Ouverture (client 2026-07-29, 2e passe) : le geste « j'ouvre un fichier »
+  // est le premier récit du site, il doit se LIRE. Avant, tout l'enchaînement
+  // curseur → sélecteur → choix du classeur tenait dans 8 % du scroll : la
+  // souris se téléportait et le sélecteur clignotait. Ces zones sont donc
+  // devenues les plus lourdes de la démo.
+  { to: 0.07, w: 0.8 },  // le titre s'efface
+  { to: 0.12, w: 1.0 },  // son espace se replie, le logiciel remonte
+  { to: 0.17, w: 2.2 },  // la souris glisse vers « Ouvrir un fichier » + clic
+  { to: 0.22, w: 1.8 },  // le sélecteur de fichier s'ouvre
+  { to: 0.285, w: 2.2 }, // la souris descend sur le classeur + clic
+  { to: 0.38, w: 1.2 },  // passage de relais vers Excel + panneau Ora
+  { to: 0.545, w: 0.6 }, // lecture du panneau Ora avant le premier geste
   { to: 0.60, w: 2.2 },  // « Lancer » + the modal opens (zoom)
   { to: 0.71, w: 3.2 },  // the three toggles + « Lancer maintenant » (heaviest)
   { to: 0.84, w: 1.6 },  // journal run + loading card + green-check success
@@ -649,6 +703,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const applyRef = useRef<(v: number) => void>(() => {});
   // Cursor click targets, measured at runtime in STAGE coordinates.
   const targetsRef = useRef<Record<string, { x: number; y: number }>>({
+    // Cibles de l'ouverture. Codées en dur : elles visent la réplique du
+    // logiciel, qui a sa propre mise à l'échelle interne, donc la mesure
+    // automatique par offsetParent y serait fausse.
+    openfile: { x: 597, y: 217 }, pickrow: { x: 520, y: 322 },
     oratab: { x: 600, y: 96 }, lancerfec: { x: 940, y: 300 }, loadc: { x: 856, y: 330 },
     tg1: { x: 850, y: 330 }, tg2: { x: 850, y: 360 }, tg3: { x: 850, y: 390 },
     run: { x: 940, y: 470 }, tab2: { x: 180, y: 590 }, tab3: { x: 300, y: 590 },
@@ -703,6 +761,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     const q = (sel: string) => stage.querySelector<HTMLElement>(sel);
     const el = {
       oratabFlash: q('[data-hd="oratab-flash"]'), panel: q('[data-hd="panel"]'),
+      appscene: q('[data-hd="appscene"]'),
+      picker: q('[data-hd="picker"]'), pickveil: q('[data-hd="pickveil"]'),
+      pickrow: q('[data-hd="pickrow"]'), openFlash: q('[data-hd="openflash"]'),
       fecFlash: q('[data-hd="fec-flash"]'),
       modal: q('[data-hd="modal"]'),
       runFlash: q('[data-hd="run-flash"]'),
@@ -725,7 +786,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     // Every click moment (progress time + target key) — drives the cursor
     // dip, the ripple pulse and the vibration feedback.
     const CLICKS: { t: number; k: string }[] = [
-      { t: 0.20, k: "oratab" }, { t: 0.578, k: "lancerfec" },
+      // Ouverture : clic sur « Ouvrir un fichier », puis sélection du classeur
+      // dans le sélecteur, puis le récit d'automatisation.
+      { t: 0.165, k: "openfile" }, { t: 0.27, k: "pickrow" },
+      { t: 0.578, k: "lancerfec" },
       { t: 0.641, k: "tg1" }, { t: 0.658, k: "tg2" }, { t: 0.675, k: "tg3" },
       { t: 0.70, k: "run" }, { t: 0.935, k: "tab2" }, { t: 0.962, k: "tab3" },
     ];
@@ -749,14 +813,20 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       //   v 0.09-0.15 le titre étant INVISIBLE, son espace se replie et
       //               l'Excel remonte en pleine vue à la taille du récit ;
       //   v 0.155+    les zooms / clics du récit démarrent.
-      const fadeT = seg(v, 0.03, 0.09);
-      const collapseT = seg(v, 0.09, 0.15);
-      const introT = 1 - collapseT;
-      const grow = 1 + 0.04 * seg(v, 0, 0.20);
-      // Zoom 0 (×2.5): camera dives HARD on the cursor clicking the « Ora »
-      // ribbon tab, then pulls back while the panel docks (the « bam » moment).
-      const Z0 = 2.5;
-      const zt0 = seg(v, 0.155, 0.19) * (1 - seg(v, 0.215, 0.27));
+      // Les deux temps sont ADOUCIS (client 2026-07-28 : « il faut que ça soit
+      // plus smooth ») : `seg` est linéaire, donc le titre et la mise à
+      // l'échelle du classeur démarraient et s'arrêtaient net. `ease` leur
+      // donne un départ et une fin progressifs, sans changer les bornes — la
+      // remontée reste terminée avant le premier plongeon caméra (v=0.155).
+      const fadeT = ease(seg(v, 0.02, 0.07));
+      const collapseT = ease(seg(v, 0.07, 0.115));
+      const grow = 1 + 0.04 * seg(v, 0, 0.30);
+      // Passage de relais logiciel → Excel. Déclaré ici car la mise à
+      // l'échelle de la scène (plus bas) en dépend : au repos la réplique du
+      // logiciel est agrandie, puis on revient au cadrage du récit.
+      const handoff = ease(seg(v, 0.30, 0.38));
+      // Zoom 0 supprimé : il plongeait sur le clic de l'onglet Ora, geste
+      // retiré de l'ouverture (vue double d'emblée, client 2026-07-28).
       // Camera zooms. Zoom 1 (×2.0): the FEC Studio moment — « Lancer » click
       // then the toggle run, focus FIXED on the modal centre (no side swing).
       // Zoom 2 (×1.32): the RESULT — engages as the audit workbook lands and
@@ -770,7 +840,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const zt2 = seg(v, 0.86, 0.895);
       const rc = T.result ?? { x: 326, y: 320 };
       const cams = [
-        { t: zt0, z: Z0, f: T.oratab ?? { x: 577, y: 71 } },
         { t: zt1, z: Z1, f: T.modalc ?? { x: 520, y: 320 } },
         { t: ztS, z: 1.6, f: T.loadc ?? { x: 856, y: 330 } },
         // Centre the RESULT on the whole Excel+panel pair (stage centre x=520),
@@ -785,29 +854,52 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // frame.
       const focus = cam.f;
       const zoom = 1 + (Z - 1) * zt;
-      // Échelle « monday » au repos : largeur quasi pleine. Sur mobile la
-      // largeur contraint déjà le fit → bigK≈1, pas de sur-zoom.
-      const bigK = Math.max(1, (box.clientWidth * 0.99) / W / (fitScaleRef.current || 1));
-      const S = fitScaleRef.current * grow * zoom * (1 + (bigK - 1) * introT);
+      // ── Taille de la réplique du logiciel au repos ──
+      // Elle est pilotée par la LARGEUR (client 2026-07-29 : « ~65 % de la
+      // largeur d'écran », référence monday.com). Auparavant la scène se calait
+      // sur la HAUTEUR disponible : sur un grand écran large et court, il
+      // restait peu de hauteur sous le titre, donc tout rétrécissait et la
+      // fenêtre paraissait minuscule. On vise donc directement la largeur de
+      // la fenêtre applicative (APP_W dans le repère de la scène), et on
+      // revient à l'échelle du récit au fur et à mesure du passage de relais.
+      const boxR = box.getBoundingClientRect();
+      const fitS = fitScaleRef.current || 1;
+      const restTarget = (0.72 * box.clientWidth) / APP_W;
+      // Jamais plus petit que le cadrage normal, et plafonné pour qu'un écran
+      // très large et très court ne parte pas dans un zoom absurde.
+      // Le plafond MORD sur la plupart des écrans (au repos, le titre occupe
+      // presque toute la hauteur, donc `fitS` est minuscule et le rapport
+      // explose) : c'est LUI, et non le 0,72 ci-dessus, qui fixe la taille de
+      // la réplique à l'ouverture. Relevé de 3 à 3,45 puis à 4,05 (client
+      // 2026-07-29 : « légèrement plus grande », puis « encore un peu »).
+      const restK = Math.min(4.05, Math.max(1, restTarget / fitS));
+      const rest = 1 - handoff;
+      const S = fitS * grow * zoom * (1 + (restK - 1) * rest);
       // Centre the focus in the VIEWPORT (not just the stage box): compensate
       // the vertical offset between the stage box centre and the screen centre.
-      const boxR = box.getBoundingClientRect();
+      // La bande des légendes est RÉSERVÉE (client 2026-07-30) : en visant le
+      // milieu du plein écran, la scène agrandie descendait forcément sur
+      // « Explorez votre classeur, feuille par feuille » et la phrase se
+      // retrouvait par-dessus le bas de la fenêtre Excel. On vise donc le
+      // milieu de l'espace RESTANT au-dessus des légendes.
       let centerDelta = 0;
       if (window.innerHeight > 0) {
-        centerDelta = boxR.top + boxR.height / 2 - window.innerHeight / 2;
+        const capsTop = caps.getBoundingClientRect().top;
+        const freeBottom = capsTop > 0 ? capsTop : window.innerHeight;
+        centerDelta = boxR.top + boxR.height / 2 - freeBottom / 2;
       }
       const dx = (520 - focus.x) * zt;
       const dy = ((320 - focus.y) - centerDelta / S) * zt;
-      // Au repos, la scène agrandie est posée BAS : son bord haut s'aligne
-      // juste sous le bloc titre, et le bas déborde sous l'écran (rogné par
-      // l'overflow du sticky) — on ne voit que le haut du logiciel.
-      let dyIntro = 0;
-      if (introT > 0 && S > 0) {
-        const stageTopScreen = boxR.top + boxR.height / 2 - (H / 2) * S;
-        dyIntro = ((boxR.top + 6 - stageTopScreen) / S) * introT;
+      // Au repos, la fenêtre agrandie est posée BAS : son bord haut se cale
+      // juste sous le bloc titre et le bas déborde sous le pli (rogné par
+      // l'overflow du sticky), exactement comme le visuel de monday.com.
+      let dyRest = 0;
+      if (rest > 0 && S > 0) {
+        const appTopScreen = boxR.top + boxR.height / 2 + (APP_TOP - H / 2) * S;
+        dyRest = ((boxR.top + 8 - appTopScreen) / S) * rest;
       }
-      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy + dyIntro}px)`;
-      box.style.marginTop = `${14 + 26 * seg(v, 0, 0.20)}px`;
+      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy + dyRest}px)`;
+      box.style.marginTop = `${14 + 26 * seg(v, 0, 0.30)}px`;
       // End-of-demo hand-off: fade the whole scene to pure black over the last
       // stretch of scroll (the software stays visible, just darkened) so it
       // flows seamlessly into the always-black text-reveal section below.
@@ -850,18 +942,55 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         }
       }
 
-      // 1 · Excel alone (centred), the cursor clicks the « Ora » ribbon tab
-      if (el.oratabFlash) el.oratabFlash.style.opacity = String(seg(v, 0.192, 0.206) * (1 - seg(v, 0.21, 0.28)));
-      // 2 · Right after the click, while the camera pulls back: the Ora panel
-      //     docks on the right and Excel slides to its dual slot (« bam »)
-      const dual = seg(v, 0.26, 0.34);
+      // 1 · OUVERTURE EN VUE DOUBLE (client 2026-07-28) : le classeur et le
+      //     panneau Ora sont côte à côte DÈS LA PREMIÈRE IMAGE. On voit le
+      //     produit tout de suite (Excel = le repère, Ora = le logiciel) au
+      //     lieu d'un tableur immobile sur lequel il fallait cliquer un onglet
+      //     que personne ne connaît. Le clic sur l'onglet et le plongeon
+      //     caméra qui l'accompagnait ont été retirés.
+      if (el.oratabFlash) el.oratabFlash.style.opacity = "0";
+      // PASSAGE DE RELAIS (client 2026-07-29) : la scène s'ouvre sur
+      // l'INTERFACE DU LOGICIEL Ora, puis celle-ci s'efface et cède la place
+      // au duo Excel + panneau qui porte tout le récit d'automatisation
+      // (FEC Studio, bascules, résultat) — exactement comme avant.
+      // Le relais (déclaré plus haut) n'a lieu qu'APRÈS le geste complet :
+      // clic sur « Ouvrir un fichier », sélecteur, choix du classeur. Sans
+      // cette scène, le passage du logiciel à Excel n'avait aucun sens
+      // (client 2026-07-29).
+      // Voile sombre + sélecteur de fichier par-dessus l'interface
+      // La carte bleue s'illumine sous le clic, PUIS le sélecteur monte : les
+      // deux gestes sont séparés dans le temps, on comprend la cause et l'effet.
+      if (el.openFlash) {
+        el.openFlash.style.opacity = String(seg(v, 0.160, 0.170) * (1 - seg(v, 0.170, 0.215)));
+      }
+      // Ouverture ADOUCIE et étalée : le sélecteur monte de 14 px en grandissant
+      // au lieu d'apparaître d'un bloc (client 2026-07-29).
+      const pickIn = ease(seg(v, 0.172, 0.222));
+      const pick = pickIn * (1 - ease(seg(v, 0.285, 0.325)));
+      if (el.picker) {
+        el.picker.style.opacity = String(pick);
+        el.picker.style.transform =
+          `translate(-50%,-50%) translateY(${14 * (1 - pickIn)}px) scale(${0.93 + 0.07 * pick})`;
+      }
+      if (el.pickveil) el.pickveil.style.opacity = String(pick * 0.55);
+      // La ligne choisie s'allume au SURVOL du curseur, puis se verrouille au clic
+      if (el.pickrow) {
+        el.pickrow.style.background =
+          pick > 0 && v >= 0.268 ? "#dbe7ff" : pick > 0 && v >= 0.245 ? "#f2f5fb" : "transparent";
+      }
+      if (el.appscene) {
+        el.appscene.style.opacity = String(1 - handoff);
+        el.appscene.style.transform = `scale(${1 - 0.06 * handoff})`;
+        el.appscene.style.pointerEvents = "none";
+      }
       if (el.panel) {
-        el.panel.style.opacity = String(dual);
-        el.panel.style.transform = `translateX(${390 * (1 - dual)}px)`;
+        el.panel.style.opacity = String(handoff);
+        el.panel.style.transform = `translateX(${26 * (1 - handoff)}px)`;
       }
       if (el.excel1) {
-        el.excel1.style.opacity = String(1 - seg(v, 0.78, 0.83));
-        el.excel1.style.transform = `translateX(${-194 * seg(v, 0.26, 0.36) - 80 * seg(v, 0.78, 0.83)}px)`;
+        el.excel1.style.opacity = String(handoff * (1 - seg(v, 0.78, 0.83)));
+        // -194px = la place de gauche de la vue double, tenue d'emblée.
+        el.excel1.style.transform = `translateX(${-194 - 26 * (1 - handoff) - 80 * seg(v, 0.78, 0.83)}px)`;
       }
       // 3 · FEC Studio modal (snappy open, rapid-fire toggles, quick close)
       if (el.fecFlash) el.fecFlash.style.opacity = String(seg(v, 0.568, 0.583) * (1 - seg(v, 0.583, 0.63)));
@@ -940,14 +1069,31 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         const TIP_X = 14.6, TIP_Y = 6.5;
         const tx = (k: string) => T[k].x - TIP_X;
         const ty = (k: string) => T[k].y - TIP_Y;
-        const times = [0, 0.15, 0.38, 0.565, 0.60, 0.638, 0.655, 0.672, 0.695, 0.735, 0.91, 0.935, 0.962, 1];
-        const keys = ["oratab", "oratab", "lancerfec", "lancerfec", "tg1", "tg2", "tg3", "run", "run", "tab2", "tab2", "tab3", "tab3"];
-        const x = kf(v, times, [940, ...keys.map(tx)].slice(0, times.length));
-        const y = kf(v, times, [600, ...keys.map(ty)].slice(0, times.length));
+        // ── OUVERTURE : le trajet de la souris est le récit ──
+        // Il est calculé À PART (et non par `kf`) pour être ADOUCI : le curseur
+        // part du bas de la fenêtre du logiciel, remonte en diagonale vers la
+        // carte « Ouvrir un fichier », clique, puis redescend sur le classeur
+        // du sélecteur. Départ et arrivée progressifs (`ease`), donc on le voit
+        // vraiment se déplacer au fur et à mesure du scroll — avant, tout le
+        // trajet tenait dans quelques pixels de scroll et il se téléportait.
+        let x: number, y: number;
+        if (v < 0.42) {
+          const a = REST_CUR, b = T.openfile, c = T.pickrow;
+          const p1 = ease(seg(v, 0.095, 0.162)); // repos → « Ouvrir un fichier »
+          const p2 = ease(seg(v, 0.228, 0.268)); // → la ligne du classeur
+          const mx = a.x + (b.x - a.x) * p1, my = a.y + (b.y - a.y) * p1;
+          x = mx + (c.x - mx) * p2 - TIP_X;
+          y = my + (c.y - my) * p2 - TIP_Y;
+        } else {
+          const times = [0.42, 0.565, 0.60, 0.638, 0.655, 0.672, 0.695, 0.735, 0.91, 0.935, 0.962, 1];
+          const keys = ["pickrow", "lancerfec", "lancerfec", "tg1", "tg2", "tg3", "run", "run", "tab2", "tab2", "tab3", "tab3"];
+          x = kf(v, times, keys.map(tx));
+          y = kf(v, times, keys.map(ty));
+        }
         const cs = kf(
           v,
-          [0, 0.192, 0.20, 0.208, 0.570, 0.578, 0.586, 0.633, 0.641, 0.649, 0.650, 0.658, 0.666, 0.667, 0.675, 0.683, 0.692, 0.70, 0.708, 0.927, 0.935, 0.943, 0.954, 0.962, 0.970, 1],
-          [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1]
+          [0, 0.157, 0.165, 0.173, 0.262, 0.27, 0.278, 0.570, 0.578, 0.586, 0.633, 0.641, 0.649, 0.650, 0.658, 0.666, 0.667, 0.675, 0.683, 0.692, 0.70, 0.708, 0.927, 0.935, 0.943, 0.954, 0.962, 0.970, 1],
+          [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 1]
         );
         el.cursor.style.transform = `translate(${x}px, ${y}px) scale(${cs})`;
       }
@@ -976,10 +1122,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       lastClickRef.current = clickIdx;
       // Captions
       const capOp = [
-        // Au repos (layout monday, logiciel plein cadre) la légende n'a pas
-        // encore de sens et chevaucherait le classeur : elle n'apparaît que
-        // quand le récit démarre.
-        (1 - introT) * (1 - seg(v, 0.50, 0.55)),
+        // La première légende ne parle que du duo Excel + Ora : elle attend
+        // donc que le passage de relais depuis l'interface soit fait.
+        handoff * (1 - seg(v, 0.50, 0.55)),
         seg(v, 0.55, 0.60) * (1 - seg(v, 0.71, 0.75)),
         seg(v, 0.73, 0.78) * (1 - seg(v, 0.86, 0.90)),
         seg(v, 0.89, 0.94),
@@ -1005,8 +1150,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
           (v2: shortened — the flow starts directly in Excel). Heavy-scroll
           zones still stretch the key moments. */}
-      <div ref={wrapRef} className="relative h-[440vh] md:h-[700vh]">
-        <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-14 md:pb-16">
+      <div ref={wrapRef} className="relative h-[500vh] md:h-[800vh]">
+        {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
+            quinzaine de pixels de plus, sans toucher l'indicateur de défilement
+            qui reste ancré à 10 px du bas. */}
+        <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-10 md:pb-12">
           {/* Soft overhead light — dark mode only */}
           <div
             aria-hidden
@@ -1019,13 +1167,22 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               bleues du haut de la landing »). Le composant HeroAurora reste
               défini plus bas, prêt à être remonté ici si on en reparle. */}
 
-          {/* Headline (fades out while the camera zoom is engaged) */}
-          <motion.div
+          {/* Headline (fades out while the camera zoom is engaged).
+              DEUX COUCHES SÉPARÉES (correctif clignotement, client
+              2026-07-28) : l'enveloppe extérieure appartient au moteur de
+              scroll (apply() y écrit opacity/transform/height), la couche
+              intérieure porte l'animation d'arrivée. Auparavant les deux
+              s'écrivaient sur le MÊME élément : apply() l'affichait à 1 dès le
+              montage, puis Framer Motion repartait de 0 — d'où le
+              « apparaît puis disparaît » d'une demi-seconde. */}
+          <div
             ref={headlineRef}
             className="hd-headline relative z-10 text-center max-w-[90rem] mx-auto"
+          >
+          <motion.div
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
           >
             {/* Ouverture calquée sur monday.com (client 2026-07-28) : ligne de
                 marque en dégradé discret (comme « monday AI work platform »),
@@ -1046,7 +1203,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
               </span>
             </span>
-            <h2 className="font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-[#111827] dark:text-white mt-3 text-center">
+            {/* Échelle d'origine rétablie (client 2026-07-30) : le passage à
+                7,5 vw / 6,5 rem, calqué sur « Automatisez de bout en bout »,
+                rendait le titre trop massif ici. La FAMILLE est de toute façon
+                déjà la même des deux côtés (Instrument Sans normale). */}
+            <h2 className="font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-balance text-[#111827] dark:text-white mt-3 text-center">
               <span className="block">{t({ fr: "Moins de saisie.", en: "Less data entry." })}</span>
               <span className="block text-brand-gradient">{t({ fr: "Plus d'analyse et de conseil.", en: "More analysis and advisory." })}</span>
             </h2>
@@ -1060,23 +1221,108 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               href="https://ora-solution.com/demo"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#3b82f6] hover:bg-[#2f6fe0] px-6 py-2.5 font-inter font-semibold text-white text-[15px] shadow-[0_12px_28px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200"
+              className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-[#3b82f6] hover:bg-[#2f6fe0] px-9 py-4 font-instrument font-medium text-white text-[17px] shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200"
             >
               {t({ fr: "Commencer", en: "Get started" })}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-[18px] h-[18px]" />
             </a>
-            <p className="mt-3 font-inter text-[13px] text-gray-400 dark:text-gray-500 text-center">
+            {/* Même famille que le titre (Instrument Sans) et l'étoile ✦ en
+                séparateur, comme la ligne de réassurance de monday.com. */}
+            <p className="mt-4 font-instrument font-normal text-[14.5px] text-gray-400 dark:text-gray-500 text-center">
               {t({
-                fr: "Testez Ora sur vos fichiers · Sans installation · Directement dans votre navigateur",
-                en: "Try Ora on your own files · No install · Right in your browser",
+                fr: "Testez Ora sur vos fichiers ✦ Sans installation ✦ Directement dans votre navigateur",
+                en: "Try Ora on your own files ✦ No install ✦ Right in your browser",
               })}
             </p>
           </motion.div>
+          </div>
 
           {/* Stage (auto-fitted 1040×640 scene) */}
           <div ref={boxRef} className="hd-stagebox relative z-10">
             <div ref={stageRef} className="hd-stage">
               <div className="hd-blob" />
+
+              {/* ══ OUVERTURE : l'interface du logiciel Ora (client
+                  2026-07-29). Elle occupe la scène au repos, puis s'efface
+                  pour laisser le duo Excel + panneau dérouler le récit.
+                  Posée dans le repère de la scène (1040×640) pour suivre
+                  exactement la même mise à l'échelle que le reste. ══ */}
+              <div
+                data-hd="appscene"
+                style={{
+                  position: "absolute",
+                  left: APP_LEFT,
+                  top: APP_TOP,
+                  width: APP_W,
+                  height: APP_H,
+                  zIndex: 6,
+                  transformOrigin: "center center",
+                }}
+              >
+                <OraAppScene />
+              </div>
+
+              {/* Éclat de clic sur la carte « Ouvrir un fichier » : sans lui, le
+                  sélecteur surgissait sans qu'on comprenne ce qui l'a déclenché. */}
+              <div
+                data-hd="openflash"
+                style={{
+                  position: "absolute",
+                  left: OPEN_CARD.left, top: OPEN_CARD.top,
+                  width: OPEN_CARD.width, height: OPEN_CARD.height,
+                  borderRadius: 9, zIndex: 7, opacity: 0, pointerEvents: "none",
+                  background: "rgba(255,255,255,.34)",
+                  boxShadow: "0 0 0 3px rgba(255,255,255,.55), 0 0 34px 6px rgba(47,111,240,.55)",
+                }}
+              />
+
+              {/* ══ Sélecteur de fichier : il s'ouvre au clic sur « Ouvrir un
+                  fichier » et c'est LUI qui explique le passage du logiciel à
+                  Excel (client 2026-07-29). Placé dans le repère de la scène
+                  (et non dans OraAppScene) pour que ses coordonnées soient
+                  directement pilotables. ══ */}
+              <div
+                data-hd="pickveil"
+                style={{
+                  position: "absolute",
+                  left: APP_LEFT, top: APP_TOP, width: APP_W, height: APP_H,
+                  background: "rgba(15,23,42,1)", opacity: 0, zIndex: 7,
+                  borderRadius: 14, pointerEvents: "none",
+                }}
+              />
+              <div className="hd-picker" data-hd="picker">
+                <div className="hd-pkhead">
+                  <span className="hd-pkdots"><i /><i /><i /></span>
+                  {t({ fr: "Choisir un fichier", en: "Choose a file" })}
+                </div>
+                <div className="hd-pkpath">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" /></svg>
+                  {t({ fr: "Dossiers clients", en: "Client folders" })}
+                </div>
+                {[
+                  { n: "Balance_2025.xlsx", m: "412 Ko" },
+                  // Un FEC est un fichier TEXTE, pas un classeur : l'extension
+                  // .xlsx était une erreur métier (client 2026-07-30).
+                  { n: "FEC_demo_2024_398k_lignes.txt", m: "18,4 Mo", sel: true },
+                  { n: "Grand_livre_juin.xlsx", m: "2,1 Mo" },
+                ].map((f) => (
+                  <div
+                    key={f.n}
+                    className="hd-pkrow"
+                    {...(f.sel ? { "data-hd": "pickrow" } : {})}
+                  >
+                    <span className="ic">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                    </span>
+                    <b>{f.n}</b>
+                    <span className="sz">{f.m}</span>
+                  </div>
+                ))}
+                <div className="hd-pkfoot">
+                  <span className="hd-pkcancel">{t({ fr: "Annuler", en: "Cancel" })}</span>
+                  <span className="hd-pkok">{t({ fr: "Ouvrir", en: "Open" })}</span>
+                </div>
+              </div>
 
               {/* ══ Real Excel — the FEC workbook. Starts CENTRED (layout
                   left:210 so the measured Ora-tab click target matches the
@@ -1507,7 +1753,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           {/* Step captions */}
           <div ref={capsRef} className="relative z-10 h-10 md:h-12 flex-shrink-0">
             {[
-              t({ fr: "Depuis Excel, cliquez sur l'onglet Ora", en: "From Excel, click the Ora tab" }),
+              t({ fr: "Ora s'ouvre à côté de votre classeur, dans Excel", en: "Ora opens beside your workbook, inside Excel" }),
               t({ fr: "Configurez FEC Studio en deux clics", en: "Configure FEC Studio in two clicks" }),
               t({ fr: "Ora construit le dossier d'audit", en: "Ora builds the audit workbook" }),
               t({ fr: "Explorez votre classeur, feuille par feuille", en: "Browse your workbook, sheet by sheet" }),
