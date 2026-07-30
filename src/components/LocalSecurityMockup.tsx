@@ -82,21 +82,17 @@ const LK_CSS = `
 
 /* ══ Bulles de format (refonte client 2026-07-30, référence iCloud d'Apple) ══
    Les mini-fiches blanches et l'enceinte en pointillés sont remplacées par des
-   pastilles rondes pleines, chacune de la couleur associée à son format, avec
-   son pictogramme en blanc. Tailles VOLONTAIREMENT inégales et distances
-   variées : c'est ce qui donne la grappe vivante d'Apple plutôt qu'une rosace
-   régulière.
-   Pictogrammes DESSINÉS ici, pas les logos officiels : reprendre les marques
-   Microsoft ou Adobe poserait un problème de droits. Ce sont les couleurs qui
-   font la reconnaissance. */
-.lk-bub{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  border-radius:50%;color:#fff;text-align:center;
+   bulles rondes. Tailles VOLONTAIREMENT inégales et distances variées : c'est
+   ce qui donne la grappe vivante d'Apple plutôt qu'une rosace régulière.
+   Bulles BLANCHES et non colorées : elles portent les logos fournis par le
+   client (public/filetypes/), qui sont des JPG sur fond blanc. Sur une bulle
+   teintée, chaque logo afficherait son carré blanc d'origine. C'est le même
+   parti pris que la rangée d'icônes en haut de la carte. */
+.lk-bub{position:absolute;display:grid;place-items:center;overflow:hidden;
+  border-radius:50%;background:#fff;
   box-shadow:0 18px 34px -14px rgba(15,23,42,.34),0 3px 10px -4px rgba(15,23,42,.16),
-             inset 0 1px 0 rgba(255,255,255,.28)}
-.lk-bub.xls{background:linear-gradient(160deg,#1a9e5c,#0d7a45)}
-.lk-bub.pdf{background:linear-gradient(160deg,#e2564a,#c0272d)}
-.lk-bub.csv{background:linear-gradient(160deg,#22b8ab,#0d8a80)}
-.lk-bub.ppt{background:linear-gradient(160deg,#f2853f,#d2551c)}
+             0 0 0 1px rgba(15,23,42,.05)}
+.lk-bub img{display:block;object-fit:contain;user-select:none}
 /* Deux petites bulles muettes, uniquement pour casser la régularité. */
 .lk-dot{position:absolute;border-radius:50%;box-shadow:0 10px 20px -10px rgba(15,23,42,.3)}
 .lk-dot.b{background:linear-gradient(160deg,#a9c9ff,#7fa8f5)}
@@ -156,38 +152,22 @@ const LK_CSS = `
 `;
 
 /**
- * Icône de type de fichier : feuille blanche au coin replié, portant un bandeau
- * de couleur avec l'extension — la forme universelle des logos de format.
+ * Les quatre formats, avec les logos FOURNIS PAR LE CLIENT (public/filetypes/),
+ * exactement ceux de la rangée d'icônes en haut de la carte. Rien n'est
+ * redessiné ici.
  *
- * Elle est DESSINÉE ici, et ce n'est pas la marque officielle de Microsoft ni
- * d'Adobe : reproduire ces logos sur un site commercial engagerait leurs
- * conditions d'usage. La forme et la couleur suffisent à la reconnaissance.
+ * `imgScale` reprend les proportions de cette rangée : le fichier Excel embarque
+ * plus de marge blanche que les autres dans son image, il faut donc l'agrandir
+ * pour qu'il paraisse de la même taille.
+ *
+ * Tailles de bulle et distances inégales à dessein : une rosace parfaitement
+ * régulière fait diagramme, pas grappe.
  */
-function FileGlyph({ ext, accent, size }: { ext: string; accent: string; size: number }) {
-  return (
-    <svg width={size} height={size * 1.18} viewBox="0 0 44 52" fill="none" aria-hidden="true">
-      <path d="M8 1.5h18.5L40 15v32.5a3.5 3.5 0 0 1-3.5 3.5h-28A3.5 3.5 0 0 1 5 47.5V5A3.5 3.5 0 0 1 8.5 1.5z" fill="#fff" />
-      <path d="M26.5 1.5 40 15h-10a3.5 3.5 0 0 1-3.5-3.5z" fill="rgba(15,23,42,.16)" />
-      <path d="M12 21h16M12 27h16" stroke="rgba(15,23,42,.16)" strokeWidth="2.4" strokeLinecap="round" />
-      <rect x="1" y="31" width="34" height="14.5" rx="3.4" fill={accent} />
-      <text
-        x="18" y="41.4" textAnchor="middle" fill="#fff"
-        fontSize={ext.length > 3 ? 8.4 : 10} fontWeight="800" letterSpacing="0.3"
-        fontFamily="Inter, system-ui, sans-serif"
-      >
-        {ext}
-      </text>
-    </svg>
-  );
-}
-
-/** Les quatre formats que le client a nommés. Tailles et distances inégales à
- *  dessein : une rosace parfaitement régulière fait diagramme, pas grappe. */
 const BUBBLES = [
-  { kind: "xls", ext: "XLSX", accent: "#0d7a45", angle: 20, radius: 208, size: 106 },
-  { kind: "pdf", ext: "PDF", accent: "#c0272d", angle: 102, radius: 226, size: 92 },
-  { kind: "ppt", ext: "PPTX", accent: "#d2551c", angle: 190, radius: 200, size: 88 },
-  { kind: "csv", ext: "CSV", accent: "#0d8a80", angle: 284, radius: 218, size: 98 },
+  { src: "/filetypes/excel.jpg", alt: "Excel", imgScale: 0.92, angle: 20, radius: 208, size: 106 },
+  { src: "/filetypes/pdf.jpg", alt: "PDF", imgScale: 0.74, angle: 102, radius: 226, size: 92 },
+  { src: "/filetypes/powerpoint.jpg", alt: "PowerPoint", imgScale: 0.74, angle: 190, radius: 200, size: 88 },
+  { src: "/filetypes/csv.png", alt: "CSV", imgScale: 0.74, angle: 284, radius: 218, size: 98 },
 ] as const;
 
 /** Pastilles décoratives, sans contenu. */
@@ -252,13 +232,18 @@ export default function LocalSecurityMockup() {
             <div className="lk-gather">
               <div className="lk-orbit">
                 {BUBBLES.map((b) => (
-                  <div key={b.ext} className="lk-sat" style={{ transform: `rotate(${b.angle}deg) translate(${b.radius}px)` }}>
+                  <div key={b.alt} className="lk-sat" style={{ transform: `rotate(${b.angle}deg) translate(${b.radius}px)` }}>
                     <div style={{ transform: `rotate(${-b.angle}deg)` }}><div className="lk-counter">
                       <div
-                        className={`lk-bub ${b.kind}`}
+                        className="lk-bub"
                         style={{ width: b.size, height: b.size, left: -b.size / 2, top: -b.size / 2 }}
                       >
-                        <FileGlyph ext={b.ext} accent={b.accent} size={b.size * 0.44} />
+                        <img
+                          src={b.src}
+                          alt={b.alt}
+                          draggable={false}
+                          style={{ width: b.size * b.imgScale, height: b.size * b.imgScale }}
+                        />
                       </div>
                     </div></div>
                   </div>
