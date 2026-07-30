@@ -381,7 +381,10 @@ export default function UseCases() {
     { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
     { title: t({ fr: "Immobilisations", en: "Fixed assets" }), meta: t({ fr: "Amortissements & tableaux", en: "Depreciation & schedules" }), bg: "#5865E3", ink: "#ffffff" },
     { title: t({ fr: "Notes de frais", en: "Expense reports" }), meta: t({ fr: "Contrôle & refacturation", en: "Checks & rebilling" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-    { title: t({ fr: "Rapprochement bancaire", en: "Bank reconciliation" }), meta: t({ fr: "Trésorerie quotidienne", en: "Daily treasury" }), bg: "#0A6BE1", ink: "#ffffff" },
+    // « Rapprochement bancaire » remplacé par « Évaluation d'entreprise »
+    // (client 2026-07-30). Il faisait doublon avec la carte pleine
+    // « Réconciliation · Trésorerie & lettrage » juste au-dessus.
+    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & prévisionnel", en: "Valuation & forecasting" }), bg: "#0A6BE1", ink: "#ffffff" },
   ];
 
   return (

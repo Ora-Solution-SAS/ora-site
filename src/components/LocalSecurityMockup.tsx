@@ -62,44 +62,48 @@ const LK_CSS = `
 /* ══ Orbite des fichiers (ils tournent, restent droits) ══ */
 .lk-orbit{position:absolute;z-index:2;left:330px;top:128px;width:380px;height:380px;
   animation:lkSpin 80s linear infinite}
-.lk-sat{position:absolute;left:50%;top:50%}
-.lk-counter{animation:lkSpinRev 80s linear infinite}
+/* Enveloppes de TAILLE NULLE : l'origine de chaque rotation tombe alors
+   exactement sur le point d'orbite. Avec des boîtes dimensionnées, la
+   contre-rotation pivoterait autour du centre de la boîte et décalerait la
+   bulle au lieu de la redresser sur place. La bulle est ensuite posée en
+   absolu, centrée sur ce point. */
+.lk-sat{position:absolute;left:50%;top:50%;width:0;height:0}
+.lk-sat>div{width:0;height:0}
+.lk-counter{width:0;height:0;animation:lkSpinRev 80s linear infinite}
 @keyframes lkSpin{to{transform:rotate(360deg)}}
 @keyframes lkSpinRev{to{transform:rotate(-360deg)}}
 
-/* mini-fichiers */
-.lk-chip{background:#fff;border-radius:9px;overflow:hidden;
-  box-shadow:0 6px 18px -8px rgba(15,23,42,.22),0 0 0 1px rgba(15,23,42,.05)}
-.lk-chip .head{display:flex;align-items:center;gap:4px;height:15px;padding:0 6px;
-  font-size:7px;font-weight:800;letter-spacing:.05em;color:#fff}
-.lk-chip .head.xls{background:#047857}
-.lk-chip .head.pdf{background:#dc2626}
-.lk-chip .head.csv{background:#0d9488}
-.lk-chip .head.rpt{background:#3b82f6}
-/* petites cases Excel */
-.lk-cells{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5px;padding:6px}
-.lk-cells i{display:block;height:7px;border-radius:1.5px;background:#eef0f4}
-.lk-cells i.g{background:#d1fae5}
-.lk-cells i.gg{background:#6ee7b7}
-/* lignes de texte (PDF) */
-.lk-lines{padding:7px 6px;display:flex;flex-direction:column;gap:3.5px}
-.lk-lines i{display:block;height:4px;border-radius:2px;background:#e5e7eb}
-.lk-lines i.short{width:62%}
-.lk-lines i.red{background:#fecaca;width:40%}
-/* mini graphique (reporting) */
-.lk-bars{display:flex;align-items:flex-end;gap:3.5px;height:34px;padding:6px 7px 7px}
-.lk-bars i{flex:1;border-radius:2px 2px 0 0;background:#bfdbfe}
-.lk-bars i.hi{background:#3b82f6}
+/* ══ Bulles de format (refonte client 2026-07-30, référence iCloud d'Apple) ══
+   Les mini-fiches blanches et l'enceinte en pointillés sont remplacées par des
+   pastilles rondes pleines, chacune de la couleur associée à son format, avec
+   son pictogramme en blanc. Tailles VOLONTAIREMENT inégales et distances
+   variées : c'est ce qui donne la grappe vivante d'Apple plutôt qu'une rosace
+   régulière.
+   Pictogrammes DESSINÉS ici, pas les logos officiels : reprendre les marques
+   Microsoft ou Adobe poserait un problème de droits. Ce sont les couleurs qui
+   font la reconnaissance. */
+.lk-bub{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border-radius:50%;color:#fff;text-align:center;
+  box-shadow:0 18px 34px -14px rgba(15,23,42,.34),0 3px 10px -4px rgba(15,23,42,.16),
+             inset 0 1px 0 rgba(255,255,255,.28)}
+.lk-bub b{font-size:11px;font-weight:800;letter-spacing:.06em;line-height:1}
+.lk-bub.xls{background:linear-gradient(160deg,#1a9e5c,#0d7a45)}
+.lk-bub.pdf{background:linear-gradient(160deg,#e2564a,#c0272d)}
+.lk-bub.csv{background:linear-gradient(160deg,#22b8ab,#0d8a80)}
+.lk-bub.ppt{background:linear-gradient(160deg,#f2853f,#d2551c)}
+/* Deux petites bulles muettes, uniquement pour casser la régularité. */
+.lk-dot{position:absolute;border-radius:50%;box-shadow:0 10px 20px -10px rgba(15,23,42,.3)}
+.lk-dot.b{background:linear-gradient(160deg,#a9c9ff,#7fa8f5)}
+.lk-dot.t{background:linear-gradient(160deg,#a5e5df,#6fc9c1)}
 
-/* ══ Cadenas central (tuile app) ══ */
+/* ══ Bulle centrale : le logo Ora ══ */
 .lk-lockwrap{position:absolute;z-index:3;left:520px;top:318px;width:0;height:0}
-/* Tuile épurée (client 2026-07-27 : « trop fancy ») : blanc plat, une seule
-   ombre douce, un filet discret. Plus de dégradé, plus de halo, plus de
-   superposition d'ombres. */
-.lk-tile{position:absolute;left:-55px;top:-55px;width:110px;height:110px;border-radius:26px;
+.lk-core{position:absolute;left:-98px;top:-98px;width:196px;height:196px;border-radius:50%;
   background:#ffffff;
-  box-shadow:0 10px 30px -12px rgba(15,23,42,.24),0 0 0 1px rgba(15,23,42,.05);
+  box-shadow:0 26px 60px -22px rgba(15,23,42,.30),0 4px 14px -6px rgba(15,23,42,.14),
+             0 0 0 1px rgba(15,23,42,.04);
   display:grid;place-items:center}
+.lk-core img{width:96px;height:auto;display:block;user-select:none}
 
 /* ══ Pastilles sur l'enceinte ══ */
 .lk-pill{position:absolute;display:flex;align-items:center;gap:8px;
@@ -128,6 +132,39 @@ const LK_CSS = `
   .lk-armed .lk-fit{opacity:1;transform:none;filter:none}
 }
 `;
+
+/** Les quatre formats que le client a nommés. Tailles et distances inégales à
+ *  dessein : une rosace parfaitement régulière fait diagramme, pas grappe. */
+const BUBBLES = [
+  {
+    kind: "xls", label: "XLSX", angle: 20, radius: 208, size: 106,
+    // Tableur : grille avec en-tête et première colonne.
+    glyph: <><rect x="3" y="4.5" width="18" height="15" rx="2.4" /><path d="M3 10h18M9 4.5v15" /></>,
+  },
+  {
+    kind: "pdf", label: "PDF", angle: 102, radius: 226, size: 92,
+    // Document au coin replié.
+    glyph: <><path d="M14 3H7.5A2 2 0 0 0 5.5 5v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /></>,
+  },
+  {
+    kind: "ppt", label: "PPTX", angle: 190, radius: 200, size: 88,
+    // Écran de présentation sur son pied.
+    glyph: <><rect x="3" y="4" width="18" height="12.5" rx="2.2" /><path d="M12 16.5v3.5M8.5 20h7" /></>,
+  },
+  {
+    kind: "csv", label: "CSV", angle: 284, radius: 218, size: 98,
+    // Lignes de valeurs séparées, dernière plus courte.
+    glyph: <><path d="M4.5 7h15M4.5 12h15M4.5 17h9" /></>,
+  },
+] as const;
+
+/** Pastilles décoratives, sans contenu. */
+const DOTS = [
+  { angle: 58, radius: 268, size: 38, tone: "b" },
+  { angle: 152, radius: 252, size: 26, tone: "t" },
+  { angle: 244, radius: 272, size: 32, tone: "t" },
+  { angle: 332, radius: 258, size: 22, tone: "b" },
+] as const;
 
 export default function LocalSecurityMockup() {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -161,85 +198,63 @@ export default function LocalSecurityMockup() {
         <div className="lk-fit">
           <div className="lk-stage" ref={stageRef}>
 
-            {/* anneaux, enceinte pointillée, nuage barré */}
-            <svg className="lk-rings" viewBox="0 0 1040 640" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              {/* Épuré (client 2026-07-27) : les deux anneaux décoratifs
-                  intérieurs ont été retirés, il ne reste que l'enceinte.
-                  Traits en teal/ardoise, pas en blanc : la zone média est
-                  transparente sur un fond de carte clair. */}
-              <circle cx="520" cy="318" r="258" fill="none" stroke="rgba(13,148,136,.42)"
-                strokeWidth="1.5" strokeDasharray="9 11" strokeLinecap="round" />
-              {/* Le nuage barré a été retiré (client 2026-07-27). Le message
-                  « rien ne sort » est déjà porté par l'enceinte fermée et par
-                  la pastille « aucune donnée envoyée ». */}
-            </svg>
+            {/* L'enceinte en pointillés a été RETIRÉE (client 2026-07-30 :
+                « deux cercles avec des tirets, ça rend moche »). Elle est
+                remplacée par un halo très diffus, qui rassemble la grappe sans
+                tracer de trait. Le message « rien ne sort » reste porté par les
+                deux pastilles. */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute", zIndex: 0, left: 520, top: 318,
+                width: 620, height: 620, margin: "-310px 0 0 -310px", borderRadius: "50%",
+                background: "radial-gradient(circle at 50% 50%, rgba(13,148,136,.10) 0%, rgba(59,130,246,.07) 42%, transparent 70%)",
+              }}
+            />
 
             {/* onde de protection */}
             <div className="lk-ripple" />
             <div className="lk-ripple r2" />
 
-            {/* fichiers en orbite (dans l'enceinte) */}
+            {/* Bulles de format en orbite. Le triple emboîtement (rotation,
+                contre-rotation figée, .lk-counter animé) est conservé tel quel :
+                c'est lui qui fait tourner la grappe tout en gardant chaque
+                bulle DROITE. */}
             <div className="lk-orbit">
-              <div className="lk-sat" style={{ transform: "rotate(18deg) translate(190px)" }}>
-                <div style={{ transform: "rotate(-18deg)" }}><div className="lk-counter">
-                  <div className="lk-chip" style={{ width: 66 }}>
-                    <div className="head xls">XLS</div>
-                    <div className="lk-cells">
-                      <i className="gg" /><i /><i />
-                      <i className="g" /><i /><i className="g" />
-                      <i /><i className="g" /><i />
-                      <i className="g" /><i /><i />
+              {BUBBLES.map((b) => (
+                <div key={b.label} className="lk-sat" style={{ transform: `rotate(${b.angle}deg) translate(${b.radius}px)` }}>
+                  <div style={{ transform: `rotate(${-b.angle}deg)` }}><div className="lk-counter">
+                    <div
+                      className={`lk-bub ${b.kind}`}
+                      style={{ width: b.size, height: b.size, left: -b.size / 2, top: -b.size / 2 }}
+                    >
+                      <svg width={b.size * 0.3} height={b.size * 0.3} viewBox="0 0 24 24" fill="none"
+                        stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        {b.glyph}
+                      </svg>
+                      <b>{b.label}</b>
                     </div>
-                  </div>
-                </div></div>
-              </div>
-              <div className="lk-sat" style={{ transform: "rotate(108deg) translate(190px)" }}>
-                <div style={{ transform: "rotate(-108deg)" }}><div className="lk-counter">
-                  <div className="lk-chip" style={{ width: 62 }}>
-                    <div className="head pdf">PDF</div>
-                    <div className="lk-lines"><i /><i className="short" /><i /><i className="red" /></div>
-                  </div>
-                </div></div>
-              </div>
-              <div className="lk-sat" style={{ transform: "rotate(198deg) translate(190px)" }}>
-                <div style={{ transform: "rotate(-198deg)" }}><div className="lk-counter">
-                  <div className="lk-chip" style={{ width: 66 }}>
-                    <div className="head rpt">RAPPORT</div>
-                    <div className="lk-bars">
-                      <i style={{ height: "40%" }} /><i style={{ height: "70%" }} />
-                      <i style={{ height: "52%" }} className="hi" /><i style={{ height: "88%" }} />
-                      <i style={{ height: "62%" }} className="hi" />
-                    </div>
-                  </div>
-                </div></div>
-              </div>
-              <div className="lk-sat" style={{ transform: "rotate(292deg) translate(190px)" }}>
-                <div style={{ transform: "rotate(-292deg)" }}><div className="lk-counter">
-                  <div className="lk-chip" style={{ width: 64 }}>
-                    <div className="head csv">CSV</div>
-                    <div className="lk-cells">
-                      <i /><i className="g" /><i />
-                      <i className="g" /><i /><i />
-                      <i /><i /><i className="gg" />
-                    </div>
-                  </div>
-                </div></div>
-              </div>
+                  </div></div>
+                </div>
+              ))}
+              {/* Petites bulles muettes : elles cassent la régularité de la
+                  rosace, exactement comme les petites pastilles d'Apple. */}
+              {DOTS.map((d, i) => (
+                <div key={i} className="lk-sat" style={{ transform: `rotate(${d.angle}deg) translate(${d.radius}px)` }}>
+                  <div style={{ transform: `rotate(${-d.angle}deg)` }}><div className="lk-counter">
+                    <div
+                      className={`lk-dot ${d.tone}`}
+                      style={{ width: d.size, height: d.size, left: -d.size / 2, top: -d.size / 2 }}
+                    />
+                  </div></div>
+                </div>
+              ))}
             </div>
 
-            {/* cadenas central */}
+            {/* Bulle centrale : le logo Ora, à la place du cadenas. */}
             <div className="lk-lockwrap">
-              <div className="lk-tile">
-                {/* Cadenas épuré (client 2026-07-27 : « pas fan du tout » de
-                    la version à dégradés). Icône au trait : une seule
-                    épaisseur, une seule couleur, aucun dégradé ni reflet. */}
-                <svg width="50" height="50" viewBox="0 0 24 24" fill="none"
-                  stroke="#0d9488" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-                  xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <rect x="4" y="10.5" width="16" height="10.5" rx="2.6" />
-                  <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
-                  <circle cx="12" cy="15.75" r="1.35" fill="#0d9488" stroke="none" />
-                </svg>
+              <div className="lk-core">
+                <img src="/logos/icon-color.png" alt="" aria-hidden draggable={false} />
               </div>
             </div>
 
