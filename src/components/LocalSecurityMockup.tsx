@@ -131,7 +131,11 @@ const LK_CSS = `
   font-size:12.5px;font-weight:600;color:#111827}
 .lk-pill svg{flex-shrink:0}
 .lk-pill .dot{width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0}
-.lk-pill.home{z-index:4;left:520px;top:60px;transform:translateX(-50%)}
+/* Remontée de 60 à 10 px (client 2026-07-30) : la pastille recouvrait les
+   bulles à chaque passage au sommet de l'orbite. Elle occupe désormais la
+   bande 10-47, et les rayons plus bas sont bornés pour qu'aucune bulle ne
+   monte au-dessus de 57. */
+.lk-pill.home{z-index:4;left:520px;top:10px;transform:translateX(-50%)}
 .lk-pill.status{z-index:4;left:520px;top:548px;transform:translateX(-50%)}
 .lk-pill .mut{color:#9ca3af;font-weight:500}
 
@@ -163,19 +167,26 @@ const LK_CSS = `
  * Tailles de bulle et distances inégales à dessein : une rosace parfaitement
  * régulière fait diagramme, pas grappe.
  */
+/**
+ * Rayons BORNÉS (client 2026-07-30) : la pastille « Chez vous » occupe la bande
+ * 10-47 en haut de la scène, dont le centre est à y = 318. Pour qu'aucune bulle
+ * ne vienne se glisser dessous en passant au sommet de son orbite, il faut donc
+ * `rayon + taille / 2 <= 261`. Les tailles, elles, restent volontairement
+ * inégales : c'est déjà elles qui portent l'essentiel de l'irrégularité.
+ */
 const BUBBLES = [
-  { src: "/filetypes/excel.jpg", alt: "Excel", imgScale: 0.92, angle: 20, radius: 208, size: 106 },
-  { src: "/filetypes/pdf.jpg", alt: "PDF", imgScale: 0.74, angle: 102, radius: 226, size: 92 },
+  { src: "/filetypes/excel.jpg", alt: "Excel", imgScale: 0.92, angle: 20, radius: 206, size: 106 },
+  { src: "/filetypes/pdf.jpg", alt: "PDF", imgScale: 0.74, angle: 102, radius: 213, size: 92 },
   { src: "/filetypes/powerpoint.jpg", alt: "PowerPoint", imgScale: 0.74, angle: 190, radius: 200, size: 88 },
-  { src: "/filetypes/csv.png", alt: "CSV", imgScale: 0.74, angle: 284, radius: 218, size: 98 },
+  { src: "/filetypes/csv.png", alt: "CSV", imgScale: 0.74, angle: 284, radius: 209, size: 98 },
 ] as const;
 
-/** Pastilles décoratives, sans contenu. */
+/** Pastilles décoratives, sans contenu, soumises à la même borne. */
 const DOTS = [
-  { angle: 58, radius: 268, size: 38, tone: "b" },
-  { angle: 152, radius: 252, size: 26, tone: "t" },
-  { angle: 244, radius: 272, size: 32, tone: "t" },
-  { angle: 332, radius: 258, size: 22, tone: "b" },
+  { angle: 58, radius: 238, size: 38, tone: "b" },
+  { angle: 152, radius: 244, size: 26, tone: "t" },
+  { angle: 244, radius: 240, size: 32, tone: "t" },
+  { angle: 332, radius: 246, size: 22, tone: "b" },
 ] as const;
 
 export default function LocalSecurityMockup() {
