@@ -146,10 +146,16 @@ export default function UseCases() {
       // Les tuiles de remplissage prennent le gabarit d'une vraie carte, sinon
       // les rangées du mur seraient irrégulières.
       const fills = fillerRefs.current.filter((el): el is HTMLDivElement => !!el);
+      const fillerSet = new Set<HTMLDivElement>(fills);
+      // Apparition RETARDÉE : elles ne se révèlent qu'une fois le mur bien
+      // engagé. Les faire monter en opacité dès le premier pixel de recul les
+      // montrait à leur place définitive alors que les vraies cartes étaient
+      // encore en chemin.
+      const fade = clamp01((u - 0.82) / 0.18);
       for (const f of fills) {
         f.style.width = `${colW}px`;
         f.style.height = `${rowH}px`;
-        f.style.opacity = String(u);
+        f.style.opacity = String(fade);
       }
 
       // Alternance vraie carte / tuile : en trois colonnes cela donne un
@@ -180,18 +186,28 @@ export default function UseCases() {
       // en pixels d'écran, donc divisée par l'échelle du mur.
       const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
 
+      // Toutes les rangées démarrent sur la MÊME grille de colonnes, y compris
+      // la dernière si elle est incomplète. La centrer, comme je le faisais,
+      // plaçait ses cartes entre les colonnes du dessus : l'indice de colonne
+      // ne voulait plus rien dire, la dérive inverse envoyait deux voisines
+      // l'une sur l'autre, et le mur finissait avec un chevauchement.
+      const rowLeft0 = (gridW - (cols * (colW + gapX) - gapX)) / 2;
       let rowTop = 0;
       for (const row of rows) {
-        // Rangée incomplète (mur non rectangulaire) : elle est centrée plutôt
-        // que collée à gauche.
-        let cardLeft = (gridW - (row.length * (colW + gapX) - gapX)) / 2;
+        let cardLeft = rowLeft0;
         row.forEach((card, ci) => {
-          const dx = (cardLeft - card.offsetLeft) * u;
+          // Les tuiles ne VOYAGENT pas. Étant hors flux, leurs `offset*` valent
+          // zéro : les interpoler comme les vraies cartes les faisait partir du
+          // coin haut-gauche de la grille et traverser tout le mur en passant
+          // par-dessus les cartes pleines. Elles sont donc posées d'emblée à
+          // leur place définitive et se contentent d'apparaître en fondu.
+          const t = fillerSet.has(card) ? 1 : u;
+          const dx = (cardLeft - card.offsetLeft) * t;
           // Colonne 1 = celle du milieu en trois colonnes ; en repli à deux
           // colonnes, c'est simplement celle de droite, et les deux dérivent
           // encore en sens opposé.
-          const dy = (rowTop - card.offsetTop) * u + (ci === 1 ? drift : -drift);
-          card.style.transform = u > 0 ? `translate3d(${dx}px, ${dy}px, 0)` : "";
+          const dy = (rowTop - card.offsetTop) * t + (ci === 1 ? drift : -drift);
+          card.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
           card.style.willChange = p > 0 && p < 1 ? "transform" : "";
           cardLeft += colW + gapX;
         });
@@ -375,18 +391,22 @@ export default function UseCases() {
   // confirmé en connaissance de cause). Ce sont des noms de remplissage, pas
   // des automatisations livrées : ils annoncent au public des capacités qui ne
   // sont pas garanties. À REMPLACER par la vraie liste dès qu'elle arrive.
-  const fillers: { title: string; meta: string; bg: string; ink: string }[] = [
-    { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
-    { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
-    { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
+  // `poster` : les tuiles ne sont plus des boîtes vides (client 2026-07-30).
+  // Elles reprennent des visuels DÉJÀ présents dans public/posters/, donc rien
+  // n'est fabriqué pour l'occasion, et elles se lisent comme les cartes pleines
+  // au lieu de trouer le mur.
+  const fillers: { title: string; meta: string; bg: string; ink: string; poster: string }[] = [
+    { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d", poster: "/posters/ora_fec_demo_v2.jpg" },
+    { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff", poster: "/posters/ora_reporting_v2.jpg" },
+    { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36", poster: "/posters/ora_pointage_v2.jpg" },
     // « Immobilisations » → « Évaluation d'entreprise » et « Notes de frais »
     // → « Prévisionnel » (client 2026-07-30). La tuile « Évaluation
     // d'entreprise » posée au tour précédent à la place de « Rapprochement
     // bancaire » ferait doublon : elle est donc retirée, et la liste passe de
     // six à CINQ tuiles. Le mur s'accommode d'un compte non multiple de trois,
     // il centre simplement sa dernière rangée.
-    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
-    { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
+    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff", poster: "/posters/feature-automate-v3.jpg" },
+    { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d", poster: "/posters/ora_reporting.jpg" },
   ];
 
   return (
@@ -556,7 +576,7 @@ export default function UseCases() {
                 key={f.title}
                 ref={(el) => { fillerRefs.current[i] = el; }}
                 aria-hidden
-                className="pointer-events-none absolute left-0 top-0 opacity-0 overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]"
+                className="pointer-events-none absolute left-0 top-0 flex flex-col opacity-0 overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]"
                 style={{ background: f.bg }}
               >
                 <div className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: f.ink }}>
@@ -564,6 +584,18 @@ export default function UseCases() {
                 </div>
                 <div className="mt-5 md:mt-6 font-inter font-semibold text-[15px] md:text-base" style={{ color: f.ink }}>
                   {f.meta}
+                </div>
+                {/* Même zone média que les cartes à `blend` : le visuel déborde
+                    sur les bords et ses quatre côtés fondent vers la couleur de
+                    la tuile, donc aucune démarcation. */}
+                <div className="relative mt-auto pt-7 md:pt-9 -mx-8 md:-mx-12 -mb-8 md:-mb-12">
+                  <img src={f.poster} alt="" aria-hidden loading="lazy" className="block w-full aspect-video object-cover" />
+                  <div aria-hidden className="pointer-events-none absolute inset-0">
+                    <div className="absolute inset-x-0 top-0 h-12" style={{ background: `linear-gradient(to bottom, ${f.bg} 0%, transparent 100%)` }} />
+                    <div className="absolute inset-x-0 bottom-0 h-10" style={{ background: `linear-gradient(to top, ${f.bg} 0%, transparent 100%)` }} />
+                    <div className="absolute inset-y-0 left-0 w-12" style={{ background: `linear-gradient(to right, ${f.bg} 0%, transparent 100%)` }} />
+                    <div className="absolute inset-y-0 right-0 w-12" style={{ background: `linear-gradient(to left, ${f.bg} 0%, transparent 100%)` }} />
+                  </div>
                 </div>
               </div>
             ))}
