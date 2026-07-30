@@ -161,7 +161,10 @@ const OA_CSS = `
 
 /* ── Arrivée puis flottement perpétuel ── */
 .oa-armed .oa-chip{opacity:0}
-@keyframes oaIn{from{opacity:0;transform:translate3d(0,20px,0) scale(.9)}to{opacity:1;transform:none}}
+/* Entrée : la pastille monte et se déplie. Elle porte sur .oa-chip pendant que
+   le flottement porte sur .oa-fl, les deux transformes ne se marchent donc pas
+   dessus et se composent pendant l'arrivée. */
+@keyframes oaIn{from{opacity:0;transform:translate3d(0,26px,0) scale(.92)}to{opacity:1;transform:none}}
 /* Flottement « nuage » : une boucle FERMÉE (0 % = 100 %) parcourue en continu,
    donc sans "alternate" : la pastille dérive au lieu de faire un aller-retour
    de métronome. Deux tracés et quatre durées différentes : les pastilles ne
@@ -178,20 +181,31 @@ const OA_CSS = `
   58%{transform:translate3d(-22px,-18px,0) rotate(-1.5deg)}
   82%{transform:translate3d(7px,-9px,0) rotate(.6deg)}
   100%{transform:translate3d(19px,16px,0) rotate(1.3deg)}}
-.oa-in .oa-chip{animation:oaIn 640ms cubic-bezier(.22,1,.36,1) both}
-.oa-in .oa-chip.in{animation-delay:260ms}
-.oa-in .oa-chip.out1{animation-delay:900ms}
-.oa-in .oa-chip.out2{animation-delay:1120ms}
-.oa-in .oa-chip.out3{animation-delay:1340ms}
+/* Les pastilles arrivent APRÈS l'interface (client 2026-07-30) : la scène
+   elle-même est fondue par .hd-stagebox de 560 à 1460 ms, donc entrer avant
+   1,5 s revenait à entrer pendant que le logiciel n'était pas encore là. */
+.oa-in .oa-chip{animation:oaIn 700ms cubic-bezier(.22,1,.36,1) both}
+.oa-in .oa-chip.in{animation-delay:1500ms}
+.oa-in .oa-chip.out1{animation-delay:1720ms}
+.oa-in .oa-chip.out2{animation-delay:1940ms}
+.oa-in .oa-chip.out3{animation-delay:2160ms}
 /* Amplitude TRIPLÉE et cycles raccourcis (client 2026-07-30 : « qu'elles
-   bougent plus, même sans le curseur »). */
-.oa-in .oa-chip .oa-fl{animation:oaFloatA 8s ease-in-out 2s infinite}
-.oa-in .oa-chip.out1 .oa-fl{animation-name:oaFloatB;animation-duration:9.5s;animation-delay:2.4s}
-.oa-in .oa-chip.out2 .oa-fl{animation-duration:11s;animation-delay:2.1s}
-.oa-in .oa-chip.out3 .oa-fl{animation-name:oaFloatB;animation-duration:12.5s;animation-delay:2.7s}
+   bougent plus, même sans le curseur »).
+   Délais NÉGATIFS, et c'est le point important : un délai positif laissait la
+   pastille immobile après son entrée, puis le flottement démarrait sur sa
+   première image, très loin de la position de repos — d'où le sursaut au bout
+   de deux secondes. En négatif, le flottement tourne DÉJÀ pendant que la
+   pastille apparaît : elle arrive en mouvement et il n'y a plus aucune rupture.
+   Quatre valeurs sans rapport entre elles, pour que les pastilles ne soient
+   jamais en phase. */
+.oa-in .oa-chip .oa-fl{animation:oaFloatA 8s ease-in-out -1.3s infinite}
+.oa-in .oa-chip.out1 .oa-fl{animation-name:oaFloatB;animation-duration:9.5s;animation-delay:-5.2s}
+.oa-in .oa-chip.out2 .oa-fl{animation-duration:11s;animation-delay:-3.1s}
+.oa-in .oa-chip.out3 .oa-fl{animation-name:oaFloatB;animation-duration:12.5s;animation-delay:-8.4s}
 /* Trait pointillé entre le fichier entrant et la carte « Ouvrir un fichier » */
 .oa-armed .oa-flow{opacity:0}
-.oa-in .oa-flow{animation:oaIn 600ms ease-out 620ms both}
+/* Le trait pointillé précède de peu la pastille entrante qu'il relie. */
+.oa-in .oa-flow{animation:oaIn 600ms ease-out 1340ms both}
 .oa-flow{position:absolute;z-index:4;left:-8px;top:222px;width:288px;height:2px;
   background:repeating-linear-gradient(90deg,#b9c7de 0 7px,transparent 7px 13px)}
 
