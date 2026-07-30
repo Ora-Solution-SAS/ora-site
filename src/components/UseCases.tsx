@@ -317,10 +317,12 @@ export default function UseCases() {
       sub: "#7c4f6e",
       blend: true,
     },
-    // ── Additional automations — WORK IN PROGRESS. Shown ONLY in local dev
-    // (`import.meta.env.DEV`), hidden in the production build until reworked
-    // with real demos. The demo clips below are placeholders for now. ──
-    ...(import.meta.env.DEV ? ([
+    // ── Automatisations supplémentaires. PUBLIÉES depuis le 2026-07-30 sur
+    // décision du client : le site en ligne n'affichait que quatre cartes
+    // contre six en local, il en veut six partout. Le verrou
+    // `import.meta.env.DEV` est donc levé.
+    // ⚠ ENCORE À FINIR : les clips de démo ci-dessous sont ceux d'AUTRES cas
+    // d'usage, pas les vrais. À réexporter avant de communiquer dessus. ──
     // Ordre re-permuté (client 2026-07-28) : « Réconciliation » d'abord,
     // « Formatage » ensuite. Les couleurs suivent désormais le CONTENU (le
     // damier reste régulier : colonne gauche pâle, colonne droite saturée).
@@ -362,7 +364,6 @@ export default function UseCases() {
       dark: true,
       mockup: "formatage",
     },
-    ] as UseCase[]) : []),
   ];
 
   // ── Tuiles de remplissage du MUR uniquement ──────────────────────────────
@@ -370,18 +371,18 @@ export default function UseCases() {
   // les rangées. Elles ne rejoignent jamais les cartes pleines travaillées
   // au-dessus : hors flux (`absolute`) et invisibles tant que le recul n'a pas
   // commencé, elles ne touchent donc pas la grille.
-  // Intitulés INVENTÉS, gardés derrière `import.meta.env.DEV` comme le reste
-  // du travail en cours : aucune automatisation fictive ne part en ligne.
-  const fillers: { title: string; meta: string; bg: string; ink: string }[] = import.meta.env.DEV
-    ? [
-      { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
-      { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
-      { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
-      { title: t({ fr: "Immobilisations", en: "Fixed assets" }), meta: t({ fr: "Amortissements & tableaux", en: "Depreciation & schedules" }), bg: "#5865E3", ink: "#ffffff" },
-      { title: t({ fr: "Notes de frais", en: "Expense reports" }), meta: t({ fr: "Contrôle & refacturation", en: "Checks & rebilling" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-      { title: t({ fr: "Rapprochement bancaire", en: "Bank reconciliation" }), meta: t({ fr: "Trésorerie quotidienne", en: "Daily treasury" }), bg: "#0A6BE1", ink: "#ffffff" },
-    ]
-    : [];
+  // ⚠ INTITULÉS INVENTÉS, et désormais PUBLIÉS (client 2026-07-30, qui a
+  // confirmé en connaissance de cause). Ce sont des noms de remplissage, pas
+  // des automatisations livrées : ils annoncent au public des capacités qui ne
+  // sont pas garanties. À REMPLACER par la vraie liste dès qu'elle arrive.
+  const fillers: { title: string; meta: string; bg: string; ink: string }[] = [
+    { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
+    { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
+    { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
+    { title: t({ fr: "Immobilisations", en: "Fixed assets" }), meta: t({ fr: "Amortissements & tableaux", en: "Depreciation & schedules" }), bg: "#5865E3", ink: "#ffffff" },
+    { title: t({ fr: "Notes de frais", en: "Expense reports" }), meta: t({ fr: "Contrôle & refacturation", en: "Checks & rebilling" }), bg: "#d9e2f6", ink: "#0c2d4d" },
+    { title: t({ fr: "Rapprochement bancaire", en: "Bank reconciliation" }), meta: t({ fr: "Trésorerie quotidienne", en: "Daily treasury" }), bg: "#0A6BE1", ink: "#ffffff" },
+  ];
 
   return (
     <div className="relative mb-40 md:mb-64">
