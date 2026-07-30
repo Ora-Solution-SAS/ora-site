@@ -520,7 +520,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       {import.meta.env.DEV && (
         <section className="relative px-6 pb-16 md:px-12">
           <div className="mx-auto max-w-[1400px]">
-            <OraWorkbench />
+            <OraWorkbench file={file} />
           </div>
         </section>
       )}

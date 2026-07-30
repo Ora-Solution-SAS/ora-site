@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ExcelPane from "./ExcelPane";
+import ExcelPane, { type GridSource } from "./ExcelPane";
 import OraPanel from "./OraPanel";
-import { CLEAN_FILENAME, MESSY_FILENAME, cleanLedger, messyLedger } from "./ledger";
+import { MESSY_FILENAME } from "./ledger";
+import { demoCleanSource, demoMessySource, uploadedSource } from "./sources";
 
 /**
  * OraWorkbench — la réplique interactive du logiciel, pour la page /demo.
@@ -34,7 +35,7 @@ const STEPS = [
 
 type Phase = "idle" | "running" | "done";
 
-export default function OraWorkbench() {
+export default function OraWorkbench({ file }: { file?: File | null }) {
   const mediaRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -42,8 +43,36 @@ export default function OraWorkbench() {
   const [step, setStep] = useState(0);
   const [cleaned, setCleaned] = useState(false);
 
-  const entries = useMemo(() => cleanLedger(44), []);
-  const messyRows = useMemo(() => messyLedger(entries), [entries]);
+  // Le fichier déposé, lu DANS LE NAVIGATEUR : il ne sert qu'à l'affichage, ne
+  // quitte jamais la page, et le lecteur n'est téléchargé qu'au moment où un
+  // fichier arrive vraiment.
+  const [uploaded, setUploaded] = useState<GridSource | null>(null);
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState<string | null>(null);
+
+  const demoMessy = useMemo(demoMessySource, []);
+  const demoClean = useMemo(demoCleanSource, []);
+
+  useEffect(() => {
+    if (!file) { setUploaded(null); setReadError(null); return; }
+    let cancelled = false;
+    setReading(true);
+    setReadError(null);
+    (async () => {
+      try {
+        const { readUploadedFile } = await import("./readWorkbook");
+        const read = await readUploadedFile(file);
+        if (!cancelled) setUploaded(uploadedSource(read));
+      } catch (e) {
+        // L'aperçu n'est qu'un confort : s'il échoue, l'automatisation reste
+        // lançable, on le dit simplement au visiteur.
+        if (!cancelled) setReadError(e instanceof Error ? e.message : "Aperçu indisponible pour ce fichier.");
+      } finally {
+        if (!cancelled) setReading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [file]);
 
   // Mise à l'échelle de la scène, même patron que les autres répliques.
   useEffect(() => {
@@ -102,7 +131,10 @@ export default function OraWorkbench() {
 
   useEffect(() => clearTimers, [clearTimers]);
 
-  const filename = cleaned ? CLEAN_FILENAME : MESSY_FILENAME;
+  // Quelle grille afficher : le fichier du visiteur dès qu'il est lisible,
+  // sinon le classeur de démonstration en avant-goût.
+  const source: GridSource = uploaded ?? (cleaned ? demoClean : demoMessy);
+  const panelFilename = uploaded?.filename ?? MESSY_FILENAME;
 
   return (
     <div ref={mediaRef} className="relative mx-auto aspect-[1400/880] w-full max-w-[1400px]">
@@ -114,16 +146,14 @@ export default function OraWorkbench() {
         <div className="flex h-full gap-4">
           <div className="min-w-0 flex-1">
             <ExcelPane
-              state={cleaned ? "clean" : "messy"}
-              filename={filename}
-              entries={entries}
-              messyRows={messyRows}
+              source={source}
+              loading={reading}
               highlightRow={phase === "running" && step >= 3 ? step : null}
             />
           </div>
 
           <div className="relative w-[452px] shrink-0">
-            <OraPanel filename={MESSY_FILENAME} onRun={run} busy={phase === "running"} />
+            <OraPanel filename={panelFilename} onRun={run} busy={phase === "running"} />
 
             {/* Voile + modales, cantonnés au panneau comme dans le logiciel. */}
             {phase !== "idle" && (
@@ -134,6 +164,12 @@ export default function OraWorkbench() {
           </div>
         </div>
       </div>
+
+      {readError && (
+        <p className="mt-3 text-center font-inter text-[13px] text-[#b45309]">
+          ⚠ {readError} L'automatisation reste lançable.
+        </p>
+      )}
     </div>
   );
 }
