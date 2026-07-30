@@ -12,12 +12,74 @@ import { useLang } from "../lib/i18n";
  * (indigo card in the use-case-cards family, with the soft white round in
  * the corner).
  *
- * TEMPORARY AUTH BYPASS (client request 2026-07-24): any credentials are
- * accepted and land on a placeholder in-page "space" view. Nothing is sent
- * anywhere and no session persists. Replace `setView("space")` with the real
- * authentication call when the backend exists.
+ * AUTH BYPASS, LOCAL DEV ONLY (client 2026-07-28): in `npm run dev`, any
+ * credentials land on the placeholder in-page "space" view so the design can
+ * be worked on. In the production build the form refuses access instead
+ * ("réservé aux clients") until real authentication exists. Nothing is sent
+ * anywhere and no session persists in either case.
  * The "not a client yet" block routes to the site's #1 action: booking.
  */
+
+/* ══ Mise en scène de l'arrivée (client 2026-07-28) ══
+   Tout entre en séquence au chargement — sinon « les gens ne comprennent pas
+   qu'il y a quelque chose qui se passe ». Ordre : panneau de marque → titre →
+   champs du formulaire → cartes flottantes. Ensuite, la page ne se fige
+   jamais : les ronds dérivent largement et les cartes respirent. */
+const EC_CSS = `
+/* ── Arrivées ── */
+@keyframes ecRise{from{opacity:0;transform:translate3d(0,22px,0)}
+  to{opacity:1;transform:none}}
+@keyframes ecPanelIn{from{opacity:0;transform:translate3d(46px,0,0) scale(.965)}
+  to{opacity:1;transform:none}}
+@keyframes ecCardIn{from{opacity:0;transform:translate3d(38px,18px,0) scale(.94)}
+  to{opacity:1;transform:none}}
+/* Les éléments animés partent invisibles : le mode both fige l'état initial
+   pendant le délai, donc rien ne clignote avant son tour. */
+.ec-rise{animation:ecRise 720ms cubic-bezier(.22,1,.36,1) both}
+.ec-panel{animation:ecPanelIn 900ms cubic-bezier(.22,1,.36,1) both}
+
+/* ── Ronds : dérive AMPLE et continue ── */
+.ec-orb{animation:ecOrbFloat 14s ease-in-out infinite alternate}
+.ec-orb2{animation:ecOrb2Float 17s ease-in-out infinite alternate}
+/* Dérive AMPLE mais surtout latérale : le rond reste un accent de coin et ne
+   remonte jamais assez pour effacer les cartes posées au-dessus de lui. */
+@keyframes ecOrbFloat{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  35%{transform:translate3d(-104px,-26px,0) scale(1.10)}
+  70%{transform:translate3d(-58px,-46px,0) scale(1.02)}
+  100%{transform:translate3d(64px,-14px,0) scale(.92)}}
+@keyframes ecOrb2Float{
+  0%{transform:translate3d(0,0,0) scale(1)}
+  40%{transform:translate3d(92px,44px,0) scale(1.14)}
+  75%{transform:translate3d(30px,84px,0) scale(1.02)}
+  100%{transform:translate3d(-58px,58px,0) scale(.9)}}
+
+/* ── Cartes flottantes : entrée décalée, puis respiration perpétuelle ── */
+.ec-card{animation:ecCardIn 760ms cubic-bezier(.22,1,.36,1) both}
+.ec-card .ec-cardin{display:block;animation:ecBob 7s ease-in-out infinite alternate}
+.ec-card:nth-child(2) .ec-cardin{animation-duration:8.5s;animation-delay:-2s}
+.ec-card:nth-child(3) .ec-cardin{animation-duration:9.5s;animation-delay:-4s}
+@keyframes ecBob{from{transform:translate3d(0,-7px,0)}to{transform:translate3d(0,9px,0)}}
+
+/* Point « en cours » qui pulse + barre de progression qui balaie */
+.ec-dot{animation:ecPulse 1.9s ease-in-out infinite}
+@keyframes ecPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.82)}}
+.ec-bar{position:relative;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.22)}
+.ec-bar i{position:absolute;inset:0;display:block;border-radius:999px;
+  background:linear-gradient(90deg,rgba(255,255,255,.55),#fff);
+  transform-origin:left center;animation:ecFill 3.4s cubic-bezier(.5,0,.3,1) infinite}
+@keyframes ecFill{0%{transform:scaleX(.05)}70%{transform:scaleX(.86)}100%{transform:scaleX(.05)}}
+
+/* Le bouton respire une fois l'entrée finie : la cible est évidente. */
+.ec-cta{animation:ecCtaGlow 3.6s ease-in-out 2.2s infinite}
+@keyframes ecCtaGlow{
+  0%,100%{box-shadow:0 2px 12px rgba(59,130,246,.30)}
+  50%{box-shadow:0 6px 26px rgba(59,130,246,.55)}}
+
+@media (prefers-reduced-motion:reduce){
+  .ec-orb,.ec-orb2,.ec-card,.ec-card .ec-cardin,.ec-rise,.ec-panel,
+  .ec-dot,.ec-bar i,.ec-cta{animation:none}}
+`;
 
 type EspaceClientPageProps = {
   theme: "light" | "dark";
@@ -28,9 +90,7 @@ type EspaceClientPageProps = {
 export default function EspaceClientPage({ theme, onNavigate, openBooking }: EspaceClientPageProps) {
   const { t } = useLang();
   const [view, setView] = useState<"login" | "space">("login");
-  // setUserEmail volontairement ignoré tant que le bypass est bloqué — la
-  // SpaceView (et son état) restent prêts pour la vraie authentification.
-  const [userEmail] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -38,11 +98,17 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    // Bypass BLOQUÉ (client 2026-07-28) : l'espace démo ne doit plus être
-    // accessible en ligne tant que la vraie authentification n'existe pas.
-    // Aucune donnée ne quitte la page ; la SpaceView reste dans le fichier,
-    // prête à être rebranchée — pour rouvrir : setUserEmail(email) puis
-    // setView("space") comme avant.
+    // Bypass réservé au DÉVELOPPEMENT LOCAL (client 2026-07-28) : en local,
+    // n'importe quels identifiants ouvrent l'espace de démonstration pour
+    // pouvoir travailler le design. En production (`npm run build`), le
+    // formulaire refuse toujours l'accès tant que la vraie authentification
+    // n'existe pas. Aucune donnée ne quitte la page dans les deux cas.
+    if (import.meta.env.DEV) {
+      const email = (new FormData(e.currentTarget as HTMLFormElement).get("email") as string) || "";
+      setUserEmail(email);
+      setView("space");
+      return;
+    }
     setLoginError(
       t({
         fr: "L'accès à l'espace Ora est réservé aux clients. Contactez-nous pour ouvrir votre compte.",
@@ -70,25 +136,33 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
     <div className="min-h-screen flex bg-[#fcfbf7] dark:bg-black">
       {/* ── Left: sign-in form ─────────────────────────────────────── */}
       <div className="flex-1 flex flex-col justify-center px-6 py-16">
+        <style>{EC_CSS}</style>
         <div className="w-full max-w-[23rem] mx-auto">
-          {/* Logo → home */}
+          {/* Logo → home. Les délais échelonnent l'arrivée de haut en bas. */}
           <button
             onClick={() => onNavigate("home")}
-            className="block"
+            className="ec-rise block"
+            style={{ animationDelay: "60ms" }}
             aria-label={t({ fr: "Retour à l'accueil", en: "Back home" })}
           >
             <img src={logo} alt="Ora" className="h-8 w-auto" />
           </button>
 
-          <h1 className="mt-10 font-poppins font-semibold text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white">
+          <h1
+            className="ec-rise mt-10 font-poppins font-semibold text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white"
+            style={{ animationDelay: "140ms" }}
+          >
             {t({ fr: "Mon espace Ora", en: "My Ora space" })}
           </h1>
-          <p className="mt-2 font-inter text-[14px] text-gray-500 dark:text-gray-400">
+          <p
+            className="ec-rise mt-2 font-inter text-[14px] text-gray-500 dark:text-gray-400"
+            style={{ animationDelay: "210ms" }}
+          >
             {t({ fr: "Connectez-vous pour retrouver vos automatisations.", en: "Sign in to access your automations." })}
           </p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div>
+            <div className="ec-rise" style={{ animationDelay: "290ms" }}>
               <label htmlFor="ec-email" className="block font-inter text-[13px] font-semibold text-[#111827] dark:text-gray-200 mb-1.5">
                 {t({ fr: "Email professionnel", en: "Work email" })}
               </label>
@@ -106,7 +180,7 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
               </div>
             </div>
 
-            <div>
+            <div className="ec-rise" style={{ animationDelay: "360ms" }}>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor="ec-pwd" className="block font-inter text-[13px] font-semibold text-[#111827] dark:text-gray-200">
                   {t({ fr: "Mot de passe", en: "Password" })}
@@ -138,8 +212,10 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
 
             <button
               type="submit"
-              className="group w-full h-11 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] font-inter font-semibold text-[14.5px] text-white inline-flex items-center justify-center gap-2 shadow-[0_2px_12px_rgba(59,130,246,0.3)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.4)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+              style={{ animationDelay: "430ms" }}
+              className="ec-rise group relative w-full h-11 rounded-xl bg-[#3b82f6] hover:bg-[#2563eb] font-inter font-semibold text-[14.5px] text-white inline-flex items-center justify-center gap-2 hover:-translate-y-px active:translate-y-0 transition-all duration-150"
             >
+              <span className="ec-cta absolute inset-0 rounded-xl" aria-hidden />
               {t({ fr: "Se connecter", en: "Sign in" })}
               <ArrowRight className="w-4 h-4 opacity-80 transition-transform duration-150 group-hover:translate-x-0.5" />
             </button>
@@ -153,7 +229,10 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
           </form>
 
           {/* Not a client yet → the site's #1 action */}
-          <div className="mt-9 pt-7 border-t border-gray-200/80 dark:border-white/[0.08]">
+          <div
+            className="ec-rise mt-9 pt-7 border-t border-gray-200/80 dark:border-white/[0.08]"
+            style={{ animationDelay: "510ms" }}
+          >
             <p className="font-inter text-[13.5px] text-gray-500 dark:text-gray-400">
               {t({ fr: "Pas encore client ?", en: "Not a client yet?" })}{" "}
               <button
@@ -168,7 +247,8 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
 
           <button
             onClick={() => onNavigate("home")}
-            className="mt-7 flex items-center gap-1.5 font-inter text-[13px] text-gray-500 dark:text-gray-400 hover:text-[#111827] dark:hover:text-white transition-colors"
+            style={{ animationDelay: "570ms" }}
+            className="ec-rise mt-7 flex items-center gap-1.5 font-inter text-[13px] text-gray-500 dark:text-gray-400 hover:text-[#111827] dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             {t({ fr: "Retour à l'accueil", en: "Back to home" })}
@@ -179,13 +259,22 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
       {/* ── Right: brand panel (desktop only). Starts below the fixed nav
           so the nav never sits on the indigo. ──────────────────────── */}
       <div className="hidden lg:flex w-[44%] p-4 pt-[84px]">
-        <div className="relative w-full rounded-[28px] overflow-hidden bg-[#5865E3] flex flex-col">
+        <div className="ec-panel relative w-full rounded-[28px] overflow-hidden bg-[#5865E3] flex flex-col">
           {/* Soft white round, clipped into the bottom-right corner, kept
-              well clear of the copy (use-case-cards family). */}
+              well clear of the copy (use-case-cards family). Il DÉRIVE en
+              continu (client 2026-07-28) : translation + léger gonflement,
+              aller-retour lent. */}
           <div
             aria-hidden
-            className="pointer-events-none absolute -right-48 -bottom-64 w-[34rem] h-[34rem] rounded-full"
+            className="ec-orb pointer-events-none absolute -right-56 -bottom-[22rem] w-[34rem] h-[34rem] rounded-full"
             style={{ background: "radial-gradient(circle at 42% 40%,#ffffff,#eef3fc 62%,#e3eaf7)" }}
+          />
+          {/* Halo compagnon, en haut à gauche : dérive en sens inverse pour
+              que le panneau respire sans jamais gêner le texte. */}
+          <div
+            aria-hidden
+            className="ec-orb2 pointer-events-none absolute -left-40 -top-28 w-[26rem] h-[26rem] rounded-full"
+            style={{ background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.20), rgba(255,255,255,0.06) 55%, transparent 72%)" }}
           />
           {/* Faint top light */}
           <div
@@ -195,18 +284,86 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
           />
 
           <div className="relative p-10 xl:p-14">
-            <h2 className="font-poppins font-semibold text-[2rem] xl:text-[2.4rem] leading-[1.15] tracking-[-0.02em] text-white max-w-md">
+            <h2
+              className="ec-rise font-poppins font-semibold text-[2rem] xl:text-[2.4rem] leading-[1.15] tracking-[-0.02em] text-white max-w-md"
+              style={{ animationDelay: "300ms" }}
+            >
               {t({
                 fr: "Toutes vos automatisations, au même endroit.",
                 en: "All your automations, in one place.",
               })}
             </h2>
-            <p className="mt-4 font-inter text-[15px] leading-relaxed text-white/75 max-w-sm">
+            <p
+              className="ec-rise mt-4 font-inter text-[15px] leading-relaxed text-white/75 max-w-sm"
+              style={{ animationDelay: "390ms" }}
+            >
               {t({
                 fr: "Votre espace client arrive bientôt : vos workflows, vos livrables et votre suivi, réunis.",
                 en: "Your client space is coming soon: your workflows, deliverables and follow-up, together.",
               })}
             </p>
+
+            {/* Aperçu vivant de l'espace : trois cartes de verre arrivent en
+                cascade puis flottent en permanence, chacune sur son propre
+                rythme. C'est ce qui donne envie d'entrer. Données fictives,
+                même univers que la SpaceView (Groupe Méridian, Émeraude). */}
+            <div className="mt-10 xl:mt-12 space-y-3.5 max-w-[22rem]">
+              {[
+                {
+                  name: t({ fr: "Reporting mensuel", en: "Monthly reporting" }),
+                  meta: t({ fr: "Groupe Méridian · livré ce matin", en: "Groupe Méridian · delivered this morning" }),
+                  state: "done" as const,
+                  delay: 620,
+                },
+                {
+                  name: t({ fr: "Extraction PDF", en: "PDF extraction" }),
+                  meta: t({ fr: "42 relevés bancaires", en: "42 bank statements" }),
+                  state: "running" as const,
+                  delay: 740,
+                },
+                {
+                  name: t({ fr: "Pointage de comptes", en: "Account matching" }),
+                  meta: t({ fr: "Dossier Émeraude · lundi 08:00", en: "Émeraude file · Monday 8:00 AM" }),
+                  state: "scheduled" as const,
+                  delay: 860,
+                },
+              ].map((card) => (
+                <div key={card.name} className="ec-card" style={{ animationDelay: `${card.delay}ms` }}>
+                  {/* Verre teinté indigo (et non blanc) : les cartes restent
+                      lisibles même quand le rond blanc passe derrière elles. */}
+                  <div className="ec-cardin rounded-2xl border border-white/20 bg-[#4650cf]/70 px-4 py-3.5 shadow-[0_14px_34px_-16px_rgba(15,23,42,.55)] backdrop-blur-md">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20 text-white">
+                        {card.state === "done" ? (
+                          <FileSpreadsheet className="h-4 w-4" />
+                        ) : card.state === "running" ? (
+                          <Workflow className="h-4 w-4" />
+                        ) : (
+                          <CalendarClock className="h-4 w-4" />
+                        )}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-inter text-[13.5px] font-semibold text-white">{card.name}</p>
+                        <p className="truncate font-inter text-[11.5px] text-white/65">{card.meta}</p>
+                      </div>
+                      {card.state === "done" && (
+                        <span className="shrink-0 rounded-full bg-white/20 px-2.5 py-1 font-inter text-[10.5px] font-semibold text-white">
+                          {t({ fr: "Prêt", en: "Ready" })}
+                        </span>
+                      )}
+                      {card.state === "running" && (
+                        <span className="ec-dot h-2 w-2 shrink-0 rounded-full bg-white" />
+                      )}
+                    </div>
+                    {card.state === "running" && (
+                      <span className="ec-bar mt-3 block h-1">
+                        <i />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -102,8 +102,11 @@ function CarouselCard({
   const { t } = useLang();
   const { Icon } = automation;
 
+  // Ombre NEUTRE : l'ancienne était teintée de bleu et posait un voile coloré
+  // sous chaque carte. Une ombre grise très diffuse décolle la carte du fond
+  // sans ajouter de couleur.
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200/70 bg-white shadow-[0_20px_60px_-10px_rgba(96,165,250,0.16),0_8px_24px_-8px_rgba(96,165,250,0.08)] dark:border-white/[0.08] dark:bg-white/[0.02] md:flex-row">
+    <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-gray-200/70 bg-white shadow-[0_24px_70px_-24px_rgba(15,23,42,0.18),0_2px_8px_-4px_rgba(15,23,42,0.06)] dark:border-white/[0.08] dark:bg-white/[0.02] md:flex-row">
       {/* Illustration: top on mobile, right on desktop */}
       <div className="order-first md:order-last md:w-[46%] md:shrink-0">
         <Illustration automation={automation} />
@@ -114,19 +117,23 @@ function CarouselCard({
         <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#0d9488] text-white">
           <Icon size={22} />
         </span>
-        <h3 className="mt-5 font-poppins text-[22px] font-semibold tracking-[-0.02em] md:text-[26px]">
+        <h3 className="mt-5 font-instrument text-[24px] font-normal tracking-[-0.03em] text-[#111827] md:text-[30px] dark:text-white">
           {t(automation.title)}
         </h3>
         <p className="mt-2.5 max-w-md font-inter text-[14px] leading-relaxed text-gray-600 dark:text-gray-300">
           {t(automation.desc)}
         </p>
 
+        {/* Étiquettes de format en gris neutre (client 2026-07-30) : en bleu et
+            en teal, elles entraient en concurrence avec la tuile d'icône et le
+            bouton, et la carte virait au patchwork. Ce sont des informations
+            techniques, elles doivent se lire sans crier. */}
         <div className="mt-4 flex flex-wrap items-center gap-1.5">
-          <span className="inline-flex items-center rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 font-inter text-[10.5px] font-semibold uppercase tracking-[0.08em] text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 font-inter text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
             {t(automation.acceptsLabel)}
           </span>
           <ArrowRight size={11} className="text-gray-300 dark:text-gray-600" />
-          <span className="inline-flex items-center rounded-full border border-teal-100 bg-teal-50 px-2.5 py-1 font-inter text-[10.5px] font-semibold uppercase tracking-[0.08em] text-teal-700 dark:border-teal-500/20 dark:bg-teal-500/10 dark:text-teal-400">
+          <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 font-inter text-[10.5px] font-semibold uppercase tracking-[0.08em] text-gray-500 dark:bg-white/[0.07] dark:text-gray-400">
             {t(automation.outputLabel)}
           </span>
         </div>
@@ -159,7 +166,7 @@ export function SelectedAutomationCard({
   const { Icon } = automation;
 
   return (
-    <div className="mx-auto flex max-w-2xl items-center gap-4 rounded-2xl border border-blue-300/70 bg-blue-50/40 p-4 dark:border-blue-500/30 dark:bg-blue-500/[0.06]">
+    <div className="mx-auto flex max-w-2xl items-center gap-4 rounded-2xl border border-blue-300/70 bg-blue-50/40 p-4 shadow-[0_18px_50px_-24px_rgba(15,23,42,0.24),0_2px_8px_-5px_rgba(15,23,42,0.10)] dark:border-blue-500/30 dark:bg-blue-500/[0.06] dark:shadow-none">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#0d9488] text-white">
         <Icon size={20} />
       </span>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Download, Lock, MousePointerClick, RefreshCcw, Zap } from "lucide-react";
+import { ArrowRight, Download, Lock, RefreshCcw } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import AutomationCarousel, { SelectedAutomationCard } from "@/components/demo/AutomationCarousel";
 import DropZone from "@/components/demo/DropZone";
@@ -37,13 +37,43 @@ type Props = {
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/** Ronds animés du fond. Deux disques flous, deux trajectoires fermées de
+ *  durées différentes : ils ne repassent jamais en phase, donc le mouvement ne
+ *  se lit jamais comme une boucle. `blur` + `transform` uniquement, tout est
+ *  composité par le GPU. Coupés en mouvement réduit. */
+const DEMO_ORB_CSS = `
+.demo-orb{position:absolute;left:50%;border-radius:9999px;filter:blur(78px);will-change:transform}
+.demo-orb-a{top:-180px;width:660px;height:660px;margin-left:-330px;
+  background:radial-gradient(circle at 50% 50%,rgba(59,130,246,.30),rgba(59,130,246,0) 68%);
+  animation:demoOrbA 24s ease-in-out infinite}
+.demo-orb-b{top:150px;width:520px;height:520px;margin-left:-260px;
+  background:radial-gradient(circle at 50% 50%,rgba(13,148,136,.22),rgba(13,148,136,0) 68%);
+  animation:demoOrbB 31s ease-in-out infinite}
+.dark .demo-orb-a{background:radial-gradient(circle at 50% 50%,rgba(59,130,246,.34),rgba(59,130,246,0) 68%)}
+.dark .demo-orb-b{background:radial-gradient(circle at 50% 50%,rgba(13,148,136,.26),rgba(13,148,136,0) 68%)}
+@keyframes demoOrbA{
+  0%{transform:translate3d(-140px,0,0) scale(1)}
+  30%{transform:translate3d(90px,60px,0) scale(1.14)}
+  62%{transform:translate3d(160px,-40px,0) scale(.94)}
+  100%{transform:translate3d(-140px,0,0) scale(1)}}
+@keyframes demoOrbB{
+  0%{transform:translate3d(180px,40px,0) scale(1.06)}
+  35%{transform:translate3d(-120px,-30px,0) scale(.9)}
+  70%{transform:translate3d(-40px,90px,0) scale(1.18)}
+  100%{transform:translate3d(180px,40px,0) scale(1.06)}}
+@media (prefers-reduced-motion:reduce){.demo-orb{animation:none}}
+`;
+
 function readMagicLinkParam(): string | null {
   return new URLSearchParams(window.location.search).get("ml");
 }
 
+/** Sur-titre discret. Les pastilles bleues cernées ont été retirées (client
+ *  2026-07-30) : elles alourdissaient chaque écran. Reste une ligne de texte
+ *  espacée, qui laisse le titre porter seul. */
 function StepBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+    <span className="font-inter text-[11.5px] font-medium uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
       {label}
     </span>
   );
@@ -54,34 +84,34 @@ function StepBadge({ label }: { label: string }) {
  *  the WHOLE journey and where they stand in it (layout redesign 2026-07-28). */
 function StepTrail({ active, labels }: { active: 1 | 2 | 3; labels: string[] }) {
   return (
-    <div className="flex items-center justify-center gap-3 md:gap-4">
+    <div className="flex items-center justify-center gap-3 md:gap-5">
       {labels.map((label, i) => {
         const n = (i + 1) as 1 | 2 | 3;
         const done = n < active;
         const current = n === active;
         return (
-          <div key={label} className="flex items-center gap-3 md:gap-4">
-            {i > 0 && (
+          <div key={label} className="flex items-center gap-3 md:gap-5">
+            {i > 0 && <span aria-hidden className="h-px w-9 bg-gray-200 md:w-16 dark:bg-white/10" />}
+            <span className="inline-flex items-center gap-2.5">
+              {/* Monochrome : l'étape courante est simplement la plus contrastée.
+                  Le bleu était réservé aux boutons, en mettre ici brouillait la
+                  hiérarchie de la page. */}
               <span
-                aria-hidden
-                className={`h-px w-8 md:w-14 ${done || current ? "bg-blue-300 dark:bg-blue-500/50" : "bg-gray-200 dark:bg-white/10"}`}
-              />
-            )}
-            <span className="inline-flex items-center gap-2">
-              <span
-                className={`flex h-6 w-6 items-center justify-center rounded-full font-inter text-[12px] font-semibold transition-colors ${
+                className={`flex h-[22px] w-[22px] items-center justify-center rounded-full font-inter text-[11px] font-semibold transition-colors duration-300 ${
                   current
-                    ? "bg-[#3b82f6] text-white shadow-[0_2px_10px_rgba(59,130,246,0.35)]"
+                    ? "bg-[#111827] text-white dark:bg-white dark:text-[#111827]"
                     : done
-                      ? "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
-                      : "border border-gray-300 text-gray-400 dark:border-white/20 dark:text-gray-500"
+                      ? "bg-gray-200 text-gray-500 dark:bg-white/15 dark:text-gray-300"
+                      : "border border-gray-200 text-gray-300 dark:border-white/15 dark:text-gray-600"
                 }`}
               >
                 {n}
               </span>
               <span
-                className={`font-inter text-[13px] font-semibold ${
-                  current ? "text-[#111827] dark:text-white" : "text-gray-400 dark:text-gray-500"
+                className={`font-inter text-[13px] transition-colors duration-300 ${
+                  current
+                    ? "font-semibold text-[#111827] dark:text-white"
+                    : "font-medium text-gray-400 dark:text-gray-500"
                 }`}
               >
                 {label}
@@ -97,8 +127,11 @@ function StepTrail({ active, labels }: { active: 1 | 2 | 3; labels: string[] }) 
 export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
   const { t } = useLang();
   const dk = theme === "dark";
-  const bg = dk ? "#111827" : "#fcfbf7";
-  const bgContrast = dk ? "#0f172a" : "#ffffff";
+  // EXCEPTION assumée à l'alternance de CLAUDE.md sur cette page (client
+  // 2026-07-30) : le beige #fcfbf7 est refusé ici, et l'alternance de fonds
+  // aussi. UN SEUL fond, blanc pur, du haut de la page jusqu'en bas. Le relief
+  // ne vient plus des bandes de couleur mais des ombres portées des cartes.
+  const bg = dk ? "#111827" : "#ffffff";
 
   // Magic-link landing (delivery space) vs the funnel itself.
   const [mlJobId, setMlJobId] = useState<string | null>(() => readMagicLinkParam());
@@ -293,7 +326,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
         <div className="mx-auto mb-10 max-w-3xl text-center">
           <StepBadge label={t({ fr: "Lancement réussi", en: "Run started" })} />
-          <h1 className="mt-5 font-poppins text-[clamp(1.9rem,3.5vw,2.75rem)] font-semibold tracking-[-0.03em]">
+          <h1 className="mt-6 font-instrument text-[clamp(2.1rem,4vw,3.2rem)] font-normal leading-[1.05] tracking-[-0.04em] text-[#111827] dark:text-white">
             {t({ fr: "Ora travaille pour vous", en: "Ora is working for you" })}
           </h1>
           <p className="mx-auto mt-3 max-w-xl font-inter text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
@@ -326,7 +359,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
         <div className="mx-auto mb-8 max-w-3xl text-center">
           <StepBadge label={t({ fr: "Traitement terminé", en: "Run complete" })} />
-          <h1 className="mt-5 font-poppins text-[clamp(1.9rem,3.5vw,2.75rem)] font-semibold tracking-[-0.03em]">
+          <h1 className="mt-6 font-instrument text-[clamp(2.1rem,4vw,3.2rem)] font-normal leading-[1.05] tracking-[-0.04em] text-[#111827] dark:text-white">
             {t({ fr: "Votre fichier est prêt", en: "Your file is ready" })}
           </h1>
           <p className="mx-auto mt-3 max-w-xl font-inter text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">
@@ -397,7 +430,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
       <div className="min-h-screen px-6 pb-24 pt-36 md:px-12" style={{ backgroundColor: bg }}>
         <div className="mx-auto mb-8 max-w-3xl text-center">
           <StepBadge label={t({ fr: "Dernière étape", en: "Final step" })} />
-          <h1 className="mt-5 font-poppins text-[clamp(1.9rem,3.5vw,2.75rem)] font-semibold tracking-[-0.03em]">
+          <h1 className="mt-6 font-instrument text-[clamp(2.1rem,4vw,3.2rem)] font-normal leading-[1.05] tracking-[-0.04em] text-[#111827] dark:text-white">
             {t({ fr: "Votre fichier arrive", en: "Your file is on its way" })}
           </h1>
         </div>
@@ -420,55 +453,66 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     t({ fr: "Téléchargez", en: "Download" }),
   ];
   return (
-    <div className="min-h-screen" style={{ backgroundColor: bg }}>
-      {/* HERO — compact (layout redesign 2026-07-28) : the headline block is
-          tightened so the automation picker is visible without scrolling; the
-          whole journey is announced by the 3-step trail just below. */}
-      <section className="px-6 pb-10 pt-32 text-center md:px-12 md:pb-12 md:pt-36">
-        <div className="mx-auto max-w-3xl">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-1.5 font-inter text-[11px] font-semibold uppercase tracking-[0.16em] text-blue-600 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
+    <div className="relative min-h-screen overflow-hidden" style={{ backgroundColor: bg }}>
+      <style>{DEMO_ORB_CSS}</style>
+      {/* HERO — refonte minimaliste (client 2026-07-30). Trois partis pris :
+          fond blanc pur, aucune pastille cernée, et le TITRE porte seul. La
+          fonte d'affichage est celle de la page d'accueil (Instrument Sans en
+          graisse normale), pas Poppins : c'est la même exception documentée
+          que pour « Automatisez de bout en bout ». Beaucoup d'air au-dessus,
+          une seule couleur d'accent, et la ligne de réassurance reprend le
+          séparateur ✦ de la page d'accueil. */}
+      {/* Ronds bleus vivants, posés DERRIÈRE le hero ET la carte (client
+          2026-07-30 : « ça fait trop flat, peut-être un rond bleu qui
+          s'anime »). Deux disques très flous qui dérivent et respirent
+          lentement, l'un bleu, l'autre teal, en décalage de phase : le fond
+          blanc bouge en permanence sans jamais devenir un décor. Couche
+          purement décorative, hors du flux et non cliquable. */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[1180px] overflow-hidden">
+        <span className="demo-orb demo-orb-a" />
+        <span className="demo-orb demo-orb-b" />
+      </div>
+
+      <section className="relative px-6 pb-14 pt-36 text-center md:px-12 md:pb-16 md:pt-44">
+        <div className="relative mx-auto max-w-4xl">
+          <span className="font-inter text-[11.5px] font-medium uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
             {t({ fr: "Démo interactive", en: "Interactive demo" })}
           </span>
-          <h1 className="mt-5 font-poppins text-[clamp(2rem,4.2vw,3.4rem)] font-semibold leading-[1.08] tracking-[-0.03em]">
-            {t({ fr: "Testez Ora sur ", en: "Try Ora on " })}
-            <span className="text-brand-gradient whitespace-nowrap">
-              {t({ fr: "vos propres fichiers", en: "your own files" })}
+
+          <h1 className="mt-6 font-instrument text-[clamp(2.5rem,6vw,4.75rem)] font-normal leading-[1.02] tracking-[-0.04em] text-[#111827] dark:text-white">
+            <span className="block">{t({ fr: "Testez Ora sur", en: "Try Ora on" })}</span>
+            <span className="block text-brand-gradient">
+              {t({ fr: "vos propres fichiers.", en: "your own files." })}
             </span>
           </h1>
 
-          <p className="mx-auto mt-4 max-w-xl font-inter text-[15.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+          <p className="mx-auto mt-7 max-w-[34rem] font-instrument text-[clamp(1rem,1.5vw,1.25rem)] font-normal leading-normal text-gray-500 dark:text-gray-400">
             {t({
-              fr: "Choisissez une automatisation, déposez un fichier et regardez le résultat en quelques instants. Directement dans votre navigateur.",
-              en: "Pick an automation, drop a file and see the result in moments. Right in your browser.",
+              fr: "Choisissez une automatisation, déposez un fichier, regardez le résultat. Directement dans votre navigateur.",
+              en: "Pick an automation, drop a file, watch the result. Right in your browser.",
             })}
           </p>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            {[
-              { Icon: Lock, label: { fr: "Fichiers jamais stockés", en: "Files never stored" } },
-              { Icon: MousePointerClick, label: { fr: "Sans installation", en: "No install needed" } },
-              { Icon: Zap, label: { fr: "Résultat instantané", en: "Instant results" } },
-            ].map(({ Icon, label }) => (
-              <span
-                key={label.en}
-                className="inline-flex items-center gap-1.5 font-inter text-[13px] font-medium text-gray-500 dark:text-gray-400"
-              >
-                <Icon size={14} className="text-[#0d9488]" />
-                {t(label)}
-              </span>
-            ))}
-          </div>
+          <p className="mt-8 font-instrument text-[14.5px] font-normal text-gray-400 dark:text-gray-500">
+            {t({
+              fr: "Fichiers jamais stockés ✦ Sans installation ✦ Résultat instantané",
+              en: "Files never stored ✦ No install ✦ Instant results",
+            })}
+          </p>
         </div>
       </section>
 
-      {/* STEPS 1 + 2 share one stage: the carousel picks the automation, then
-          collapses into a compact summary card with the drop zone below. The
-          step trail on top tracks the visitor through the whole journey. */}
-      <section className="px-6 pb-16 pt-10 md:px-12 md:pb-20 md:pt-12" style={{ backgroundColor: bgContrast }}>
+      {/* STEPS 1 + 2 share one stage. Ordre imposé par le client (2026-07-30) :
+          la CARTE arrive directement sous le paragraphe du hero, sans titre
+          intercalé, et le fil « Choisissez / Déposez / Téléchargez » se place
+          EN DESSOUS. « Quelle tâche voulez-vous automatiser ? » et son
+          sous-titre ont été retirés : le paragraphe du hero dit déjà
+          « choisissez une automatisation », et l'étape 1 du fil s'appelle
+          « Choisissez ». C'était le « trop de texte pour rien ».
+          Fond identique au hero : plus de bande grise, la page est blanche de
+          bout en bout, et ce sont les OMBRES des cartes qui donnent le relief. */}
+      <section className="relative px-6 pb-16 pt-0 md:px-12 md:pb-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-10 md:mb-12">
-            <StepTrail active={automation ? 2 : 1} labels={stepLabels} />
-          </div>
           <AnimatePresence mode="wait" initial={false}>
             {!automation ? (
               <motion.div
@@ -478,18 +522,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 exit={{ opacity: 0, scale: 0.985 }}
                 transition={{ duration: 0.45, ease: EASE }}
               >
-                <div className="mx-auto mb-10 max-w-2xl text-center">
-                  <h2 className="font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                    {t({ fr: "Quelle tâche voulez-vous ", en: "Which task should we " })}
-                    <span className="whitespace-nowrap">{t({ fr: "automatiser ?", en: "automate?" })}</span>
-                  </h2>
-                  <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                    {t({
-                      fr: "Découvrez quelques automatisations proposées par Ora.",
-                      en: "Discover a few of the automations Ora offers.",
-                    })}
-                  </p>
-                </div>
                 <AutomationCarousel onSelect={setSelectedKey} />
               </motion.div>
             ) : (
@@ -500,12 +532,6 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 exit={{ opacity: 0, scale: 0.985 }}
                 transition={{ duration: 0.45, ease: EASE }}
               >
-                <div className="mx-auto mb-8 max-w-2xl text-center">
-                  <h2 className="font-poppins text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
-                    {t({ fr: "À vous de jouer", en: "Your turn" })}
-                  </h2>
-                </div>
-
                 <SelectedAutomationCard
                   automation={automation}
                   onChange={() => {
@@ -557,6 +583,13 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Le fil du parcours, EN DESSOUS de la carte : la carte est ce que
+              le visiteur vient voir, le fil n'est qu'un repère de progression.
+              Détaché par un filet, pour qu'il ne flotte pas dans le vide. */}
+          <div className="mx-auto mt-14 max-w-2xl border-t border-gray-100 pt-10 md:mt-20 md:pt-12 dark:border-white/[0.06]">
+            <StepTrail active={automation ? 2 : 1} labels={stepLabels} />
+          </div>
         </div>
       </section>
     </div>

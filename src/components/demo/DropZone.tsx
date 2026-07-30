@@ -66,7 +66,7 @@ export default function DropZone({ automation, file, onFile }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.97 }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="mx-auto flex max-w-xl items-center gap-4 rounded-[24px] border border-teal-200/80 bg-teal-50/50 p-5 dark:border-teal-500/25 dark:bg-teal-500/[0.06]"
+            className="mx-auto flex max-w-xl items-center gap-4 rounded-[24px] border border-teal-200/80 bg-teal-50/50 p-5 shadow-[0_22px_60px_-26px_rgba(15,23,42,0.26),0_3px_10px_-6px_rgba(15,23,42,0.10)] dark:border-teal-500/25 dark:bg-teal-500/[0.06] dark:shadow-none"
           >
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#0d9488] text-white">
               <FileSpreadsheet size={22} />
@@ -113,13 +113,17 @@ export default function DropZone({ automation, file, onFile }: Props) {
                 setDragging(false);
                 tryAccept(e.dataTransfer.files?.[0]);
               }}
+              /* La page est entièrement blanche (client 2026-07-30) : sans
+                 ombre, cette zone blanche sur fond blanc disparaissait. Une
+                 ombre large et douce la décolle du fond, et elle se creuse au
+                 survol puis au glisser pour accompagner le geste. */
               className={`relative cursor-pointer overflow-hidden rounded-[28px] border-2 border-dashed px-6 py-14 text-center transition-all duration-300
                 ${
                   dragging
-                    ? "scale-[1.015] border-[#3b82f6] bg-blue-50/70 dark:bg-blue-500/[0.08]"
+                    ? "scale-[1.015] border-[#3b82f6] bg-blue-50/70 shadow-[0_36px_90px_-24px_rgba(59,130,246,0.42),0_6px_18px_-8px_rgba(15,23,42,0.12)] dark:bg-blue-500/[0.08]"
                     : error
-                      ? "border-red-300 bg-white dark:border-red-500/40 dark:bg-white/[0.02]"
-                      : "border-gray-300/80 bg-white hover:border-blue-300 hover:bg-blue-50/40 dark:border-white/15 dark:bg-white/[0.02] dark:hover:border-blue-500/40 dark:hover:bg-blue-500/[0.04]"
+                      ? "border-red-300 bg-white shadow-[0_24px_60px_-24px_rgba(220,38,38,0.28),0_3px_10px_-6px_rgba(15,23,42,0.10)] dark:border-red-500/40 dark:bg-white/[0.02]"
+                      : "border-gray-300/80 bg-white shadow-[0_26px_70px_-28px_rgba(15,23,42,0.26),0_3px_10px_-6px_rgba(15,23,42,0.10)] hover:border-blue-300 hover:bg-blue-50/40 hover:shadow-[0_34px_84px_-26px_rgba(59,130,246,0.30),0_5px_14px_-7px_rgba(15,23,42,0.12)] dark:border-white/15 dark:bg-white/[0.02] dark:shadow-none dark:hover:border-blue-500/40 dark:hover:bg-blue-500/[0.04]"
                 }`}
             >
               {/* Soft ambient glow behind the icon */}

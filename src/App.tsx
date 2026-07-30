@@ -1009,6 +1009,9 @@ const App = () => {
           (sticky scrub, fake Ora app + animated cursor) under the headline via
           OraHeroDemo. Swap back to <OraGallery> for the 6-video curved
           carousel once the real clips are ready. */}
+      {/* Hero = démo scrollée RÉTABLIE (client 2026-07-29), mais elle OUVRE
+          désormais sur l'interface du logiciel Ora, plus sur Excel. Le
+          noircissement de fin de démo est conservé tel quel. */}
       <OraHeroDemo theme={theme} openBooking={openBooking} />
 
       {/* ── "Your time is your most valuable asset" scroll-reveal ──
@@ -1053,7 +1056,7 @@ const App = () => {
             what Ora automates (FEC Studio, monthly reporting), with the real
             demo clips. Placed right above the "coûte plus que du temps"
             problem section. */}
-        <UseCases openBooking={openBooking} />
+        <UseCases />
 
         {/* Problem — « Votre Excel vous coûte plus que du temps » : masqué
             pour l'instant (à replacer ailleurs / en FAQ plus tard). Réactiver :
