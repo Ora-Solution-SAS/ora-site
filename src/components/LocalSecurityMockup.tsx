@@ -48,19 +48,26 @@ const LK_CSS = `
 /* ══ Anneaux statiques, enceinte et nuage barré (SVG plein cadre) ══ */
 .lk-rings{position:absolute;z-index:0;left:0;top:0;width:1040px;height:640px}
 
-/* ══ Onde de protection ══ */
-.lk-ripple{position:absolute;z-index:1;left:520px;top:318px;width:170px;height:170px;
-  margin:-85px 0 0 -85px;border-radius:50%;
-  border:1.5px solid rgba(13,148,136,.5)}
-.lk-ripple.r2{animation-delay:2.75s}
-@keyframes lkRipple{
-  0%   {transform:scale(.55);opacity:.6}
-  100% {transform:scale(3.1);opacity:0}
-}
-.lk-ripple{animation:lkRipple 5.5s cubic-bezier(.25,.6,.4,1) infinite;opacity:0}
+/* L'onde de protection qui partait du centre a été SUPPRIMÉE (client
+   2026-07-30 : « ce rond-là qui part du logo central, il est moche »). */
+
+/* ══ Respiration : les bulles rentrent dans le logo, puis ressortent ══
+   Une couche à part, car .lk-orbit occupe déjà sa propre propriété transform
+   avec la rotation lente : deux animations ne peuvent pas écrire la même
+   propriété sur le même élément. L'origine est posée sur le centre exact de la
+   scène, donc réduire l'échelle fait converger toutes les bulles vers le logo
+   Ora plutôt que vers le coin de la couche. */
+.lk-gather{position:absolute;z-index:2;inset:0;transform-origin:520px 318px;
+  animation:lkGather 13s cubic-bezier(.65,0,.35,1) infinite}
+@keyframes lkGather{
+  0%,44%{transform:scale(1);opacity:1}
+  57%{transform:scale(.05);opacity:0}
+  63%{transform:scale(.05);opacity:0}
+  77%{transform:scale(1);opacity:1}
+  100%{transform:scale(1);opacity:1}}
 
 /* ══ Orbite des fichiers (ils tournent, restent droits) ══ */
-.lk-orbit{position:absolute;z-index:2;left:330px;top:128px;width:380px;height:380px;
+.lk-orbit{position:absolute;left:330px;top:128px;width:380px;height:380px;
   animation:lkSpin 80s linear infinite}
 /* Enveloppes de TAILLE NULLE : l'origine de chaque rotation tombe alors
    exactement sur le point d'orbite. Avec des boîtes dimensionnées, la
@@ -86,7 +93,6 @@ const LK_CSS = `
   border-radius:50%;color:#fff;text-align:center;
   box-shadow:0 18px 34px -14px rgba(15,23,42,.34),0 3px 10px -4px rgba(15,23,42,.16),
              inset 0 1px 0 rgba(255,255,255,.28)}
-.lk-bub b{font-size:11px;font-weight:800;letter-spacing:.06em;line-height:1}
 .lk-bub.xls{background:linear-gradient(160deg,#1a9e5c,#0d7a45)}
 .lk-bub.pdf{background:linear-gradient(160deg,#e2564a,#c0272d)}
 .lk-bub.csv{background:linear-gradient(160deg,#22b8ab,#0d8a80)}
@@ -103,7 +109,24 @@ const LK_CSS = `
   box-shadow:0 26px 60px -22px rgba(15,23,42,.30),0 4px 14px -6px rgba(15,23,42,.14),
              0 0 0 1px rgba(15,23,42,.04);
   display:grid;place-items:center}
-.lk-core img{width:96px;height:auto;display:block;user-select:none}
+/* Le logo se retourne pendant que les bulles sont rentrées : il « se refait »
+   au creux de la boucle, puis les bulles ressortent. Synchronisé sur les mêmes
+   13 s que .lk-gather. */
+.lk-core img{width:96px;height:auto;display:block;user-select:none;
+  animation:lkCoreSpin 13s cubic-bezier(.65,0,.35,1) infinite}
+@keyframes lkCoreSpin{
+  0%,50%{transform:rotate(0deg) scale(1)}
+  60%{transform:rotate(200deg) scale(1.14)}
+  70%{transform:rotate(360deg) scale(1)}
+  100%{transform:rotate(360deg) scale(1)}}
+/* Le disque blanc respire très légèrement à l'instant où les bulles le
+   rejoignent : sans ça, l'arrivée ne se voit pas. */
+.lk-core{animation:lkCorePulse 13s cubic-bezier(.65,0,.35,1) infinite}
+@keyframes lkCorePulse{
+  0%,52%{transform:scale(1)}
+  58%{transform:scale(1.07)}
+  68%{transform:scale(1)}
+  100%{transform:scale(1)}}
 
 /* ══ Pastilles sur l'enceinte ══ */
 .lk-pill{position:absolute;display:flex;align-items:center;gap:8px;
@@ -127,35 +150,44 @@ const LK_CSS = `
              filter 800ms cubic-bezier(.22,1,.36,1) 160ms}
 
 @media (prefers-reduced-motion: reduce){
-  .lk-orbit,.lk-counter{animation:none}
-  .lk-ripple{animation:none;opacity:.25;transform:scale(1.4)}
+  .lk-orbit,.lk-counter,.lk-gather,.lk-core,.lk-core img{animation:none}
   .lk-armed .lk-fit{opacity:1;transform:none;filter:none}
 }
 `;
 
+/**
+ * Icône de type de fichier : feuille blanche au coin replié, portant un bandeau
+ * de couleur avec l'extension — la forme universelle des logos de format.
+ *
+ * Elle est DESSINÉE ici, et ce n'est pas la marque officielle de Microsoft ni
+ * d'Adobe : reproduire ces logos sur un site commercial engagerait leurs
+ * conditions d'usage. La forme et la couleur suffisent à la reconnaissance.
+ */
+function FileGlyph({ ext, accent, size }: { ext: string; accent: string; size: number }) {
+  return (
+    <svg width={size} height={size * 1.18} viewBox="0 0 44 52" fill="none" aria-hidden="true">
+      <path d="M8 1.5h18.5L40 15v32.5a3.5 3.5 0 0 1-3.5 3.5h-28A3.5 3.5 0 0 1 5 47.5V5A3.5 3.5 0 0 1 8.5 1.5z" fill="#fff" />
+      <path d="M26.5 1.5 40 15h-10a3.5 3.5 0 0 1-3.5-3.5z" fill="rgba(15,23,42,.16)" />
+      <path d="M12 21h16M12 27h16" stroke="rgba(15,23,42,.16)" strokeWidth="2.4" strokeLinecap="round" />
+      <rect x="1" y="31" width="34" height="14.5" rx="3.4" fill={accent} />
+      <text
+        x="18" y="41.4" textAnchor="middle" fill="#fff"
+        fontSize={ext.length > 3 ? 8.4 : 10} fontWeight="800" letterSpacing="0.3"
+        fontFamily="Inter, system-ui, sans-serif"
+      >
+        {ext}
+      </text>
+    </svg>
+  );
+}
+
 /** Les quatre formats que le client a nommés. Tailles et distances inégales à
  *  dessein : une rosace parfaitement régulière fait diagramme, pas grappe. */
 const BUBBLES = [
-  {
-    kind: "xls", label: "XLSX", angle: 20, radius: 208, size: 106,
-    // Tableur : grille avec en-tête et première colonne.
-    glyph: <><rect x="3" y="4.5" width="18" height="15" rx="2.4" /><path d="M3 10h18M9 4.5v15" /></>,
-  },
-  {
-    kind: "pdf", label: "PDF", angle: 102, radius: 226, size: 92,
-    // Document au coin replié.
-    glyph: <><path d="M14 3H7.5A2 2 0 0 0 5.5 5v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /></>,
-  },
-  {
-    kind: "ppt", label: "PPTX", angle: 190, radius: 200, size: 88,
-    // Écran de présentation sur son pied.
-    glyph: <><rect x="3" y="4" width="18" height="12.5" rx="2.2" /><path d="M12 16.5v3.5M8.5 20h7" /></>,
-  },
-  {
-    kind: "csv", label: "CSV", angle: 284, radius: 218, size: 98,
-    // Lignes de valeurs séparées, dernière plus courte.
-    glyph: <><path d="M4.5 7h15M4.5 12h15M4.5 17h9" /></>,
-  },
+  { kind: "xls", ext: "XLSX", accent: "#0d7a45", angle: 20, radius: 208, size: 106 },
+  { kind: "pdf", ext: "PDF", accent: "#c0272d", angle: 102, radius: 226, size: 92 },
+  { kind: "ppt", ext: "PPTX", accent: "#d2551c", angle: 190, radius: 200, size: 88 },
+  { kind: "csv", ext: "CSV", accent: "#0d8a80", angle: 284, radius: 218, size: 98 },
 ] as const;
 
 /** Pastilles décoratives, sans contenu. */
@@ -212,43 +244,38 @@ export default function LocalSecurityMockup() {
               }}
             />
 
-            {/* onde de protection */}
-            <div className="lk-ripple" />
-            <div className="lk-ripple r2" />
-
             {/* Bulles de format en orbite. Le triple emboîtement (rotation,
                 contre-rotation figée, .lk-counter animé) est conservé tel quel :
                 c'est lui qui fait tourner la grappe tout en gardant chaque
-                bulle DROITE. */}
-            <div className="lk-orbit">
-              {BUBBLES.map((b) => (
-                <div key={b.label} className="lk-sat" style={{ transform: `rotate(${b.angle}deg) translate(${b.radius}px)` }}>
-                  <div style={{ transform: `rotate(${-b.angle}deg)` }}><div className="lk-counter">
-                    <div
-                      className={`lk-bub ${b.kind}`}
-                      style={{ width: b.size, height: b.size, left: -b.size / 2, top: -b.size / 2 }}
-                    >
-                      <svg width={b.size * 0.3} height={b.size * 0.3} viewBox="0 0 24 24" fill="none"
-                        stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        {b.glyph}
-                      </svg>
-                      <b>{b.label}</b>
-                    </div>
-                  </div></div>
-                </div>
-              ))}
-              {/* Petites bulles muettes : elles cassent la régularité de la
-                  rosace, exactement comme les petites pastilles d'Apple. */}
-              {DOTS.map((d, i) => (
-                <div key={i} className="lk-sat" style={{ transform: `rotate(${d.angle}deg) translate(${d.radius}px)` }}>
-                  <div style={{ transform: `rotate(${-d.angle}deg)` }}><div className="lk-counter">
-                    <div
-                      className={`lk-dot ${d.tone}`}
-                      style={{ width: d.size, height: d.size, left: -d.size / 2, top: -d.size / 2 }}
-                    />
-                  </div></div>
-                </div>
-              ))}
+                bulle DROITE. La couche .lk-gather par-dessus les fait converger
+                vers le logo puis ressortir. */}
+            <div className="lk-gather">
+              <div className="lk-orbit">
+                {BUBBLES.map((b) => (
+                  <div key={b.ext} className="lk-sat" style={{ transform: `rotate(${b.angle}deg) translate(${b.radius}px)` }}>
+                    <div style={{ transform: `rotate(${-b.angle}deg)` }}><div className="lk-counter">
+                      <div
+                        className={`lk-bub ${b.kind}`}
+                        style={{ width: b.size, height: b.size, left: -b.size / 2, top: -b.size / 2 }}
+                      >
+                        <FileGlyph ext={b.ext} accent={b.accent} size={b.size * 0.44} />
+                      </div>
+                    </div></div>
+                  </div>
+                ))}
+                {/* Petites bulles muettes : elles cassent la régularité de la
+                    rosace, exactement comme les petites pastilles d'Apple. */}
+                {DOTS.map((d, i) => (
+                  <div key={i} className="lk-sat" style={{ transform: `rotate(${d.angle}deg) translate(${d.radius}px)` }}>
+                    <div style={{ transform: `rotate(${-d.angle}deg)` }}><div className="lk-counter">
+                      <div
+                        className={`lk-dot ${d.tone}`}
+                        style={{ width: d.size, height: d.size, left: -d.size / 2, top: -d.size / 2 }}
+                      />
+                    </div></div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Bulle centrale : le logo Ora, à la place du cadenas. */}

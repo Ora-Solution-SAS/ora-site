@@ -379,12 +379,14 @@ export default function UseCases() {
     { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
     { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
     { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
-    { title: t({ fr: "Immobilisations", en: "Fixed assets" }), meta: t({ fr: "Amortissements & tableaux", en: "Depreciation & schedules" }), bg: "#5865E3", ink: "#ffffff" },
-    { title: t({ fr: "Notes de frais", en: "Expense reports" }), meta: t({ fr: "Contrôle & refacturation", en: "Checks & rebilling" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-    // « Rapprochement bancaire » remplacé par « Évaluation d'entreprise »
-    // (client 2026-07-30). Il faisait doublon avec la carte pleine
-    // « Réconciliation · Trésorerie & lettrage » juste au-dessus.
-    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & prévisionnel", en: "Valuation & forecasting" }), bg: "#0A6BE1", ink: "#ffffff" },
+    // « Immobilisations » → « Évaluation d'entreprise » et « Notes de frais »
+    // → « Prévisionnel » (client 2026-07-30). La tuile « Évaluation
+    // d'entreprise » posée au tour précédent à la place de « Rapprochement
+    // bancaire » ferait doublon : elle est donc retirée, et la liste passe de
+    // six à CINQ tuiles. Le mur s'accommode d'un compte non multiple de trois,
+    // il centre simplement sa dernière rangée.
+    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
+    { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
   ];
 
   return (
