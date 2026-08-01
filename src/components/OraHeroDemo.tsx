@@ -48,8 +48,13 @@ const REST_CUR = { x: 330, y: 498 };
 
 /** Carte bleue « Ouvrir un fichier », dans le repère de la scène (la réplique
  *  du logiciel a sa propre mise à l'échelle interne, ces valeurs sont donc
- *  posées à la main comme les cibles du curseur). */
-const OPEN_CARD = { left: 328, top: 189, width: 538, height: 54 };
+ *  posées à la main comme les cibles du curseur).
+ *  Recalé au bord près (client 2026-08-01) : ces valeurs tombaient 7,7 unités
+ *  trop haut et 1,1 trop court. L'ancien repère de clic étant un halo blanc
+ *  diffus de 34 px, l'écart ne se voyait pas ; le liseré fin qui l'a remplacé
+ *  doit épouser exactement le tracé de la carte, sinon il la coupe en haut et
+ *  laisse un vide en bas. Mesuré en direct contre `.oa-open`. */
+const OPEN_CARD = { left: 328, top: 197, width: 538, height: 55 };
 
 const HD_CSS = `
 /* ══ Hero scroll-demo — faithful Ora app + real Excel, scroll-driven ══ */
@@ -807,6 +812,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       { t: 0.641, k: "tg1" }, { t: 0.658, k: "tg2" }, { t: 0.675, k: "tg3" },
       { t: 0.70, k: "run" }, { t: 0.935, k: "tab2" }, { t: 0.962, k: "tab3" },
     ];
+    // Cibles posées sur un fond BLEU (grande carte d'ouverture et boutons
+    // d'action) : l'onde de clic y passe en blanc. Les autres tombent sur des
+    // surfaces claires et gardent l'onde bleue de la marque.
+    const ON_BLUE = new Set(["openfile", "lancerfec", "run"]);
 
     const apply = (vRaw: number) => {
       lastVRef.current = vRaw;
@@ -1124,6 +1133,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           el.ripple.style.top = `${T[active.k].y}px`;
           el.ripple.style.transform = `scale(${0.35 + 0.95 * pe})`;
           el.ripple.style.opacity = String((1 - pe) * 0.75);
+          // L'onde s'accorde au fond qu'elle touche (client 2026-08-01) : une
+          // onde bleue sur un bouton bleu ne se lisait pas, elle formait une
+          // tache pâle. Blanche sur les surfaces bleues, bleue sur les
+          // surfaces claires.
+          const onBlue = ON_BLUE.has(active.k);
+          el.ripple.style.borderColor = onBlue ? "rgba(255,255,255,.92)" : "#3b82f6";
+          el.ripple.style.background = onBlue ? "rgba(255,255,255,.26)" : "rgba(59,130,246,.18)";
         } else {
           el.ripple.style.opacity = "0";
         }
@@ -1282,8 +1298,17 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 <OraAppScene />
               </div>
 
-              {/* Éclat de clic sur la carte « Ouvrir un fichier » : sans lui, le
-                  sélecteur surgissait sans qu'on comprenne ce qui l'a déclenché. */}
+              {/* Repère de clic sur la carte « Ouvrir un fichier » : sans lui, le
+                  sélecteur surgissait sans qu'on comprenne ce qui l'a déclenché.
+                  Refait (client 2026-08-01 : « ce design de clic ne rend pas
+                  bien », et surtout : ne pas toucher au design de la carte).
+                  L'ancienne version posait un voile BLANC sur toute la carte
+                  (opacité .34), un anneau blanc de 3 px et un halo bleu diffus
+                  de 34 px : le bouton se délavait, son dégradé disparaissait et
+                  l'ensemble ressemblait à une sélection ratée. Il ne reste qu'un
+                  contour blanc fin, à l'INTÉRIEUR du tracé de la carte : aucun
+                  voile, aucun halo qui déborde, donc les couleurs de la carte
+                  sont intactes. */}
               <div
                 data-hd="openflash"
                 style={{
@@ -1291,8 +1316,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                   left: OPEN_CARD.left, top: OPEN_CARD.top,
                   width: OPEN_CARD.width, height: OPEN_CARD.height,
                   borderRadius: 9, zIndex: 7, opacity: 0, pointerEvents: "none",
-                  background: "rgba(255,255,255,.34)",
-                  boxShadow: "0 0 0 3px rgba(255,255,255,.55), 0 0 34px 6px rgba(47,111,240,.55)",
+                  boxShadow: "inset 0 0 0 2px rgba(255,255,255,.85)",
                 }}
               />
 
