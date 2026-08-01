@@ -63,11 +63,13 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
  *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
- *  Portée de 2,6 à 3,3 avec la cinquième rangée (2026-08-01) : à 2,6 le mur
- *  faisait ~3 530 px de haut pour 2 340 px tolérés, la hauteur reprenait donc la
- *  main et l'échelle retombait sous celle imposée par la largeur, exactement le
- *  rétrécissement que cette constante sert à éviter. */
-const PULLBACK_FILL_H = 3.3;
+ *  Portée à 3,8 avec la SEPTIÈME rangée (2026-08-01). Mesuré en 1440×900 : mur
+ *  de 2 036 × 4 769 px, le terme de largeur vaut 0,679 et il faut donc au moins
+ *  3,6 côté hauteur pour que la largeur garde la main. À 3,3 le terme de hauteur
+ *  tombait à 0,623, la hauteur reprenait le dessus et le mur rétrécissait,
+ *  exactement ce que cette constante sert à éviter. 3,8 laisse de la marge pour
+ *  les écrans plus courts. */
+const PULLBACK_FILL_H = 3.8;
 /** Amplitude de la dérive inverse des colonnes, en pixels d'écran. */
 const WALL_DRIFT = 170;
 
@@ -481,7 +483,7 @@ export default function UseCases() {
   // autres cas d'usage ont été essayés puis retirés le jour même : leurs fonds
   // sombres juraient avec les couleurs des tuiles (« affreux »). Titre + meta
   // sur un aplat pastel, rien d'autre, en attendant les vrais visuels.
-  const fillers: { title: string; meta: string; bg: string; ink: string }[] = [
+  const fillerBase: { title: string; meta: string; bg: string; ink: string }[] = [
     { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
     { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
     { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
@@ -505,6 +507,15 @@ export default function UseCases() {
     { title: t({ fr: "Inventaire", en: "Inventory" }), meta: t({ fr: "Stocks & valorisation", en: "Stock & valuation" }), bg: "#0F766E", ink: "#ffffff" },
     { title: t({ fr: "Journal de paie", en: "Payroll journal" }), meta: t({ fr: "Écritures & contrôles", en: "Entries & controls" }), bg: "#f2e8f7", ink: "#33204a" },
   ];
+
+  // Le jeu de base est RÉPÉTÉ pour allonger le mur (client 2026-08-01 : « tu les
+  // dupliques, il faut juste plus de lignes »). Aucun intitulé nouveau n'est
+  // inventé : ce sont exactement les mêmes encadrés, repris tels quels.
+  //   6 vraies cartes + 15 tuiles = 21 cartes, soit SEPT rangées de trois
+  //   (contre cinq), donc davantage de matière à faire défiler sous la dérive.
+  // La clé React devient l'INDICE et non le titre : avec des doublons, une clé
+  // par titre ferait collision et React ne rendrait qu'une tuile sur deux.
+  const fillers = [...fillerBase, ...fillerBase.slice(0, 6)];
 
   return (
     <div className="relative mb-40 md:mb-64">
@@ -670,7 +681,7 @@ export default function UseCases() {
                 apparaître au fur et à mesure du dézoom. */}
             {fillers.map((f, i) => (
               <div
-                key={f.title}
+                key={`${f.title}-${i}`}
                 ref={(el) => { fillerRefs.current[i] = el; }}
                 aria-hidden
                 className="pointer-events-none absolute left-0 top-0 opacity-0 overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]"
