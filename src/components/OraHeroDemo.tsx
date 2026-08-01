@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraAppScene from "./OraAppScene";
+import OraHeroMobile from "./OraHeroMobile";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
@@ -1177,10 +1178,27 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
+      {/* ── Phones (< 768px) : hero RECOMPOSÉ ─────────────────────────────
+          La scène scrollée ci-dessous est une scène de 1040×640 contenant une
+          réplique de 1180×720. Tenir l'une ou l'autre dans une colonne de
+          327 px donne une échelle de ~0,29, donc des typographies de 7 à
+          13,5 px rendues entre 2 et 4 px : plus rien n'est lisible. Recadrer
+          au lieu de réduire ne sauve rien non plus, la réplique ne reste
+          lisible qu'à l'échelle 1 et il n'en tient alors que 28 % de la
+          largeur. D'où une branche tactile distincte, comme le fait déjà
+          OraExperienceCarousel. */}
+      <div className="md:hidden">
+        <OraHeroMobile openBooking={openBooking} />
+      </div>
+
       {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
           (v2: shortened — the flow starts directly in Excel). Heavy-scroll
-          zones still stretch the key moments. */}
-      <div ref={wrapRef} className="relative h-[500vh] md:h-[800vh]">
+          zones still stretch the key moments.
+          `hidden md:block` : sur mobile la scène n'est pas seulement masquée,
+          elle ne pèse plus rien dans la mise en page, donc les 500 vh de
+          scrub (≈ 4 264 px de scroll pour une animation invisible) et le
+          curseur de souris simulé disparaissent avec elle. */}
+      <div ref={wrapRef} className="relative hidden md:block md:h-[800vh]">
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}
@@ -1822,8 +1840,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
 
       {/* CTA — after the demo releases. The CONTAINER is a plain always-black
           div (never animated: an opacity-0 entrance here used to let the
-          section's white bg flash through). Only the button itself animates. */}
-      <div className="relative z-10 bg-black pt-16 md:pt-20 pb-16 md:pb-24 px-6 md:px-12 flex justify-center">
+          section's white bg flash through). Only the button itself animates.
+          `hidden md:flex` : sur mobile OraHeroMobile porte déjà son propre
+          bouton de réservation, et ce fond noir ne servait qu'à enchaîner sur
+          ExcelReveal, elle-même absente sous 768 px. */}
+      <div className="relative z-10 bg-black pt-16 md:pt-20 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
         <motion.button
           onClick={openBooking}
           initial={{ opacity: 0, y: 28 }}
