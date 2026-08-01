@@ -62,8 +62,12 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 à 2,6 (client 2026-07-30 : « ça doit prendre plus de largeur ») — sous
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
- *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran. */
-const PULLBACK_FILL_H = 2.6;
+ *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
+ *  Portée de 2,6 à 3,3 avec la cinquième rangée (2026-08-01) : à 2,6 le mur
+ *  faisait ~3 530 px de haut pour 2 340 px tolérés, la hauteur reprenait donc la
+ *  main et l'échelle retombait sous celle imposée par la largeur, exactement le
+ *  rétrécissement que cette constante sert à éviter. */
+const PULLBACK_FILL_H = 3.3;
 /** Amplitude de la dérive inverse des colonnes, en pixels d'écran. */
 const WALL_DRIFT = 170;
 
@@ -78,6 +82,20 @@ export default function UseCases() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const fillerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Le moteur est scindé en DEUX (client 2026-08-01 : « c'est un peu lent et un
+  // peu bugué quand le dézoom s'active »). Avant, une seule fonction était
+  // branchée directement sur `scroll`, sans throttle, et elle alternait lectures
+  // et écritures de mise en page : `offsetWidth`, écriture de `pin.style.top`,
+  // `getBoundingClientRect`, écriture de la largeur des tuiles, relecture des
+  // `offset*` de chaque carte, écriture des transformes, relecture du rect du
+  // cadenceur, écriture du masque. Chaque retour en lecture après une écriture
+  // force un recalcul SYNCHRONE de la mise en page, et l'événement `scroll` peut
+  // se répéter plusieurs fois par image : d'où les saccades.
+  //   · `measure()` prend toutes les mesures et les met en cache. Appelée au
+  //     montage, au redimensionnement et quand le mur grandit, jamais pendant
+  //     le scroll.
+  //   · `apply()` ne fait plus que deux lectures groupées EN TÊTE, puis
+  //     uniquement des écritures, et tourne au maximum une fois par image.
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Même source que la mise en page : le `md:` de Tailwind. Comparer
@@ -88,6 +106,33 @@ export default function UseCases() {
     const pin = pinRef.current;
     const grid = zoomRef.current;
     if (!track || !pin || !grid) return;
+
+    /** Place d'arrivée d'une carte dans le mur, mesurée une fois pour toutes. */
+    type Slot = {
+      card: HTMLDivElement;
+      /** Les tuiles ne VOYAGENT pas : posées d'emblée à leur place, elles se
+       *  contentent d'apparaître en fondu. */
+      still: boolean;
+      dx: number;
+      dy: number;
+      /** Colonne 1 = celle du milieu en trois colonnes ; en repli à deux, c'est
+       *  celle de droite, et les deux dérivent encore en sens opposé. */
+      mid: boolean;
+    };
+    type Geo = {
+      pinTop: number;
+      scrub: number;
+      fit: number;
+      gridH: number;
+      wallFullH: number;
+      fadeH: number;
+      slots: Slot[];
+    };
+    let geo: Geo | null = null;
+    let rafId = 0;
+    let hinted = false;
+    /** Dernières bornes du masque posées, pour ne pas le réécrire à l'identique. */
+    const lastMask: { haut: number | null; bas: number | null } = { haut: null, bas: null };
 
     const reset = () => {
       pin.style.top = "";
@@ -101,13 +146,19 @@ export default function UseCases() {
       fillerRefs.current.forEach((el) => {
         if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; }
       });
+      hinted = false;
+      // Sans ça, un retour aux MÊMES bornes après un reset sauterait la
+      // réécriture et le masque resterait absent.
+      lastMask.haut = null;
+      lastMask.bas = null;
     };
 
-    const apply = () => {
+    // ── Mesures : tout ce qui ne dépend PAS de la position de scroll ─────────
+    const measure = () => {
       // Sous `md` la grille n'est pas épinglée : on remet tout à plat, sinon
       // les transformes d'une session desktop resteraient collés après un
       // redimensionnement.
-      if (!desktop.matches || reduced) return reset();
+      if (!desktop.matches || reduced) { geo = null; return reset(); }
 
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -116,24 +167,12 @@ export default function UseCases() {
       const gridW = grid.offsetWidth;
       const gridH = grid.offsetHeight;
       const reals = cardRefs.current.filter((el): el is HTMLDivElement => !!el);
-      if (gridH <= vh || reals.length < 2) return reset();
+      if (gridH <= vh || reals.length < 2) { geo = null; return reset(); }
 
       // `top` négatif : la grille défile normalement puis se fige au moment où
-      // son BAS touche le bas de l'écran, donc pile sur la dernière rangée
-      // (« Réconciliation » / « Formatage pour logiciel métier »).
+      // son BAS touche le bas de l'écran, donc pile sur la dernière rangée.
       const pinTop = vh - gridH;
-      pin.style.top = `${pinTop}px`;
 
-      const p = clamp01((pinTop - track.getBoundingClientRect().top) / (vh * PULLBACK_VH));
-      const u = ease(p);
-
-      // ── Disposition d'arrivée du mur ────────────────────────────────────
-      // Reculer sur la grille à deux colonnes ne suffit pas : elle est trois
-      // fois plus haute que large, donc la faire tenir à l'écran la réduirait
-      // à un bandeau étroit au milieu du vide. Les cartes se REDISTRIBUENT
-      // donc en un mur plus large pendant le recul. Leur taille de mise en
-      // page ne change jamais (simple `translate`), il n'y a donc aucun
-      // reflux de texte pendant l'animation.
       // Mesures prises sur les VRAIES cartes uniquement : les tuiles de
       // remplissage sont hors flux, leurs `offset*` valent tous zéro.
       const colW = reals[0].offsetWidth;
@@ -143,20 +182,8 @@ export default function UseCases() {
         : gapX;
       const rowH = Math.max(...reals.map((c) => c.offsetHeight));
 
-      // Les tuiles de remplissage prennent le gabarit d'une vraie carte, sinon
-      // les rangées du mur seraient irrégulières.
       const fills = fillerRefs.current.filter((el): el is HTMLDivElement => !!el);
       const fillerSet = new Set<HTMLDivElement>(fills);
-      // Apparition RETARDÉE : elles ne se révèlent qu'une fois le mur bien
-      // engagé. Les faire monter en opacité dès le premier pixel de recul les
-      // montrait à leur place définitive alors que les vraies cartes étaient
-      // encore en chemin.
-      const fade = clamp01((u - 0.82) / 0.18);
-      for (const f of fills) {
-        f.style.width = `${colW}px`;
-        f.style.height = `${rowH}px`;
-        f.style.opacity = String(fade);
-      }
 
       // Alternance vraie carte / tuile : en trois colonnes cela donne un
       // damier, donc les ajouts se fondent dans le mur au lieu de former un
@@ -168,9 +195,9 @@ export default function UseCases() {
       }
 
       // TROIS colonnes, et pas un nombre choisi automatiquement : c'est ce qui
-      // rend lisible la dérive inverse plus bas (les deux colonnes extérieures
-      // montent, celle du milieu descend). En dessous de six cartes, trois
-      // colonnes laisseraient une rangée dépareillée, on retombe alors à deux.
+      // rend lisible la dérive inverse (les deux colonnes extérieures montent,
+      // celle du milieu descend). En dessous de six cartes, trois colonnes
+      // laisseraient une rangée dépareillée, on retombe alors à deux.
       const cols = cards.length >= 6 ? 3 : 2;
       const rows: HTMLDivElement[][] = [];
       for (let i = 0; i < cards.length; i += cols) rows.push(cards.slice(i, i + cols));
@@ -179,81 +206,140 @@ export default function UseCases() {
         + gapY * (rows.length - 1);
       const fit = Math.min(1, (vw * PULLBACK_FILL_W) / wallW, (vh * PULLBACK_FILL_H) / wallFullH);
 
-      const s = 1 - (1 - fit) * u;
-      // Dérive inverse : la colonne du MILIEU descend pendant que les deux
-      // extérieures montent. Décalée de 0,15 pour que le mur soit déjà en
-      // mouvement en arrivant, plutôt que de démarrer pile à l'arrêt. Exprimée
-      // en pixels d'écran, donc divisée par l'échelle du mur.
-      const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
-
       // Toutes les rangées démarrent sur la MÊME grille de colonnes, y compris
-      // la dernière si elle est incomplète. La centrer, comme je le faisais,
-      // plaçait ses cartes entre les colonnes du dessus : l'indice de colonne
-      // ne voulait plus rien dire, la dérive inverse envoyait deux voisines
-      // l'une sur l'autre, et le mur finissait avec un chevauchement.
+      // la dernière si elle est incomplète. La centrer plaçait ses cartes entre
+      // les colonnes du dessus : l'indice de colonne ne voulait plus rien dire,
+      // la dérive inverse envoyait deux voisines l'une sur l'autre, et le mur
+      // finissait avec un chevauchement.
       const rowLeft0 = (gridW - (cols * (colW + gapX) - gapX)) / 2;
+      const slots: Slot[] = [];
       let rowTop = 0;
       for (const row of rows) {
         let cardLeft = rowLeft0;
         row.forEach((card, ci) => {
-          // Les tuiles ne VOYAGENT pas. Étant hors flux, leurs `offset*` valent
-          // zéro : les interpoler comme les vraies cartes les faisait partir du
-          // coin haut-gauche de la grille et traverser tout le mur en passant
-          // par-dessus les cartes pleines. Elles sont donc posées d'emblée à
-          // leur place définitive et se contentent d'apparaître en fondu.
-          const t = fillerSet.has(card) ? 1 : u;
-          const dx = (cardLeft - card.offsetLeft) * t;
-          // Colonne 1 = celle du milieu en trois colonnes ; en repli à deux
-          // colonnes, c'est simplement celle de droite, et les deux dérivent
-          // encore en sens opposé.
-          const dy = (rowTop - card.offsetTop) * t + (ci === 1 ? drift : -drift);
-          card.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-          card.style.willChange = p > 0 && p < 1 ? "transform" : "";
+          slots.push({
+            card,
+            still: fillerSet.has(card),
+            dx: cardLeft - card.offsetLeft,
+            dy: rowTop - card.offsetTop,
+            mid: ci === 1,
+          });
           cardLeft += colW + gapX;
         });
         rowTop += Math.max(...row.map((c) => c.offsetHeight)) + gapY;
       }
 
+      // ÉCRITURES groupées à la toute fin, une fois toutes les lectures faites.
+      // Le gabarit des tuiles est posé ICI et plus à chaque image : `width` et
+      // `height` sont des propriétés de MISE EN PAGE, les réécrire soixante fois
+      // par seconde invalidait la mise en page pour rien.
+      pin.style.top = `${pinTop}px`;
+      for (const f of fills) {
+        f.style.width = `${colW}px`;
+        f.style.height = `${rowH}px`;
+      }
+
+      geo = {
+        pinTop, scrub: vh * PULLBACK_VH, fit, gridH, wallFullH,
+        fadeH: Math.min(130, vh * 0.16), slots,
+      };
+    };
+
+    // ── Application : lectures groupées en tête, puis écritures seules ───────
+    const apply = () => {
+      rafId = 0;
+      const g = geo;
+      if (!g) return;
+
+      // LECTURES (les deux seules, et avant toute écriture).
+      const trackTop = track.getBoundingClientRect().top;
+      const pinTopNow = pin.getBoundingClientRect().top;
+
+      const p = clamp01((g.pinTop - trackTop) / g.scrub);
+      const u = ease(p);
+      const s = 1 - (1 - g.fit) * u;
+      // Dérive inverse : la colonne du MILIEU descend pendant que les deux
+      // extérieures montent. Décalée de 0,15 pour que le mur soit déjà en
+      // mouvement en arrivant. Exprimée en pixels d'écran, donc divisée par
+      // l'échelle du mur.
+      const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
+      // Apparition RETARDÉE des tuiles : elles ne se révèlent qu'une fois le
+      // mur bien engagé.
+      const fade = clamp01((u - 0.82) / 0.18);
+      const active = p > 0 && p < 1;
+
+      // ÉCRITURES.
+      for (const slot of g.slots) {
+        const t = slot.still ? 1 : u;
+        const dy = slot.dy * t + (slot.mid ? drift : -drift);
+        slot.card.style.transform = `translate3d(${slot.dx * t}px, ${dy}px, 0)`;
+        if (slot.still) slot.card.style.opacity = String(fade);
+      }
       // Recul de caméra. Origine en bas de la grille, donc pile sur le bas de
       // l'écran pendant l'épinglage : à u = 0 la grille est exactement à sa
       // place, et le mur se recentre au fur et à mesure du recul.
-      const wallH = gridH + (wallFullH - gridH) * u;
-      grid.style.transform = `translate3d(0, ${u * (s * gridH - (s * wallH) / 2 - vh / 2)}px, 0) scale(${s})`;
-      grid.style.willChange = p > 0 && p < 1 ? "transform" : "";
+      const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
+      grid.style.transform = `translate3d(0, ${u * (s * g.gridH - (s * wallH) / 2 - window.innerHeight / 2)}px, 0) scale(${s})`;
+
+      // `will-change` posé au CHANGEMENT d'état seulement : le réécrire à chaque
+      // image est une mutation de style de plus, et le promouvoir en continu
+      // garde des calques en mémoire pour rien.
+      if (active !== hinted) {
+        hinted = active;
+        const hint = active ? "transform" : "";
+        grid.style.willChange = hint;
+        for (const slot of g.slots) slot.card.style.willChange = hint;
+      }
 
       // Fondu haut et bas pendant le recul. Les bornes sont recalculées depuis
-      // la position RÉELLE de l'enveloppe à chaque image, et non depuis les
-      // coordonnées de l'épinglage : une fois le mur libéré, l'enveloppe remonte
-      // avec la page, et un dégradé figé emporterait le fondu avec elle en
-      // plein milieu de l'écran.
-      // La borne basse suit le BAS DU CADENCEUR quand celui-ci passe au-dessus
-      // du bas de l'écran : c'est là que commence « Automatisez de bout en
-      // bout », dont le fond opaque tranchait net la dernière rangée.
+      // la position RÉELLE de l'enveloppe, et non depuis les coordonnées de
+      // l'épinglage : une fois le mur libéré, l'enveloppe remonte avec la page,
+      // et un dégradé figé emporterait le fondu avec elle en plein milieu de
+      // l'écran.
       if (p > 0) {
-        const pinTopNow = pin.getBoundingClientRect().top;
-        const haut = -pinTopNow;
-        const bas = -pinTopNow + Math.min(vh, track.getBoundingClientRect().bottom);
-        const fade = Math.min(130, vh * 0.16);
-        const mask = `linear-gradient(to bottom, transparent ${haut}px, #000 ${haut + fade}px, #000 ${bas - fade}px, transparent ${bas}px)`;
-        pin.style.setProperty("-webkit-mask-image", mask);
-        pin.style.setProperty("mask-image", mask);
-      } else {
+        // Bornes ARRONDIES au pixel, et masque réécrit seulement s'il change
+        // vraiment. Un masque en dégradé sur un conteneur épinglé qui porte des
+        // vidéos et trois maquettes se re-rastérise à chaque réécriture : c'est
+        // du travail de DESSIN, invisible pour un profil de mise en page, et
+        // c'est le coût le plus lourd de la séquence. Au pixel près, deux images
+        // voisines demandent très souvent le même masque.
+        const haut = Math.round(-pinTopNow);
+        const bas = Math.round(-pinTopNow + Math.min(window.innerHeight, trackTop + track.offsetHeight));
+        if (haut !== lastMask.haut || bas !== lastMask.bas) {
+          lastMask.haut = haut;
+          lastMask.bas = bas;
+          const mask = `linear-gradient(to bottom, transparent ${haut}px, #000 ${haut + g.fadeH}px, #000 ${bas - g.fadeH}px, transparent ${bas}px)`;
+          pin.style.setProperty("-webkit-mask-image", mask);
+          pin.style.setProperty("mask-image", mask);
+        }
+      } else if (lastMask.haut !== null) {
+        lastMask.haut = null;
+        lastMask.bas = null;
         pin.style.removeProperty("-webkit-mask-image");
         pin.style.removeProperty("mask-image");
       }
     };
 
-    apply();
-    window.addEventListener("scroll", apply, { passive: true });
-    window.addEventListener("resize", apply);
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(apply);
+    };
+    const remeasure = () => {
+      measure();
+      if (!rafId) rafId = requestAnimationFrame(apply);
+    };
+
+    remeasure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", remeasure);
     // La grille grandit encore après le montage (posters, vidéos, polices) :
     // sans ça le `top` d'épinglage resterait calculé sur une hauteur trop
     // faible et le recul démarrerait au mauvais endroit.
-    const ro = new ResizeObserver(apply);
+    const ro = new ResizeObserver(remeasure);
     ro.observe(pin);
     return () => {
-      window.removeEventListener("scroll", apply);
-      window.removeEventListener("resize", apply);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", remeasure);
       ro.disconnect();
     };
   }, []);
@@ -407,6 +493,17 @@ export default function UseCases() {
     // il centre simplement sa dernière rangée.
     { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
     { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
+    // QUATRE tuiles de plus (client 2026-08-01 : « rajoute des lignes, plus de
+    // contenu qui remonte sur les côtés et descend au milieu »). Le mur passe de
+    // onze à quinze cartes, donc de quatre à CINQ rangées de trois : la dernière
+    // rangée redevient pleine, et la dérive a plus de matière à faire défiler.
+    // Mêmes intitulés inventés que les cinq précédentes, avec le même
+    // avertissement : à remplacer par la vraie liste. L'aplat alterne pastel et
+    // saturé pour prolonger le damier.
+    { title: t({ fr: "Liasse fiscale", en: "Tax bundle" }), meta: t({ fr: "Bilan & annexes", en: "Balance sheet & notes" }), bg: "#1E3A8A", ink: "#ffffff" },
+    { title: t({ fr: "Balance âgée", en: "Aged balance" }), meta: t({ fr: "Créances & échéances", en: "Receivables & due dates" }), bg: "#e6edfa", ink: "#0c2d4d" },
+    { title: t({ fr: "Inventaire", en: "Inventory" }), meta: t({ fr: "Stocks & valorisation", en: "Stock & valuation" }), bg: "#0F766E", ink: "#ffffff" },
+    { title: t({ fr: "Journal de paie", en: "Payroll journal" }), meta: t({ fr: "Écritures & contrôles", en: "Entries & controls" }), bg: "#f2e8f7", ink: "#33204a" },
   ];
 
   return (
