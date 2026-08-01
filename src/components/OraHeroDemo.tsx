@@ -74,12 +74,26 @@ const HD_CSS = `
   border:1px solid #e6e7ea}
 .hd-pkok{font-size:12px;font-weight:600;color:#fff;padding:6px 15px;border-radius:8px;background:#2f6ff0}
 
-.hd-stagebox{position:relative;flex:1;min-height:0;width:100%;
-  animation:hdStageIn 900ms cubic-bezier(.22,1,.36,1) 560ms both}
-/* Fondu SEUL (pas de transform) : le moteur de scrub mesure la boîte au
-   pixel près, un transform pendant l'arrivée fausserait le cadrage. */
-@keyframes hdStageIn{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.hd-stagebox{animation:none}}
+.hd-stagebox{position:relative;flex:1;min-height:0;width:100%}
+/* Arrivée « bas vers le haut » (client 2026-08-01) : la réplique du logiciel
+   MONTE depuis le bas jusqu'à sa place, au lieu d'apparaître en fondu sur
+   place.
+   Le déplacement vit sur une couche INTERNE, jamais sur .hd-stagebox : le
+   moteur de scrub mesure cette boîte au pixel près (getBoundingClientRect,
+   pour centerDelta et dyRest), un transform dessus fausserait le cadrage de
+   toute la scène. La couche est en position:absolute;inset:0, donc elle a
+   exactement la même boîte que la stagebox : les left:50%/top:50% de
+   .hd-stage se résolvent à l'identique, et stagePos() s'arrête à .hd-stage,
+   donc les cibles du curseur ne bougent pas non plus.
+   La montée se termine sur translateY(0) : le cadrage final est au pixel
+   celui que calcule apply(). Le débordement bas est rogné par
+   l'overflow-hidden du sticky, donc la fenêtre monte bien depuis sous le pli. */
+.hd-stagerise{position:absolute;inset:0;
+  animation:hdStageRise 1100ms cubic-bezier(.22,1,.36,1) 420ms both}
+@keyframes hdStageRise{
+  from{opacity:0;transform:translate3d(0,120px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}}
+@media (prefers-reduced-motion:reduce){.hd-stagerise{animation:none}}
 .hd-stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;
   transform-origin:center center;
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -1238,7 +1252,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           </div>
 
           {/* Stage (auto-fitted 1040×640 scene) */}
+          {/* DEUX COUCHES SÉPARÉES, comme pour le titre plus haut : la boîte
+              extérieure appartient au moteur de scroll (il la mesure et écrit
+              son marginTop), la couche .hd-stagerise porte l'animation
+              d'arrivée « bas vers le haut ». Un transform posé directement sur
+              .hd-stagebox décalerait les mesures de cadrage. */}
           <div ref={boxRef} className="hd-stagebox relative z-10">
+          <div className="hd-stagerise">
             <div ref={stageRef} className="hd-stage">
               <div className="hd-blob" />
 
@@ -1748,6 +1768,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 <path d="M9 4 L9 27 L14.6 21.6 L18 29.4 L22.4 27.4 L19 19.8 L26.6 19.8 Z" fill="#0b0b0f" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round" />
               </svg>
             </div>
+          </div>
           </div>
 
           {/* Step captions */}

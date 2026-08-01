@@ -182,8 +182,8 @@ const OA_CSS = `
   82%{transform:translate3d(7px,-9px,0) rotate(.6deg)}
   100%{transform:translate3d(19px,16px,0) rotate(1.3deg)}}
 /* Les pastilles arrivent APRÈS l'interface (client 2026-07-30) : la scène
-   elle-même est fondue par .hd-stagebox de 560 à 1460 ms, donc entrer trop tôt
-   revenait à entrer pendant que le logiciel n'était pas encore là.
+   elle-même monte en place via .hd-stagerise de 420 à 1520 ms, donc entrer trop
+   tôt revenait à entrer pendant que le logiciel n'était pas encore là.
    Cadence RESSERRÉE (client 2026-07-30 : « c'est un peu trop lent ») : premier
    départ ramené de 1500 à 1050 ms, décalage entre pastilles de 220 à 150 ms et
    entrée de 700 à 500 ms. La dernière est posée à 2 s au lieu de 2,86 s, tout
