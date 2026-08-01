@@ -186,6 +186,22 @@ export default function UseCases() {
 
       const fills = fillerRefs.current.filter((el): el is HTMLDivElement => !!el);
       const fillerSet = new Set<HTMLDivElement>(fills);
+      // Géométrie des tuiles CONNUE, jamais relue. C'est le correctif du mur
+      // cassé : leur gabarit (`colW` x `rowH`) est écrit à la fin de cette
+      // fonction, or les hauteurs de rangées étaient calculées AVANT, en lisant
+      // `offsetHeight`. Au premier passage les tuiles avaient donc leur hauteur
+      // naturelle, bien plus courte : les rangées de tuiles se tassaient les
+      // unes sur les autres et `wallFullH` était très sous-estimé, donc le mur
+      // mal cadré. Et rien ne déclenchait de seconde mesure, l'observateur
+      // surveillant `pin`, dont la taille ne bouge pas quand on redimensionne
+      // des éléments hors flux. L'ancien moteur y échappait en réécrivant ce
+      // gabarit à chaque image, avant les calculs.
+      // Les tuiles étant posées en `absolute left-0 top-0`, leur origine vaut
+      // (0, 0) et leur boîte vaut (colW, rowH) : tout est déjà connu ici.
+      const isFill = (c: HTMLDivElement) => fillerSet.has(c);
+      const hOf = (c: HTMLDivElement) => (isFill(c) ? rowH : c.offsetHeight);
+      const leftOf = (c: HTMLDivElement) => (isFill(c) ? 0 : c.offsetLeft);
+      const topOf = (c: HTMLDivElement) => (isFill(c) ? 0 : c.offsetTop);
 
       // Alternance vraie carte / tuile : en trois colonnes cela donne un
       // damier, donc les ajouts se fondent dans le mur au lieu de former un
@@ -204,7 +220,7 @@ export default function UseCases() {
       const rows: HTMLDivElement[][] = [];
       for (let i = 0; i < cards.length; i += cols) rows.push(cards.slice(i, i + cols));
       const wallW = Math.max(...rows.map((r) => r.length)) * (colW + gapX) - gapX;
-      const wallFullH = rows.reduce((acc, r) => acc + Math.max(...r.map((c) => c.offsetHeight)), 0)
+      const wallFullH = rows.reduce((acc, r) => acc + Math.max(...r.map(hOf)), 0)
         + gapY * (rows.length - 1);
       const fit = Math.min(1, (vw * PULLBACK_FILL_W) / wallW, (vh * PULLBACK_FILL_H) / wallFullH);
 
@@ -222,13 +238,13 @@ export default function UseCases() {
           slots.push({
             card,
             still: fillerSet.has(card),
-            dx: cardLeft - card.offsetLeft,
-            dy: rowTop - card.offsetTop,
+            dx: cardLeft - leftOf(card),
+            dy: rowTop - topOf(card),
             mid: ci === 1,
           });
           cardLeft += colW + gapX;
         });
-        rowTop += Math.max(...row.map((c) => c.offsetHeight)) + gapY;
+        rowTop += Math.max(...row.map(hOf)) + gapY;
       }
 
       // ÉCRITURES groupées à la toute fin, une fois toutes les lectures faites.
