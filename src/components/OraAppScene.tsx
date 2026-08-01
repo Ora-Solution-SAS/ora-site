@@ -182,13 +182,17 @@ const OA_CSS = `
   82%{transform:translate3d(7px,-9px,0) rotate(.6deg)}
   100%{transform:translate3d(19px,16px,0) rotate(1.3deg)}}
 /* Les pastilles arrivent APRÈS l'interface (client 2026-07-30) : la scène
-   elle-même est fondue par .hd-stagebox de 560 à 1460 ms, donc entrer avant
-   1,5 s revenait à entrer pendant que le logiciel n'était pas encore là. */
-.oa-in .oa-chip{animation:oaIn 700ms cubic-bezier(.22,1,.36,1) both}
-.oa-in .oa-chip.in{animation-delay:1500ms}
-.oa-in .oa-chip.out1{animation-delay:1720ms}
-.oa-in .oa-chip.out2{animation-delay:1940ms}
-.oa-in .oa-chip.out3{animation-delay:2160ms}
+   elle-même est fondue par .hd-stagebox de 560 à 1460 ms, donc entrer trop tôt
+   revenait à entrer pendant que le logiciel n'était pas encore là.
+   Cadence RESSERRÉE (client 2026-07-30 : « c'est un peu trop lent ») : premier
+   départ ramené de 1500 à 1050 ms, décalage entre pastilles de 220 à 150 ms et
+   entrée de 700 à 500 ms. La dernière est posée à 2 s au lieu de 2,86 s, tout
+   en laissant l'interface s'installer la première. */
+.oa-in .oa-chip{animation:oaIn 500ms cubic-bezier(.22,1,.36,1) both}
+.oa-in .oa-chip.in{animation-delay:1050ms}
+.oa-in .oa-chip.out1{animation-delay:1200ms}
+.oa-in .oa-chip.out2{animation-delay:1350ms}
+.oa-in .oa-chip.out3{animation-delay:1500ms}
 /* Amplitude TRIPLÉE et cycles raccourcis (client 2026-07-30 : « qu'elles
    bougent plus, même sans le curseur »).
    Délais NÉGATIFS, et c'est le point important : un délai positif laissait la
@@ -205,7 +209,7 @@ const OA_CSS = `
 /* Trait pointillé entre le fichier entrant et la carte « Ouvrir un fichier » */
 .oa-armed .oa-flow{opacity:0}
 /* Le trait pointillé précède de peu la pastille entrante qu'il relie. */
-.oa-in .oa-flow{animation:oaIn 600ms ease-out 1340ms both}
+.oa-in .oa-flow{animation:oaIn 450ms ease-out 900ms both}
 .oa-flow{position:absolute;z-index:4;left:-8px;top:222px;width:288px;height:2px;
   background:repeating-linear-gradient(90deg,#b9c7de 0 7px,transparent 7px 13px)}
 

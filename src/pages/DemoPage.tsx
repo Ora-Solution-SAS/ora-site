@@ -9,6 +9,7 @@ import PreviewWindow from "@/components/demo/PreviewWindow";
 import RunView from "@/components/demo/RunView";
 import SentView from "@/components/demo/SentView";
 import DeliveryView from "@/components/demo/DeliveryView";
+import OraWorkbench from "@/components/demo/workbench/OraWorkbench";
 import { getAutomation } from "@/components/demo/data";
 import {
   DemoApiError,
@@ -511,6 +512,19 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
           « Choisissez ». C'était le « trop de texte pour rien ».
           Fond identique au hero : plus de bande grise, la page est blanche de
           bout en bout, et ce sont les OMBRES des cartes qui donnent le relief. */}
+      {/* ── Workbench, CHANTIER EN COURS ────────────────────────────────────
+          Réplique interactive du logiciel (Excel + panneau Ora) destinée à
+          remplacer l'entonnoir ci-dessous. Visible en local uniquement le temps
+          de la construction : le mode réel et la capture d'e-mail ne sont pas
+          encore branchés, donc rien de tout ça ne doit atteindre le site. */}
+      {import.meta.env.DEV && (
+        <section className="relative px-6 pb-16 md:px-12">
+          <div className="mx-auto max-w-[1400px]">
+            <OraWorkbench file={file} />
+          </div>
+        </section>
+      )}
+
       <section className="relative px-6 pb-16 pt-0 md:px-12 md:pb-24">
         <div className="mx-auto max-w-6xl">
           <AnimatePresence mode="wait" initial={false}>
