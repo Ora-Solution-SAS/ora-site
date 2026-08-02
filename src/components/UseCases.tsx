@@ -90,6 +90,114 @@ const PULLBACK_FILL_H = 3.3;
  *  j'invoquais concernaient le mur, pas la bande où l'on voit quelque chose. */
 const WALL_DRIFT = 170;
 
+/**
+ * WallCard — copie VISUELLE d'une carte de cas d'usage, pour étoffer le mur
+ * pendant le dézoom (client 2026-08-01 : « mets des encadrés qui existent déjà,
+ * même s'ils sont doublon », et « ce qui est vide, c'est l'intérieur des
+ * tuiles »).
+ *
+ * Remplace les anciennes tuiles qui ne portaient qu'un titre sur un aplat de
+ * couleur : c'était leur intérieur vide qui donnait l'aspect brouillon au mur.
+ * Ici on retrouve le titre, la pastille, la ligne meta, les puces et un visuel,
+ * donc un mur homogène de bout en bout.
+ *
+ * Trois écarts DÉLIBÉRÉS avec la vraie carte, tous pour le poids :
+ *   · le média est le POSTER en image, jamais la vidéo ni la maquette. Douze
+ *     copies signifieraient sinon douze balises `video` en lecture ou douze
+ *     scènes de maquette avec leur ResizeObserver, ce qui ruinerait la fluidité
+ *     qu'on vient de gagner ;
+ *   · aucune animation Framer Motion : l'opacité et la position sont écrites par
+ *     le moteur du dézoom, une animation d'entrée entrerait en conflit ;
+ *   · rien d'interactif. La copie est décorative, donc `aria-hidden` et
+ *     `pointer-events-none`, et la pastille « Voir la démo » n'est qu'un décor.
+ */
+function WallCard({ item }: { item: UseCase }) {
+  const { t } = useLang();
+  const Icon = item.metaIcon;
+  return (
+    <div
+      className={`relative h-full overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]${item.mockup ? " flex flex-col" : ""}`}
+      style={{ background: item.bg }}
+    >
+      {item.decor === "circle" && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-[46%] w-[105%] aspect-square -translate-x-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle at 38% 30%, #e4ebff 0%, #cbd6fb 55%, #b3c1f6 100%)" }}
+        />
+      )}
+      {item.decor === "rings" && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-[58%] w-[62%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[48px] border-2 border-white/25" />
+          <div className="absolute left-1/2 top-[58%] w-[82%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[64px] border-2 border-white/15" />
+          <div className="absolute left-1/2 top-[58%] w-[102%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[80px] border-2 border-white/[0.08]" />
+        </div>
+      )}
+
+      <div className="relative flex items-center justify-between gap-4">
+        <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: item.ink }}>
+          {item.title}
+        </h3>
+        <span
+          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] ${
+            item.dark ? "bg-white/15" : "bg-white/70"
+          }`}
+          style={{ color: item.ink }}
+        >
+          {t({ fr: "Voir la démo", en: "Watch the demo" })}
+          <ArrowUpRight className="w-4 h-4" />
+        </span>
+      </div>
+
+      <div className="relative mt-5 md:mt-6 flex items-center gap-2.5" style={{ color: item.ink }}>
+        <Icon className="w-[18px] h-[18px]" />
+        <span className="font-inter font-semibold text-[15px] md:text-base">{item.meta}</span>
+      </div>
+
+      <ul className="relative mt-3 space-y-2.5">
+        {item.bullets.map((b) => (
+          <li key={b} className="flex items-start gap-2.5 font-inter text-[14px] md:text-[15.5px] leading-relaxed" style={{ color: item.sub }}>
+            <span
+              aria-hidden
+              className="mt-[7px] h-[7px] w-[7px] shrink-0 rounded-full border-[1.5px]"
+              style={{ borderColor: item.sub }}
+            />
+            {b}
+          </li>
+        ))}
+      </ul>
+
+      {/* Même emplacement que le média de la vraie carte, poster en image. */}
+      <div
+        className={
+          item.mockup
+            ? "relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-8 md:-mb-12"
+            : item.blend
+              ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
+              : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
+        }
+      >
+        <img
+          src={item.poster}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="w-full aspect-video object-cover block"
+        />
+        {item.blend && (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-x-0 bottom-0 h-10 md:h-12" style={{ background: `linear-gradient(to top, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-y-0 left-0 w-10 md:w-14" style={{ background: `linear-gradient(to right, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-y-0 right-0 w-10 md:w-14" style={{ background: `linear-gradient(to left, ${item.bg} 0%, transparent 100%)` }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function UseCases() {
   const { t } = useLang();
   const [active, setActive] = useState<UseCase | null>(null);
@@ -533,46 +641,34 @@ export default function UseCases() {
     },
   ];
 
-  // ── Tuiles de remplissage du MUR uniquement ──────────────────────────────
-  // Elles n'apparaissent QUE pendant le dézoom, pour étoffer les colonnes et
-  // les rangées. Elles ne rejoignent jamais les cartes pleines travaillées
-  // au-dessus : hors flux (`absolute`) et invisibles tant que le recul n'a pas
-  // commencé, elles ne touchent donc pas la grille.
-  // ⚠ INTITULÉS INVENTÉS, et désormais PUBLIÉS (client 2026-07-30, qui a
-  // confirmé en connaissance de cause). Ce sont des noms de remplissage, pas
-  // des automatisations livrées : ils annoncent au public des capacités qui ne
-  // sont pas garanties. À REMPLACER par la vraie liste dès qu'elle arrive.
-  // Encadrés VIDES, à dessein (client 2026-07-30). Les posters repris des
-  // autres cas d'usage ont été essayés puis retirés le jour même : leurs fonds
-  // sombres juraient avec les couleurs des tuiles (« affreux »). Titre + meta
-  // sur un aplat pastel, rien d'autre, en attendant les vrais visuels.
-  const fillerBase: { title: string; meta: string; bg: string; ink: string }[] = [
-    { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
-    { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
-    { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
-    // « Immobilisations » → « Évaluation d'entreprise » et « Notes de frais »
-    // → « Prévisionnel » (client 2026-07-30). La tuile « Évaluation
-    // d'entreprise » posée au tour précédent à la place de « Rapprochement
-    // bancaire » ferait doublon : elle est donc retirée, et la liste passe de
-    // six à CINQ tuiles. Le mur s'accommode d'un compte non multiple de trois,
-    // il centre simplement sa dernière rangée.
-    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
-    { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-  ];
+  // ── Remplissage du MUR : des COPIES des vraies cartes ────────────────────
+  // Elles n'apparaissent QUE pendant le dézoom, pour étoffer les colonnes et les
+  // rangées, et ne rejoignent jamais la grille du dessus : hors flux
+  // (`absolute`) et invisibles tant que le recul n'a pas commencé.
+  //
+  // Avant, c'étaient des tuiles ne portant qu'un titre sur un aplat pastel, avec
+  // des intitulés INVENTÉS. Deux problèmes réglés d'un coup (client 2026-08-01) :
+  // leur intérieur vide donnait au mur un aspect brouillon, et leurs noms
+  // annonçaient des automatisations non garanties. On duplique désormais les six
+  // cartes travaillées, en assumant les doublons, donc plus aucun intitulé
+  // inventé et un mur homogène.
+  // Le rendu passe par <WallCard>, qui reprend le visuel de la carte avec son
+  // POSTER en image au lieu de la vidéo ou de la maquette : douze copies des
+  // médias animés coûteraient beaucoup trop cher.
+  // Décalage de DEUX crans, plus un par tour. Le mur alterne vraie carte / copie,
+  // donc la copie d'indice i se retrouve collée à la vraie carte d'indice i :
+  // sans décalage, chaque copie serait le jumeau immédiat de sa voisine de gauche
+  // (le doublon côte à côte de la capture client). Deux crans suffisent à ce que
+  // les TROIS cartes d'une même rangée soient toujours distinctes, vérifié sur
+  // les six rangées.
+  // Des répétitions restent possibles d'une rangée à l'autre dans une même
+  // colonne, mais les colonnes dérivent verticalement pendant l'animation, donc
+  // cet alignement ne tient jamais, et les doublons sont assumés.
+  const wallDupes: UseCase[] = Array.from({ length: 12 }, (_, i) => {
+    const tour = Math.floor(i / cases.length);
+    return cases[(i + 2 + tour) % cases.length];
+  });
 
-  // Les CINQ encadrés d'origine, RÉPÉTÉS en boucle (client 2026-08-01 :
-  // « duplique les encadrés qui existent déjà, n'en crée pas d'autres ex
-  // nihilo »). Aucun intitulé inventé.
-  //   6 vraies cartes + 12 tuiles = 18 cartes, soit SIX rangées de trois.
-  // Six et pas plus : au-delà, les tuiles empiètent sur la bande visible et
-  // chassent les cartes travaillées (voir le calcul dans measure()). Les rangées
-  // au-delà des quatre premières forment la RÉSERVE que la seconde phase fait
-  // défiler, 936 px de chaque côté.
-  // Cinq tuiles pour trois colonnes, et 5 et 3 sont premiers entre eux : la
-  // boucle décale d'elle-même la colonne d'une tuile à chaque tour.
-  // La clé React est l'INDICE et non le titre : avec des doublons, une clé par
-  // titre ferait collision et React ne rendrait qu'une tuile sur cinq.
-  const fillers = Array.from({ length: 12 }, (_, i) => fillerBase[i % fillerBase.length]);
 
   return (
     <div className="relative mb-40 md:mb-64">
@@ -731,25 +827,22 @@ export default function UseCases() {
               );
             })}
 
-            {/* Tuiles de remplissage du mur. HORS FLUX (`absolute`) : elles
-                n'occupent aucune place dans la grille, qui reste donc celle
-                des seules cartes travaillées. Le moteur du recul leur donne
-                le gabarit d'une carte, les place dans le mur et les fait
-                apparaître au fur et à mesure du dézoom. */}
-            {fillers.map((f, i) => (
+            {/* Copies de cartes pour étoffer le mur. HORS FLUX (`absolute`) :
+                elles n'occupent aucune place dans la grille, qui reste celle des
+                seules cartes travaillées. Le moteur du recul leur donne le
+                gabarit d'une carte, les place dans le mur et les fait apparaître
+                au fur et à mesure du dézoom.
+                Décoratives : `aria-hidden` et `pointer-events-none`, pour ne pas
+                doubler le contenu pour les lecteurs d'écran ni intercepter de
+                clic. */}
+            {wallDupes.map((c, i) => (
               <div
-                key={`${f.title}-${i}`}
+                key={`dupe-${i}`}
                 ref={(el) => { fillerRefs.current[i] = el; }}
                 aria-hidden
-                className="pointer-events-none absolute left-0 top-0 opacity-0 overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]"
-                style={{ background: f.bg }}
+                className="pointer-events-none absolute left-0 top-0 opacity-0"
               >
-                <div className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: f.ink }}>
-                  {f.title}
-                </div>
-                <div className="mt-5 md:mt-6 font-inter font-semibold text-[15px] md:text-base" style={{ color: f.ink }}>
-                  {f.meta}
-                </div>
+                <WallCard item={c} />
               </div>
             ))}
           </div>
