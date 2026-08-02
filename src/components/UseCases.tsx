@@ -63,15 +63,23 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
  *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
- *  Portée à 3,8 avec la SEPTIÈME rangée (2026-08-01). Mesuré en 1440×900 : mur
- *  de 2 036 × 4 769 px, le terme de largeur vaut 0,679 et il faut donc au moins
- *  3,6 côté hauteur pour que la largeur garde la main. À 3,3 le terme de hauteur
- *  tombait à 0,623, la hauteur reprenait le dessus et le mur rétrécissait,
- *  exactement ce que cette constante sert à éviter. 3,8 laisse de la marge pour
+ *  Portée à 7,6 avec le passage à QUATORZE rangées (2026-08-01). Mesuré en
+ *  1440×900 : mur de 2 036 × 9 578 px, le terme de largeur vaut 0,679, il faut
+ *  donc au moins 7,23 côté hauteur pour que la largeur garde la main. En dessous,
+ *  la hauteur reprend le dessus et le mur RÉTRÉCIT à mesure qu'on ajoute des
+ *  rangées, exactement l'inverse de l'effet cherché. 7,6 laisse de la marge pour
  *  les écrans plus courts. */
-const PULLBACK_FILL_H = 3.8;
-/** Amplitude de la dérive inverse des colonnes, en pixels d'écran. */
-const WALL_DRIFT = 170;
+const PULLBACK_FILL_H = 7.6;
+/** Amplitude de la dérive inverse des colonnes, en pixels d'écran.
+ *  Portée de 170 à 520 (client 2026-08-01 : « pour vraiment pouvoir faire le
+ *  défilement que je veux »). C'est CETTE valeur qui produit le mouvement, pas
+ *  le nombre de rangées : à 170, le déplacement à l'écran culminait à 0,85 x 170
+ *  = 144 px, soit 16 % de la hauteur d'un écran de 900 px, donc un glissement à
+ *  peine perceptible. À 520 il atteint ~440 px, la moitié de l'écran : on voit
+ *  franchement les colonnes extérieures remonter pendant que celle du milieu
+ *  descend. Le doublement des rangées est ce qui rend cette amplitude possible
+ *  sans découvrir le vide en haut et en bas des colonnes. */
+const WALL_DRIFT = 520;
 
 export default function UseCases() {
   const { t } = useLang();
@@ -511,27 +519,24 @@ export default function UseCases() {
     // il centre simplement sa dernière rangée.
     { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
     { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-    // QUATRE tuiles de plus (client 2026-08-01 : « rajoute des lignes, plus de
-    // contenu qui remonte sur les côtés et descend au milieu »). Le mur passe de
-    // onze à quinze cartes, donc de quatre à CINQ rangées de trois : la dernière
-    // rangée redevient pleine, et la dérive a plus de matière à faire défiler.
-    // Mêmes intitulés inventés que les cinq précédentes, avec le même
-    // avertissement : à remplacer par la vraie liste. L'aplat alterne pastel et
-    // saturé pour prolonger le damier.
-    { title: t({ fr: "Liasse fiscale", en: "Tax bundle" }), meta: t({ fr: "Bilan & annexes", en: "Balance sheet & notes" }), bg: "#1E3A8A", ink: "#ffffff" },
-    { title: t({ fr: "Balance âgée", en: "Aged balance" }), meta: t({ fr: "Créances & échéances", en: "Receivables & due dates" }), bg: "#e6edfa", ink: "#0c2d4d" },
-    { title: t({ fr: "Inventaire", en: "Inventory" }), meta: t({ fr: "Stocks & valorisation", en: "Stock & valuation" }), bg: "#0F766E", ink: "#ffffff" },
-    { title: t({ fr: "Journal de paie", en: "Payroll journal" }), meta: t({ fr: "Écritures & contrôles", en: "Entries & controls" }), bg: "#f2e8f7", ink: "#33204a" },
   ];
 
-  // Le jeu de base est RÉPÉTÉ pour allonger le mur (client 2026-08-01 : « tu les
-  // dupliques, il faut juste plus de lignes »). Aucun intitulé nouveau n'est
-  // inventé : ce sont exactement les mêmes encadrés, repris tels quels.
-  //   6 vraies cartes + 15 tuiles = 21 cartes, soit SEPT rangées de trois
-  //   (contre cinq), donc davantage de matière à faire défiler sous la dérive.
-  // La clé React devient l'INDICE et non le titre : avec des doublons, une clé
-  // par titre ferait collision et React ne rendrait qu'une tuile sur deux.
-  const fillers = [...fillerBase, ...fillerBase.slice(0, 6)];
+  // Les CINQ encadrés ci-dessus sont simplement RÉPÉTÉS en boucle pour allonger
+  // le mur (client 2026-08-01 : « duplique les encadrés qui existent déjà, n'en
+  // crée pas d'autres ex nihilo »). Aucun intitulé n'est inventé ici : quatre
+  // tuiles que j'avais ajoutées de mon propre chef ont été retirées, la liste de
+  // base revient donc à celle validée le 2026-07-30.
+  //   6 vraies cartes + 36 tuiles = 42 cartes, soit QUATORZE rangées de trois.
+  // C'est cette matière qui permet de MONTER la dérive (voir WALL_DRIFT) : sans
+  // elle, un déplacement ample découvrirait le vide au-dessus et en dessous des
+  // colonnes.
+  // Cinq tuiles pour trois colonnes, et 5 et 3 sont premiers entre eux : la
+  // boucle décale donc d'elle-même la colonne d'une tuile à chaque tour, et le
+  // même encadré ne se réaligne qu'au bout de quinze cases. Aucun pivotement
+  // n'est nécessaire.
+  // La clé React est l'INDICE et non le titre : avec des doublons, une clé par
+  // titre ferait collision et React ne rendrait qu'une tuile sur cinq.
+  const fillers = Array.from({ length: 36 }, (_, i) => fillerBase[i % fillerBase.length]);
 
   return (
     <div className="relative mb-40 md:mb-64">
