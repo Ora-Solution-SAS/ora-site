@@ -63,13 +63,8 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
  *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
- *  Portée à 7,6 avec le passage à QUATORZE rangées (2026-08-01). Mesuré en
- *  1440×900 : mur de 2 036 × 9 578 px, le terme de largeur vaut 0,679, il faut
- *  donc au moins 7,23 côté hauteur pour que la largeur garde la main. En dessous,
- *  la hauteur reprend le dessus et le mur RÉTRÉCIT à mesure qu'on ajoute des
- *  rangées, exactement l'inverse de l'effet cherché. 7,6 laisse de la marge pour
- *  les écrans plus courts. */
-const PULLBACK_FILL_H = 7.6;
+ *  REMISE à 2,6 avec le retour à quatre rangées (2026-08-01). */
+const PULLBACK_FILL_H = 2.6;
 /** Amplitude de la dérive inverse des colonnes, en pixels d'écran.
  *  REMISE à 170 (client 2026-08-01 : « les encadrés partent tous vers le haut en
  *  disparaissant, conserve l'animation que l'on avait »). Le passage à 520 était
@@ -280,7 +275,11 @@ export default function UseCases() {
       const trackTop = track.getBoundingClientRect().top;
       const pinTopNow = pin.getBoundingClientRect().top;
 
-      const p = clamp01((g.pinTop - trackTop) / g.scrub);
+      // Distance parcourue depuis le début de l'épinglage. Elle alimente DEUX
+      // phases qui s'enchaînent : le recul de caméra, puis le défilement des
+      // colonnes.
+      const d = g.pinTop - trackTop;
+      const p = clamp01(d / g.scrub);
       const u = ease(p);
       const s = 1 - (1 - g.fit) * u;
       // Dérive inverse : la colonne du MILIEU descend pendant que les deux
@@ -520,22 +519,22 @@ export default function UseCases() {
     { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
   ];
 
-  // Les CINQ encadrés ci-dessus sont simplement RÉPÉTÉS en boucle pour allonger
-  // le mur (client 2026-08-01 : « duplique les encadrés qui existent déjà, n'en
-  // crée pas d'autres ex nihilo »). Aucun intitulé n'est inventé ici : quatre
-  // tuiles que j'avais ajoutées de mon propre chef ont été retirées, la liste de
-  // base revient donc à celle validée le 2026-07-30.
-  //   6 vraies cartes + 36 tuiles = 42 cartes, soit QUATORZE rangées de trois.
-  // C'est cette matière qui permet de MONTER la dérive (voir WALL_DRIFT) : sans
-  // elle, un déplacement ample découvrirait le vide au-dessus et en dessous des
-  // colonnes.
-  // Cinq tuiles pour trois colonnes, et 5 et 3 sont premiers entre eux : la
-  // boucle décale donc d'elle-même la colonne d'une tuile à chaque tour, et le
-  // même encadré ne se réaligne qu'au bout de quinze cases. Aucun pivotement
-  // n'est nécessaire.
-  // La clé React est l'INDICE et non le titre : avec des doublons, une clé par
-  // titre ferait collision et React ne rendrait qu'une tuile sur cinq.
-  const fillers = Array.from({ length: 36 }, (_, i) => fillerBase[i % fillerBase.length]);
+  // RETOUR aux cinq encadrés d'origine, sans duplication (client 2026-08-01 :
+  // « conserve l'animation que l'on avait qui était bien »).
+  // La cause du défaut « les encadrés partent vers le haut en disparaissant »
+  // n'était pas la dérive mais le NOMBRE DE RANGÉES. Le mur est centré sur la
+  // fenêtre à la fin du recul, et les six vraies cartes n'occupent que ses
+  // premières rangées. Calculé en 1440x900 :
+  //    4 rangées → mur affiché 1 839 px, 469 px au-dessus de la bande visible,
+  //                vraies cartes de 0 à 1 866 px → VISIBLES
+  //    7 rangées → 3 238 px, 1 169 px au-dessus → partiellement visibles
+  //   14 rangées → 6 503 px, 2 802 px au-dessus → HORS CHAMP, elles s'effacent
+  //                dans le fondu
+  // Allonger le mur pousse donc mécaniquement les cartes travaillées hors de
+  // l'écran. Toute reprise de rangées supplémentaires devra d'abord changer
+  // l'ancrage vertical du mur (aligner son HAUT sur la bande au lieu de le
+  // centrer), sinon le symptôme reviendra.
+  const fillers = fillerBase;
 
   return (
     <div className="relative mb-40 md:mb-64">
