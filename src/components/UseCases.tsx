@@ -71,15 +71,14 @@ const PULLBACK_FILL_W = 0.96;
  *  les écrans plus courts. */
 const PULLBACK_FILL_H = 7.6;
 /** Amplitude de la dérive inverse des colonnes, en pixels d'écran.
- *  Portée de 170 à 520 (client 2026-08-01 : « pour vraiment pouvoir faire le
- *  défilement que je veux »). C'est CETTE valeur qui produit le mouvement, pas
- *  le nombre de rangées : à 170, le déplacement à l'écran culminait à 0,85 x 170
- *  = 144 px, soit 16 % de la hauteur d'un écran de 900 px, donc un glissement à
- *  peine perceptible. À 520 il atteint ~440 px, la moitié de l'écran : on voit
- *  franchement les colonnes extérieures remonter pendant que celle du milieu
- *  descend. Le doublement des rangées est ce qui rend cette amplitude possible
- *  sans découvrir le vide en haut et en bas des colonnes. */
-const WALL_DRIFT = 520;
+ *  REMISE à 170 (client 2026-08-01 : « les encadrés partent tous vers le haut en
+ *  disparaissant, conserve l'animation que l'on avait »). Le passage à 520 était
+ *  une erreur de repère de ma part : le fondu haut et bas est calé sur la
+ *  FENÊTRE VISIBLE, pas sur la hauteur du mur. Un déplacement de 442 px dans un
+ *  écran de 900 px sort donc les deux colonnes extérieures de la bande visible,
+ *  où elles s'effacent dans le dégradé. Les 2 802 px de matière hors champ que
+ *  j'invoquais concernaient le mur, pas la bande où l'on voit quelque chose. */
+const WALL_DRIFT = 170;
 
 export default function UseCases() {
   const { t } = useLang();
