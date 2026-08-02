@@ -51,22 +51,22 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 /** Cubic in-out: le recul démarre et se pose progressivement, sans à-coup. */
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-/** Longueur du scrub du recul, en hauteurs d'écran. PREMIÈRE phase, INCHANGÉE
- *  (client 2026-08-01 : « le dézoom, on n'y touche plus du tout »).
+/** Longueur du scrub du recul, en hauteurs d'écran. PREMIÈRE phase.
+ *  Ramenée de 1,2 à 0,7 (client 2026-08-01 : « l'utilisateur a trop besoin de
+ *  scroller pour arriver à l'animation de défilement des colonnes »). Le recul
+ *  lui-même n'est pas modifié, il se déroule simplement sur moins de scroll.
  *  Le cale-scroll sous la grille vaut PULLBACK_VH + SCROLL_VH. */
-const PULLBACK_VH = 1.2;
+const PULLBACK_VH = 0.7;
 /** SECONDE phase, en hauteurs d'écran. Elle ne démarre qu'une fois le recul
  *  terminé : le mur reste épinglé et les colonnes DÉFILENT, les deux extérieures
  *  vers le haut, celle du milieu vers le bas. Sans boucle, comme demandé : ce qui
  *  atteint le bord s'efface dans le dégradé déjà en place. */
-const SCROLL_VH = 1.8;
+const SCROLL_VH = 1.2;
 /** Course d'une colonne pendant la seconde phase, en pixels d'écran.
- *  Bornée par la RÉSERVE de tuiles : en 1440x900 le mur affiché fait 6 503 px
- *  pour une bande visible de 900, soit ~2 800 px de rangées de chaque côté des
- *  cartes travaillées, qui sont au centre. 1 500 px de course restent donc
- *  largement couverts, aucune colonne ne se vide, et le rapport avec les
- *  1,8 hauteur d'écran de scroll reste proche de 1:1. */
-const COL_SCROLL = 1500;
+ *  Bornée par la RÉSERVE : avec six rangées, le mur passe 936 px au-dessus et en
+ *  dessous de la bande visible. 700 px de course restent donc couverts des deux
+ *  côtés, aucune colonne ne découvre le vide. */
+const COL_SCROLL = 700;
 /** Part de la LARGEUR d'écran qu'occupe le mur, caméra au plus loin. */
 const PULLBACK_FILL_W = 0.96;
 /** Hauteur tolérée pour le mur, en hauteurs d'écran. Volontairement très
@@ -76,11 +76,10 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
  *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
- *  Portée à 7,6 avec les quatorze rangées (2026-08-01) : mesuré en 1440x900, mur
- *  de 2 036 x 9 578 px, le terme de largeur vaut 0,679, il faut donc au moins
- *  7,23 côté hauteur pour que la largeur garde la main. En dessous, la hauteur
- *  reprend le dessus et le mur RÉTRÉCIT quand on ajoute des rangées. */
-const PULLBACK_FILL_H = 7.6;
+ *  Ramenée à 3,3 avec les six rangées (2026-08-01) : mur de 2 036 x 4 082 px,
+ *  terme de largeur 0,679, il faut donc au moins 3,08 côté hauteur pour que la
+ *  largeur garde la main. 3,3 laisse de la marge. */
+const PULLBACK_FILL_H = 3.3;
 /** Amplitude de la dérive inverse des colonnes, en pixels d'écran.
  *  REMISE à 170 (client 2026-08-01 : « les encadrés partent tous vers le haut en
  *  disparaissant, conserve l'animation que l'on avait »). Le passage à 520 était
@@ -229,29 +228,24 @@ export default function UseCases() {
       // laisseraient une rangée dépareillée, on retombe alors à deux.
       const cols = reals.length + fills.length >= 6 ? 3 : 2;
 
-      // Les vraies cartes sont placées au MILIEU du mur, et non en tête
-      // (client 2026-08-01 : « les encadrés partent vers le haut en
-      // disparaissant », puis « cadre sur les vraies cartes »).
-      // C'est LE point qui débloque l'ajout de rangées. Le mur est centré sur la
-      // fenêtre à la fin du recul : tant que les cartes travaillées occupaient
-      // ses premières rangées, allonger le mur les poussait mécaniquement
-      // au-dessus de la bande visible, où elles s'effaçaient dans le fondu
-      // (14 rangées = 2 802 px de mur au-dessus de la bande, pour des cartes
-      // n'occupant que les 1 866 premiers pixels).
-      // En les centrant, le recul de caméra n'a PAS besoin d'être touché : le mur
-      // reste centré comme avant, et ce sont les tuiles qui débordent, moitié
-      // au-dessus, moitié en dessous.
-      // Le bloc central garde l'alternance carte / tuile qui fait le damier.
-      const core: HTMLDivElement[] = [];
-      for (let i = 0; i < reals.length; i++) {
-        core.push(reals[i]);
-        if (i < fills.length) core.push(fills[i]);
+      // Les vraies cartes restent en TÊTE du mur (client 2026-08-01 :
+      // « l'organisation au dézoom est moche, ça part trop dans tous les sens »).
+      // Je les avais placées au MILIEU pour les garder à l'écran, mais ça leur
+      // imposait un trajet vertical d'environ 3 400 px pendant le recul, alors
+      // qu'en tête leur déplacement ne dépasse jamais UNE rangée : c'est ce qui
+      // rendait le dézoom propre à l'origine.
+      // Les garder visibles est donc obtenu autrement : en LIMITANT le nombre de
+      // rangées. Calculé en 1440x900, avec les cartes en tête, la bande visible
+      // est entièrement remplie par elles jusqu'à SIX rangées (le mur passe alors
+      // 936 px au-dessus de la bande, pour un bloc de cartes qui en couvre 1 866).
+      // À 7 rangées les tuiles occupent déjà 23 % de la bande, à 10 les cartes en
+      // sortent complètement.
+      // L'alternance carte / tuile fait le damier.
+      const cards: HTMLDivElement[] = [];
+      for (let i = 0; i < Math.max(reals.length, fills.length); i++) {
+        if (i < reals.length) cards.push(reals[i]);
+        if (i < fills.length) cards.push(fills[i]);
       }
-      const rest = fills.slice(reals.length);
-      // Arrondi sur une rangée ENTIÈRE, sinon le bloc central tomberait à cheval
-      // sur deux rangées et l'alternance se décalerait.
-      const above = Math.round(rest.length / 2 / cols) * cols;
-      const cards = [...rest.slice(0, above), ...core, ...rest.slice(above)];
 
       const rows: HTMLDivElement[][] = [];
       for (let i = 0; i < cards.length; i += cols) rows.push(cards.slice(i, i + cols));
@@ -569,15 +563,16 @@ export default function UseCases() {
   // Les CINQ encadrés d'origine, RÉPÉTÉS en boucle (client 2026-08-01 :
   // « duplique les encadrés qui existent déjà, n'en crée pas d'autres ex
   // nihilo »). Aucun intitulé inventé.
-  //   6 vraies cartes + 36 tuiles = 42 cartes, soit QUATORZE rangées de trois.
-  // Les tuiles ne sont pas là pour être lues : elles forment la RÉSERVE que la
-  // seconde phase fait défiler au-dessus et en dessous des cartes travaillées.
+  //   6 vraies cartes + 12 tuiles = 18 cartes, soit SIX rangées de trois.
+  // Six et pas plus : au-delà, les tuiles empiètent sur la bande visible et
+  // chassent les cartes travaillées (voir le calcul dans measure()). Les rangées
+  // au-delà des quatre premières forment la RÉSERVE que la seconde phase fait
+  // défiler, 936 px de chaque côté.
   // Cinq tuiles pour trois colonnes, et 5 et 3 sont premiers entre eux : la
-  // boucle décale d'elle-même la colonne d'une tuile à chaque tour, le même
-  // encadré ne se réaligne qu'au bout de quinze cases.
+  // boucle décale d'elle-même la colonne d'une tuile à chaque tour.
   // La clé React est l'INDICE et non le titre : avec des doublons, une clé par
   // titre ferait collision et React ne rendrait qu'une tuile sur cinq.
-  const fillers = Array.from({ length: 36 }, (_, i) => fillerBase[i % fillerBase.length]);
+  const fillers = Array.from({ length: 12 }, (_, i) => fillerBase[i % fillerBase.length]);
 
   return (
     <div className="relative mb-40 md:mb-64">
@@ -760,10 +755,10 @@ export default function UseCases() {
           </div>
         </div>
         {/* Cale-scroll : la distance parcourue pendant que le mur est épinglé.
-            Doit rester égale à PULLBACK_VH + SCROLL_VH, soit 1,2 + 1,8 = 3
-            hauteurs d'écran. Le recul occupe les 120 premiers pour-cent, le
-            défilement des colonnes les 180 suivants. */}
-        <div aria-hidden className="hidden md:block md:h-[300vh]" />
+            Doit rester égale à PULLBACK_VH + SCROLL_VH, soit 0,7 + 1,2 = 1,9
+            hauteur d'écran. Le recul occupe les 70 premiers pour-cent, le
+            défilement des colonnes les 120 suivants. */}
+        <div aria-hidden className="hidden md:block md:h-[190vh]" />
       </div>
 
       {/* Le bloc de clôture « Ora Engineering, automatisation sur mesure » /
