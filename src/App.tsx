@@ -1018,7 +1018,29 @@ const App = () => {
           ExcelReveal: pure-black Bending-Spoons progressive-blur reveal, normal
           flow (no scroll-lock). `bg-black` on the wrapper keeps the seam from
           the (darkened) demo above pure black — no white flash. */}
-      <div className="relative bg-black">
+      {/* `data-hero-bg` : OraHeroDemo pilote CE fond en même temps que celui de
+          son bloc de clôture (client 2026-08-03). Sans ça, le blanc du bouton
+          « Réserver un appel » et le noir de cette section coexistaient à l'écran,
+          séparés par une ligne franche : ce n'était pas une transition mais une
+          couture entre deux blocs de couleurs différentes. Les deux basculent
+          désormais ensemble, donc l'écran entier passe du blanc au noir. */}
+      {/* `pt-[36vh]` : les phrases sont descendues (client 2026-08-03 : « un peu
+          plus bas, pour qu'on voie l'animation d'arrivée de chaque lettre »).
+          Ce coussin remplit DEUX rôles, et c'est le second qui a motivé cette
+          valeur :
+            1. garantir l'ORDRE, fond noir avant les phrases. Le premier mot doit
+               rester sous la frontière de netteté d'ExcelReveal au moment de la
+               bascule, sinon il devient lisible sur du blanc. Cette contrainte est
+               couplée à la constante FOCUS : toute modification là-bas impose de
+               revérifier ici ;
+            2. SÉPARER les deux moments. À 22 vh, la bascule au noir et l'arrivée du
+               texte se produisaient presque ensemble : l'œil suivait le changement
+               de fond et le début de la révélation passait inaperçu. Avec 36 vh, le
+               noir s'installe d'abord, puis le texte monte depuis le bas de l'écran
+               et traverse la frontière lettre par lettre, sous les yeux du lecteur.
+          Cela réintroduit sciemment une partie de l'espace retiré plus tôt, mais
+          cet espace est NOIR et non blanc : il ne se lit plus comme un vide. */}
+      <div data-hero-bg className="relative bg-black pt-[36vh]">
         <ExcelReveal />
       </div>
 

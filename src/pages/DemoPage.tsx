@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Download, Lock, RefreshCcw } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import AutomationCarousel, { SelectedAutomationCard } from "@/components/demo/AutomationCarousel";
+import ComingSoonModal from "@/components/demo/ComingSoonModal";
 import DropZone from "@/components/demo/DropZone";
 import FormModal from "@/components/demo/FormModal";
 import PreviewWindow from "@/components/demo/PreviewWindow";
@@ -139,6 +140,11 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
 
   const [phase, setPhase] = useState<"funnel" | "processing" | "preview" | "sent">("funnel");
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  // Annonce d'ouverture de la web app (client 2026-08-03). Tant qu'elle n'est pas
+  // ouverte, choisir une automatisation n'enclenche PAS le parcours de test : on
+  // affiche la date et le compte à rebours. `setSelectedKey` reste en place, il
+  // suffira de rebrancher `onSelect` dessus le jour de l'ouverture.
+  const [annonce, setAnnonce] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [launching, setLaunching] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
@@ -536,7 +542,7 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
                 exit={{ opacity: 0, scale: 0.985 }}
                 transition={{ duration: 0.45, ease: EASE }}
               >
-                <AutomationCarousel onSelect={setSelectedKey} />
+                <AutomationCarousel onSelect={() => setAnnonce(true)} />
               </motion.div>
             ) : (
               <motion.div
@@ -606,6 +612,8 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
           </div>
         </div>
       </section>
+
+      {annonce && <ComingSoonModal onClose={() => setAnnonce(false)} />}
     </div>
   );
 }
