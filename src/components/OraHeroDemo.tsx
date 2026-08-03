@@ -48,6 +48,21 @@ const APP_LEFT = 155, APP_TOP = 66, APP_W = 730, APP_H = 512;
  *  puis plus rien ne bouge et l'on passe à la section noire. */
 const V_INTRO = 0.125;
 
+/** Fraction de la course d'épinglage consacrée à l'intro, quand la démo n'est
+ *  PAS lancée. Le reste (40 %) est une PALIER : la réplique reste immobile,
+ *  la notification est affichée, et il faut continuer de défiler pour en sortir.
+ *
+ *  Ce palier remplace le lenis.stop() du 2026-08-03 (client : « il ne faudrait
+ *  pas que le scroll soit bloqué quand le bouton s'affiche mais ralenti, sinon
+ *  on dirait que le site bugue »). Le constat est juste : à l'arrêt, la molette
+ *  ne produit STRICTEMENT rien, ce qui se lit comme une page cassée. Ici la page
+ *  continue de défiler, l'ascenseur avance, et c'est la scène épinglée qui
+ *  patiente, comportement normal et lisible d'une section épinglée.
+ *  Bénéfice secondaire, et il est important : plus de Lenis à l'arrêt, donc plus
+ *  de compteurs d'insistance, de minuteries de secours ni de risque de laisser
+ *  le défilement bloqué, qui est un piège connu du projet. */
+const V_HOLD = 0.60;
+
 /** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
  *  il est visible dès la première image et son trajet vers la carte « Ouvrir
  *  un fichier » traverse l'écran en diagonale, donc il se remarque. */
@@ -833,101 +848,28 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
 
-  // ── Blocage du scroll à l'apparition de la notification ──────────────────
-  // Client 2026-08-03 : « je veux que le scroll soit un peu plus lourd, peut-être
-  // même bloqué, l'utilisateur ne peut pas descendre plus bas que l'endroit où on
-  // voit toute la réplication ». Ce n'est donc plus un simple ralentissement de
-  // 900 ms mais un ARRÊT FERME, tenu jusqu'à ce que l'utilisateur tranche.
+  // ── Allumage de la notification ──────────────────────────────────────────
+  // Il n'y a plus de blocage ici. Le lenis.stop() qui s'y trouvait a été retiré
+  // (client 2026-08-03 : « il ne faudrait pas que le scroll soit bloqué quand le
+  // bouton s'affiche mais ralenti, sinon on dirait que le site bugue »), et avec
+  // lui tout son appareillage : compteur d'insistance, maintien minimum de 1,8 s,
+  // minuterie de secours à 6 s, relance de Lenis au nettoyage. Autant de
+  // machinerie qui n'existait que pour rattraper le blocage, et dont chaque
+  // branche était une occasion de laisser le défilement à l'arrêt.
   //
-  // Trois sorties, pour ne jamais le piéger :
-  //   · il clique : `demoOn` passe à vrai, l'effet se rejoue et son nettoyage
-  //     relance Lenis ;
-  //   · il insiste : on additionne ses gestes de défilement vers le bas et on
-  //     libère au-delà de 420 px cumulés, soit deux ou trois coups de molette. Le
-  //     scroll paraît « lourd » puis cède, exactement l'effet demandé ;
-  //   · garde-fou : libération inconditionnelle au bout de 6 s.
+  // La lourdeur est désormais purement géométrique : V_HOLD réserve 46 vh de
+  // course d'épinglage après la fin de l'intro. La page continue de défiler,
+  // l'ascenseur avance, la scène patiente. C'est le comportement attendu d'une
+  // section épinglée, pas celui d'une page figée.
   //
-  // Et un MAINTIEN MINIMUM par-dessus (client 2026-08-03 : « l'utilisateur doit
-  // avoir le temps de le voir, et ensuite on bascule »). Sans lui, un seul geste
-  // ample de trackpad franchissait les 420 px dans la même image que l'apparition :
-  // la notification était techniquement affichée mais illisible.
-  //
-  // Lenis laissé à l'arrêt est un piège connu du projet (App.tsx le relance
-  // explicitement à chaque navigation) : le nettoyage relance donc TOUJOURS.
+  // Ne reste donc que l'allumage, franc et immédiat.
   useEffect(() => {
     if (!invited || demoOn) return;
     const carte = inviteRef.current;
-
-    // ALLUMAGE D'ABORD, et sans condition. Il était auparavant enfermé dans le
-    // chemin du blocage, en aval des deux sorties ci-dessous : en « mouvement
-    // réduit », ou si Lenis manquait, la notification restait donc à opacité 0
-    // alors que le moteur l'avait rendue cliquable. Une cible invisible.
-    // La révélation progressive liée à l'insistance a par ailleurs été retirée :
-    // elle l'affichait à moitié, puis le moteur la coupait, d'où le « ça s'allume
-    // un peu puis ça repart » du client.
-    if (carte) {
-      carte.style.transition = "opacity 340ms ease";
-      carte.style.opacity = "1";
-    }
-
-    const lenis = (window as { __lenis?: { stop: () => void; start: () => void } }).__lenis;
-    // Notification visible, mais sans blocage : on ne retient jamais quelqu'un
-    // qui a demandé moins de mouvement, et on ne bloque pas sans savoir relancer.
-    if (reduced || !lenis) return;
-
-    lenis.stop();
-    let libere = false;
-    let cumul = 0;
-    const t0 = performance.now();
-    /** Maintien MINIMUM avant toute libération : le blocage garantit qu'on a le
-     *  temps de lire la notification avant de pouvoir redescendre. */
-    const MAINTIEN = 1800;
-    let differe = 0;
-    const liberer = () => {
-      if (libere) return;
-      // Le maintien minimum ne DÉFAUSSE pas la demande, il la DIFFÈRE : un
-      // utilisateur qui insiste tout de suite serait sinon bloqué jusqu'au
-      // garde-fou de 6 s. On honore son geste dès la fin du maintien.
-      const reste = MAINTIEN - (performance.now() - t0);
-      if (reste > 0) {
-        if (!differe) differe = window.setTimeout(liberer, reste);
-        return;
-      }
-      libere = true;
-      // Son rôle est joué : le lecteur a vu et n'a pas cliqué, on l'efface pour
-      // ne pas la laisser traîner pendant la suite du défilement.
-      if (carte) { carte.style.transition = "opacity 260ms ease"; carte.style.opacity = "0"; }
-      lenis.start();
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY <= 0) return;
-      cumul += e.deltaY;
-      if (cumul > 420) liberer();
-    };
-    let tY = 0;
-    const onTouchStart = (e: TouchEvent) => { tY = e.touches[0]?.clientY ?? 0; };
-    const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? 0;
-      const d = tY - y;
-      tY = y;
-      if (d > 0) { cumul += d; if (cumul > 420) liberer(); }
-    };
-
-    window.addEventListener("wheel", onWheel, { passive: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    const secours = window.setTimeout(liberer, 6000);
-
-    return () => {
-      window.clearTimeout(secours);
-      if (differe) window.clearTimeout(differe);
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      lenis.start();
-    };
-  }, [invited, demoOn, reduced]);
+    if (!carte) return;
+    carte.style.transition = "opacity 340ms ease";
+    carte.style.opacity = "1";
+  }, [invited, demoOn]);
 
   // ── Bascule du fond au noir ───────────────────────────────────────────────
   // Client 2026-08-03 : « l'ensemble du background est blanc, et quand on arrive
@@ -1114,13 +1056,14 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const vRaw = vIn;
       lastVRef.current = vRaw;
       // Heavy-scroll remap: raw scroll (linear) → demo time (weighted zones).
-      // Démo NON lancée : le temps est étalé linéairement sur la seule intro, de
-      // 0 à V_INTRO. La course disponible (70 vh) sert donc entièrement à faire
-      // remonter la réplique, et le récit ne démarre jamais.
-      // Démo NON lancée : le temps est étalé linéairement sur la seule intro, de 0
-      // à V_INTRO. Toute la course sert donc à faire remonter la réplique, et le
-      // récit ne démarre jamais.
-      const v = lance ? remap(vRaw) : V_INTRO * Math.min(1, Math.max(0, vRaw));
+      // Démo NON lancée : le temps est étalé sur les V_HOLD premiers pour cent de
+      // la course, puis plafonné à V_INTRO. L'intro se joue donc sur la même
+      // distance qu'avant (0,60 x 115 vh = 69 vh, contre 70 vh), et les 40 %
+      // restants forment le palier pendant lequel la notification est visible.
+      // Le récit, lui, ne démarre jamais sans invitation.
+      const v = lance
+        ? remap(vRaw)
+        : V_INTRO * Math.min(1, Math.max(0, vRaw) / V_HOLD);
       const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
       // Intro boost (client 2026-07-28) : au repos, le classeur Excel est
@@ -1263,7 +1206,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         // fuir sur le reste du site. Reste le garde-fou géométrique, et
         // l'effacement volontaire à la libération du blocage.
         const sceneVisible = boxR.bottom > 0 && boxR.top < window.innerHeight;
-        const montre = !lance && vRaw > 0.92 && sceneVisible;
+        // Le seuil suit désormais la fin de l'intro, donc l'entrée dans le palier :
+        // la notification apparaît à l'instant précis où la réplique achève sa
+        // montée et où on la voit entière, l'endroit désigné par le client sur sa
+        // capture. Une marge de 0,02 avant, pour qu'un défilement rapide ne puisse
+        // pas enjamber le seuil sans l'armer.
+        const montre = !lance && vRaw > V_HOLD - 0.02 && sceneVisible;
         // L'opacité n'est écrite ici QUE pour éteindre hors zone. Une fois armée,
         // c'est l'effet de blocage qui la possède : il l'allume franchement, puis
         // l'éteint quand il rend la main. Sans ce partage, le moteur écrasait à
@@ -1564,7 +1512,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
           ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
           fois le bouton passé (choix client 2026-08-03). */}
-      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[170vh]"}`}>
+      {/* 215vh et non 170 quand la démo n'est pas lancée : la course d'épinglage
+          passe de 70 à 115 vh. L'intro en consomme 69, autant qu'avant, et les
+          46 vh restants sont le palier où la notification s'affiche. C'est cette
+          distance qui donne la sensation de lourdeur, sans jamais rien bloquer. */}
+      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[215vh]"}`}>
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}
