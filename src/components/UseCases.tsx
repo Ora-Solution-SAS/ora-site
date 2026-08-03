@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, Wand2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, ArrowUpRight, ClipboardCheck, FileText, FolderCheck, Mail, PieChart, PlugZap, Scale, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
 import FormatageMockup from "./FormatageMockup";
+import PrevisionnelMockup from "./PrevisionnelMockup";
+import EvaluationMockup from "./EvaluationMockup";
+import CrmMockup from "./CrmMockup";
+import OrganisationMockup from "./OrganisationMockup";
 
 /**
  * UseCases — Bending-Spoons-style acquisition cards, adapted to Ora use cases:
@@ -20,7 +24,13 @@ type UseCase = {
   metaIcon: LucideIcon;
   meta: string;
   bullets: string[];
-  video: string;
+  /** Clip de démonstration. ABSENT quand aucune vidéo ne correspond réellement à
+   *  la carte (client 2026-08-03 : « n'en invente pas, n'en mets pas une qui ne
+   *  correspond pas »). Dans ce cas la pastille « Voir la démo » n'est pas
+   *  rendue du tout : pas de bouton mort, et aucun texte du genre « vidéo
+   *  bientôt disponible ». */
+  video?: string;
+  /** Toujours requis : le mur du dézoom affiche ce poster dans les copies. */
   poster: string;
   /** Card background (blue family, pastel or saturated). */
   bg: string;
@@ -39,7 +49,7 @@ type UseCase = {
   /** Replace the video media zone with a custom static mockup composition
    *  (Bending-Spoons style). The video is kept for the "Voir la démo"
    *  lightbox. */
-  mockup?: "reporting" | "pointage" | "formatage";
+  mockup?: "reporting" | "pointage" | "formatage" | "previsionnel" | "evaluation" | "crm" | "organisation";
 };
 
 const fadeUp = {
@@ -51,9 +61,22 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 /** Cubic in-out: le recul démarre et se pose progressivement, sans à-coup. */
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-/** Longueur du scrub du recul, en hauteurs d'écran. Doit rester synchronisée
- *  avec la hauteur du cale-scroll `md:h-[120vh]` sous la grille. */
-const PULLBACK_VH = 1.2;
+/** Longueur du scrub du recul, en hauteurs d'écran. PREMIÈRE phase.
+ *  Ramenée de 1,2 à 0,7 (client 2026-08-01 : « l'utilisateur a trop besoin de
+ *  scroller pour arriver à l'animation de défilement des colonnes »). Le recul
+ *  lui-même n'est pas modifié, il se déroule simplement sur moins de scroll.
+ *  Le cale-scroll sous la grille vaut PULLBACK_VH + SCROLL_VH. */
+const PULLBACK_VH = 0.7;
+/** SECONDE phase, en hauteurs d'écran. Elle ne démarre qu'une fois le recul
+ *  terminé : le mur reste épinglé et les colonnes DÉFILENT, les deux extérieures
+ *  vers le haut, celle du milieu vers le bas. Sans boucle, comme demandé : ce qui
+ *  atteint le bord s'efface dans le dégradé déjà en place. */
+const SCROLL_VH = 1.2;
+/** Course d'une colonne pendant la seconde phase, en pixels d'écran.
+ *  Bornée par la RÉSERVE : avec six rangées, le mur passe 936 px au-dessus et en
+ *  dessous de la bande visible. 700 px de course restent donc couverts des deux
+ *  côtés, aucune colonne ne découvre le vide. */
+const COL_SCROLL = 700;
 /** Part de la LARGEUR d'écran qu'occupe le mur, caméra au plus loin. */
 const PULLBACK_FILL_W = 0.96;
 /** Hauteur tolérée pour le mur, en hauteurs d'écran. Volontairement très
@@ -62,10 +85,130 @@ const PULLBACK_FILL_W = 0.96;
  *  1,45 à 2,6 (client 2026-07-30 : « ça doit prendre plus de largeur ») — sous
  *  1,45 c'était la HAUTEUR qui bridait l'échelle, donc le mur se rétrécissait
  *  au milieu de deux grandes marges vides dès qu'on ajoutait des rangées.
- *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran. */
-const PULLBACK_FILL_H = 2.6;
-/** Amplitude de la dérive inverse des colonnes, en pixels d'écran. */
+ *  Au-delà, c'est la largeur qui commande, et le mur remplit l'écran.
+ *  Ramenée à 3,3 avec les six rangées (2026-08-01) : mur de 2 036 x 4 082 px,
+ *  terme de largeur 0,679, il faut donc au moins 3,08 côté hauteur pour que la
+ *  largeur garde la main. 3,3 laisse de la marge. */
+const PULLBACK_FILL_H = 3.3;
+/** Amplitude de la dérive inverse des colonnes, en pixels d'écran.
+ *  REMISE à 170 (client 2026-08-01 : « les encadrés partent tous vers le haut en
+ *  disparaissant, conserve l'animation que l'on avait »). Le passage à 520 était
+ *  une erreur de repère de ma part : le fondu haut et bas est calé sur la
+ *  FENÊTRE VISIBLE, pas sur la hauteur du mur. Un déplacement de 442 px dans un
+ *  écran de 900 px sort donc les deux colonnes extérieures de la bande visible,
+ *  où elles s'effacent dans le dégradé. Les 2 802 px de matière hors champ que
+ *  j'invoquais concernaient le mur, pas la bande où l'on voit quelque chose. */
 const WALL_DRIFT = 170;
+
+/**
+ * WallCard — copie VISUELLE d'une carte de cas d'usage, pour étoffer le mur
+ * pendant le dézoom (client 2026-08-01 : « mets des encadrés qui existent déjà,
+ * même s'ils sont doublon », et « ce qui est vide, c'est l'intérieur des
+ * tuiles »).
+ *
+ * Remplace les anciennes tuiles qui ne portaient qu'un titre sur un aplat de
+ * couleur : c'était leur intérieur vide qui donnait l'aspect brouillon au mur.
+ * Ici on retrouve le titre, la pastille, la ligne meta, les puces et un visuel,
+ * donc un mur homogène de bout en bout.
+ *
+ * Trois écarts DÉLIBÉRÉS avec la vraie carte, tous pour le poids :
+ *   · le média est le POSTER en image, jamais la vidéo ni la maquette. Douze
+ *     copies signifieraient sinon douze balises `video` en lecture ou douze
+ *     scènes de maquette avec leur ResizeObserver, ce qui ruinerait la fluidité
+ *     qu'on vient de gagner ;
+ *   · aucune animation Framer Motion : l'opacité et la position sont écrites par
+ *     le moteur du dézoom, une animation d'entrée entrerait en conflit ;
+ *   · rien d'interactif. La copie est décorative, donc `aria-hidden` et
+ *     `pointer-events-none`, et la pastille « Voir la démo » n'est qu'un décor.
+ */
+function WallCard({ item }: { item: UseCase }) {
+  const { t } = useLang();
+  const Icon = item.metaIcon;
+  return (
+    <div
+      className={`relative h-full overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]${item.mockup ? " flex flex-col" : ""}`}
+      style={{ background: item.bg }}
+    >
+      {item.decor === "circle" && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-[46%] w-[105%] aspect-square -translate-x-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle at 38% 30%, #e4ebff 0%, #cbd6fb 55%, #b3c1f6 100%)" }}
+        />
+      )}
+      {item.decor === "rings" && (
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute left-1/2 top-[58%] w-[62%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[48px] border-2 border-white/25" />
+          <div className="absolute left-1/2 top-[58%] w-[82%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[64px] border-2 border-white/15" />
+          <div className="absolute left-1/2 top-[58%] w-[102%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[80px] border-2 border-white/[0.08]" />
+        </div>
+      )}
+
+      <div className="relative flex items-center justify-between gap-4">
+        <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: item.ink }}>
+          {item.title}
+        </h3>
+        {item.video && (
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] ${
+              item.dark ? "bg-white/15" : "bg-white/70"
+            }`}
+            style={{ color: item.ink }}
+          >
+            {t({ fr: "Voir la démo", en: "Watch the demo" })}
+            <ArrowUpRight className="w-4 h-4" />
+          </span>
+        )}
+      </div>
+
+      <div className="relative mt-5 md:mt-6 flex items-center gap-2.5" style={{ color: item.ink }}>
+        <Icon className="w-[18px] h-[18px]" />
+        <span className="font-inter font-semibold text-[15px] md:text-base">{item.meta}</span>
+      </div>
+
+      <ul className="relative mt-3 space-y-2.5">
+        {item.bullets.map((b) => (
+          <li key={b} className="flex items-start gap-2.5 font-inter text-[14px] md:text-[15.5px] leading-relaxed" style={{ color: item.sub }}>
+            <span
+              aria-hidden
+              className="mt-[7px] h-[7px] w-[7px] shrink-0 rounded-full border-[1.5px]"
+              style={{ borderColor: item.sub }}
+            />
+            {b}
+          </li>
+        ))}
+      </ul>
+
+      {/* Même emplacement que le média de la vraie carte, poster en image. */}
+      <div
+        className={
+          item.mockup
+            ? "relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-8 md:-mb-12"
+            : item.blend
+              ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
+              : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
+        }
+      >
+        <img
+          src={item.poster}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className="w-full aspect-video object-cover block"
+        />
+        {item.blend && (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-x-0 bottom-0 h-10 md:h-12" style={{ background: `linear-gradient(to top, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-y-0 left-0 w-10 md:w-14" style={{ background: `linear-gradient(to right, ${item.bg} 0%, transparent 100%)` }} />
+            <div className="absolute inset-y-0 right-0 w-10 md:w-14" style={{ background: `linear-gradient(to left, ${item.bg} 0%, transparent 100%)` }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function UseCases() {
   const { t } = useLang();
@@ -78,6 +221,20 @@ export default function UseCases() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const fillerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Le moteur est scindé en DEUX (client 2026-08-01 : « c'est un peu lent et un
+  // peu bugué quand le dézoom s'active »). Avant, une seule fonction était
+  // branchée directement sur `scroll`, sans throttle, et elle alternait lectures
+  // et écritures de mise en page : `offsetWidth`, écriture de `pin.style.top`,
+  // `getBoundingClientRect`, écriture de la largeur des tuiles, relecture des
+  // `offset*` de chaque carte, écriture des transformes, relecture du rect du
+  // cadenceur, écriture du masque. Chaque retour en lecture après une écriture
+  // force un recalcul SYNCHRONE de la mise en page, et l'événement `scroll` peut
+  // se répéter plusieurs fois par image : d'où les saccades.
+  //   · `measure()` prend toutes les mesures et les met en cache. Appelée au
+  //     montage, au redimensionnement et quand le mur grandit, jamais pendant
+  //     le scroll.
+  //   · `apply()` ne fait plus que deux lectures groupées EN TÊTE, puis
+  //     uniquement des écritures, et tourne au maximum une fois par image.
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Même source que la mise en page : le `md:` de Tailwind. Comparer
@@ -89,6 +246,66 @@ export default function UseCases() {
     const grid = zoomRef.current;
     if (!track || !pin || !grid) return;
 
+    /** Place d'arrivée d'une carte dans le mur, mesurée une fois pour toutes. */
+    type Slot = {
+      card: HTMLDivElement;
+      /** Les tuiles ne VOYAGENT pas : posées d'emblée à leur place, elles se
+       *  contentent d'apparaître en fondu. */
+      still: boolean;
+      dx: number;
+      dy: number;
+      /** Colonne 1 = celle du milieu en trois colonnes ; en repli à deux, c'est
+       *  celle de droite, et les deux dérivent encore en sens opposé. */
+      mid: boolean;
+      /** Position et hauteur de MISE EN PAGE, pour situer la carte à l'écran sans
+       *  aucune lecture pendant le scroll. */
+      top0: number;
+      h: number;
+      /** Dernier état de masquage écrit, pour ne pas réécrire à l'identique. */
+      off: boolean;
+      /** Dernier `will-change` écrit, même raison. */
+      wc: string;
+    };
+    type Geo = {
+      pinTop: number;
+      scrub: number;
+      /** Longueur en pixels de la SECONDE phase, le défilement des colonnes. */
+      scroll: number;
+      fit: number;
+      gridH: number;
+      wallFullH: number;
+      fadeH: number;
+      slots: Slot[];
+    };
+    // Les VIDÉOS des cartes tournent en autoplay/loop. Pendant le recul, elles se
+    // trouvent dans un sous-arbre dont l'échelle change à chaque image : chaque
+    // image de chaque vidéo doit alors être recomposée dans une couche
+    // retransformée. C'est du travail de DESSIN, invisible pour un profil de mise
+    // en page, et c'est aujourd'hui le coût dominant de la séquence, d'autant que
+    // la grille contient désormais sept scènes de maquette. On les met donc en
+    // pause le temps de l'animation : à l'échelle où les cartes se retrouvent,
+    // une image figée est indiscernable d'une vidéo qui joue.
+    const videos = [...grid.querySelectorAll("video")];
+    let geo: Geo | null = null;
+    let rafId = 0;
+    let hinted = false;
+    let videosOff = false;
+    /** Vrai quand l'état de repos a déjà été posé : évite de le réécrire. */
+    let auRepos = false;
+
+    const setVideos = (off: boolean) => {
+      if (off === videosOff) return;
+      videosOff = off;
+      for (const v of videos) {
+        if (off) v.pause();
+        // `play()` renvoie une promesse qui peut être rejetée (onglet masqué,
+        // politique d'autoplay) : on l'ignore volontairement.
+        else void v.play().catch(() => {});
+      }
+    };
+    /** Dernières bornes du masque posées, pour ne pas le réécrire à l'identique. */
+    const lastMask: { haut: number | null; bas: number | null } = { haut: null, bas: null };
+
     const reset = () => {
       pin.style.top = "";
       pin.style.removeProperty("-webkit-mask-image");
@@ -96,18 +313,49 @@ export default function UseCases() {
       grid.style.transform = "";
       grid.style.willChange = "";
       cardRefs.current.forEach((el) => {
-        if (el) { el.style.transform = ""; el.style.willChange = ""; }
+        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.visibility = ""; }
       });
       fillerRefs.current.forEach((el) => {
-        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; }
+        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; el.style.pointerEvents = ""; el.style.visibility = ""; }
       });
+      hinted = false;
+      setVideos(false);
+      // Sans ça, un retour aux MÊMES bornes après un reset sauterait la
+      // réécriture et le masque resterait absent.
+      lastMask.haut = null;
+      lastMask.bas = null;
     };
 
-    const apply = () => {
+    /** Remet les cartes à plat, mais CONSERVE `pin.style.top` : sans lui
+     *  l'épinglage ne se déclencherait plus à l'arrivée. Contrairement à
+     *  `reset()`, qui sert à désactiver complètement le moteur. */
+    const settleAtRest = () => {
+      if (auRepos) return;
+      auRepos = true;
+      grid.style.transform = "";
+      grid.style.willChange = "";
+      hinted = false;
+      for (const slot of geo?.slots ?? []) {
+        slot.card.style.transform = "";
+        slot.card.style.visibility = "";
+        slot.card.style.willChange = "";
+        slot.off = false;
+        slot.wc = "";
+        if (slot.still) { slot.card.style.opacity = "0"; slot.card.style.pointerEvents = ""; }
+      }
+      pin.style.removeProperty("-webkit-mask-image");
+      pin.style.removeProperty("mask-image");
+      lastMask.haut = null;
+      lastMask.bas = null;
+      setVideos(false);
+    };
+
+    // ── Mesures : tout ce qui ne dépend PAS de la position de scroll ─────────
+    const measure = () => {
       // Sous `md` la grille n'est pas épinglée : on remet tout à plat, sinon
       // les transformes d'une session desktop resteraient collés après un
       // redimensionnement.
-      if (!desktop.matches || reduced) return reset();
+      if (!desktop.matches || reduced) { geo = null; return reset(); }
 
       const vw = window.innerWidth;
       const vh = window.innerHeight;
@@ -116,24 +364,12 @@ export default function UseCases() {
       const gridW = grid.offsetWidth;
       const gridH = grid.offsetHeight;
       const reals = cardRefs.current.filter((el): el is HTMLDivElement => !!el);
-      if (gridH <= vh || reals.length < 2) return reset();
+      if (gridH <= vh || reals.length < 2) { geo = null; return reset(); }
 
       // `top` négatif : la grille défile normalement puis se fige au moment où
-      // son BAS touche le bas de l'écran, donc pile sur la dernière rangée
-      // (« Réconciliation » / « Formatage pour logiciel métier »).
+      // son BAS touche le bas de l'écran, donc pile sur la dernière rangée.
       const pinTop = vh - gridH;
-      pin.style.top = `${pinTop}px`;
 
-      const p = clamp01((pinTop - track.getBoundingClientRect().top) / (vh * PULLBACK_VH));
-      const u = ease(p);
-
-      // ── Disposition d'arrivée du mur ────────────────────────────────────
-      // Reculer sur la grille à deux colonnes ne suffit pas : elle est trois
-      // fois plus haute que large, donc la faire tenir à l'écran la réduirait
-      // à un bandeau étroit au milieu du vide. Les cartes se REDISTRIBUENT
-      // donc en un mur plus large pendant le recul. Leur taille de mise en
-      // page ne change jamais (simple `translate`), il n'y a donc aucun
-      // reflux de texte pendant l'animation.
       // Mesures prises sur les VRAIES cartes uniquement : les tuiles de
       // remplissage sont hors flux, leurs `offset*` valent tous zéro.
       const colW = reals[0].offsetWidth;
@@ -143,117 +379,293 @@ export default function UseCases() {
         : gapX;
       const rowH = Math.max(...reals.map((c) => c.offsetHeight));
 
-      // Les tuiles de remplissage prennent le gabarit d'une vraie carte, sinon
-      // les rangées du mur seraient irrégulières.
       const fills = fillerRefs.current.filter((el): el is HTMLDivElement => !!el);
       const fillerSet = new Set<HTMLDivElement>(fills);
-      // Apparition RETARDÉE : elles ne se révèlent qu'une fois le mur bien
-      // engagé. Les faire monter en opacité dès le premier pixel de recul les
-      // montrait à leur place définitive alors que les vraies cartes étaient
-      // encore en chemin.
-      const fade = clamp01((u - 0.82) / 0.18);
-      for (const f of fills) {
-        f.style.width = `${colW}px`;
-        f.style.height = `${rowH}px`;
-        f.style.opacity = String(fade);
-      }
+      // Géométrie des tuiles CONNUE, jamais relue. C'est le correctif du mur
+      // cassé : leur gabarit (`colW` x `rowH`) est écrit à la fin de cette
+      // fonction, or les hauteurs de rangées étaient calculées AVANT, en lisant
+      // `offsetHeight`. Au premier passage les tuiles avaient donc leur hauteur
+      // naturelle, bien plus courte : les rangées de tuiles se tassaient les
+      // unes sur les autres et `wallFullH` était très sous-estimé, donc le mur
+      // mal cadré. Et rien ne déclenchait de seconde mesure, l'observateur
+      // surveillant `pin`, dont la taille ne bouge pas quand on redimensionne
+      // des éléments hors flux. L'ancien moteur y échappait en réécrivant ce
+      // gabarit à chaque image, avant les calculs.
+      // Les tuiles étant posées en `absolute left-0 top-0`, leur origine vaut
+      // (0, 0) et leur boîte vaut (colW, rowH) : tout est déjà connu ici.
+      const isFill = (c: HTMLDivElement) => fillerSet.has(c);
+      const hOf = (c: HTMLDivElement) => (isFill(c) ? rowH : c.offsetHeight);
+      const leftOf = (c: HTMLDivElement) => (isFill(c) ? 0 : c.offsetLeft);
+      const topOf = (c: HTMLDivElement) => (isFill(c) ? 0 : c.offsetTop);
 
-      // Alternance vraie carte / tuile : en trois colonnes cela donne un
-      // damier, donc les ajouts se fondent dans le mur au lieu de former un
-      // bloc rapporté sous les cartes travaillées.
+      // TROIS colonnes, et pas un nombre choisi automatiquement : c'est ce qui
+      // rend lisible la dérive inverse (les deux colonnes extérieures montent,
+      // celle du milieu descend). En dessous de six cartes, trois colonnes
+      // laisseraient une rangée dépareillée, on retombe alors à deux.
+      const cols = reals.length + fills.length >= 6 ? 3 : 2;
+
+      // Les vraies cartes restent en TÊTE du mur (client 2026-08-01 :
+      // « l'organisation au dézoom est moche, ça part trop dans tous les sens »).
+      // Je les avais placées au MILIEU pour les garder à l'écran, mais ça leur
+      // imposait un trajet vertical d'environ 3 400 px pendant le recul, alors
+      // qu'en tête leur déplacement ne dépasse jamais UNE rangée : c'est ce qui
+      // rendait le dézoom propre à l'origine.
+      // Les garder visibles est donc obtenu autrement : en LIMITANT le nombre de
+      // rangées. Calculé en 1440x900, avec les cartes en tête, la bande visible
+      // est entièrement remplie par elles jusqu'à SIX rangées (le mur passe alors
+      // 936 px au-dessus de la bande, pour un bloc de cartes qui en couvre 1 866).
+      // À 7 rangées les tuiles occupent déjà 23 % de la bande, à 10 les cartes en
+      // sortent complètement.
+      // L'alternance carte / tuile fait le damier.
       const cards: HTMLDivElement[] = [];
       for (let i = 0; i < Math.max(reals.length, fills.length); i++) {
         if (i < reals.length) cards.push(reals[i]);
         if (i < fills.length) cards.push(fills[i]);
       }
 
-      // TROIS colonnes, et pas un nombre choisi automatiquement : c'est ce qui
-      // rend lisible la dérive inverse plus bas (les deux colonnes extérieures
-      // montent, celle du milieu descend). En dessous de six cartes, trois
-      // colonnes laisseraient une rangée dépareillée, on retombe alors à deux.
-      const cols = cards.length >= 6 ? 3 : 2;
       const rows: HTMLDivElement[][] = [];
       for (let i = 0; i < cards.length; i += cols) rows.push(cards.slice(i, i + cols));
       const wallW = Math.max(...rows.map((r) => r.length)) * (colW + gapX) - gapX;
-      const wallFullH = rows.reduce((acc, r) => acc + Math.max(...r.map((c) => c.offsetHeight)), 0)
+      const wallFullH = rows.reduce((acc, r) => acc + Math.max(...r.map(hOf)), 0)
         + gapY * (rows.length - 1);
       const fit = Math.min(1, (vw * PULLBACK_FILL_W) / wallW, (vh * PULLBACK_FILL_H) / wallFullH);
 
-      const s = 1 - (1 - fit) * u;
-      // Dérive inverse : la colonne du MILIEU descend pendant que les deux
-      // extérieures montent. Décalée de 0,15 pour que le mur soit déjà en
-      // mouvement en arrivant, plutôt que de démarrer pile à l'arrêt. Exprimée
-      // en pixels d'écran, donc divisée par l'échelle du mur.
-      const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
-
       // Toutes les rangées démarrent sur la MÊME grille de colonnes, y compris
-      // la dernière si elle est incomplète. La centrer, comme je le faisais,
-      // plaçait ses cartes entre les colonnes du dessus : l'indice de colonne
-      // ne voulait plus rien dire, la dérive inverse envoyait deux voisines
-      // l'une sur l'autre, et le mur finissait avec un chevauchement.
+      // la dernière si elle est incomplète. La centrer plaçait ses cartes entre
+      // les colonnes du dessus : l'indice de colonne ne voulait plus rien dire,
+      // la dérive inverse envoyait deux voisines l'une sur l'autre, et le mur
+      // finissait avec un chevauchement.
       const rowLeft0 = (gridW - (cols * (colW + gapX) - gapX)) / 2;
+      const slots: Slot[] = [];
       let rowTop = 0;
       for (const row of rows) {
         let cardLeft = rowLeft0;
         row.forEach((card, ci) => {
-          // Les tuiles ne VOYAGENT pas. Étant hors flux, leurs `offset*` valent
-          // zéro : les interpoler comme les vraies cartes les faisait partir du
-          // coin haut-gauche de la grille et traverser tout le mur en passant
-          // par-dessus les cartes pleines. Elles sont donc posées d'emblée à
-          // leur place définitive et se contentent d'apparaître en fondu.
-          const t = fillerSet.has(card) ? 1 : u;
-          const dx = (cardLeft - card.offsetLeft) * t;
-          // Colonne 1 = celle du milieu en trois colonnes ; en repli à deux
-          // colonnes, c'est simplement celle de droite, et les deux dérivent
-          // encore en sens opposé.
-          const dy = (rowTop - card.offsetTop) * t + (ci === 1 ? drift : -drift);
-          card.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-          card.style.willChange = p > 0 && p < 1 ? "transform" : "";
+          slots.push({
+            card,
+            still: fillerSet.has(card),
+            dx: cardLeft - leftOf(card),
+            dy: rowTop - topOf(card),
+            mid: ci === 1,
+            top0: topOf(card),
+            h: hOf(card),
+            off: false,
+            wc: "",
+          });
           cardLeft += colW + gapX;
         });
-        rowTop += Math.max(...row.map((c) => c.offsetHeight)) + gapY;
+        rowTop += Math.max(...row.map(hOf)) + gapY;
       }
 
+      // ÉCRITURES groupées à la toute fin, une fois toutes les lectures faites.
+      // Le gabarit des tuiles est posé ICI et plus à chaque image : `width` et
+      // `height` sont des propriétés de MISE EN PAGE, les réécrire soixante fois
+      // par seconde invalidait la mise en page pour rien.
+      pin.style.top = `${pinTop}px`;
+      for (const f of fills) {
+        f.style.width = `${colW}px`;
+        f.style.height = `${rowH}px`;
+      }
+
+      geo = {
+        pinTop, scrub: vh * PULLBACK_VH, scroll: vh * SCROLL_VH,
+        fit, gridH, wallFullH,
+        fadeH: Math.min(130, vh * 0.16), slots,
+      };
+    };
+
+    // ── Application : lectures groupées en tête, puis écritures seules ───────
+    const apply = () => {
+      rafId = 0;
+      const g = geo;
+      if (!g) return;
+
+      // LECTURES (les deux seules, et avant toute écriture).
+      const trackTop = track.getBoundingClientRect().top;
+      const pinTopNow = pin.getBoundingClientRect().top;
+
+      // Distance parcourue depuis le début de l'épinglage. Elle alimente DEUX
+      // phases qui s'enchaînent : le recul de caméra, puis le défilement des
+      // colonnes.
+      const d = g.pinTop - trackTop;
+
+      // ── DEUX SORTIES ANTICIPÉES ──────────────────────────────────────────
+      // `apply()` était appelé à chaque événement de scroll de TOUTE la page, et
+      // réécrivait alors dix-neuf transformations identiques (`translate3d(0px,
+      // 0px, 0)`) même quand la section était à des milliers de pixels de
+      // l'écran. Poser la même valeur marque quand même l'élément à recalculer :
+      // ce coût était payé en permanence, d'où les accrocs ressentis AVANT le
+      // dézoom, quand les cartes sont encore en deux colonnes.
+      //   1. Avant l'épinglage : on pose l'état de repos UNE fois, puis plus rien.
+      if (d <= 0) return settleAtRest();
+      auRepos = false;
+      //   2. Épinglage entièrement hors de l'écran : rien de visible à mettre à
+      //      jour, on garde l'état tel quel, il sera recalculé au retour.
+      const vhGuard = window.innerHeight;
+      if (pinTopNow + g.gridH < -400 || pinTopNow > vhGuard + 400) return;
+
+      const p = clamp01(d / g.scrub);
+      const u = ease(p);
+      const s = 1 - (1 - g.fit) * u;
+      // Dérive inverse : la colonne du MILIEU descend pendant que les deux
+      // extérieures montent. Décalée de 0,15 pour que le mur soit déjà en
+      // mouvement en arrivant. Exprimée en pixels d'écran, donc divisée par
+      // l'échelle du mur.
+      const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
+      // Apparition RETARDÉE des tuiles : elles ne se révèlent qu'une fois le
+      // mur bien engagé.
+      const fade = clamp01((u - 0.82) / 0.18);
+      // SECONDE PHASE. `q` reste à zéro tant que la distance parcourue n'a pas
+      // dépassé la longueur du recul : le dézoom se déroule donc exactement comme
+      // avant, on n'y touche pas. Ensuite le mur reste épinglé et les colonnes
+      // défilent, les extérieures vers le haut, celle du milieu vers le bas.
+      // Sans boucle : ce qui atteint le bord s'efface dans le dégradé déjà posé,
+      // et la réserve de tuiles couvre la course.
+      const q = clamp01((d - g.scrub) / g.scroll);
+      const colScroll = (q * COL_SCROLL) / s;
+      // DEUX états distincts, et c'est le correctif du « ça bugue fortement à la
+      // fin » (client 2026-08-03) :
+      //   · `engaged` = le mur est en disposition de mur. Il le reste au-delà de
+      //     la fin de l'animation, donc rien ne bascule à cet instant ;
+      //   · `running` = l'animation progresse encore.
+      // Avant, un unique `active = d > 0 && q < 1` faisait TOUT retomber pile à
+      // q = 1 : l'élagage se désactivait et les quinze à vingt cartes masquées
+      // redevenaient visibles dans la MÊME image, obligeant le navigateur à
+      // peindre d'un coup autant de grandes cartes avec leurs maquettes. C'était
+      // le pic de la fin du défilement.
+      const engaged = u > 0;
+      const running = d > 0 && q < 1;
+
+      // ── Élagage du DESSIN ────────────────────────────────────────────────
+      // Le mur fait environ trois fois la hauteur de la bande visible, donc la
+      // plupart des cartes sont peintes alors qu'elles sont hors champ, et de
+      // toute façon effacées par le fondu. On les sort du dessin avec
+      // `visibility:hidden`, qui n'affecte PAS la mise en page : aucune de leurs
+      // positions ne change, elles réapparaissent simplement quand elles entrent.
+      // Tout est déduit de valeurs en cache, sans une seule lecture de mise en
+      // page pendant le scroll.
+      // Le repère : après le transform de la grille, une position locale y tombe à
+      // l'écran en pinTopNow + gridH + (y - gridH) * s + T.
+      const vhNow = window.innerHeight;
+      const marge = 120;
+      const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
+      const gridT = u * (s * g.gridH - (s * wallH) / 2 - vhNow / 2);
+
+      // ÉCRITURES.
+      for (const slot of g.slots) {
+        const t = slot.still ? 1 : u;
+        // Les deux mouvements vont dans le MÊME sens et s'additionnent : la
+        // colonne du milieu descend pendant le recul puis continue de descendre
+        // pendant le défilement, les extérieures montent puis continuent de
+        // monter. Aucune inversion de sens au passage d'une phase à l'autre.
+        const dy = slot.dy * t + (slot.mid ? drift + colScroll : -drift - colScroll);
+        slot.card.style.transform = `translate3d(${slot.dx * t}px, ${dy}px, 0)`;
+
+        // Hors de la bande visible ? On la sort du DESSIN. `visibility` n'affecte
+        // pas la mise en page, donc rien ne se déplace et la carte réapparaît
+        // simplement quand elle entre. L'état n'est écrit qu'au changement.
+        const yLocal = slot.top0 + dy;
+        const yEcran = pinTopNow + g.gridH + (yLocal - g.gridH) * s + gridT;
+        const off = engaged && (yEcran + slot.h * s < -marge || yEcran > vhNow + marge);
+        if (off !== slot.off) {
+          slot.off = off;
+          slot.card.style.visibility = off ? "hidden" : "";
+        }
+        // Promotion en couche GPU carte par carte, et seulement si elle est
+        // RÉELLEMENT visible. Avant, les vingt-cinq cartes étaient promues
+        // ensemble puis dépromues ensemble : autant de textures réservées pour
+        // des cartes hors champ, et une démolition de couches groupée sur une
+        // seule image. Là, seules les six à neuf cartes de la bande sont
+        // promues, et elles le sont une par une au fil du défilement.
+        const wc = engaged && !off ? "transform" : "";
+        if (wc !== slot.wc) {
+          slot.wc = wc;
+          slot.card.style.willChange = wc;
+        }
+
+        if (slot.still) {
+          slot.card.style.opacity = String(fade);
+          // Survolables une fois franchement révélées seulement : avant, la
+          // classe pointer-events-none reste maîtresse, pour ne jamais voler
+          // un clic aux vraies cartes pendant la transition.
+          slot.card.style.pointerEvents = fade > 0.6 ? "auto" : "none";
+        }
+      }
       // Recul de caméra. Origine en bas de la grille, donc pile sur le bas de
       // l'écran pendant l'épinglage : à u = 0 la grille est exactement à sa
       // place, et le mur se recentre au fur et à mesure du recul.
-      const wallH = gridH + (wallFullH - gridH) * u;
-      grid.style.transform = `translate3d(0, ${u * (s * gridH - (s * wallH) / 2 - vh / 2)}px, 0) scale(${s})`;
-      grid.style.willChange = p > 0 && p < 1 ? "transform" : "";
+      // (Le décalage vertical est calculé plus haut, `gridT`, pour servir aussi à
+      // l'élagage du dessin.)
+      grid.style.transform = `translate3d(0, ${gridT}px, 0) scale(${s})`;
+
+      // Vidéos en pause pendant toute la séquence épinglée, rendues à la lecture
+      // dès qu'on en sort.
+      setVideos(d > 0);
+
+      // La grille suit `engaged` : promue tant que le mur est en disposition de
+      // mur, donc aucune bascule à la fin de l'animation. Écrit au changement
+      // seulement. La promotion des cartes est gérée une par une dans la boucle
+      // ci-dessus.
+      if (engaged !== hinted) {
+        hinted = engaged;
+        grid.style.willChange = engaged ? "transform" : "";
+      }
 
       // Fondu haut et bas pendant le recul. Les bornes sont recalculées depuis
-      // la position RÉELLE de l'enveloppe à chaque image, et non depuis les
-      // coordonnées de l'épinglage : une fois le mur libéré, l'enveloppe remonte
-      // avec la page, et un dégradé figé emporterait le fondu avec elle en
-      // plein milieu de l'écran.
-      // La borne basse suit le BAS DU CADENCEUR quand celui-ci passe au-dessus
-      // du bas de l'écran : c'est là que commence « Automatisez de bout en
-      // bout », dont le fond opaque tranchait net la dernière rangée.
-      if (p > 0) {
-        const pinTopNow = pin.getBoundingClientRect().top;
-        const haut = -pinTopNow;
-        const bas = -pinTopNow + Math.min(vh, track.getBoundingClientRect().bottom);
-        const fade = Math.min(130, vh * 0.16);
-        const mask = `linear-gradient(to bottom, transparent ${haut}px, #000 ${haut + fade}px, #000 ${bas - fade}px, transparent ${bas}px)`;
-        pin.style.setProperty("-webkit-mask-image", mask);
-        pin.style.setProperty("mask-image", mask);
-      } else {
+      // la position RÉELLE de l'enveloppe, et non depuis les coordonnées de
+      // l'épinglage : une fois le mur libéré, l'enveloppe remonte avec la page,
+      // et un dégradé figé emporterait le fondu avec elle en plein milieu de
+      // l'écran.
+      // Le masque n'est mis à jour que TANT QUE l'animation tourne. Passé la fin,
+      // l'épinglage se relâche et `pinTopNow` change à chaque image : les bornes
+      // étaient donc recalculées et le masque réécrit soixante fois par seconde,
+      // ce qui re-rastérise à chaque fois un conteneur portant tout le mur. On le
+      // fige à sa dernière valeur, il accompagne alors le mur qui s'en va. La
+      // mise à jour reprend si l'on remonte dans l'animation.
+      if (p > 0 && running) {
+        // Bornes ARRONDIES au pixel, et masque réécrit seulement s'il change
+        // vraiment. Un masque en dégradé sur un conteneur épinglé qui porte des
+        // vidéos et trois maquettes se re-rastérise à chaque réécriture : c'est
+        // du travail de DESSIN, invisible pour un profil de mise en page, et
+        // c'est le coût le plus lourd de la séquence. Au pixel près, deux images
+        // voisines demandent très souvent le même masque.
+        const haut = Math.round(-pinTopNow);
+        const bas = Math.round(-pinTopNow + Math.min(window.innerHeight, trackTop + track.offsetHeight));
+        if (haut !== lastMask.haut || bas !== lastMask.bas) {
+          lastMask.haut = haut;
+          lastMask.bas = bas;
+          const mask = `linear-gradient(to bottom, transparent ${haut}px, #000 ${haut + g.fadeH}px, #000 ${bas - g.fadeH}px, transparent ${bas}px)`;
+          pin.style.setProperty("-webkit-mask-image", mask);
+          pin.style.setProperty("mask-image", mask);
+        }
+      } else if (p === 0 && lastMask.haut !== null) {
+        lastMask.haut = null;
+        lastMask.bas = null;
         pin.style.removeProperty("-webkit-mask-image");
         pin.style.removeProperty("mask-image");
       }
     };
 
-    apply();
-    window.addEventListener("scroll", apply, { passive: true });
-    window.addEventListener("resize", apply);
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(apply);
+    };
+    const remeasure = () => {
+      measure();
+      if (!rafId) rafId = requestAnimationFrame(apply);
+    };
+
+    remeasure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", remeasure);
     // La grille grandit encore après le montage (posters, vidéos, polices) :
     // sans ça le `top` d'épinglage resterait calculé sur une hauteur trop
     // faible et le recul démarrerait au mauvais endroit.
-    const ro = new ResizeObserver(apply);
+    const ro = new ResizeObserver(remeasure);
     ro.observe(pin);
     return () => {
-      window.removeEventListener("scroll", apply);
-      window.removeEventListener("resize", apply);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", remeasure);
       ro.disconnect();
     };
   }, []);
@@ -322,13 +734,25 @@ export default function UseCases() {
         t({ fr: "Vos PDF sont lus et transformés en tableau Excel exploitable, sans ressaisie", en: "Your PDFs are read and turned into a usable Excel table, no re-keying" }),
         t({ fr: "Chaque ligne, montant et référence extraits fidèlement, prêts à traiter", en: "Every line, amount and reference extracted faithfully, ready to work with" }),
       ],
-      video: "/ora_pdf_extract_v2.mp4",
-      poster: "/posters/ora_pdf_extract.jpg",
+      // v4 : clip RÉEXPORTÉ sur le rose de la carte (client 2026-08-03). La v2
+      // était rendue sur une lavande #ebe0f9, héritée de l'ancienne couleur de
+      // carte, et la jonction se voyait depuis le passage au rose. Le fond a été
+      // changé à la SOURCE, dans la page qui génère la vidéo
+      // (Desktop/.../demo-video-pdf-extract/pdf-extract-demo.html, `#backdrop`),
+      // puis les 547 images ont été rendues et réencodées : les angles arrondis
+      // et les ombres portées des fenêtres se fondent donc vraiment dans le rose,
+      // ce qu'une incrustation de couleur n'aurait pas su faire.
+      video: "/ora_pdf_extract_v4.mp4",
+      poster: "/posters/ora_pdf_extract_v4.jpg",
       // Rose poudré (client 2026-07-29 : « plus rose »), en remplacement de la
-      // lavande #eae6fb. NB : le fond propre de la vidéo est un bleu pâle
-      // #dbe3f7, donc la jonction entre la carte et le clip est ENCORE plus
-      // visible qu'avant, tant que la vidéo n'est pas réexportée sur ce fond.
-      bg: "#f7e3f0",
+      // lavande #eae6fb.
+      // #f6e3f0 et non #f7e3f0 : une unité de rouge en moins, invisible à l'œil,
+      // mais c'est la valeur que le navigateur DÉCODE réellement du clip. Le rose
+      // est encodé à #f7e3f0 à la source ; le passage en YUV 4:2:0, imposé par
+      // H.264, le ramène à #f6e3f0 et rien ne peut l'en empêcher. C'est donc au
+      // CSS, seul terme exact des deux, de s'aligner sur la vidéo. Jonction nulle
+      // pendant la lecture, une unité d'écart sur le poster JPEG.
+      bg: "#f6e3f0",
       ink: "#3d1b36",
       sub: "#7c4f6e",
       blend: true,
@@ -380,35 +804,132 @@ export default function UseCases() {
       dark: true,
       mockup: "formatage",
     },
+    // ── Quatre cartes « conseil » ajoutées le 2026-08-02 : Prévisionnel,
+    // Évaluation financière, Connectivité CRM, Organisation. Le damier
+    // continue (rangée 4 : saturé | pâle, rangée 5 : pâle | saturé) et la
+    // palette reste dans la famille bleu / indigo / teal : navy #1e3a8a et
+    // teal de marque #0d9488 côté saturé, menthe #d7efe9 et pervenche
+    // #e3e9fc côté pastel.
+    // ⚠ COPIE PROVISOIRE : titres, meta et puces sont des brouillons à faire
+    // valider (formulation exacte) avant toute mise en ligne.
+    // ⚠ VIDÉOS PROVISOIRES : les clips de la lightbox sont ceux d'AUTRES cas
+    // d'usage, à réexporter avant de communiquer dessus (même réserve que les
+    // cartes « Réconciliation » et « Formatage » ci-dessus). Les POSTERS, eux,
+    // sont les vrais : captures des maquettes, utilisées par le mur du dézoom.
+    {
+      title: t({ fr: "Prévisionnel", en: "Forecasting" }),
+      metaIcon: TrendingUp,
+      meta: t({ fr: "Business plan & trajectoire financière", en: "Business plan & financial trajectory" }),
+      bullets: [
+        t({ fr: "Le business plan se construit à partir de votre historique, hypothèses à l'appui", en: "The business plan is built from your history, assumptions made explicit" }),
+        t({ fr: "Une trajectoire claire sur plusieurs années, prête à présenter", en: "A clear multi-year trajectory, ready to present" }),
+      ],
+      poster: "/posters/ora_previsionnel.jpg",
+      // Bleu nuit, dans la famille du navy de la marque : bien distinct du
+      // bleu vif #0A6BE1 et de l'indigo #5865E3 déjà en place.
+      bg: "#1e3a8a",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.78)",
+      dark: true,
+      mockup: "previsionnel",
+    },
+    {
+      title: t({ fr: "Évaluation financière", en: "Business valuation" }),
+      metaIcon: Scale,
+      meta: t({ fr: "Valorisation, multiples & comparables", en: "Valuation, multiples & comparables" }),
+      bullets: [
+        t({ fr: "La valorisation posée sur des multiples et des comparables explicites", en: "Valuation grounded in explicit multiples and comparables" }),
+        t({ fr: "Une fourchette argumentée, prête à défendre face au client", en: "A reasoned range, ready to defend with your client" }),
+      ],
+      poster: "/posters/ora_evaluation.jpg",
+      // Vert d'eau : le versant pastel du teal de marque #0d9488.
+      bg: "#d7efe9",
+      ink: "#0b3a33",
+      sub: "#33635c",
+      mockup: "evaluation",
+    },
+    {
+      title: t({ fr: "Connectivité CRM", en: "CRM connectivity" }),
+      metaIcon: PlugZap,
+      meta: t({ fr: "CRM, facturation & suivi commercial", en: "CRM, invoicing & sales tracking" }),
+      bullets: [
+        t({ fr: "Les données de votre CRM alimentent directement vos fichiers de travail", en: "Your CRM data feeds directly into your working files" }),
+        t({ fr: "Fini les doubles saisies entre outils : une seule source à jour", en: "No more double entry between tools: one up-to-date source" }),
+      ],
+      poster: "/posters/ora_crm.jpg",
+      // Pervenche : pastel côté indigo, distinct des bleus pâles existants.
+      bg: "#e3e9fc",
+      ink: "#1b2a5e",
+      sub: "#4a5691",
+      mockup: "crm",
+    },
+    {
+      title: t({ fr: "Organisation", en: "Organization" }),
+      metaIcon: FolderCheck,
+      meta: t({ fr: "Classement de dossiers & fichiers", en: "Folder & file organization" }),
+      bullets: [
+        t({ fr: "Vos fichiers renommés et rangés selon votre plan de classement", en: "Your files renamed and filed according to your filing plan" }),
+        t({ fr: "Chaque dossier client reste propre, sans tri manuel", en: "Every client folder stays tidy, no manual sorting" }),
+      ],
+      poster: "/posters/ora_organisation.jpg",
+      // Teal de marque, versant saturé : première carte de la série à le
+      // porter en aplat.
+      bg: "#0d9488",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.8)",
+      dark: true,
+      mockup: "organisation",
+    },
   ];
 
-  // ── Tuiles de remplissage du MUR uniquement ──────────────────────────────
-  // Elles n'apparaissent QUE pendant le dézoom, pour étoffer les colonnes et
-  // les rangées. Elles ne rejoignent jamais les cartes pleines travaillées
-  // au-dessus : hors flux (`absolute`) et invisibles tant que le recul n'a pas
-  // commencé, elles ne touchent donc pas la grille.
-  // ⚠ INTITULÉS INVENTÉS, et désormais PUBLIÉS (client 2026-07-30, qui a
-  // confirmé en connaissance de cause). Ce sont des noms de remplissage, pas
-  // des automatisations livrées : ils annoncent au public des capacités qui ne
-  // sont pas garanties. À REMPLACER par la vraie liste dès qu'elle arrive.
-  // Encadrés VIDES, à dessein (client 2026-07-30). Les posters repris des
-  // autres cas d'usage ont été essayés puis retirés le jour même : leurs fonds
-  // sombres juraient avec les couleurs des tuiles (« affreux »). Titre + meta
-  // sur un aplat pastel, rien d'autre, en attendant les vrais visuels.
-  const fillers: { title: string; meta: string; bg: string; ink: string }[] = [
-    { title: t({ fr: "Contrôle de TVA", en: "VAT control" }), meta: t({ fr: "Déclarations & contrôles", en: "Filings & controls" }), bg: "#d2e4fa", ink: "#0c2d4d" },
-    { title: t({ fr: "Consolidation", en: "Consolidation" }), meta: t({ fr: "Groupes & filiales", en: "Groups & subsidiaries" }), bg: "#0E7490", ink: "#ffffff" },
-    { title: t({ fr: "Relances clients", en: "Customer follow-ups" }), meta: t({ fr: "Recouvrement & encours", en: "Collections & receivables" }), bg: "#f7e3f0", ink: "#3d1b36" },
-    // « Immobilisations » → « Évaluation d'entreprise » et « Notes de frais »
-    // → « Prévisionnel » (client 2026-07-30). La tuile « Évaluation
-    // d'entreprise » posée au tour précédent à la place de « Rapprochement
-    // bancaire » ferait doublon : elle est donc retirée, et la liste passe de
-    // six à CINQ tuiles. Le mur s'accommode d'un compte non multiple de trois,
-    // il centre simplement sa dernière rangée.
-    { title: t({ fr: "Évaluation d'entreprise", en: "Business valuation" }), meta: t({ fr: "Valorisation & multiples", en: "Valuation & multiples" }), bg: "#5865E3", ink: "#ffffff" },
-    { title: t({ fr: "Prévisionnel", en: "Financial forecast" }), meta: t({ fr: "Business plan & trajectoire", en: "Business plan & runway" }), bg: "#d9e2f6", ink: "#0c2d4d" },
-  ];
+  // ── Remplissage du MUR : des COPIES des vraies cartes ────────────────────
+  // Elles n'apparaissent QUE pendant le dézoom, pour étoffer les colonnes et les
+  // rangées, et ne rejoignent jamais la grille du dessus : hors flux
+  // (`absolute`) et invisibles tant que le recul n'a pas commencé.
+  //
+  // Avant, c'étaient des tuiles ne portant qu'un titre sur un aplat pastel, avec
+  // des intitulés INVENTÉS. Deux problèmes réglés d'un coup (client 2026-08-01) :
+  // leur intérieur vide donnait au mur un aspect brouillon, et leurs noms
+  // annonçaient des automatisations non garanties. On duplique désormais les six
+  // cartes travaillées, en assumant les doublons, donc plus aucun intitulé
+  // inventé et un mur homogène.
+  // Le rendu passe par <WallCard>, qui reprend le visuel de la carte avec son
+  // POSTER en image au lieu de la vidéo ou de la maquette : douze copies des
+  // médias animés coûteraient beaucoup trop cher.
+  // HUIT copies, et plus douze : le passage de six à dix vraies cartes
+  // (2026-08-02) aurait sinon porté le mur à 22 tuiles, donc HUIT rangées, et
+  // toutes les constantes du recul (PULLBACK_FILL_H 3,3, réserve de 936 px,
+  // COL_SCROLL 700) sont calées sur un mur de SIX rangées. 10 + 8 = 18 tuiles
+  // conservent exactement la géométrie d'avant (6 rangées de 3), rien à
+  // retuner.
+  // Affectation EXPLICITE, colonne par colonne, et plus un simple décalage
+  // (client 2026-08-02 : « il ne faut pas que, quand on défile, il y ait
+  // Prévisionnel 2 fois de suite à côté »). Pendant la seconde phase, les
+  // colonnes extérieures montent et celle du milieu descend : deux rangées
+  // différentes finissent côte à côte, donc l'ancien critère « les trois
+  // cartes d'une même rangée sont distinctes » ne suffisait pas (un décalage
+  // de 3 mettait par exemple les deux copies de « Prévisionnel » en vis-à-vis
+  // après deux crans de dérive).
+  // Le mur intercale vraie carte / copie : r0,f0,r1,f1..., rangées de trois.
+  // Les vraies cartes tombent donc en colonnes par résidu modulo 3 :
+  // colonne 0 = {0,3,6}, colonne 1 = {2,5,8}, colonne 2 = {1,4,7,9}. En
+  // choisissant les copies DANS le même ensemble que leur colonne
+  // (f1,f4,f7 → colonne 0 ; f0,f3,f6 → colonne 1 ; f2,f5 → colonne 2), les
+  // trois colonnes n'ont AUCUNE carte en commun : quel que soit le décalage
+  // vertical de la dérive, deux voisines horizontales ne peuvent jamais être
+  // identiques. À l'intérieur d'une colonne, l'ordre alterne pour qu'aucune
+  // copie ne soit non plus la voisine VERTICALE de sa jumelle.
+  // D'où f0..f7 = cases[5,6,9,8,0,1,2,3] :
+  //   colonne 0 : c0,c6,c3,c0,c6,c3 · colonne 1 : c5,c2,c8,c5,c2,c8 ·
+  //   colonne 2 : c1,c9,c4,c1,c7,c9 — rangées toutes distinctes, vérifié.
+  const wallDupes: UseCase[] = [5, 6, 9, 8, 0, 1, 2, 3].map((i) => cases[i]);
 
+
+  // L'espace blanc entre le mur et « Automatisez de bout en bout » est CONSERVÉ
+  // (client 2026-08-03 : « on garde l'espace blanc, c'était bien, le problème
+  // c'est le scroll qui bugue »). J'avais supprimé cette marge sur desktop pour
+  // resserrer la jonction : ce n'était pas le sujet, le layout revient à
+  // l'identique.
   return (
     <div className="relative mb-40 md:mb-64">
       {/* Header */}
@@ -480,6 +1001,8 @@ export default function UseCases() {
                       <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: c.ink }}>
                         {c.title}
                       </h3>
+                      {/* Pas de vidéo qui corresponde, pas de pastille. */}
+                      {c.video && (
                       <button
                         type="button"
                         onClick={() => setActive(c)}
@@ -491,6 +1014,7 @@ export default function UseCases() {
                         {t({ fr: "Voir la démo", en: "Watch the demo" })}
                         <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       </button>
+                      )}
                     </div>
 
                     {/* Meta line */}
@@ -524,6 +1048,14 @@ export default function UseCases() {
                           <ReportingMockup />
                         ) : c.mockup === "formatage" ? (
                           <FormatageMockup />
+                        ) : c.mockup === "previsionnel" ? (
+                          <PrevisionnelMockup />
+                        ) : c.mockup === "evaluation" ? (
+                          <EvaluationMockup />
+                        ) : c.mockup === "crm" ? (
+                          <CrmMockup />
+                        ) : c.mockup === "organisation" ? (
+                          <OrganisationMockup />
                         ) : (
                           <PointageMockup />
                         )}
@@ -566,32 +1098,41 @@ export default function UseCases() {
               );
             })}
 
-            {/* Tuiles de remplissage du mur. HORS FLUX (`absolute`) : elles
-                n'occupent aucune place dans la grille, qui reste donc celle
-                des seules cartes travaillées. Le moteur du recul leur donne
-                le gabarit d'une carte, les place dans le mur et les fait
-                apparaître au fur et à mesure du dézoom. */}
-            {fillers.map((f, i) => (
+            {/* Copies de cartes pour étoffer le mur. HORS FLUX (`absolute`) :
+                elles n'occupent aucune place dans la grille, qui reste celle des
+                seules cartes travaillées. Le moteur du recul leur donne le
+                gabarit d'une carte, les place dans le mur et les fait apparaître
+                au fur et à mesure du dézoom.
+                Décoratives : `aria-hidden` et `pointer-events-none`, pour ne pas
+                doubler le contenu pour les lecteurs d'écran ni intercepter de
+                clic. */}
+            {wallDupes.map((c, i) => (
               <div
-                key={f.title}
+                key={`dupe-${i}`}
                 ref={(el) => { fillerRefs.current[i] = el; }}
                 aria-hidden
-                className="pointer-events-none absolute left-0 top-0 opacity-0 overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]"
-                style={{ background: f.bg }}
+                className="pointer-events-none absolute left-0 top-0 opacity-0"
               >
-                <div className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: f.ink }}>
-                  {f.title}
-                </div>
-                <div className="mt-5 md:mt-6 font-inter font-semibold text-[15px] md:text-base" style={{ color: f.ink }}>
-                  {f.meta}
+                {/* Enveloppe de survol (client 2026-08-02 : « fais en sorte que
+                    les encadrés soient animés quand on bouge notre curseur
+                    dessus ») : léger zoom au survol, comme les vraies cartes.
+                    Sur l'ENFANT, pas sur l'enveloppe : le moteur du mur écrit
+                    un translate3d sur l'enveloppe à chaque image, un scale au
+                    même endroit serait écrasé. Les pointer-events sont rendus
+                    par le moteur une fois la tuile révélée, et repris quand
+                    elle s'efface. */}
+                <div className="h-full w-full cursor-default transition-transform duration-300 ease-out hover:scale-[1.04]">
+                  <WallCard item={c} />
                 </div>
               </div>
             ))}
           </div>
         </div>
-        {/* Cale-scroll : la distance parcourue pendant le recul de caméra.
-            Doit rester égale à PULLBACK_VH. */}
-        <div aria-hidden className="hidden md:block md:h-[120vh]" />
+        {/* Cale-scroll : la distance parcourue pendant que le mur est épinglé.
+            Doit rester égale à PULLBACK_VH + SCROLL_VH, soit 0,7 + 1,2 = 1,9
+            hauteur d'écran. Le recul occupe les 70 premiers pour-cent, le
+            défilement des colonnes les 120 suivants. */}
+        <div aria-hidden className="hidden md:block md:h-[190vh]" />
       </div>
 
       {/* Le bloc de clôture « Ora Engineering, automatisation sur mesure » /

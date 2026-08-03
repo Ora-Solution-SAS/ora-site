@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraAppScene from "./OraAppScene";
+import OraHeroMobile from "./OraHeroMobile";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
@@ -41,6 +42,27 @@ const W = 1040, H = 640;
  *  (elle ouvre la démo, avant le passage de relais vers Excel + panneau). */
 const APP_LEFT = 155, APP_TOP = 66, APP_W = 730, APP_H = 512;
 
+/** Fin de l'INTRO, en temps de démo : le titre s'efface (0,02 à 0,07) puis son
+ *  espace se replie et la réplique remonte en pleine vue (0,07 à 0,115). Tant
+ *  que la démo n'est pas lancée, le temps est plafonné ici : l'intro se joue,
+ *  puis plus rien ne bouge et l'on passe à la section noire. */
+const V_INTRO = 0.125;
+
+/** Fraction de la course d'épinglage consacrée à l'intro, quand la démo n'est
+ *  PAS lancée. Le reste (40 %) est une PALIER : la réplique reste immobile,
+ *  la notification est affichée, et il faut continuer de défiler pour en sortir.
+ *
+ *  Ce palier remplace le lenis.stop() du 2026-08-03 (client : « il ne faudrait
+ *  pas que le scroll soit bloqué quand le bouton s'affiche mais ralenti, sinon
+ *  on dirait que le site bugue »). Le constat est juste : à l'arrêt, la molette
+ *  ne produit STRICTEMENT rien, ce qui se lit comme une page cassée. Ici la page
+ *  continue de défiler, l'ascenseur avance, et c'est la scène épinglée qui
+ *  patiente, comportement normal et lisible d'une section épinglée.
+ *  Bénéfice secondaire, et il est important : plus de Lenis à l'arrêt, donc plus
+ *  de compteurs d'insistance, de minuteries de secours ni de risque de laisser
+ *  le défilement bloqué, qui est un piège connu du projet. */
+const V_HOLD = 0.60;
+
 /** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
  *  il est visible dès la première image et son trajet vers la carte « Ouvrir
  *  un fichier » traverse l'écran en diagonale, donc il se remarque. */
@@ -48,8 +70,13 @@ const REST_CUR = { x: 330, y: 498 };
 
 /** Carte bleue « Ouvrir un fichier », dans le repère de la scène (la réplique
  *  du logiciel a sa propre mise à l'échelle interne, ces valeurs sont donc
- *  posées à la main comme les cibles du curseur). */
-const OPEN_CARD = { left: 328, top: 189, width: 538, height: 54 };
+ *  posées à la main comme les cibles du curseur).
+ *  Recalé au bord près (client 2026-08-01) : ces valeurs tombaient 7,7 unités
+ *  trop haut et 1,1 trop court. L'ancien repère de clic étant un halo blanc
+ *  diffus de 34 px, l'écart ne se voyait pas ; le liseré fin qui l'a remplacé
+ *  doit épouser exactement le tracé de la carte, sinon il la coupe en haut et
+ *  laisse un vide en bas. Mesuré en direct contre `.oa-open`. */
+const OPEN_CARD = { left: 328, top: 197, width: 538, height: 55 };
 
 const HD_CSS = `
 /* ══ Hero scroll-demo — faithful Ora app + real Excel, scroll-driven ══ */
@@ -74,12 +101,26 @@ const HD_CSS = `
   border:1px solid #e6e7ea}
 .hd-pkok{font-size:12px;font-weight:600;color:#fff;padding:6px 15px;border-radius:8px;background:#2f6ff0}
 
-.hd-stagebox{position:relative;flex:1;min-height:0;width:100%;
-  animation:hdStageIn 900ms cubic-bezier(.22,1,.36,1) 560ms both}
-/* Fondu SEUL (pas de transform) : le moteur de scrub mesure la boîte au
-   pixel près, un transform pendant l'arrivée fausserait le cadrage. */
-@keyframes hdStageIn{from{opacity:0}to{opacity:1}}
-@media (prefers-reduced-motion:reduce){.hd-stagebox{animation:none}}
+.hd-stagebox{position:relative;flex:1;min-height:0;width:100%}
+/* Arrivée « bas vers le haut » (client 2026-08-01) : la réplique du logiciel
+   MONTE depuis le bas jusqu'à sa place, au lieu d'apparaître en fondu sur
+   place.
+   Le déplacement vit sur une couche INTERNE, jamais sur .hd-stagebox : le
+   moteur de scrub mesure cette boîte au pixel près (getBoundingClientRect,
+   pour centerDelta et dyRest), un transform dessus fausserait le cadrage de
+   toute la scène. La couche est en position:absolute;inset:0, donc elle a
+   exactement la même boîte que la stagebox : les left:50%/top:50% de
+   .hd-stage se résolvent à l'identique, et stagePos() s'arrête à .hd-stage,
+   donc les cibles du curseur ne bougent pas non plus.
+   La montée se termine sur translateY(0) : le cadrage final est au pixel
+   celui que calcule apply(). Le débordement bas est rogné par
+   l'overflow-hidden du sticky, donc la fenêtre monte bien depuis sous le pli. */
+.hd-stagerise{position:absolute;inset:0;
+  animation:hdStageRise 1100ms cubic-bezier(.22,1,.36,1) 420ms both}
+@keyframes hdStageRise{
+  from{opacity:0;transform:translate3d(0,120px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}}
+@media (prefers-reduced-motion:reduce){.hd-stagerise{animation:none}}
 .hd-stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;
   transform-origin:center center;
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
@@ -414,8 +455,78 @@ const HD_CSS = `
 .hd-sticky.immersive .hd-cap>span:first-child{background:rgba(255,255,255,.12);box-shadow:0 0 0 1px rgba(255,255,255,.22);color:#fff}
 .hd-sticky.immersive .hd-cap>span:last-child{color:#d1d5db}
 /* ── Persistent scroll cue: the demo is driven by scrolling, not clicks ── */
+/* ══ Notification d'invitation ════════════════════════════════════════════
+   Client 2026-08-03, troisième passe : « bien plus minimaliste, bien plus petit
+   et discret ». Ma version précédente faisait 330 x 224 px avec liseré de
+   marque, étiquette et gros bouton bleu : jugée moche, à raison, elle écrasait
+   la scène. On revient donc EXACTEMENT au gabarit des pastilles flottantes de la
+   réplique (fiche blanche, icône teintée, titre puis sous-titre gris), avec pour
+   seule marque d'interactivité un chevron et une teinte bleue sur l'icône.
+   Deux couches : .hd-invanchor ne porte que la position et l'opacité, .hd-invite
+   l'apparence et le flottement, sinon les deux se disputeraient transform. La
+   fuite du curseur, elle, passe par translate, propriete distincte, donc les
+   trois se composent sans conflit. */
+/* En absolute et NON en fixed (correctif client 2026-08-03 : « le bouton réapparaît
+   à des endroits où il n'est pas censé être »). En fixed, l'élément n'était plus
+   solidaire de la page : il restait collé au viewport et suivait le lecteur
+   partout. Et masquer par calcul ne suffisait pas, car le moteur ne tourne que
+   sur les CHANGEMENTS de progression du scroll : une fois le hero traversé, la
+   progression est bloquée à 1, plus aucun changement n'est émis, donc la dernière
+   opacité écrite restait en place indéfiniment.
+   En absolute dans le bloc épinglé, la notification part avec lui, quoi qu'il
+   arrive. Les coordonnées écrites par le moteur restent valables : le bloc est
+   collé en top-0 et fait la hauteur de l'écran, ses coordonnées locales sont
+   donc celles du viewport pendant tout l'épinglage, seul moment où elle
+   s'affiche. */
+.hd-invanchor{position:absolute;z-index:40;transform:translate(-100%,-100%);
+  opacity:0;pointer-events:none;transition:opacity 480ms ease}
+.hd-invite{display:flex;align-items:center;gap:11px;
+  padding:11px 13px 11px 12px;border-radius:15px;background:#fff;text-align:left;
+  box-shadow:0 18px 40px -14px rgba(15,23,42,.34),0 3px 10px -4px rgba(15,23,42,.14),
+             0 0 0 1px rgba(15,23,42,.05);
+  animation:hdInviteFloat 6s ease-in-out infinite alternate;
+  transition:box-shadow .2s ease,translate .18s ease-out}
+.hd-invite:hover{box-shadow:0 24px 52px -14px rgba(15,23,42,.42),0 4px 12px -4px rgba(15,23,42,.18),
+             0 0 0 1px rgba(59,130,246,.4)}
+.hd-invite .ic{width:34px;height:34px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#e8f0ff,#d7e5ff);color:#2f6ff0}
+.hd-invite b{display:block;font-size:13px;font-weight:700;color:#111827;white-space:nowrap}
+.hd-invite .sub{display:block;margin-top:2px;font-size:11.5px;color:#8b909b;white-space:nowrap}
+.hd-invite .go{margin-left:4px;flex-shrink:0;color:#c3c6cd;transition:color .2s ease}
+.hd-invite:hover .go{color:#2f6ff0}
+@keyframes hdInviteFloat{from{transform:translate3d(0,0,0)}to{transform:translate3d(-4px,6px,0)}}
+@media (prefers-reduced-motion:reduce){.hd-invite{animation:none}}
+.dark .hd-invite{background:#0f172a;
+  box-shadow:0 18px 40px -14px rgba(0,0,0,.62),0 0 0 1px rgba(255,255,255,.10)}
+.dark .hd-invite b{color:#fff}
+.dark .hd-invite .ic{background:rgba(59,130,246,.18);color:#8ab4ff}
+
+/* ══ Fondu du bas de la scène ══════════════════════════════════════════════
+   Client 2026-08-03 : « le rond est toujours coupé net en bas par une bande
+   blanche, et l'ombre derrière la réplique s'arrête net aussi ».
+   Ce n'etait pas une couleur de fond mais le BORD BAS du bloc épinglé, qui est en
+   overflow-hidden : le rond et l'ombre portée de la fenêtre y étaient tranchés
+   net, ce qui dessinait une ligne franche en travers de la page.
+   Ce voile les dissout dans le blanc sur 230 px, donc plus aucune ligne de coupe.
+   C'est le même principe que le masque en dégradé utilisé pendant le récit
+   complet, en version fixe et bien moins coûteuse.
+   Il n'est rendu que si la démo n'est PAS lancée : pendant le récit, la scène
+   finit par passer au noir et c'est son masque qui s'en occupe. */
+/* 150 px et une montée tardive : à 230 px avec un palier à 62 %, le voile
+   délavait les tuiles ACCÈS RAPIDE alors que la réplique est encore le visuel
+   principal. Il ne doit dissoudre que les tout derniers pixels, là où le rond et
+   l'ombre se faisaient trancher. */
+.hd-bottomfade{position:absolute;left:0;right:0;bottom:0;height:150px;z-index:15;
+  pointer-events:none;
+  background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.22) 55%,rgba(255,255,255,.72) 82%,#fff 100%)}
+.dark .hd-bottomfade{background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,rgba(0,0,0,.22) 55%,rgba(0,0,0,.72) 82%,#000 100%)}
+
 .hd-scrollcue{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
   padding:7px 13px;border-radius:99px;background:rgba(17,24,39,.05);transition:background-color .5s ease}
+/* display:none porté PAR CE MÊME bloc : la classe utilitaire hidden de
+   Tailwind a la même spécificité mais est déclarée plus haut dans le document,
+   donc le display:flex de .hd-scrollcue la gagnait. */
+.hd-scrollcue.off{display:none}
 .hd-scrollcue .chev{color:#6b7280;animation:hdCueBounce 1.4s ease-in-out infinite;transition:color .5s ease}
 .hd-scrollcue .txt{font-size:11px;font-weight:600;color:#6b7280;transition:color .5s ease;white-space:nowrap}
 .hd-scrollcue .track{display:block;width:110px;height:3px;border-radius:99px;background:rgba(17,24,39,.12);overflow:hidden;transition:background-color .5s ease}
@@ -696,6 +807,8 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const hintRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
+  const inviteRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
   const lastClickRef = useRef(-1);
 
   const fitScaleRef = useRef(1);
@@ -715,9 +828,145 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
 
   // Scroll scrub: 0 → 1 across the tall wrapper.
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
+  // ── Démo scrollée sur OPT-IN (client 2026-08-03) ─────────────────────────
+  // Par défaut le récit ne se joue PAS : la scène reste à son état de repos, le
+  // curseur simulé n'apparaît pas, et la page défile normalement. Une pastille
+  // flottante propose de le lancer. Un clic, et on retrouve exactement le
+  // comportement d'avant.
+  const [demoOn, setDemoOn] = useState(false);
+  // Passe à vrai la PREMIÈRE fois que la notification se montre. Sert à déclencher
+  // le petit blocage de scroll, dans un effet React plutôt que dans le moteur :
+  // le nettoyage de l'effet garantit alors que Lenis est toujours relancé.
+  const [invited, setInvited] = useState(false);
+  const invitedRef = useRef(false);
+  // Le moteur de scrub vit dans un effet à dépendances vides : il lit donc
+  // l'état via une ref, sinon il resterait sur la valeur du premier rendu.
+  const demoOnRef = useRef(false);
+  demoOnRef.current = demoOn;
+
   const [reduced] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
   );
+
+  // ── Allumage de la notification ──────────────────────────────────────────
+  // Il n'y a plus de blocage ici. Le lenis.stop() qui s'y trouvait a été retiré
+  // (client 2026-08-03 : « il ne faudrait pas que le scroll soit bloqué quand le
+  // bouton s'affiche mais ralenti, sinon on dirait que le site bugue »), et avec
+  // lui tout son appareillage : compteur d'insistance, maintien minimum de 1,8 s,
+  // minuterie de secours à 6 s, relance de Lenis au nettoyage. Autant de
+  // machinerie qui n'existait que pour rattraper le blocage, et dont chaque
+  // branche était une occasion de laisser le défilement à l'arrêt.
+  //
+  // La lourdeur est désormais purement géométrique : V_HOLD réserve 46 vh de
+  // course d'épinglage après la fin de l'intro. La page continue de défiler,
+  // l'ascenseur avance, la scène patiente. C'est le comportement attendu d'une
+  // section épinglée, pas celui d'une page figée.
+  //
+  // Ne reste donc que l'allumage, franc et immédiat.
+  useEffect(() => {
+    if (!invited || demoOn) return;
+    const carte = inviteRef.current;
+    if (!carte) return;
+    carte.style.transition = "opacity 340ms ease";
+    carte.style.opacity = "1";
+  }, [invited, demoOn]);
+
+  // ── Bascule du fond au noir ───────────────────────────────────────────────
+  // Client 2026-08-03 : « l'ensemble du background est blanc, et quand on arrive
+  // à un certain endroit, il devient noir ».
+  // Le défaut des versions précédentes : je ne peignais QUE le bloc de clôture.
+  // La section suivante restant noire en permanence, le blanc du bouton et son
+  // noir coexistaient à l'écran, séparés par une ligne franche. Ce n'était donc
+  // pas une transition mais une couture entre deux blocs.
+  // On pilote maintenant les DEUX ensemble, sur la même image et avec la même
+  // transition : l'écran entier est blanc, puis l'écran entier est noir.
+  // Déclencheur : le bouton « Réserver un appel » a quitté le haut de l'écran.
+  // DEUX états, aucune interpolation au scroll : une première version dégradait
+  // le blanc vers le noir sur toute la traversée et produisait une bande grise.
+  // Rien à faire quand la démo tourne, sa fin assombrit déjà la scène, ni en mode
+  // sombre, tout étant déjà noir.
+  useEffect(() => {
+    if (demoOn) return;
+    const cta = ctaRef.current;
+    if (!cta) return;
+    if (document.documentElement.classList.contains("dark")) return;
+    const bouton = cta.querySelector("button");
+    if (!bouton) return;
+    const suite = document.querySelector<HTMLElement>("[data-hero-bg]");
+    const cibles = [cta, suite].filter((e): e is HTMLElement => !!e);
+
+    for (const e of cibles) e.style.transition = "background-color 260ms linear";
+    let noir: boolean | null = null;
+    let raf = 0;
+    const peindre = () => {
+      raf = 0;
+      if (!window.innerHeight) return;
+      const veutNoir = bouton.getBoundingClientRect().bottom <= 0;
+      if (veutNoir === noir) return;
+      noir = veutNoir;
+      for (const e of cibles) {
+        e.style.backgroundColor = veutNoir ? "#000000" : "#ffffff";
+        // La barre de navigation est fixe : sans ce drapeau, elle restait claire
+        // au-dessus d'un fond devenu noir (client 2026-08-03). Le site a déjà ce
+        // mécanisme, Navigation.tsx cherche les éléments marqués data-nav-dark qui
+        // passent sous sa ligne médiane et bascule alors en habillage sombre. Je ne
+        // l'avais simplement pas branché sur cette bascule.
+        if (veutNoir) e.setAttribute("data-nav-dark", "");
+        else e.removeAttribute("data-nav-dark");
+      }
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(peindre); };
+    peindre();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      for (const e of cibles) {
+        e.style.backgroundColor = "";
+        e.style.transition = "";
+        e.removeAttribute("data-nav-dark");
+      }
+    };
+  }, [demoOn]);
+
+
+  // ── La notification fuit légèrement le curseur ────────────────────────────
+  // Client 2026-08-03 : « comme les autres petits encadrés, qu'ils soient
+  // légèrement en train de bouger, comme s'ils voulaient nous fuir ». Même
+  // mécanisme que les pastilles de OraAppScene, y compris le recours à la
+  // propriété `translate` plutôt qu'à `transform`, déjà occupée par le
+  // flottement : les deux se composent alors sans s'écraser.
+  // Une différence assumée : la fuite s'ARRÊTE dès que le curseur est sur la
+  // carte. Elle taquine à distance, mais ne se dérobe pas au moment de cliquer.
+  useEffect(() => {
+    if (demoOn || reduced) return;
+    const carte = inviteRef.current?.querySelector<HTMLElement>(".hd-invite");
+    if (!carte) return;
+    const RAYON = 190, POUSSEE = 16;
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== "mouse") return;
+      const r = carte.getBoundingClientRect();
+      const surLaCarte =
+        e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      if (surLaCarte) { carte.style.translate = ""; return; }
+      const dx = r.left + r.width / 2 - e.clientX;
+      const dy = r.top + r.height / 2 - e.clientY;
+      const d = Math.hypot(dx, dy);
+      if (d > RAYON || d < 1) { carte.style.translate = ""; return; }
+      const f = (1 - d / RAYON) * POUSSEE;
+      carte.style.translate = `${(dx / d) * f}px ${(dy / d) * f}px`;
+    };
+    const clear = () => { carte.style.translate = ""; };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", clear);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", clear);
+      clear();
+    };
+  }, [demoOn, reduced]);
 
   // Fit the 1040×640 stage inside the box + measure the cursor's click targets.
   useEffect(() => {
@@ -782,9 +1031,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       cursor: q('[data-hd="cursor"]'), ripple: q('[data-hd="ripple"]'),
       caps: [...caps.querySelectorAll<HTMLElement>(".hd-cap")],
       cuefill: hint.querySelector<HTMLElement>('[data-hd="cuefill"]'),
+      invite: stickyRef.current?.querySelector<HTMLElement>('[data-hd="invite"]') ?? null,
     };
     // Every click moment (progress time + target key) — drives the cursor
     // dip, the ripple pulse and the vibration feedback.
+    /** Hauteur de la notification, mesurée une seule fois. */
+    let inviteH = 0;
+
     const CLICKS: { t: number; k: string }[] = [
       // Ouverture : clic sur « Ouvrir un fichier », puis sélection du classeur
       // dans le sélecteur, puis le récit d'automatisation.
@@ -793,11 +1046,24 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       { t: 0.641, k: "tg1" }, { t: 0.658, k: "tg2" }, { t: 0.675, k: "tg3" },
       { t: 0.70, k: "run" }, { t: 0.935, k: "tab2" }, { t: 0.962, k: "tab3" },
     ];
+    // Cibles posées sur un fond BLEU (grande carte d'ouverture et boutons
+    // d'action) : l'onde de clic y passe en blanc. Les autres tombent sur des
+    // surfaces claires et gardent l'onde bleue de la marque.
+    const ON_BLUE = new Set(["openfile", "lancerfec", "run"]);
 
-    const apply = (vRaw: number) => {
+    const apply = (vIn: number) => {
+      const lance = demoOnRef.current;
+      const vRaw = vIn;
       lastVRef.current = vRaw;
       // Heavy-scroll remap: raw scroll (linear) → demo time (weighted zones).
-      const v = remap(vRaw);
+      // Démo NON lancée : le temps est étalé sur les V_HOLD premiers pour cent de
+      // la course, puis plafonné à V_INTRO. L'intro se joue donc sur la même
+      // distance qu'avant (0,60 x 115 vh = 69 vh, contre 70 vh), et les 40 %
+      // restants forment le palier pendant lequel la notification est visible.
+      // Le récit, lui, ne démarre jamais sans invitation.
+      const v = lance
+        ? remap(vRaw)
+        : V_INTRO * Math.min(1, Math.max(0, vRaw) / V_HOLD);
       const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
       // Intro boost (client 2026-07-28) : au repos, le classeur Excel est
@@ -899,12 +1165,77 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         dyRest = ((boxR.top + 8 - appTopScreen) / S) * rest;
       }
       stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy + dyRest}px)`;
+
+      // ── Notification d'invitation ────────────────────────────────────────
+      // Elle est ancrée au coin HAUT-DROIT de la réplique, dans le repère de la
+      // scène, donc elle suit la fenêtre du logiciel quand celle-ci monte et
+      // grandit. La scène étant posée en `left:50% top:50%` puis
+      // `translate(-50%,-50%) scale(S) translate(dx,dy)`, un point (sx, sy) du
+      // repère tombe à l'écran en centre_de_la_boite + (point - centre_de_la_scene
+      // + décalage) * S.
+      // Sa TAILLE, en revanche, ne suit pas l'échelle : c'est un élément
+      // cliquable, il doit rester lisible et d'une taille constante.
+      if (el.invite) {
+        const cx = boxR.left + boxR.width / 2;
+        const cy = boxR.top + boxR.height / 2;
+        const ax = cx + (APP_LEFT + APP_W - 520 + dx) * S;
+        const ay = cy + (APP_TOP - 320 + dy + dyRest) * S;
+        // Hauteur lue UNE fois, pas à chaque image.
+        if (!inviteH) inviteH = el.invite.offsetHeight;
+        // L'ancre est en translate(-100%,-100%) : `top` est donc le BAS de la
+        // carte. On le borne pour qu'elle ne passe jamais sous la barre de
+        // navigation fixe (68 px) : à la fin de l'intro la réplique remonte très
+        // haut, et une carte de 200 px posée au-dessus de son bord sortirait de
+        // l'écran par le haut.
+        const basMin = 68 + 16 + inviteH;
+        el.invite.style.left = `${Math.round(ax)}px`;
+        el.invite.style.top = `${Math.round(Math.max(basMin, ay - 14))}px`;
+        // Visible seulement une fois l'intro jouée, et jamais si la démo tourne.
+        // 0,92 : le temps de démo vaut alors V_INTRO x 0,92 = 0,115, soit la fin
+        // exacte du repli du titre, donc l'instant où la réplique achève sa montée
+        // et où on la voit ENTIÈRE. C'est l'endroit désigné par le client sur sa
+        // capture, et c'est là que le scroll se bloque.
+        //
+        // BORNE HAUTE SUPPRIMÉE (client 2026-08-03 : « le bouton s'allume un peu
+        // puis repart »). La fenêtre allait de 0,92 à 0,999, soit à peine 40 px de
+        // scroll : l'inertie de Lenis la traversait avant même que le blocage
+        // n'ait pris effet, donc le moteur remettait l'opacité à zéro dans la
+        // foulée. D'où l'allumage suivi de l'extinction.
+        // Elle n'a plus d'utilité depuis que l'ancre est en `absolute` dans le
+        // bloc épinglé : la notification s'en va avec le hero, elle ne peut plus
+        // fuir sur le reste du site. Reste le garde-fou géométrique, et
+        // l'effacement volontaire à la libération du blocage.
+        const sceneVisible = boxR.bottom > 0 && boxR.top < window.innerHeight;
+        // Le seuil suit désormais la fin de l'intro, donc l'entrée dans le palier :
+        // la notification apparaît à l'instant précis où la réplique achève sa
+        // montée et où on la voit entière, l'endroit désigné par le client sur sa
+        // capture. Une marge de 0,02 avant, pour qu'un défilement rapide ne puisse
+        // pas enjamber le seuil sans l'armer.
+        const montre = !lance && vRaw > V_HOLD - 0.02 && sceneVisible;
+        // L'opacité n'est écrite ici QUE pour éteindre hors zone. Une fois armée,
+        // c'est l'effet de blocage qui la possède : il l'allume franchement, puis
+        // l'éteint quand il rend la main. Sans ce partage, le moteur écrasait à
+        // chaque image la valeur posée par l'effet.
+        if (!montre) el.invite.style.opacity = "0";
+        el.invite.style.pointerEvents = montre ? "auto" : "none";
+        // Signalé UNE fois à React, pour armer le blocage de scroll. Un rendu
+        // par image serait hors de question, d'où le garde-fou par ref.
+        if (montre && !invitedRef.current) {
+          invitedRef.current = true;
+          setInvited(true);
+        }
+      }
       box.style.marginTop = `${14 + 26 * seg(v, 0, 0.30)}px`;
       // End-of-demo hand-off: fade the whole scene to pure black over the last
       // stretch of scroll (the software stays visible, just darkened) so it
       // flows seamlessly into the always-black text-reveal section below.
       // ONE clean light→black passage only: the demo stays LIGHT through all
       // the zoom moments (no repeated dark flashes).
+      // Assombrissement final : réservé au récit complet. Démo non lancée, le
+      // temps est plafonné à V_INTRO, donc ce segment vaut zéro et la scène reste
+      // blanche de bout en bout. C'est le choix du client (2026-08-03) : le noir
+      // n'arrive qu'APRÈS le bouton de clôture, et la coupure du rond par le bord
+      // bas de la scène est assumée.
       const endDark = seg(v, 0.92, 0.99);
       const immersive = endDark > 0.12;
       const sticky = stickyRef.current;
@@ -1096,6 +1427,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           [1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 0.82, 1, 1, 1]
         );
         el.cursor.style.transform = `translate(${x}px, ${y}px) scale(${cs})`;
+        // Pas de curseur simulé avant le lancement : un curseur figé au milieu
+        // de la scène n'aurait aucun sens.
+        el.cursor.style.opacity = lance ? "1" : "0";
       }
       // Click feedback: a ripple pulse at the click point + a short vibration
       // where the platform supports it (mobile; desktops ignore silently).
@@ -1110,6 +1444,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           el.ripple.style.top = `${T[active.k].y}px`;
           el.ripple.style.transform = `scale(${0.35 + 0.95 * pe})`;
           el.ripple.style.opacity = String((1 - pe) * 0.75);
+          // L'onde s'accorde au fond qu'elle touche (client 2026-08-01) : une
+          // onde bleue sur un bouton bleu ne se lisait pas, elle formait une
+          // tache pâle. Blanche sur les surfaces bleues, bleue sur les
+          // surfaces claires.
+          const onBlue = ON_BLUE.has(active.k);
+          el.ripple.style.borderColor = onBlue ? "rgba(255,255,255,.92)" : "#3b82f6";
+          el.ripple.style.background = onBlue ? "rgba(255,255,255,.26)" : "rgba(59,130,246,.18)";
         } else {
           el.ripple.style.opacity = "0";
         }
@@ -1147,10 +1488,35 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
+      {/* ── Phones (< 768px) : hero RECOMPOSÉ ─────────────────────────────
+          La scène scrollée ci-dessous est une scène de 1040×640 contenant une
+          réplique de 1180×720. Tenir l'une ou l'autre dans une colonne de
+          327 px donne une échelle de ~0,29, donc des typographies de 7 à
+          13,5 px rendues entre 2 et 4 px : plus rien n'est lisible. Recadrer
+          au lieu de réduire ne sauve rien non plus, la réplique ne reste
+          lisible qu'à l'échelle 1 et il n'en tient alors que 28 % de la
+          largeur. D'où une branche tactile distincte, comme le fait déjà
+          OraExperienceCarousel. */}
+      <div className="md:hidden">
+        <OraHeroMobile openBooking={openBooking} />
+      </div>
+
       {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
           (v2: shortened — the flow starts directly in Excel). Heavy-scroll
-          zones still stretch the key moments. */}
-      <div ref={wrapRef} className="relative h-[500vh] md:h-[800vh]">
+          zones still stretch the key moments.
+          `hidden md:block` : sur mobile la scène n'est pas seulement masquée,
+          elle ne pèse plus rien dans la mise en page, donc les 500 vh de
+          scrub (≈ 4 264 px de scroll pour une animation invisible) et le
+          curseur de souris simulé disparaissent avec elle. */}
+      {/* Sans lancement, 170 vh au lieu de 800 : la course sert uniquement à jouer
+          l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
+          ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
+          fois le bouton passé (choix client 2026-08-03). */}
+      {/* 215vh et non 170 quand la démo n'est pas lancée : la course d'épinglage
+          passe de 70 à 115 vh. L'intro en consomme 69, autant qu'avant, et les
+          46 vh restants sont le palier où la notification s'affiche. C'est cette
+          distance qui donne la sensation de lourdeur, sans jamais rien bloquer. */}
+      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[215vh]"}`}>
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}
@@ -1238,7 +1604,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           </div>
 
           {/* Stage (auto-fitted 1040×640 scene) */}
+          {/* DEUX COUCHES SÉPARÉES, comme pour le titre plus haut : la boîte
+              extérieure appartient au moteur de scroll (il la mesure et écrit
+              son marginTop), la couche .hd-stagerise porte l'animation
+              d'arrivée « bas vers le haut ». Un transform posé directement sur
+              .hd-stagebox décalerait les mesures de cadrage. */}
           <div ref={boxRef} className="hd-stagebox relative z-10">
+          <div className="hd-stagerise">
             <div ref={stageRef} className="hd-stage">
               <div className="hd-blob" />
 
@@ -1262,8 +1634,17 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 <OraAppScene />
               </div>
 
-              {/* Éclat de clic sur la carte « Ouvrir un fichier » : sans lui, le
-                  sélecteur surgissait sans qu'on comprenne ce qui l'a déclenché. */}
+              {/* Repère de clic sur la carte « Ouvrir un fichier » : sans lui, le
+                  sélecteur surgissait sans qu'on comprenne ce qui l'a déclenché.
+                  Refait (client 2026-08-01 : « ce design de clic ne rend pas
+                  bien », et surtout : ne pas toucher au design de la carte).
+                  L'ancienne version posait un voile BLANC sur toute la carte
+                  (opacité .34), un anneau blanc de 3 px et un halo bleu diffus
+                  de 34 px : le bouton se délavait, son dégradé disparaissait et
+                  l'ensemble ressemblait à une sélection ratée. Il ne reste qu'un
+                  contour blanc fin, à l'INTÉRIEUR du tracé de la carte : aucun
+                  voile, aucun halo qui déborde, donc les couleurs de la carte
+                  sont intactes. */}
               <div
                 data-hd="openflash"
                 style={{
@@ -1271,8 +1652,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                   left: OPEN_CARD.left, top: OPEN_CARD.top,
                   width: OPEN_CARD.width, height: OPEN_CARD.height,
                   borderRadius: 9, zIndex: 7, opacity: 0, pointerEvents: "none",
-                  background: "rgba(255,255,255,.34)",
-                  boxShadow: "0 0 0 3px rgba(255,255,255,.55), 0 0 34px 6px rgba(47,111,240,.55)",
+                  boxShadow: "inset 0 0 0 2px rgba(255,255,255,.85)",
                 }}
               />
 
@@ -1749,6 +2129,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               </svg>
             </div>
           </div>
+          </div>
 
           {/* Step captions */}
           <div ref={capsRef} className="relative z-10 h-10 md:h-12 flex-shrink-0">
@@ -1767,7 +2148,38 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
 
           {/* Scroll cue — PERSISTENT: chevron + demo progress bar, so the user
               understands the whole animation is driven by scrolling. */}
-          <div ref={hintRef} className="hd-scrollcue pointer-events-none font-inter">
+          {/* Fondu du bas de la scène : supprime la ligne de coupe du rond et de
+              l'ombre sur le bord bas du bloc épinglé. Uniquement hors récit. */}
+          {!demoOn && <div aria-hidden className="hd-bottomfade" />}
+
+          {/* Notification d'invitation. Rendue en PERMANENCE : sa visibilité et
+              sa position sont écrites par le moteur, ce qui évite un rendu React
+              à chaque image de scroll. */}
+          <div ref={inviteRef} data-hd="invite" className="hd-invanchor">
+            <button
+              type="button"
+              onClick={() => setDemoOn(true)}
+              className="hd-invite font-inter"
+              aria-label={t({ fr: "Lancer la démonstration au défilement", en: "Start the scroll-driven demo" })}
+            >
+              <span className="ic">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7-11-7z" />
+                </svg>
+              </span>
+              <span>
+                <b>{t({ fr: "Lancer la démo", en: "Start the demo" })}</b>
+                <span className="sub">{t({ fr: "Ora se pilote au défilement", en: "Ora drives itself as you scroll" })}</span>
+              </span>
+              <span className="go">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m9 18 6-6-6-6" />
+                </svg>
+              </span>
+            </button>
+          </div>
+
+          <div ref={hintRef} className={`hd-scrollcue pointer-events-none font-inter${demoOn ? "" : " off"}`}>
             <svg className="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
             <span className="txt">{t({ fr: "Faites défiler", en: "Scroll" })}</span>
             <span className="track"><span className="fill" data-hd="cuefill" /></span>
@@ -1777,8 +2189,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
 
       {/* CTA — after the demo releases. The CONTAINER is a plain always-black
           div (never animated: an opacity-0 entrance here used to let the
-          section's white bg flash through). Only the button itself animates. */}
-      <div className="relative z-10 bg-black pt-16 md:pt-20 pb-16 md:pb-24 px-6 md:px-12 flex justify-center">
+          section's white bg flash through). Only the button itself animates.
+          `hidden md:flex` : sur mobile OraHeroMobile porte déjà son propre
+          bouton de réservation, et ce fond noir ne servait qu'à enchaîner sur
+          ExcelReveal, elle-même absente sous 768 px. */}
+      <div ref={ctaRef} className="relative z-10 bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
         <motion.button
           onClick={openBooking}
           initial={{ opacity: 0, y: 28 }}

@@ -48,17 +48,34 @@ export function useEnterOnScroll<T extends HTMLElement>() {
       }
       // Scrolled past upwards (r.bottom <= 0): leave it played.
     };
-    // Measured straight from the scroll handler rather than inside a
-    // requestAnimationFrame: rAF is throttled (or frozen) whenever the tab is
-    // not in the foreground, which would silently skip the trigger. The cost
-    // is one getBoundingClientRect per scroll event, and React bails out when
-    // the boolean does not actually change, so no extra render happens.
+    // Throttlé en rAF (2026-08-03). Avant, `measure()` était branché DIRECTEMENT
+    // sur `scroll`, soit un getBoundingClientRect par événement. Ce hook a dix
+    // instances vivantes sur la page, et `scroll` émet plusieurs événements par
+    // image : cela faisait donc des dizaines de lectures de mise en page forcées
+    // par image, sur TOUTE la page, y compris là où aucune de ces animations
+    // n'est visible. En rAF, c'est au pire dix lectures par image.
+    //
+    // Le commentaire d'origine écartait rAF au motif qu'il est gelé quand
+    // l'onglet n'est pas au premier plan, ce qui pouvait faire manquer le
+    // déclenchement. Deux garde-fous couvrent ce cas : une mesure DIRECTE au
+    // retour au premier plan, et une autre au redimensionnement. Le
+    // déclenchement reste donc fiable, sans le coût par événement.
+    let rafId = 0;
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => { rafId = 0; measure(); });
+    };
+    const onVisible = () => { if (!document.hidden) measure(); };
+
     measure();
-    window.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", measure);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
-      window.removeEventListener("scroll", measure);
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [armed]);
 

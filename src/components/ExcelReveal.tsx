@@ -15,7 +15,20 @@ import { useLang } from "@/lib/i18n";
  *  each rAF frame only reads scrollY and writes filter/opacity.
  *  Desktop only (hidden on mobile). */
 
-const FOCUS = 0.56; //   viewport fraction where the frontier sits
+// RECENTRÉE à 0,50 (client 2026-08-03, deuxième passe : « les phrases s'affichent
+// un peu trop haut, en scrollant vite on ne peut pas les lire, elles sont déjà
+// parties »).
+// Cette fraction situe la frontière de netteté dans l'écran, et elle règle DEUX
+// choses à la fois, en sens opposés :
+//   · plus elle est BASSE (0,56), plus un mot devient net tôt, donc plus longtemps
+//     il reste lisible avant de sortir par le haut ;
+//   · plus elle est HAUTE (0,30), plus le mot reste flouté, donc plus la découverte
+//     suit le geste, mais moins on a le temps de lire.
+// Mon passage à 0,30 avait privilégié la découverte au prix du temps de lecture :
+// un mot n'était net que dans le premier tiers de l'écran, soit 216 px de scroll
+// avant de disparaître. À 0,50 il l'est dès le milieu, ce qui laisse 360 px, tout
+// en gardant la moitié basse de l'écran pour la découverte.
+const FOCUS = 0.50; //   viewport fraction where the frontier sits
 // Hyper-sensitive to scroll: a TIGHT transition band (~one line of reading
 // distance) so the reveal edge is crisp and each letter flips blurred→sharp
 // with only a few px of scroll — the sweep tracks the finger letter by letter.
@@ -196,7 +209,14 @@ export default function ExcelReveal() {
       ref={sectionRef}
       id="excel-reveal"
       data-nav-dark
-      className="relative hidden md:block bg-black"
+      /* `bg-black` RETIRÉ (client 2026-08-03 : « enlève ce fond noir »). C'est
+         désormais le conteneur parent, marqué `data-hero-bg` dans App.tsx, qui
+         porte la couleur : OraHeroDemo la fait basculer du blanc au noir en même
+         temps que son bloc de clôture, une fois le bouton « Réserver un appel »
+         passé. Tant que ce fond restait ici, il s'affichait par-dessus celui du
+         parent et le noir apparaissait donc toujours d'emblée.
+         L'animation de révélation des phrases n'est pas touchée. */
+      className="relative hidden md:block"
     >
       {/* Bending-Spoons layout: LEFT-aligned, full-width, big type. Stacked
           with a gap so ~2 phrases are on screen at once (previous crisp above,

@@ -57,8 +57,7 @@ const LK_CSS = `
    propriété sur le même élément. L'origine est posée sur le centre exact de la
    scène, donc réduire l'échelle fait converger toutes les bulles vers le logo
    Ora plutôt que vers le coin de la couche. */
-.lk-gather{position:absolute;z-index:2;inset:0;transform-origin:520px 318px;
-  animation:lkGather 13s cubic-bezier(.65,0,.35,1) infinite}
+.lk-gather{position:absolute;z-index:2;inset:0;transform-origin:520px 318px}
 @keyframes lkGather{
   0%,44%{transform:scale(1);opacity:1}
   57%{transform:scale(.05);opacity:0}
@@ -67,8 +66,7 @@ const LK_CSS = `
   100%{transform:scale(1);opacity:1}}
 
 /* ══ Orbite des fichiers (ils tournent, restent droits) ══ */
-.lk-orbit{position:absolute;left:330px;top:128px;width:380px;height:380px;
-  animation:lkSpin 80s linear infinite}
+.lk-orbit{position:absolute;left:330px;top:128px;width:380px;height:380px}
 /* Enveloppes de TAILLE NULLE : l'origine de chaque rotation tombe alors
    exactement sur le point d'orbite. Avec des boîtes dimensionnées, la
    contre-rotation pivoterait autour du centre de la boîte et décalerait la
@@ -76,7 +74,7 @@ const LK_CSS = `
    absolu, centrée sur ce point. */
 .lk-sat{position:absolute;left:50%;top:50%;width:0;height:0}
 .lk-sat>div{width:0;height:0}
-.lk-counter{width:0;height:0;animation:lkSpinRev 80s linear infinite}
+.lk-counter{width:0;height:0}
 @keyframes lkSpin{to{transform:rotate(360deg)}}
 @keyframes lkSpinRev{to{transform:rotate(-360deg)}}
 
@@ -108,8 +106,7 @@ const LK_CSS = `
 /* Le logo se retourne pendant que les bulles sont rentrées : il « se refait »
    au creux de la boucle, puis les bulles ressortent. Synchronisé sur les mêmes
    13 s que .lk-gather. */
-.lk-core img{width:96px;height:auto;display:block;user-select:none;
-  animation:lkCoreSpin 13s cubic-bezier(.65,0,.35,1) infinite}
+.lk-core img{width:96px;height:auto;display:block;user-select:none}
 @keyframes lkCoreSpin{
   0%,50%{transform:rotate(0deg) scale(1)}
   60%{transform:rotate(200deg) scale(1.14)}
@@ -117,7 +114,7 @@ const LK_CSS = `
   100%{transform:rotate(360deg) scale(1)}}
 /* Le disque blanc respire très légèrement à l'instant où les bulles le
    rejoignent : sans ça, l'arrivée ne se voit pas. */
-.lk-core{animation:lkCorePulse 13s cubic-bezier(.65,0,.35,1) infinite}
+
 @keyframes lkCorePulse{
   0%,52%{transform:scale(1)}
   58%{transform:scale(1.07)}
@@ -139,15 +136,38 @@ const LK_CSS = `
 .lk-pill.status{z-index:4;left:520px;top:548px;transform:translateX(-50%)}
 .lk-pill .mut{color:#9ca3af;font-weight:500}
 
+/* ══ Départ des animations de logos, à l'ARRIVÉE de la carte ══════════════
+   Client 2026-08-03 : « j'aimerais que les animations de logo arrivent quand
+   l'utilisateur scrolle vers le bas et que l'encadré a quasi fini de monter ».
+   Elles étaient déclarées en infinite sur les sélecteurs de base, donc elles
+   tournaient dès le CHARGEMENT de la page : en arrivant sur la carte, le cycle
+   de 13 s était à une phase quelconque, souvent bulles déjà rentrées dans le
+   logo. On ne voyait donc jamais la chorégraphie depuis son début.
+   Elles ne démarrent maintenant que sous .lk-in, posé quand la carte entre
+   réellement à l'écran, et avec 950 ms de retard : la montée de la carte dure
+   1 100 ms après 160 ms d'attente, donc à 950 ms elle est quasi terminée, ce qui
+   est exactement le moment demandé.
+   Effet de bord bienvenu : plus rien ne tourne tant que la carte n'a pas été
+   vue, au lieu de trois animations en boucle depuis le chargement. */
+.lk-in .lk-gather{animation:lkGather 13s cubic-bezier(.65,0,.35,1) 950ms infinite}
+.lk-in .lk-orbit{animation:lkSpin 80s linear 950ms infinite}
+.lk-in .lk-counter{animation:lkSpinRev 80s linear 950ms infinite}
+.lk-in .lk-core{animation:lkCorePulse 13s cubic-bezier(.65,0,.35,1) 950ms infinite}
+.lk-in .lk-core img{animation:lkCoreSpin 13s cubic-bezier(.65,0,.35,1) 950ms infinite}
+
 /* ══ Arrivée au scroll (même signature que les deux autres cartes) ══
    L'état masqué n'est posé que sous .lk-armed, une classe ajoutée par le JS
    uniquement s'il peut animer : sans JS ou en mouvement réduit, tout
    s'affiche normalement, rien n'est conditionné à l'animation. */
-.lk-armed .lk-fit{opacity:0;transform:translate3d(0,80px,0) scale(.985);filter:blur(6px)}
-.lk-in .lk-fit{opacity:1;transform:none;filter:blur(0);
+/* Flou animé RETIRÉ (2026-08-03) : filter: blur() en transition force une
+   re-rastérisation floutée de toute la composition à chaque image pendant
+   800 ms, c'est l'un des effets les plus coûteux qui existent. Le mouvement et
+   le fondu portent déjà l'arrivée. Même retrait que sur les cartes de
+   StackingCards. */
+.lk-armed .lk-fit{opacity:0;transform:translate3d(0,80px,0) scale(.985)}
+.lk-in .lk-fit{opacity:1;transform:none;
   transition:transform 1100ms cubic-bezier(.22,1,.36,1) 160ms,
-             opacity 620ms cubic-bezier(.22,1,.36,1) 160ms,
-             filter 800ms cubic-bezier(.22,1,.36,1) 160ms}
+             opacity 620ms cubic-bezier(.22,1,.36,1) 160ms}
 
 @media (prefers-reduced-motion: reduce){
   .lk-orbit,.lk-counter,.lk-gather,.lk-core,.lk-core img{animation:none}
