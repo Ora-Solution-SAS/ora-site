@@ -101,11 +101,10 @@ function AtlasListMockup() {
         style={{
           transform: hidden ? "translate3d(0,84px,0) scale(0.985)" : "translate3d(0,0,0) scale(1)",
           opacity: hidden ? 0 : 1,
-          filter: hidden ? "blur(6px)" : "blur(0px)",
           transition: armed
-            ? "transform 1100ms cubic-bezier(0.22,1,0.36,1) 160ms, opacity 620ms cubic-bezier(0.22,1,0.36,1) 160ms, filter 800ms cubic-bezier(0.22,1,0.36,1) 160ms"
+            ? "transform 1100ms cubic-bezier(0.22,1,0.36,1) 160ms, opacity 620ms cubic-bezier(0.22,1,0.36,1) 160ms"
             : undefined,
-          willChange: armed ? "transform, opacity, filter" : undefined,
+          willChange: armed ? "transform, opacity" : undefined,
         }}
         className="w-full lg:h-full flex flex-col rounded-[16px] md:rounded-[20px] overflow-hidden bg-white ring-1 ring-black/5 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.4)] p-4 md:p-5"
       >
