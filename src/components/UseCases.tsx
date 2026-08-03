@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, ArrowUpRight, ClipboardCheck, FileText, Mail, PieChart, Wand2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, ArrowUpRight, ClipboardCheck, FileText, FolderCheck, Mail, PieChart, PlugZap, Scale, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
 import FormatageMockup from "./FormatageMockup";
+import PrevisionnelMockup from "./PrevisionnelMockup";
+import EvaluationMockup from "./EvaluationMockup";
+import CrmMockup from "./CrmMockup";
+import OrganisationMockup from "./OrganisationMockup";
 
 /**
  * UseCases — Bending-Spoons-style acquisition cards, adapted to Ora use cases:
@@ -20,7 +24,13 @@ type UseCase = {
   metaIcon: LucideIcon;
   meta: string;
   bullets: string[];
-  video: string;
+  /** Clip de démonstration. ABSENT quand aucune vidéo ne correspond réellement à
+   *  la carte (client 2026-08-03 : « n'en invente pas, n'en mets pas une qui ne
+   *  correspond pas »). Dans ce cas la pastille « Voir la démo » n'est pas
+   *  rendue du tout : pas de bouton mort, et aucun texte du genre « vidéo
+   *  bientôt disponible ». */
+  video?: string;
+  /** Toujours requis : le mur du dézoom affiche ce poster dans les copies. */
   poster: string;
   /** Card background (blue family, pastel or saturated). */
   bg: string;
@@ -39,7 +49,7 @@ type UseCase = {
   /** Replace the video media zone with a custom static mockup composition
    *  (Bending-Spoons style). The video is kept for the "Voir la démo"
    *  lightbox. */
-  mockup?: "reporting" | "pointage" | "formatage";
+  mockup?: "reporting" | "pointage" | "formatage" | "previsionnel" | "evaluation" | "crm" | "organisation";
 };
 
 const fadeUp = {
@@ -138,15 +148,17 @@ function WallCard({ item }: { item: UseCase }) {
         <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: item.ink }}>
           {item.title}
         </h3>
-        <span
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] ${
-            item.dark ? "bg-white/15" : "bg-white/70"
-          }`}
-          style={{ color: item.ink }}
-        >
-          {t({ fr: "Voir la démo", en: "Watch the demo" })}
-          <ArrowUpRight className="w-4 h-4" />
-        </span>
+        {item.video && (
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] ${
+              item.dark ? "bg-white/15" : "bg-white/70"
+            }`}
+            style={{ color: item.ink }}
+          >
+            {t({ fr: "Voir la démo", en: "Watch the demo" })}
+            <ArrowUpRight className="w-4 h-4" />
+          </span>
+        )}
       </div>
 
       <div className="relative mt-5 md:mt-6 flex items-center gap-2.5" style={{ color: item.ink }}>
@@ -245,6 +257,14 @@ export default function UseCases() {
       /** Colonne 1 = celle du milieu en trois colonnes ; en repli à deux, c'est
        *  celle de droite, et les deux dérivent encore en sens opposé. */
       mid: boolean;
+      /** Position et hauteur de MISE EN PAGE, pour situer la carte à l'écran sans
+       *  aucune lecture pendant le scroll. */
+      top0: number;
+      h: number;
+      /** Dernier état de masquage écrit, pour ne pas réécrire à l'identique. */
+      off: boolean;
+      /** Dernier `will-change` écrit, même raison. */
+      wc: string;
     };
     type Geo = {
       pinTop: number;
@@ -257,9 +277,32 @@ export default function UseCases() {
       fadeH: number;
       slots: Slot[];
     };
+    // Les VIDÉOS des cartes tournent en autoplay/loop. Pendant le recul, elles se
+    // trouvent dans un sous-arbre dont l'échelle change à chaque image : chaque
+    // image de chaque vidéo doit alors être recomposée dans une couche
+    // retransformée. C'est du travail de DESSIN, invisible pour un profil de mise
+    // en page, et c'est aujourd'hui le coût dominant de la séquence, d'autant que
+    // la grille contient désormais sept scènes de maquette. On les met donc en
+    // pause le temps de l'animation : à l'échelle où les cartes se retrouvent,
+    // une image figée est indiscernable d'une vidéo qui joue.
+    const videos = [...grid.querySelectorAll("video")];
     let geo: Geo | null = null;
     let rafId = 0;
     let hinted = false;
+    let videosOff = false;
+    /** Vrai quand l'état de repos a déjà été posé : évite de le réécrire. */
+    let auRepos = false;
+
+    const setVideos = (off: boolean) => {
+      if (off === videosOff) return;
+      videosOff = off;
+      for (const v of videos) {
+        if (off) v.pause();
+        // `play()` renvoie une promesse qui peut être rejetée (onglet masqué,
+        // politique d'autoplay) : on l'ignore volontairement.
+        else void v.play().catch(() => {});
+      }
+    };
     /** Dernières bornes du masque posées, pour ne pas le réécrire à l'identique. */
     const lastMask: { haut: number | null; bas: number | null } = { haut: null, bas: null };
 
@@ -270,16 +313,41 @@ export default function UseCases() {
       grid.style.transform = "";
       grid.style.willChange = "";
       cardRefs.current.forEach((el) => {
-        if (el) { el.style.transform = ""; el.style.willChange = ""; }
+        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.visibility = ""; }
       });
       fillerRefs.current.forEach((el) => {
-        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; }
+        if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; el.style.pointerEvents = ""; el.style.visibility = ""; }
       });
       hinted = false;
+      setVideos(false);
       // Sans ça, un retour aux MÊMES bornes après un reset sauterait la
       // réécriture et le masque resterait absent.
       lastMask.haut = null;
       lastMask.bas = null;
+    };
+
+    /** Remet les cartes à plat, mais CONSERVE `pin.style.top` : sans lui
+     *  l'épinglage ne se déclencherait plus à l'arrivée. Contrairement à
+     *  `reset()`, qui sert à désactiver complètement le moteur. */
+    const settleAtRest = () => {
+      if (auRepos) return;
+      auRepos = true;
+      grid.style.transform = "";
+      grid.style.willChange = "";
+      hinted = false;
+      for (const slot of geo?.slots ?? []) {
+        slot.card.style.transform = "";
+        slot.card.style.visibility = "";
+        slot.card.style.willChange = "";
+        slot.off = false;
+        slot.wc = "";
+        if (slot.still) { slot.card.style.opacity = "0"; slot.card.style.pointerEvents = ""; }
+      }
+      pin.style.removeProperty("-webkit-mask-image");
+      pin.style.removeProperty("mask-image");
+      lastMask.haut = null;
+      lastMask.bas = null;
+      setVideos(false);
     };
 
     // ── Mesures : tout ce qui ne dépend PAS de la position de scroll ─────────
@@ -379,6 +447,10 @@ export default function UseCases() {
             dx: cardLeft - leftOf(card),
             dy: rowTop - topOf(card),
             mid: ci === 1,
+            top0: topOf(card),
+            h: hOf(card),
+            off: false,
+            wc: "",
           });
           cardLeft += colW + gapX;
         });
@@ -416,6 +488,22 @@ export default function UseCases() {
       // phases qui s'enchaînent : le recul de caméra, puis le défilement des
       // colonnes.
       const d = g.pinTop - trackTop;
+
+      // ── DEUX SORTIES ANTICIPÉES ──────────────────────────────────────────
+      // `apply()` était appelé à chaque événement de scroll de TOUTE la page, et
+      // réécrivait alors dix-neuf transformations identiques (`translate3d(0px,
+      // 0px, 0)`) même quand la section était à des milliers de pixels de
+      // l'écran. Poser la même valeur marque quand même l'élément à recalculer :
+      // ce coût était payé en permanence, d'où les accrocs ressentis AVANT le
+      // dézoom, quand les cartes sont encore en deux colonnes.
+      //   1. Avant l'épinglage : on pose l'état de repos UNE fois, puis plus rien.
+      if (d <= 0) return settleAtRest();
+      auRepos = false;
+      //   2. Épinglage entièrement hors de l'écran : rien de visible à mettre à
+      //      jour, on garde l'état tel quel, il sera recalculé au retour.
+      const vhGuard = window.innerHeight;
+      if (pinTopNow + g.gridH < -400 || pinTopNow > vhGuard + 400) return;
+
       const p = clamp01(d / g.scrub);
       const u = ease(p);
       const s = 1 - (1 - g.fit) * u;
@@ -435,7 +523,33 @@ export default function UseCases() {
       // et la réserve de tuiles couvre la course.
       const q = clamp01((d - g.scrub) / g.scroll);
       const colScroll = (q * COL_SCROLL) / s;
-      const active = d > 0 && q < 1;
+      // DEUX états distincts, et c'est le correctif du « ça bugue fortement à la
+      // fin » (client 2026-08-03) :
+      //   · `engaged` = le mur est en disposition de mur. Il le reste au-delà de
+      //     la fin de l'animation, donc rien ne bascule à cet instant ;
+      //   · `running` = l'animation progresse encore.
+      // Avant, un unique `active = d > 0 && q < 1` faisait TOUT retomber pile à
+      // q = 1 : l'élagage se désactivait et les quinze à vingt cartes masquées
+      // redevenaient visibles dans la MÊME image, obligeant le navigateur à
+      // peindre d'un coup autant de grandes cartes avec leurs maquettes. C'était
+      // le pic de la fin du défilement.
+      const engaged = u > 0;
+      const running = d > 0 && q < 1;
+
+      // ── Élagage du DESSIN ────────────────────────────────────────────────
+      // Le mur fait environ trois fois la hauteur de la bande visible, donc la
+      // plupart des cartes sont peintes alors qu'elles sont hors champ, et de
+      // toute façon effacées par le fondu. On les sort du dessin avec
+      // `visibility:hidden`, qui n'affecte PAS la mise en page : aucune de leurs
+      // positions ne change, elles réapparaissent simplement quand elles entrent.
+      // Tout est déduit de valeurs en cache, sans une seule lecture de mise en
+      // page pendant le scroll.
+      // Le repère : après le transform de la grille, une position locale y tombe à
+      // l'écran en pinTopNow + gridH + (y - gridH) * s + T.
+      const vhNow = window.innerHeight;
+      const marge = 120;
+      const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
+      const gridT = u * (s * g.gridH - (s * wallH) / 2 - vhNow / 2);
 
       // ÉCRITURES.
       for (const slot of g.slots) {
@@ -446,22 +560,55 @@ export default function UseCases() {
         // monter. Aucune inversion de sens au passage d'une phase à l'autre.
         const dy = slot.dy * t + (slot.mid ? drift + colScroll : -drift - colScroll);
         slot.card.style.transform = `translate3d(${slot.dx * t}px, ${dy}px, 0)`;
-        if (slot.still) slot.card.style.opacity = String(fade);
+
+        // Hors de la bande visible ? On la sort du DESSIN. `visibility` n'affecte
+        // pas la mise en page, donc rien ne se déplace et la carte réapparaît
+        // simplement quand elle entre. L'état n'est écrit qu'au changement.
+        const yLocal = slot.top0 + dy;
+        const yEcran = pinTopNow + g.gridH + (yLocal - g.gridH) * s + gridT;
+        const off = engaged && (yEcran + slot.h * s < -marge || yEcran > vhNow + marge);
+        if (off !== slot.off) {
+          slot.off = off;
+          slot.card.style.visibility = off ? "hidden" : "";
+        }
+        // Promotion en couche GPU carte par carte, et seulement si elle est
+        // RÉELLEMENT visible. Avant, les vingt-cinq cartes étaient promues
+        // ensemble puis dépromues ensemble : autant de textures réservées pour
+        // des cartes hors champ, et une démolition de couches groupée sur une
+        // seule image. Là, seules les six à neuf cartes de la bande sont
+        // promues, et elles le sont une par une au fil du défilement.
+        const wc = engaged && !off ? "transform" : "";
+        if (wc !== slot.wc) {
+          slot.wc = wc;
+          slot.card.style.willChange = wc;
+        }
+
+        if (slot.still) {
+          slot.card.style.opacity = String(fade);
+          // Survolables une fois franchement révélées seulement : avant, la
+          // classe pointer-events-none reste maîtresse, pour ne jamais voler
+          // un clic aux vraies cartes pendant la transition.
+          slot.card.style.pointerEvents = fade > 0.6 ? "auto" : "none";
+        }
       }
       // Recul de caméra. Origine en bas de la grille, donc pile sur le bas de
       // l'écran pendant l'épinglage : à u = 0 la grille est exactement à sa
       // place, et le mur se recentre au fur et à mesure du recul.
-      const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
-      grid.style.transform = `translate3d(0, ${u * (s * g.gridH - (s * wallH) / 2 - window.innerHeight / 2)}px, 0) scale(${s})`;
+      // (Le décalage vertical est calculé plus haut, `gridT`, pour servir aussi à
+      // l'élagage du dessin.)
+      grid.style.transform = `translate3d(0, ${gridT}px, 0) scale(${s})`;
 
-      // `will-change` posé au CHANGEMENT d'état seulement : le réécrire à chaque
-      // image est une mutation de style de plus, et le promouvoir en continu
-      // garde des calques en mémoire pour rien.
-      if (active !== hinted) {
-        hinted = active;
-        const hint = active ? "transform" : "";
-        grid.style.willChange = hint;
-        for (const slot of g.slots) slot.card.style.willChange = hint;
+      // Vidéos en pause pendant toute la séquence épinglée, rendues à la lecture
+      // dès qu'on en sort.
+      setVideos(d > 0);
+
+      // La grille suit `engaged` : promue tant que le mur est en disposition de
+      // mur, donc aucune bascule à la fin de l'animation. Écrit au changement
+      // seulement. La promotion des cartes est gérée une par une dans la boucle
+      // ci-dessus.
+      if (engaged !== hinted) {
+        hinted = engaged;
+        grid.style.willChange = engaged ? "transform" : "";
       }
 
       // Fondu haut et bas pendant le recul. Les bornes sont recalculées depuis
@@ -469,7 +616,13 @@ export default function UseCases() {
       // l'épinglage : une fois le mur libéré, l'enveloppe remonte avec la page,
       // et un dégradé figé emporterait le fondu avec elle en plein milieu de
       // l'écran.
-      if (p > 0) {
+      // Le masque n'est mis à jour que TANT QUE l'animation tourne. Passé la fin,
+      // l'épinglage se relâche et `pinTopNow` change à chaque image : les bornes
+      // étaient donc recalculées et le masque réécrit soixante fois par seconde,
+      // ce qui re-rastérise à chaque fois un conteneur portant tout le mur. On le
+      // fige à sa dernière valeur, il accompagne alors le mur qui s'en va. La
+      // mise à jour reprend si l'on remonte dans l'animation.
+      if (p > 0 && running) {
         // Bornes ARRONDIES au pixel, et masque réécrit seulement s'il change
         // vraiment. Un masque en dégradé sur un conteneur épinglé qui porte des
         // vidéos et trois maquettes se re-rastérise à chaque réécriture : c'est
@@ -485,7 +638,7 @@ export default function UseCases() {
           pin.style.setProperty("-webkit-mask-image", mask);
           pin.style.setProperty("mask-image", mask);
         }
-      } else if (lastMask.haut !== null) {
+      } else if (p === 0 && lastMask.haut !== null) {
         lastMask.haut = null;
         lastMask.bas = null;
         pin.style.removeProperty("-webkit-mask-image");
@@ -581,13 +734,25 @@ export default function UseCases() {
         t({ fr: "Vos PDF sont lus et transformés en tableau Excel exploitable, sans ressaisie", en: "Your PDFs are read and turned into a usable Excel table, no re-keying" }),
         t({ fr: "Chaque ligne, montant et référence extraits fidèlement, prêts à traiter", en: "Every line, amount and reference extracted faithfully, ready to work with" }),
       ],
-      video: "/ora_pdf_extract_v2.mp4",
-      poster: "/posters/ora_pdf_extract.jpg",
+      // v4 : clip RÉEXPORTÉ sur le rose de la carte (client 2026-08-03). La v2
+      // était rendue sur une lavande #ebe0f9, héritée de l'ancienne couleur de
+      // carte, et la jonction se voyait depuis le passage au rose. Le fond a été
+      // changé à la SOURCE, dans la page qui génère la vidéo
+      // (Desktop/.../demo-video-pdf-extract/pdf-extract-demo.html, `#backdrop`),
+      // puis les 547 images ont été rendues et réencodées : les angles arrondis
+      // et les ombres portées des fenêtres se fondent donc vraiment dans le rose,
+      // ce qu'une incrustation de couleur n'aurait pas su faire.
+      video: "/ora_pdf_extract_v4.mp4",
+      poster: "/posters/ora_pdf_extract_v4.jpg",
       // Rose poudré (client 2026-07-29 : « plus rose »), en remplacement de la
-      // lavande #eae6fb. NB : le fond propre de la vidéo est un bleu pâle
-      // #dbe3f7, donc la jonction entre la carte et le clip est ENCORE plus
-      // visible qu'avant, tant que la vidéo n'est pas réexportée sur ce fond.
-      bg: "#f7e3f0",
+      // lavande #eae6fb.
+      // #f6e3f0 et non #f7e3f0 : une unité de rouge en moins, invisible à l'œil,
+      // mais c'est la valeur que le navigateur DÉCODE réellement du clip. Le rose
+      // est encodé à #f7e3f0 à la source ; le passage en YUV 4:2:0, imposé par
+      // H.264, le ramène à #f6e3f0 et rien ne peut l'en empêcher. C'est donc au
+      // CSS, seul terme exact des deux, de s'aligner sur la vidéo. Jonction nulle
+      // pendant la lecture, une unité d'écart sur le poster JPEG.
+      bg: "#f6e3f0",
       ink: "#3d1b36",
       sub: "#7c4f6e",
       blend: true,
@@ -639,6 +804,82 @@ export default function UseCases() {
       dark: true,
       mockup: "formatage",
     },
+    // ── Quatre cartes « conseil » ajoutées le 2026-08-02 : Prévisionnel,
+    // Évaluation financière, Connectivité CRM, Organisation. Le damier
+    // continue (rangée 4 : saturé | pâle, rangée 5 : pâle | saturé) et la
+    // palette reste dans la famille bleu / indigo / teal : navy #1e3a8a et
+    // teal de marque #0d9488 côté saturé, menthe #d7efe9 et pervenche
+    // #e3e9fc côté pastel.
+    // ⚠ COPIE PROVISOIRE : titres, meta et puces sont des brouillons à faire
+    // valider (formulation exacte) avant toute mise en ligne.
+    // ⚠ VIDÉOS PROVISOIRES : les clips de la lightbox sont ceux d'AUTRES cas
+    // d'usage, à réexporter avant de communiquer dessus (même réserve que les
+    // cartes « Réconciliation » et « Formatage » ci-dessus). Les POSTERS, eux,
+    // sont les vrais : captures des maquettes, utilisées par le mur du dézoom.
+    {
+      title: t({ fr: "Prévisionnel", en: "Forecasting" }),
+      metaIcon: TrendingUp,
+      meta: t({ fr: "Business plan & trajectoire financière", en: "Business plan & financial trajectory" }),
+      bullets: [
+        t({ fr: "Le business plan se construit à partir de votre historique, hypothèses à l'appui", en: "The business plan is built from your history, assumptions made explicit" }),
+        t({ fr: "Une trajectoire claire sur plusieurs années, prête à présenter", en: "A clear multi-year trajectory, ready to present" }),
+      ],
+      poster: "/posters/ora_previsionnel.jpg",
+      // Bleu nuit, dans la famille du navy de la marque : bien distinct du
+      // bleu vif #0A6BE1 et de l'indigo #5865E3 déjà en place.
+      bg: "#1e3a8a",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.78)",
+      dark: true,
+      mockup: "previsionnel",
+    },
+    {
+      title: t({ fr: "Évaluation financière", en: "Business valuation" }),
+      metaIcon: Scale,
+      meta: t({ fr: "Valorisation, multiples & comparables", en: "Valuation, multiples & comparables" }),
+      bullets: [
+        t({ fr: "La valorisation posée sur des multiples et des comparables explicites", en: "Valuation grounded in explicit multiples and comparables" }),
+        t({ fr: "Une fourchette argumentée, prête à défendre face au client", en: "A reasoned range, ready to defend with your client" }),
+      ],
+      poster: "/posters/ora_evaluation.jpg",
+      // Vert d'eau : le versant pastel du teal de marque #0d9488.
+      bg: "#d7efe9",
+      ink: "#0b3a33",
+      sub: "#33635c",
+      mockup: "evaluation",
+    },
+    {
+      title: t({ fr: "Connectivité CRM", en: "CRM connectivity" }),
+      metaIcon: PlugZap,
+      meta: t({ fr: "CRM, facturation & suivi commercial", en: "CRM, invoicing & sales tracking" }),
+      bullets: [
+        t({ fr: "Les données de votre CRM alimentent directement vos fichiers de travail", en: "Your CRM data feeds directly into your working files" }),
+        t({ fr: "Fini les doubles saisies entre outils : une seule source à jour", en: "No more double entry between tools: one up-to-date source" }),
+      ],
+      poster: "/posters/ora_crm.jpg",
+      // Pervenche : pastel côté indigo, distinct des bleus pâles existants.
+      bg: "#e3e9fc",
+      ink: "#1b2a5e",
+      sub: "#4a5691",
+      mockup: "crm",
+    },
+    {
+      title: t({ fr: "Organisation", en: "Organization" }),
+      metaIcon: FolderCheck,
+      meta: t({ fr: "Classement de dossiers & fichiers", en: "Folder & file organization" }),
+      bullets: [
+        t({ fr: "Vos fichiers renommés et rangés selon votre plan de classement", en: "Your files renamed and filed according to your filing plan" }),
+        t({ fr: "Chaque dossier client reste propre, sans tri manuel", en: "Every client folder stays tidy, no manual sorting" }),
+      ],
+      poster: "/posters/ora_organisation.jpg",
+      // Teal de marque, versant saturé : première carte de la série à le
+      // porter en aplat.
+      bg: "#0d9488",
+      ink: "#ffffff",
+      sub: "rgba(255,255,255,0.8)",
+      dark: true,
+      mockup: "organisation",
+    },
   ];
 
   // ── Remplissage du MUR : des COPIES des vraies cartes ────────────────────
@@ -655,21 +896,40 @@ export default function UseCases() {
   // Le rendu passe par <WallCard>, qui reprend le visuel de la carte avec son
   // POSTER en image au lieu de la vidéo ou de la maquette : douze copies des
   // médias animés coûteraient beaucoup trop cher.
-  // Décalage de DEUX crans, plus un par tour. Le mur alterne vraie carte / copie,
-  // donc la copie d'indice i se retrouve collée à la vraie carte d'indice i :
-  // sans décalage, chaque copie serait le jumeau immédiat de sa voisine de gauche
-  // (le doublon côte à côte de la capture client). Deux crans suffisent à ce que
-  // les TROIS cartes d'une même rangée soient toujours distinctes, vérifié sur
-  // les six rangées.
-  // Des répétitions restent possibles d'une rangée à l'autre dans une même
-  // colonne, mais les colonnes dérivent verticalement pendant l'animation, donc
-  // cet alignement ne tient jamais, et les doublons sont assumés.
-  const wallDupes: UseCase[] = Array.from({ length: 12 }, (_, i) => {
-    const tour = Math.floor(i / cases.length);
-    return cases[(i + 2 + tour) % cases.length];
-  });
+  // HUIT copies, et plus douze : le passage de six à dix vraies cartes
+  // (2026-08-02) aurait sinon porté le mur à 22 tuiles, donc HUIT rangées, et
+  // toutes les constantes du recul (PULLBACK_FILL_H 3,3, réserve de 936 px,
+  // COL_SCROLL 700) sont calées sur un mur de SIX rangées. 10 + 8 = 18 tuiles
+  // conservent exactement la géométrie d'avant (6 rangées de 3), rien à
+  // retuner.
+  // Affectation EXPLICITE, colonne par colonne, et plus un simple décalage
+  // (client 2026-08-02 : « il ne faut pas que, quand on défile, il y ait
+  // Prévisionnel 2 fois de suite à côté »). Pendant la seconde phase, les
+  // colonnes extérieures montent et celle du milieu descend : deux rangées
+  // différentes finissent côte à côte, donc l'ancien critère « les trois
+  // cartes d'une même rangée sont distinctes » ne suffisait pas (un décalage
+  // de 3 mettait par exemple les deux copies de « Prévisionnel » en vis-à-vis
+  // après deux crans de dérive).
+  // Le mur intercale vraie carte / copie : r0,f0,r1,f1..., rangées de trois.
+  // Les vraies cartes tombent donc en colonnes par résidu modulo 3 :
+  // colonne 0 = {0,3,6}, colonne 1 = {2,5,8}, colonne 2 = {1,4,7,9}. En
+  // choisissant les copies DANS le même ensemble que leur colonne
+  // (f1,f4,f7 → colonne 0 ; f0,f3,f6 → colonne 1 ; f2,f5 → colonne 2), les
+  // trois colonnes n'ont AUCUNE carte en commun : quel que soit le décalage
+  // vertical de la dérive, deux voisines horizontales ne peuvent jamais être
+  // identiques. À l'intérieur d'une colonne, l'ordre alterne pour qu'aucune
+  // copie ne soit non plus la voisine VERTICALE de sa jumelle.
+  // D'où f0..f7 = cases[5,6,9,8,0,1,2,3] :
+  //   colonne 0 : c0,c6,c3,c0,c6,c3 · colonne 1 : c5,c2,c8,c5,c2,c8 ·
+  //   colonne 2 : c1,c9,c4,c1,c7,c9 — rangées toutes distinctes, vérifié.
+  const wallDupes: UseCase[] = [5, 6, 9, 8, 0, 1, 2, 3].map((i) => cases[i]);
 
 
+  // L'espace blanc entre le mur et « Automatisez de bout en bout » est CONSERVÉ
+  // (client 2026-08-03 : « on garde l'espace blanc, c'était bien, le problème
+  // c'est le scroll qui bugue »). J'avais supprimé cette marge sur desktop pour
+  // resserrer la jonction : ce n'était pas le sujet, le layout revient à
+  // l'identique.
   return (
     <div className="relative mb-40 md:mb-64">
       {/* Header */}
@@ -741,6 +1001,8 @@ export default function UseCases() {
                       <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: c.ink }}>
                         {c.title}
                       </h3>
+                      {/* Pas de vidéo qui corresponde, pas de pastille. */}
+                      {c.video && (
                       <button
                         type="button"
                         onClick={() => setActive(c)}
@@ -752,6 +1014,7 @@ export default function UseCases() {
                         {t({ fr: "Voir la démo", en: "Watch the demo" })}
                         <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       </button>
+                      )}
                     </div>
 
                     {/* Meta line */}
@@ -785,6 +1048,14 @@ export default function UseCases() {
                           <ReportingMockup />
                         ) : c.mockup === "formatage" ? (
                           <FormatageMockup />
+                        ) : c.mockup === "previsionnel" ? (
+                          <PrevisionnelMockup />
+                        ) : c.mockup === "evaluation" ? (
+                          <EvaluationMockup />
+                        ) : c.mockup === "crm" ? (
+                          <CrmMockup />
+                        ) : c.mockup === "organisation" ? (
+                          <OrganisationMockup />
                         ) : (
                           <PointageMockup />
                         )}
@@ -842,7 +1113,17 @@ export default function UseCases() {
                 aria-hidden
                 className="pointer-events-none absolute left-0 top-0 opacity-0"
               >
-                <WallCard item={c} />
+                {/* Enveloppe de survol (client 2026-08-02 : « fais en sorte que
+                    les encadrés soient animés quand on bouge notre curseur
+                    dessus ») : léger zoom au survol, comme les vraies cartes.
+                    Sur l'ENFANT, pas sur l'enveloppe : le moteur du mur écrit
+                    un translate3d sur l'enveloppe à chaque image, un scale au
+                    même endroit serait écrasé. Les pointer-events sont rendus
+                    par le moteur une fois la tuile révélée, et repris quand
+                    elle s'efface. */}
+                <div className="h-full w-full cursor-default transition-transform duration-300 ease-out hover:scale-[1.04]">
+                  <WallCard item={c} />
+                </div>
               </div>
             ))}
           </div>
