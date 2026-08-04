@@ -28,7 +28,28 @@ import { useLang } from "@/lib/i18n";
 // un mot n'était net que dans le premier tiers de l'écran, soit 216 px de scroll
 // avant de disparaître. À 0,50 il l'est dès le milieu, ce qui laisse 360 px, tout
 // en gardant la moitié basse de l'écran pour la découverte.
-const FOCUS = 0.50; //   viewport fraction where the frontier sits
+// Mon passage à 0,72 était une ERREUR de levier (client 2026-08-04 : « quand on
+// scrolle vers le bas il y a déjà la moitié des phrases qui sont affichées »).
+// FOCUS ne règle pas la vitesse, il règle la HAUTEUR DE LA ZONE NETTE, et le
+// nombre de phrases nettes AFFICHÉES EN MÊME TEMPS vaut :
+//     zone nette (FOCUS x vh) / pas entre deux phrases (leur hauteur de texte +
+//     le `marginBottom` ci-dessous)
+// Correctif suivant à 0,38 : la SECONDE erreur (même jour, message suivant :
+// « les phrases sont trop haute et quand l'on scroll on ne les voit plus
+// s'animé »). Mesuré directement sur le DOM réel (getBoundingClientRect, pas
+// de calcul de tête cette fois) : à 0,38 la transition floue→nette se
+// produisait entre 304 et 380 px depuis le haut d'un écran de 900 px, donc
+// dans le TIERS SUPÉRIEUR — au-dessus de la zone où l'œil se pose en lisant,
+// et sur seulement 76 px de scroll. D'où les deux symptômes à la fois : la
+// netteté se joue « trop haut », et hors du regard, l'utilisateur ne voit pas
+// le mot se démêler, il le découvre déjà net.
+// PORTÉE à 0,46 : la transition tombe désormais entre 376 et 452 px, soit
+// 42-50 % de l'écran — recentrée dans la zone de lecture. Avec le pas mesuré à
+// 227 px (`marginBottom` redonné à 4,5vh, voir plus bas), le ratio remonte à
+// 1,83 : légèrement au-dessus des 1,71 du dernier réglage jamais critiqué côté
+// recouvrement, mais c'est le compromis qui corrige la position sans revenir
+// au 0,50/8,5vh d'origine.
+const FOCUS = 0.46; //   viewport fraction where the frontier sits
 // Hyper-sensitive to scroll: a TIGHT transition band (~one line of reading
 // distance) so the reveal edge is crisp and each letter flips blurred→sharp
 // with only a few px of scroll — the sweep tracks the finger letter by letter.
@@ -222,7 +243,11 @@ export default function ExcelReveal() {
           with a gap so ~2 phrases are on screen at once (previous crisp above,
           next blurred below). pb = black breathing space after the last line.
           PADDING, not a child margin (a margin collapses out → white line). */}
-      <div className="px-6 md:px-[5.5vw] pt-[20vh] pb-[11vh]">
+      {/* pt ramené de 20 à 13vh (client 2026-08-04) : troisième levier, celui de
+          la toute PREMIÈRE phrase. Elle attendait 144 px de noir avant même
+          d'entrer dans la zone de révélation, ce qui donnait l'impression que la
+          section met du temps à démarrer. */}
+      <div className="px-6 md:px-[5.5vw] pt-[13vh] pb-[11vh]">
         {phrases.map((phrase, pi) => {
           const grad = phrase.gradient.map((g) => g.toLowerCase());
           return (
@@ -238,7 +263,17 @@ export default function ExcelReveal() {
                 textWrap: "balance",
                 // Tighter spacing = the next phrase reaches the reveal line
                 // after much less scrolling (client: "plus rapide").
-                marginBottom: "8.5vh",
+                // REDONNÉ de 3,5 à 4,5vh (client 2026-08-04, quatrième passe :
+                // « les phrases sont trop haute et quand l'on scroll on ne les
+                // voit plus s'animé »). Le vrai coupable était FOCUS (voir son
+                // commentaire), mais un pas trop serré aggravait le ratio de
+                // recouvrement une fois FOCUS remonté à 0,46 : redonner un peu
+                // de marge ici le ramène à 1,83 au lieu de 2,20. La distance
+                // totale à parcourir dans la section (1280x900, DOM réel) passe
+                // donc de 1043 à 1079 px : encore 16 % de moins que le tout
+                // premier réglage (1286 px), contre 19 % à l'étape précédente —
+                // un léger compromis pour corriger la position de la netteté.
+                marginBottom: "4.5vh",
               }}
             >
               {phrase.text.split(" ").map((w, wi) => {
