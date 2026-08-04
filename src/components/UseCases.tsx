@@ -220,6 +220,9 @@ export default function UseCases() {
   const zoomRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const fillerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  /** Bandes de fondu haut et bas, en remplacement du `mask-image`. */
+  const fadeTopRef = useRef<HTMLDivElement>(null);
+  const fadeBotRef = useRef<HTMLDivElement>(null);
 
   // Le moteur est scindé en DEUX (client 2026-08-01 : « c'est un peu lent et un
   // peu bugué quand le dézoom s'active »). Avant, une seule fonction était
@@ -244,7 +247,9 @@ export default function UseCases() {
     const track = trackRef.current;
     const pin = pinRef.current;
     const grid = zoomRef.current;
-    if (!track || !pin || !grid) return;
+    const fadeTop = fadeTopRef.current;
+    const fadeBot = fadeBotRef.current;
+    if (!track || !pin || !grid || !fadeTop || !fadeBot) return;
 
     /** Place d'arrivée d'une carte dans le mur, mesurée une fois pour toutes. */
     type Slot = {
@@ -265,6 +270,10 @@ export default function UseCases() {
       off: boolean;
       /** Dernier `will-change` écrit, même raison. */
       wc: string;
+      /** Dernière opacité écrite (tuiles seulement), même raison. */
+      op: number;
+      /** Dernier transform écrit, même raison. */
+      tr: string;
     };
     type Geo = {
       pinTop: number;
@@ -275,6 +284,15 @@ export default function UseCases() {
       gridH: number;
       wallFullH: number;
       fadeH: number;
+      /** Hauteur du cadenceur, mise en CACHE. Elle ne dépend que de la mise en
+       *  page, jamais du scroll : la relire dans `apply()` revenait à demander un
+       *  recalcul SYNCHRONE de la mise en page juste après avoir écrit dix-neuf
+       *  transformes, donc à chaque image. C'est le pire schéma possible
+       *  (écriture → lecture), et il annulait tout le bénéfice du découpage
+       *  mesure / application. */
+      trackH: number;
+      /** Hauteur de l'enveloppe épinglée, pour la découpe basse. */
+      pinH: number;
       slots: Slot[];
     };
     // Les VIDÉOS des cartes tournent en autoplay/loop. Pendant le recul, elles se
@@ -292,6 +310,10 @@ export default function UseCases() {
     let videosOff = false;
     /** Vrai quand l'état de repos a déjà été posé : évite de le réécrire. */
     let auRepos = false;
+    /** Vrai quand les deux bandes de fondu sont visibles. */
+    let fondus = false;
+    /** Dernier transform posé sur la grille, pour ne pas le réécrire à l'identique. */
+    let dernierGT = "";
 
     const setVideos = (off: boolean) => {
       if (off === videosOff) return;
@@ -308,10 +330,13 @@ export default function UseCases() {
 
     const reset = () => {
       pin.style.top = "";
-      pin.style.removeProperty("-webkit-mask-image");
-      pin.style.removeProperty("mask-image");
+      pin.style.removeProperty("clip-path");
+      fadeTop.style.opacity = "0";
+      fadeBot.style.opacity = "0";
+      fondus = false;
       grid.style.transform = "";
       grid.style.willChange = "";
+      dernierGT = "";
       cardRefs.current.forEach((el) => {
         if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.visibility = ""; }
       });
@@ -334,6 +359,7 @@ export default function UseCases() {
       auRepos = true;
       grid.style.transform = "";
       grid.style.willChange = "";
+      dernierGT = "";
       hinted = false;
       for (const slot of geo?.slots ?? []) {
         slot.card.style.transform = "";
@@ -341,10 +367,13 @@ export default function UseCases() {
         slot.card.style.willChange = "";
         slot.off = false;
         slot.wc = "";
-        if (slot.still) { slot.card.style.opacity = "0"; slot.card.style.pointerEvents = ""; }
+        slot.tr = "";
+        if (slot.still) { slot.card.style.opacity = "0"; slot.card.style.pointerEvents = ""; slot.op = 0; }
       }
-      pin.style.removeProperty("-webkit-mask-image");
-      pin.style.removeProperty("mask-image");
+      pin.style.removeProperty("clip-path");
+      fadeTop.style.opacity = "0";
+      fadeBot.style.opacity = "0";
+      fondus = false;
       lastMask.haut = null;
       lastMask.bas = null;
       setVideos(false);
@@ -435,12 +464,28 @@ export default function UseCases() {
       // les colonnes du dessus : l'indice de colonne ne voulait plus rien dire,
       // la dérive inverse envoyait deux voisines l'une sur l'autre, et le mur
       // finissait avec un chevauchement.
+      // Cache de l'ANCIEN passage, retrouvé par élément carte : `measure()` peut
+      // se redéclencher en PLEIN milieu de l'animation (changement de langue,
+      // redimensionnement — le `ResizeObserver` sur `pin` guette les deux), et
+      // reconstruit alors un `Slot` NEUF par carte. Les éléments DOM, eux, ne
+      // sont pas réinitialisés : ils portent encore les styles écrits par le
+      // dernier `apply()`. Sans ce report, un `Slot` neuf reparcourt à `op: 0`
+      // pendant qu'une tuile affiche encore 0,6 à l'écran ; si l'image suivante
+      // calcule à nouveau une cible de 0 (parfaitement possible juste après un
+      // redimensionnement, qui déplace aussi `p`), la comparaison `op !== slot.op`
+      // ne voit AUCUN changement et n'écrit rien : la tuile reste figée à 0,6
+      // jusqu'à ce que le scroll la fasse ressortir de ce sous-intervalle. Même
+      // défaut pour `off` (une carte resterait invisible) et `wc`. Le report
+      // aligne le cache neuf sur ce que le DOM affiche RÉELLEMENT, donc la
+      // comparaison redevient fiable dès la toute première image qui suit.
+      const oldByCard = new Map(geo?.slots.map((s) => [s.card, s]) ?? []);
       const rowLeft0 = (gridW - (cols * (colW + gapX) - gapX)) / 2;
       const slots: Slot[] = [];
       let rowTop = 0;
       for (const row of rows) {
         let cardLeft = rowLeft0;
         row.forEach((card, ci) => {
+          const prev = oldByCard.get(card);
           slots.push({
             card,
             still: fillerSet.has(card),
@@ -449,13 +494,24 @@ export default function UseCases() {
             mid: ci === 1,
             top0: topOf(card),
             h: hOf(card),
-            off: false,
-            wc: "",
+            off: prev?.off ?? false,
+            wc: prev?.wc ?? "",
+            op: prev?.op ?? 0,
+            tr: prev?.tr ?? "",
           });
           cardLeft += colW + gapX;
         });
         rowTop += Math.max(...row.map(hOf)) + gapY;
       }
+
+      // Les deux DERNIÈRES lectures, encore AVANT les écritures qui suivent :
+      // aucune des écritures ci-dessous ne change la hauteur de `track` ou de
+      // `pin` (`top`, `width`/`height` hors flux, `translate3d`), donc les lire
+      // après n'aurait rien invalidé de RÉEL — mais l'inverser les aurait quand
+      // même rendues SUSPECTES au premier survol du fichier, à l'endroit même
+      // qui explique juste en dessous pourquoi l'ordre lecture/écriture compte.
+      const trackH = track.offsetHeight;
+      const pinH = pin.offsetHeight;
 
       // ÉCRITURES groupées à la toute fin, une fois toutes les lectures faites.
       // Le gabarit des tuiles est posé ICI et plus à chaque image : `width` et
@@ -467,10 +523,17 @@ export default function UseCases() {
         f.style.height = `${rowH}px`;
       }
 
+      const fadeH = Math.min(130, vh * 0.16);
+      // Gabarit des deux bandes de fondu posé ICI, avec le reste des écritures
+      // de mise en page. Pendant le scroll elles ne reçoivent plus qu'un
+      // `translate3d`, qui ne coûte rien.
+      fadeTop.style.height = `${fadeH}px`;
+      fadeBot.style.height = `${fadeH}px`;
+
       geo = {
         pinTop, scrub: vh * PULLBACK_VH, scroll: vh * SCROLL_VH,
         fit, gridH, wallFullH,
-        fadeH: Math.min(130, vh * 0.16), slots,
+        fadeH, trackH, pinH, slots,
       };
     };
 
@@ -501,8 +564,8 @@ export default function UseCases() {
       auRepos = false;
       //   2. Épinglage entièrement hors de l'écran : rien de visible à mettre à
       //      jour, on garde l'état tel quel, il sera recalculé au retour.
-      const vhGuard = window.innerHeight;
-      if (pinTopNow + g.gridH < -400 || pinTopNow > vhGuard + 400) return;
+      const vhNow = window.innerHeight;
+      if (pinTopNow + g.gridH < -400 || pinTopNow > vhNow + 400) return;
 
       const p = clamp01(d / g.scrub);
       const u = ease(p);
@@ -535,6 +598,23 @@ export default function UseCases() {
       // le pic de la fin du défilement.
       const engaged = u > 0;
       const running = d > 0 && q < 1;
+      // TROISIÈME état, et c'est le correctif du « ça bugue au défilement ».
+      // Il sépare les deux phases par ce qui les distingue VRAIMENT du point de
+      // vue du dessin :
+      //   · pendant le recul, l'ÉCHELLE de la grille change à chaque image. Tout
+      //     ce qu'elle contient doit être redessiné à la nouvelle échelle, et
+      //     toute couche fille l'oblige à être redessinée séparément. On ne veut
+      //     donc AUCUNE couche fille : une seule surface, celle de la grille ;
+      //   · pendant le défilement des colonnes, l'échelle est FIGÉE (u vaut 1) et
+      //     la grille ne bouge plus du tout : seules les cartes se déplacent, en
+      //     translation pure. Là, une couche par carte visible est exactement ce
+      //     qu'il faut, le compositeur les déplace sans rien redessiner.
+      // Le seuil est à 0,92 et non à 1 : créer six à neuf couches d'un coup coûte
+      // une image, et on préfère la payer AVANT la bascule plutôt que pile
+      // dessus. Le recul étant en cubique amorti, `u` vaut déjà 0,998 à p = 0,92 :
+      // sur ces derniers pour-cent l'échelle ne bouge pratiquement plus, la
+      // promotion n'y déclenche donc aucune re-rastérisation en cascade.
+      const promouvoir = engaged && p >= 0.92;
 
       // ── Élagage du DESSIN ────────────────────────────────────────────────
       // Le mur fait environ trois fois la hauteur de la bande visible, donc la
@@ -546,7 +626,6 @@ export default function UseCases() {
       // page pendant le scroll.
       // Le repère : après le transform de la grille, une position locale y tombe à
       // l'écran en pinTopNow + gridH + (y - gridH) * s + T.
-      const vhNow = window.innerHeight;
       const marge = 120;
       const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
       const gridT = u * (s * g.gridH - (s * wallH) / 2 - vhNow / 2);
@@ -559,7 +638,18 @@ export default function UseCases() {
         // pendant le défilement, les extérieures montent puis continuent de
         // monter. Aucune inversion de sens au passage d'une phase à l'autre.
         const dy = slot.dy * t + (slot.mid ? drift + colScroll : -drift - colScroll);
-        slot.card.style.transform = `translate3d(${slot.dx * t}px, ${dy}px, 0)`;
+        // Arrondi au centième de pixel, et réécriture seulement en cas de vrai
+        // changement. Une fois l'animation terminée, le mur reste en place
+        // pendant qu'on continue de scroller : les dix-huit transformes étaient
+        // alors réécrits à l'identique à chaque image, et chaque réécriture
+        // remet la carte dans la liste des éléments à recalculer, même sans
+        // changement de valeur. C'est ce qui restait à payer sur toute la fin de
+        // la section.
+        const tr = `translate3d(${Math.round(slot.dx * t * 100) / 100}px, ${Math.round(dy * 100) / 100}px, 0)`;
+        if (tr !== slot.tr) {
+          slot.tr = tr;
+          slot.card.style.transform = tr;
+        }
 
         // Hors de la bande visible ? On la sort du DESSIN. `visibility` n'affecte
         // pas la mise en page, donc rien ne se déplace et la carte réapparaît
@@ -571,24 +661,32 @@ export default function UseCases() {
           slot.off = off;
           slot.card.style.visibility = off ? "hidden" : "";
         }
-        // Promotion en couche GPU carte par carte, et seulement si elle est
-        // RÉELLEMENT visible. Avant, les vingt-cinq cartes étaient promues
-        // ensemble puis dépromues ensemble : autant de textures réservées pour
-        // des cartes hors champ, et une démolition de couches groupée sur une
-        // seule image. Là, seules les six à neuf cartes de la bande sont
-        // promues, et elles le sont une par une au fil du défilement.
-        const wc = engaged && !off ? "transform" : "";
+        // Promotion en couche GPU réservée à la SECONDE phase (`promouvoir`,
+        // calculé plus haut). Pendant le recul, une carte promue serait une
+        // couche fille à l'intérieur d'un parent dont l'échelle change à chaque
+        // image : le navigateur doit alors re-rastériser CHAQUE couche fille à
+        // la nouvelle échelle, soit six à neuf rastérisations par image au lieu
+        // d'une seule pour la grille. La promotion carte par carte, censée
+        // alléger, coûtait donc plus cher qu'elle ne rapportait.
+        const wc = promouvoir && !off ? "transform" : "";
         if (wc !== slot.wc) {
           slot.wc = wc;
           slot.card.style.willChange = wc;
         }
 
         if (slot.still) {
-          slot.card.style.opacity = String(fade);
-          // Survolables une fois franchement révélées seulement : avant, la
-          // classe pointer-events-none reste maîtresse, pour ne jamais voler
-          // un clic aux vraies cartes pendant la transition.
-          slot.card.style.pointerEvents = fade > 0.6 ? "auto" : "none";
+          // Écrit seulement quand la valeur change VRAIMENT. `fade` reste à
+          // zéro pendant les 82 premiers pour-cent du recul : on y réécrivait
+          // « 0 » sur huit tuiles à chaque image, pour rien.
+          const op = Math.round(fade * 100) / 100;
+          if (op !== slot.op) {
+            slot.op = op;
+            slot.card.style.opacity = String(op);
+            // Survolables une fois franchement révélées seulement : avant, la
+            // classe pointer-events-none reste maîtresse, pour ne jamais voler
+            // un clic aux vraies cartes pendant la transition.
+            slot.card.style.pointerEvents = op > 0.6 ? "auto" : "none";
+          }
         }
       }
       // Recul de caméra. Origine en bas de la grille, donc pile sur le bas de
@@ -596,7 +694,15 @@ export default function UseCases() {
       // place, et le mur se recentre au fur et à mesure du recul.
       // (Le décalage vertical est calculé plus haut, `gridT`, pour servir aussi à
       // l'élagage du dessin.)
-      grid.style.transform = `translate3d(0, ${gridT}px, 0) scale(${s})`;
+      // Réécrit seulement s'il change vraiment : pendant toute la SECONDE phase
+      // il est constant (u vaut 1, donc `s` et `gridT` aussi), et le réécrire à
+      // l'identique remet malgré tout la grille — et ses dix-huit encadrés — dans
+      // la liste des éléments à recalculer, soixante fois par seconde.
+      const gt = `translate3d(0, ${Math.round(gridT * 100) / 100}px, 0) scale(${Math.round(s * 10000) / 10000})`;
+      if (gt !== dernierGT) {
+        dernierGT = gt;
+        grid.style.transform = gt;
+      }
 
       // Vidéos en pause pendant toute la séquence épinglée, rendues à la lecture
       // dès qu'on en sort.
@@ -611,38 +717,54 @@ export default function UseCases() {
         grid.style.willChange = engaged ? "transform" : "";
       }
 
-      // Fondu haut et bas pendant le recul. Les bornes sont recalculées depuis
-      // la position RÉELLE de l'enveloppe, et non depuis les coordonnées de
-      // l'épinglage : une fois le mur libéré, l'enveloppe remonte avec la page,
-      // et un dégradé figé emporterait le fondu avec elle en plein milieu de
-      // l'écran.
-      // Le masque n'est mis à jour que TANT QUE l'animation tourne. Passé la fin,
-      // l'épinglage se relâche et `pinTopNow` change à chaque image : les bornes
-      // étaient donc recalculées et le masque réécrit soixante fois par seconde,
-      // ce qui re-rastérise à chaque fois un conteneur portant tout le mur. On le
-      // fige à sa dernière valeur, il accompagne alors le mur qui s'en va. La
-      // mise à jour reprend si l'on remonte dans l'animation.
+      // ── Découpe de la bande visible, et fondu de ses deux bords ──────────
+      // C'était le poste le plus lourd de la séquence, et il est ici SCINDÉ en
+      // deux mécanismes distincts, un par besoin :
+      //   · la COUPE FRANCHE (le mur déborde largement sous l'enveloppe et
+      //     empiétait sinon sur la section suivante) est faite par un
+      //     `clip-path: inset(...)`. Un rectangle sans coin arrondi est appliqué
+      //     par le compositeur comme un simple rognage de couche ;
+      //   · l'ADOUCISSEMENT des deux bords est fait par deux bandes en dégradé
+      //     posées par-dessus, qu'on se contente de translater.
+      // Avant, les deux étaient obtenus par un unique `mask-image` en dégradé
+      // sur l'enveloppe épinglée. Un masque de ce type oblige le navigateur à
+      // dessiner TOUT son contenu dans une texture hors écran, puis à lui
+      // appliquer le dégradé, puis à composer le résultat — et ce contenu, c'est
+      // dix-huit encadrés, leurs ombres portées, sept scènes de maquette et
+      // trois vidéos. Cette passe était repayée à chaque re-rastérisation, donc
+      // à chaque image du recul, puisque l'échelle du mur y change en continu.
+      // Le rendu à l'écran est identique.
       if (p > 0 && running) {
-        // Bornes ARRONDIES au pixel, et masque réécrit seulement s'il change
-        // vraiment. Un masque en dégradé sur un conteneur épinglé qui porte des
-        // vidéos et trois maquettes se re-rastérise à chaque réécriture : c'est
-        // du travail de DESSIN, invisible pour un profil de mise en page, et
-        // c'est le coût le plus lourd de la séquence. Au pixel près, deux images
-        // voisines demandent très souvent le même masque.
+        // Bornes ARRONDIES au pixel, et réécriture seulement en cas de vrai
+        // changement : au pixel près, deux images voisines demandent très
+        // souvent la même découpe.
         const haut = Math.round(-pinTopNow);
-        const bas = Math.round(-pinTopNow + Math.min(window.innerHeight, trackTop + track.offsetHeight));
+        const bas = Math.round(-pinTopNow + Math.min(vhNow, trackTop + g.trackH));
         if (haut !== lastMask.haut || bas !== lastMask.bas) {
           lastMask.haut = haut;
           lastMask.bas = bas;
-          const mask = `linear-gradient(to bottom, transparent ${haut}px, #000 ${haut + g.fadeH}px, #000 ${bas - g.fadeH}px, transparent ${bas}px)`;
-          pin.style.setProperty("-webkit-mask-image", mask);
-          pin.style.setProperty("mask-image", mask);
+          // Bornes ramenées dans la boîte : à la toute dernière image, quand
+          // l'épinglage se relâche, `bas` peut dépasser la hauteur de
+          // l'enveloppe d'un ou deux pixels. Une valeur négative rendrait la
+          // déclaration invalide, et la découpe resterait alors bloquée sur la
+          // précédente.
+          const bd = Math.max(0, g.pinH - bas);
+          pin.style.clipPath = `inset(${Math.max(0, haut)}px 0px ${bd}px 0px)`;
+          fadeTop.style.transform = `translate3d(0,${haut}px,0)`;
+          fadeBot.style.transform = `translate3d(0,${bas - g.fadeH}px,0)`;
+        }
+        if (!fondus) {
+          fondus = true;
+          fadeTop.style.opacity = "1";
+          fadeBot.style.opacity = "1";
         }
       } else if (p === 0 && lastMask.haut !== null) {
         lastMask.haut = null;
         lastMask.bas = null;
-        pin.style.removeProperty("-webkit-mask-image");
-        pin.style.removeProperty("mask-image");
+        fondus = false;
+        pin.style.removeProperty("clip-path");
+        fadeTop.style.opacity = "0";
+        fadeBot.style.opacity = "0";
       }
     };
 
@@ -1127,6 +1249,35 @@ export default function UseCases() {
               </div>
             ))}
           </div>
+
+          {/* Fondu des deux bords de la bande visible. Remplace le `mask-image`
+              en dégradé qui était posé sur l'enveloppe : voir le commentaire du
+              moteur. Ces deux bandes sont peintes À PART, elles n'obligent donc
+              jamais le mur à passer par une texture intermédiaire. Le moteur ne
+              leur écrit qu'un `translate3d` et une opacité, deux propriétés que
+              le compositeur traite seul.
+              Le dégradé part de la couleur de fond de la section, EN DUR : un
+              `mask-image` rendait les pixels du mur transparents, donc suivait
+              tout seul n'importe quel fond ; ces bandes, elles, PEIGNENT du
+              blanc / noir opaque par-dessus le mur ET son arrière-plan. C'est
+              donc désormais un INVARIANT À DEUX ENDROITS : `from-white
+              dark:from-black` ici doit rester égal au `bg-white dark:bg-black`
+              de la section `#features` dans App.tsx. Un jour où ce fond change
+              (CLAUDE.md prévoit `#fcfbf7` / `#111827` pour une future passe
+              clair/sombre), ces deux bandes redeviendront visibles comme deux
+              barres blanches/noires si on oublie de les mettre à jour avec. */}
+          <div
+            ref={fadeTopRef}
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden md:block bg-gradient-to-b from-white dark:from-black to-transparent"
+            style={{ opacity: 0 }}
+          />
+          <div
+            ref={fadeBotRef}
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden md:block bg-gradient-to-t from-white dark:from-black to-transparent"
+            style={{ opacity: 0 }}
+          />
         </div>
         {/* Cale-scroll : la distance parcourue pendant que le mur est épinglé.
             Doit rester égale à PULLBACK_VH + SCROLL_VH, soit 0,7 + 1,2 = 1,9
