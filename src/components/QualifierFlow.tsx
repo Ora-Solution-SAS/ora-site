@@ -220,7 +220,7 @@ export default function QualifierFlow({ onComplete }: Props) {
               key={i}
               className={`h-1 rounded-full transition-all duration-300 ${
                 i === step
-                  ? "w-6 bg-gradient-to-r from-[#3b82f6] to-[#0d9488]"
+                  ? "w-6 bg-[#2563eb]"
                   : i < step
                     ? "w-1.5 bg-blue-500/50 dark:bg-blue-400/50"
                     : "w-1.5 bg-gray-200 dark:bg-white/10"
@@ -268,7 +268,7 @@ export default function QualifierFlow({ onComplete }: Props) {
                   <div
                     className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 transition-colors duration-150 ${
                       isSelected
-                        ? "bg-gradient-to-br from-[#3b82f6] to-[#0d9488] text-white"
+                        ? "bg-[#2563eb] text-white"
                         : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20"
                     }`}
                   >

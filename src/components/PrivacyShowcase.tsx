@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
-import { motion, useMotionValue, useInView, animate, useTransform, type MotionValue } from "framer-motion";
-import { Lock, Check, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, Lock, ShieldCheck } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 
 /** Small inline Swiss flag (red rounded square + white cross). */
@@ -15,53 +14,85 @@ function SwissFlag({ className }: { className?: string }) {
 }
 
 /**
- * Privacy section — Joko-style tile grid.
+ * Privacy section — REFONTE sobre et minimaliste (client 2026-08-04, référence
+ * monday.com « Les entreprises nous font confiance ») : un grand titre, puis
+ * trois cartes plates bord fin sur fond uni. Une carte texte qui porte le
+ * détail sécurité avec ses marqueurs réels en pied (RGPD, Suisse, CLOUD Act,
+ * MFA), et deux cartes à grand chiffre.
  *
- *  Three tiles side by side: each holds a blue-gradient visual with one of the
- *  animated security icons (lock / cloud / check) that draws itself in when
- *  the tile scrolls into view — and replays on hover. Under each tile sits a
- *  short title; hovering the tile unfolds its paragraph beneath the title.
+ * Remplace la version « tuiles Joko » : tuiles bleues animées (cadenas, nuage,
+ * coche qui se dessinent), halos radiaux, paragraphes dépliés au survol. Tout
+ * ce théâtre est retiré au profit du calme monday ; seul reste le fade-up
+ * d'entrée, commun à tout le site. L'ancienne version est dans git si besoin.
  *
- *  Mobile (< md): tiles stack and paragraphs are always visible (no hover).
+ * RÈGLE INCHANGÉE (mémoire projet) : aucune preuve fabriquée. Pas de logo
+ * SOC 2 / ISO à la monday puisque ces certifications n'existent pas chez Ora ;
+ * les deux chiffres affichés (0 et 100 %) sont des engagements réels déjà
+ * revendiqués ailleurs sur le site, pas des statistiques inventées.
  */
 
 interface PrivacyShowcaseProps {
   theme: "light" | "dark";
 }
 
-type IconKind = "lock" | "cloud" | "check";
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" },
+} as const;
 
 export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
   const { t } = useLang();
   const dk = theme === "dark";
-  const lockColor = dk ? "#60a5fa" : "#2563eb";
 
-  const features: { kind: IconKind; title: string; desc: string }[] = [
+  const badges = [
     {
-      kind: "lock",
-      title: t({ fr: "En local", en: "On-device" }),
-      desc: t({
-        fr: "Les automatisations s'exécutent localement, sur votre appareil. Le traitement de vos fichiers se fait chez vous, nos serveurs ne servent qu'à stocker vos données chiffrées, jamais à les analyser.",
-        en: "Automations run locally, on your own device. Your files are processed on your side; our servers only store your encrypted data, they never analyze it.",
+      icon: <ShieldCheck className="w-4 h-4 text-emerald-500" />,
+      label: t({ fr: "Conforme RGPD", en: "GDPR compliant" }),
+    },
+    {
+      icon: <SwissFlag className="w-4 h-4" />,
+      label: t({ fr: "Hébergé en Suisse", en: "Hosted in Switzerland" }),
+    },
+    {
+      icon: <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />,
+      label: t({ fr: "Hors CLOUD Act", en: "Outside the CLOUD Act" }),
+    },
+    {
+      icon: <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />,
+      label: t({ fr: "MFA", en: "MFA" }),
+    },
+  ];
+
+  const stats = [
+    {
+      intro: t({
+        fr: "Vos fichiers servent à votre travail, à rien d'autre.",
+        en: "Your files serve your work, nothing else.",
+      }),
+      figure: "0",
+      caption: t({
+        fr: "donnée client utilisée pour entraîner un modèle d'IA",
+        en: "client data point used to train an AI model",
       }),
     },
     {
-      kind: "cloud",
-      title: t({ fr: "Chiffrement", en: "Encryption" }),
-      desc: t({
-        fr: "Vos données métier et financières sont chiffrées directement sur votre appareil, avant tout envoi. Seuls des blobs illisibles quittent votre machine, la clé qui les ouvre ne sort jamais de votre compte.",
-        en: "Your business and financial data is encrypted directly on your device, before anything is sent. Only unreadable blobs leave your machine, and the key that opens them never leaves your account.",
+      intro: t({
+        fr: "Francfort et Genève, hors de portée du CLOUD Act américain.",
+        en: "Frankfurt and Geneva, out of reach of the US CLOUD Act.",
       }),
-    },
-    {
-      kind: "check",
-      title: t({ fr: "En Suisse", en: "In Switzerland" }),
-      desc: t({
-        fr: "Aucun fichier client n'est utilisé pour entraîner des modèles d'IA. Vos données servent uniquement à votre travail. Stockées chiffrées en Suisse, chez un hébergeur conforme au RGPD, hors CLOUD Act américain.",
-        en: "No client file is ever used to train AI models. Your data serves only your work. Stored encrypted in Switzerland, with a GDPR-compliant host, outside the US CLOUD Act.",
+      figure: "100 %",
+      caption: t({
+        fr: "de vos données hébergées en Europe, chiffrées avant l'envoi",
+        en: "of your data hosted in Europe, encrypted before it is sent",
       }),
     },
   ];
+
+  // Cartes plates : fond uni, bord fin, zéro ombre — la sobriété monday.
+  const cardCls = dk
+    ? "rounded-[20px] bg-white/[0.03] ring-1 ring-white/[0.08]"
+    : "rounded-[20px] bg-white ring-1 ring-gray-200/90";
 
   return (
     <section
@@ -70,263 +101,75 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
       className="relative px-6 md:px-12 pt-44 md:pt-64 pb-20 md:pb-28"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
-      {/* Very soft blue ambient glows so the tiles lift off the flat background. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: dk
-            ? "radial-gradient(38% 26% at 24% 32%, rgba(59,130,246,0.14) 0%, transparent 70%), radial-gradient(42% 30% at 78% 60%, rgba(59,130,246,0.11) 0%, transparent 72%)"
-            : "radial-gradient(36% 26% at 22% 30%, rgba(59,130,246,0.10) 0%, transparent 70%), radial-gradient(42% 30% at 80% 58%, rgba(96,165,250,0.08) 0%, transparent 72%)",
-        }}
-      />
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* ── Header ──────────────────────────────────────────────── */}
+      {/* ÉLARGI de 6xl à 7xl (client 2026-08-05 : « pour la partie sécurité à la
+          fin fais en sorte d'agrandir les encadrés »). Les trois cartes gagnent
+          128 px de large à elles trois, et l'intérieur suit : padding, corps de
+          texte et grands chiffres montent d'un cran chacun, sinon les cartes
+          n'auraient fait que s'étirer autour du même contenu. */}
+      <div className="relative max-w-7xl mx-auto">
+        {/* ── Header : gros titre calme, à la monday ─────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
+          {...fadeUp}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center max-w-3xl mx-auto mb-14 md:mb-20"
+          className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
         >
-          <div
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[12px] font-semibold uppercase tracking-[0.12em] mb-6 border"
-            style={{
-              borderColor: dk ? "rgba(59,130,246,0.3)" : "rgba(59,130,246,0.25)",
-              background: dk ? "rgba(59,130,246,0.1)" : "rgba(59,130,246,0.07)",
-              color: lockColor,
-            }}
-          >
-            <Lock className="w-3.5 h-3.5" />
+          <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
             {t({ fr: "Confidentialité", en: "Privacy" })}
-          </div>
-          <h2 className="font-poppins font-semibold text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mb-5">
+          </span>
+          <h2 className="font-poppins font-semibold text-3xl md:text-[3.1rem] tracking-[-0.03em] leading-[1.1] text-[#111827] dark:text-white mt-4">
             {t({ fr: "Vos données vous appartiennent.", en: "Your data belongs to you." })}
           </h2>
-          <p className="font-inter text-base md:text-lg leading-relaxed text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            {t({
-              fr: "Le traitement s'exécute en local, sur votre machine. Avec Atlas, notre solution d'orchestration de fichiers, vos fichiers sont chiffrés sur votre appareil puis hébergés exclusivement en Suisse : sur nos serveurs, ils n'existent que sous forme de données illisibles.",
-              en: "Processing runs locally, on your machine. With Atlas, our file-orchestration solution, your files are encrypted on your device then hosted exclusively in Switzerland: on our servers, they exist only as unreadable data.",
-            })}
-          </p>
         </motion.div>
 
-        {/* ── Joko-style tile row. Flex (not grid) on md+ so the hovered
-            tile can widen while its neighbours slide aside. ─────────── */}
-        <div className="flex flex-col md:flex-row gap-10 md:gap-8 lg:gap-10">
-          {features.map((f, i) => (
-            <PrivacyTile key={f.kind} kind={f.kind} title={f.title} desc={f.desc} dk={dk} index={i} />
-          ))}
-        </div>
+        {/* ── Trois cartes plates : texte sécurité + deux grands chiffres ── */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-[1.35fr_1fr_1fr] gap-5 md:gap-7 items-stretch">
+          <motion.div
+            {...fadeUp}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className={`${cardCls} p-9 md:p-12 flex flex-col md:col-span-2 lg:col-span-1`}
+          >
+            <h3 className="font-poppins font-semibold text-2xl md:text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white">
+              {t({ fr: "Sécurité de bout en bout", en: "End-to-end security" })}
+            </h3>
+            <p className="font-inter mt-5 text-[16px] md:text-[17px] leading-relaxed text-gray-500 dark:text-gray-400">
+              {t({
+                fr: "Le traitement s'exécute en local, sur votre machine. Avec Atlas, notre orchestration de fichiers, vos données sont chiffrées sur votre appareil avant tout envoi : nos serveurs ne stockent que des données illisibles. L'accès est cloisonné par organisation, équipe et utilisateur, refusé par défaut.",
+                en: "Processing runs locally, on your machine. With Atlas, our file orchestration, your data is encrypted on your device before anything is sent: our servers only store unreadable data. Access is isolated per organisation, team and user, denied by default.",
+              })}
+            </p>
+            {/* Marqueurs réels en pied de carte, là où monday pose ses logos. */}
+            <div className="mt-auto pt-10 flex flex-wrap items-center gap-x-6 gap-y-3 font-inter text-[14px] font-medium text-gray-500 dark:text-gray-400">
+              {badges.map((b) => (
+                <span key={b.label} className="inline-flex items-center gap-2">
+                  {b.icon}
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </motion.div>
 
-        {/* ── Trust strip — quick reassurance markers ──────────────────── */}
-        <div className="mt-14 md:mt-20 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 font-inter text-[13px] font-medium text-gray-500 dark:text-gray-400">
-          <span className="inline-flex items-center gap-2">
-            <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            {t({ fr: "Chiffrement de bout en bout", en: "End-to-end encryption" })}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <SwissFlag className="w-4 h-4" />
-            {t({ fr: "Données hébergées en Suisse", en: "Data hosted in Switzerland" })}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            {t({ fr: "Conforme RGPD", en: "GDPR compliant" })}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Check className="w-4 h-4 text-emerald-500" strokeWidth={3} />
-            {t({ fr: "Hors CLOUD Act", en: "Outside the CLOUD Act" })}
-          </span>
+          {stats.map((s, i) => (
+            <motion.div
+              key={s.figure}
+              {...fadeUp}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.08 * (i + 1) }}
+              className={`${cardCls} p-9 md:p-12 flex flex-col items-center text-center`}
+            >
+              <p className="font-inter text-[15px] md:text-[16px] leading-relaxed text-gray-500 dark:text-gray-400">
+                {s.intro}
+              </p>
+              <div className="flex-1 flex items-center py-6">
+                <span className="font-poppins font-semibold text-[4.6rem] md:text-[5.6rem] leading-none tracking-[-0.03em] text-[#111827] dark:text-white">
+                  {s.figure}
+                </span>
+              </div>
+              <p className="font-inter font-semibold text-[15px] md:text-[16px] leading-snug text-[#111827] dark:text-white max-w-[260px]">
+                {s.caption}
+              </p>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  PrivacyTile — blue visual + word + paragraph revealed on hover.
-// ─────────────────────────────────────────────────────────────────────────────
-
-function PrivacyTile({
-  kind,
-  title,
-  desc,
-  dk,
-  index,
-}: {
-  kind: IconKind;
-  title: string;
-  desc: string;
-  dk: boolean;
-  index: number;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-120px" });
-  const lp = useMotionValue(0);
-
-  // Draw the icon in when the tile first scrolls into view…
-  useEffect(() => {
-    if (inView) {
-      const controls = animate(lp, 1, { duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: index * 0.12 });
-      return () => controls.stop();
-    }
-  }, [inView, lp, index]);
-
-  // …and replay the draw-in on hover.
-  const onEnter = () => {
-    lp.set(0);
-    animate(lp, 1, { duration: 0.9, ease: [0.22, 1, 0.36, 1] });
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      // flex-grow animates: the hovered tile widens, neighbours slide aside.
-      className="group md:flex-[1_1_0%] md:hover:flex-[1.35_1_0%] transition-[flex-grow] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] min-w-0"
-      onMouseEnter={onEnter}
-      initial={{ opacity: 0, y: 26 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }}
-    >
-      {/* Visual — brand-blue gradient sky, Joko-style, icon floating center.
-          Fixed height on md+ so widening the tile never changes the row
-          height; colors invert on hover (light face, blue icon). */}
-      <div
-        className="relative aspect-[4/3] md:aspect-auto md:h-[280px] lg:h-[300px] rounded-[24px] overflow-hidden"
-        style={{
-          // Flat solid blue — lightened from the royal #4169E1 swatch
-          // (client request 2026-07-24): brand blue, softer and brighter.
-          background: dk ? "#3566d6" : "#3b82f6",
-        }}
-      >
-        {/* soft top glow, like light coming from above */}
-        <div
-          aria-hidden
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(90% 60% at 50% -10%, rgba(255,255,255,0.14) 0%, transparent 60%)",
-          }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-110">
-          <div className="scale-[1.9] md:scale-[2.1]">
-            <IconStage kind={kind} lp={lp} accent="#ffffff" muted="rgba(255,255,255,0.55)" />
-          </div>
-        </div>
-      </div>
-
-      {/* Word */}
-      <h3 className="mt-5 text-center font-poppins font-semibold text-xl md:text-2xl tracking-[-0.02em] text-[#111827] dark:text-white">
-        {title}
-      </h3>
-
-      {/* Paragraph — folded on desktop, unfolds on hover; always open < md */}
-      <div className="grid grid-rows-[1fr] md:grid-rows-[0fr] md:group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]">
-        <div className="overflow-hidden min-h-0">
-          <p className="pt-2.5 text-center font-inter text-[15px] md:text-base leading-relaxed text-gray-500 dark:text-gray-400 md:opacity-0 md:translate-y-1 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-500">
-            {desc}
-          </p>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-//  IconStage — the three draw-in SVG animations (lock / cloud / check).
-// ─────────────────────────────────────────────────────────────────────────────
-
-function IconStage({
-  kind,
-  lp,
-  accent,
-  muted,
-}: {
-  kind: IconKind;
-  lp: MotionValue<number>;
-  accent: string;
-  muted: string;
-}) {
-  const stroke = 2;
-
-  // ── LOCK: shackle seats down ──
-  const shackleY = useTransform(lp, [0, 1], [-7, 0]);
-  const lockColor = useTransform(lp, [0.55, 1], [muted, accent]);
-  const lockOpacity = useTransform(lp, [0, 0.22], [0, 1]);
-
-  // ── CLOUD: arrives (drifts down + fades in) ──
-  const cloudY = useTransform(lp, [0, 0.85], [-14, 0]);
-  const cloudScale = useTransform(lp, [0, 0.85, 1], [0.85, 1.04, 1]);
-  const cloudOpacity = useTransform(lp, [0, 0.55], [0, 1]);
-
-  // ── CHECK: ring then tick draw in ──
-  const ringOffset = useTransform(lp, [0, 0.65], [1, 0]);
-  const tickOffset = useTransform(lp, [0.55, 1], [1, 0]);
-
-  if (kind === "lock") {
-    return (
-      <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
-        <motion.g transform="translate(24, 26)" style={{ opacity: lockOpacity }}>
-          <motion.path
-            d="M-9 -2 V -9 a9 9 0 0 1 18 0 V -2"
-            stroke={muted}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            style={{ y: shackleY }}
-          />
-          <motion.rect
-            x="-13" y="-2" width="26" height="20" rx="5"
-            fill="none"
-            strokeWidth={stroke}
-            style={{ stroke: lockColor }}
-          />
-          <motion.circle cx="0" cy="8" r="2.2" style={{ fill: lockColor }} />
-        </motion.g>
-      </svg>
-    );
-  }
-
-  if (kind === "cloud") {
-    return (
-      <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
-        <motion.path
-          d="M16 32 a8 8 0 0 1 1 -15.2 a9.5 9.5 0 0 1 18 2.6 a7 7 0 0 1 -1.2 12.6 Z"
-          fill="none"
-          stroke={accent}
-          strokeWidth={stroke}
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          style={{ y: cloudY, scale: cloudScale, opacity: cloudOpacity }}
-        />
-      </svg>
-    );
-  }
-
-  // CHECK
-  return (
-    <svg viewBox="0 0 48 48" className="w-20 h-20 md:w-24 md:h-24 overflow-visible" fill="none" aria-hidden>
-      <motion.circle
-        cx="24" cy="24" r="16"
-        fill="none"
-        stroke={accent}
-        strokeWidth={stroke}
-        pathLength={1}
-        strokeDasharray="1"
-        strokeLinecap="round"
-        transform="rotate(-90 24 24)"
-        style={{ strokeDashoffset: ringOffset }}
-      />
-      <motion.path
-        d="M17 24.5 L22 29.5 L31.5 19"
-        fill="none"
-        stroke={accent}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        pathLength={1}
-        strokeDasharray="1"
-        style={{ strokeDashoffset: tickOffset }}
-      />
-    </svg>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { MockupHome, MockupManager } from "./AtlasMockups";
+import { FileChipStrip } from "./StackingCards";
 import AtlasSimulation from "./atlas-sim";
 import InViewVideo from "./InViewVideo";
 import ScaleToFit from "./ScaleToFit";
@@ -101,11 +102,40 @@ export default function AtlasShowcase() {
         background: isMobile
           ? "radial-gradient(ellipse at 50% 0%, #0a0a0a 0%, #000 55%, #000 100%)"
           : "radial-gradient(ellipse at 50% 0%, #0f1424 0%, #060810 55%, #000 100%)",
-        // Ombre portée au-dessus du bord haut : renforce l'effet "rideau" quand
-        // la section monte par-dessus ExcelReveal épinglé (sticky) en dessous.
-        boxShadow: "0 -36px 72px rgba(2,6,23,0.35)",
+        // ── FLUIDITÉ DE LA REMONTÉE (client 2026-08-05 : « la remontée de la
+        // partie Atlas est un peu buggée, fluidifie-la ») ──────────────────
+        // La section n'est pas animée : elle défile normalement et passe
+        // PAR-DESSUS la pile de cartes épinglées grâce à son `z-20`. C'est donc
+        // au navigateur de la redessiner à chaque image du scroll, et c'était
+        // cher : gradient radial plein écran, halo, cadre, et la simulation
+        // Atlas entière dessous.
+        //   · `translateZ(0)` la promeut en COUCHE de composition. Le
+        //     rideau devient un simple déplacement de couche au lieu d'une
+        //     repeinture, ce qui est exactement le mouvement recherché.
+        //   · `contain: paint` promet au navigateur que rien ne déborde de la
+        //     boîte — vrai, `overflow-hidden` est déjà là — donc il peut élaguer
+        //     tout le dessin hors cadre au lieu de l'évaluer.
+        // L'ombre portée haute, elle, est passée en calque (voir juste après) :
+        // en `box-shadow` de 72 px de flou sur un bloc pleine largeur, elle
+        // était re-floutée à chaque image, et c'était le poste le plus lourd.
+        transform: "translateZ(0)",
+        contain: "paint",
       }}
     >
+      <style>{`
+        @keyframes atlasStar{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        .atlas-star{animation:atlasStar 4.5s ease-in-out infinite;will-change:transform}
+        @media (prefers-reduced-motion:reduce){.atlas-star{animation:none}}
+      `}</style>
+
+      {/* Ombre du bord haut, en dégradé plutôt qu'en `box-shadow` : le rendu à
+          l'écran est le même, mais un dégradé est peint UNE fois dans la couche
+          et se contente ensuite de bouger avec elle. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 md:h-24 -z-0"
+        style={{ background: "linear-gradient(to bottom, rgba(2,6,23,0.42), transparent)" }}
+      />
       {/* Scroll-triggered stagger entrance: each major block fades up
           when the section enters the viewport. `once: true` means the
           animation plays a single time (no replay when scrolling back).
@@ -149,18 +179,15 @@ export default function AtlasShowcase() {
             },
           }}
         >
-          <motion.img
+          {/* Flottement passé de Framer Motion à une ANIMATION CSS : la boucle
+              était infinie, donc un rappel JavaScript à chaque image pendant
+              toute la durée de vie de la page, y compris section hors écran.
+              En CSS, le compositeur la mène seul et la suspend hors écran. */}
+          <img
             src="/logos/star-trail.png"
             alt=""
             aria-hidden
-            className="h-16 md:h-20 w-auto object-contain select-none pointer-events-none"
-            animate={{ y: [0, -6, 0] }}
-            transition={{
-              duration: 4.5,
-              ease: "easeInOut",
-              repeat: Infinity,
-              repeatType: "loop",
-            }}
+            className="atlas-star h-16 md:h-20 w-auto object-contain select-none pointer-events-none"
           />
         </motion.div>
 
@@ -227,24 +254,89 @@ export default function AtlasShowcase() {
           </div>
         </motion.div>
 
-        {/* Explanatory paragraph below the main mockup — gives Atlas more
-            context than the headline alone. */}
+        {/* ── Bloc explicatif — MISE EN PAGE MONDAY (client 2026-08-05 :
+            « améliore le layout de la partie Le dossier complet orchestré et
+            traçable, je trouve ça affreux, prends l'exemple de monday.com »)
+            ────────────────────────────────────────────────────────────────
+            Ma version précédente empilait trois blocs CENTRÉS de largeurs
+            différentes — un titre, une phrase, une rangée de pastilles, puis
+            une grille de trois colonnes — sous une maquette elle aussi centrée.
+            Quatre axes de centrage à la suite, aucune colonne commune : ça ne
+            faisait pas une mise en page, ça faisait un empilement.
+
+            Monday ne centre presque jamais ce genre de bloc. Sa grammaire, ici
+            reprise : DEUX colonnes, tout aligné à gauche sur une même verticale,
+            le discours d'un côté et les preuves de l'autre. La colonne de droite
+            est une LISTE séparée par des filets, pas une grille : trois lignes se
+            lisent de haut en bas, alors que trois colonnes obligent l'œil à
+            repartir à gauche à chaque fois.
+
+            Les pastilles de formats restent (demande du 2026-08-05), mais sous
+            le paragraphe et alignées avec lui, au lieu de flotter au centre. */}
         <motion.div
-          className="max-w-3xl mx-auto mt-16 md:mt-24 text-center"
+          className="mt-20 md:mt-28 grid lg:grid-cols-2 gap-x-16 gap-y-12 items-start text-left"
           variants={fadeInUp}
         >
-          <h3 className="font-poppins font-semibold text-3xl md:text-[2.6rem] tracking-[-0.03em] leading-[1.12] text-white">
-            {t({
-              fr: "Le dossier complet, orchestré et traçable",
-              en: "The whole dossier, orchestrated and traceable",
-            })}
-          </h3>
-          <p className="mt-6 font-inter text-base md:text-lg leading-[1.75] text-gray-200">
-            {t({
-              fr: "Atlas transforme un dossier de deal ou de mission en une carte vivante : chaque fichier est relié à ses sources, ses dérivés et ses livrables. Vous voyez d'un coup d'œil le statut de chaque document, ce qui reste à valider et qui a fait quoi, grâce à un journal d'audit par document. La lignée complète d'un chiffre, de la donnée brute au livrable final, sans jamais quitter Excel.",
-              en: "Atlas turns a deal or engagement dossier into a living map: every file is linked to its sources, its derivatives and its deliverables. See each document's status at a glance, what's still to validate and who did what, with a per-document audit trail. The full lineage of a figure, from raw data to final deliverable, without ever leaving Excel.",
-            })}
-          </p>
+          <div>
+            {/* Titre donné par le client le 2026-08-07. Mesure élargie de 13
+                à 22 caractères et corps plafonné à 3 rem : la phrase est deux
+                fois plus longue que « Le dossier complet, orchestré et
+                traçable » qu'elle remplace, et serait tombée sur six lignes
+                dans l'ancien gabarit. */}
+            <h3 className="font-poppins font-semibold tracking-[-0.03em] leading-[1.08] text-white text-[clamp(1.9rem,3.4vw,3rem)] max-w-[22ch]">
+              {t({
+                fr: "Création de système d'orchestration sur mesure pour votre organisation avec Atlas",
+                en: "Custom orchestration systems built for your organisation, with Atlas",
+              })}
+            </h3>
+            <p className="mt-6 font-inter text-base md:text-lg leading-[1.7] text-gray-300 max-w-[46ch]">
+              {t({
+                fr: "Atlas transforme un dossier de deal ou de mission en une carte vivante, sans jamais quitter Excel.",
+                en: "Atlas turns a deal or engagement dossier into a living map, without ever leaving Excel.",
+              })}
+            </p>
+            <div className="mt-10">
+              <FileChipStrip />
+            </div>
+          </div>
+
+          <div className="lg:pt-2">
+            {[
+              {
+                t: t({ fr: "Chaque fichier relié", en: "Every file linked" }),
+                d: t({
+                  fr: "Un document est rattaché à ses sources, ses dérivés et ses livrables. La lignée complète d'un chiffre, de la donnée brute au livrable final.",
+                  en: "A document is attached to its sources, its derivatives and its deliverables. The full lineage of a figure, from raw data to final deliverable.",
+                }),
+              },
+              {
+                t: t({ fr: "Le statut d'un coup d'œil", en: "Status at a glance" }),
+                d: t({
+                  fr: "Vous voyez où en est chaque document et ce qui reste à valider, sans ouvrir les fichiers un par un.",
+                  en: "See where each document stands and what is still to validate, without opening files one by one.",
+                }),
+              },
+              {
+                t: t({ fr: "Un journal par document", en: "A log per document" }),
+                d: t({
+                  fr: "Qui a fait quoi, et quand. Chaque document porte son propre journal d'audit, consultable à tout moment.",
+                  en: "Who did what, and when. Every document carries its own audit trail, available at any time.",
+                }),
+              },
+            ].map((c, i) => (
+              <div
+                key={c.t}
+                className={`py-7 first:pt-0 ${i > 0 ? "border-t border-white/[0.12]" : ""}`}
+              >
+                <h4 className="font-poppins font-semibold text-[18px] md:text-[19px] tracking-[-0.01em] text-white">
+                  {c.t}
+                </h4>
+                <p className="mt-2.5 font-inter text-[15px] md:text-base leading-relaxed text-gray-400 max-w-[52ch]">
+                  {c.d}
+                </p>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Démo complète (ora-1.mp4) — déplacée ici depuis le bas de la

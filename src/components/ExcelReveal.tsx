@@ -49,18 +49,53 @@ import { useLang } from "@/lib/i18n";
 // 1,83 : légèrement au-dessus des 1,71 du dernier réglage jamais critiqué côté
 // recouvrement, mais c'est le compromis qui corrige la position sans revenir
 // au 0,50/8,5vh d'origine.
-const FOCUS = 0.46; //   viewport fraction where the frontier sits
+// PORTÉE de 0,46 à 0,52 puis à 0,58 (client 2026-08-05, deux passes de suite :
+// « un tout petit peu plus bas pour qu'elle soit plus centrée », puis « baisse
+// l'emplacement d'apparition, il faut qu'elle soit plus bas »). Sur un écran de
+// 900 px la transition floue→nette se joue désormais entre 508 et 535 px, soit
+// 56-59 % de la hauteur : sous la ligne médiane, dans le bas du champ de
+// lecture. Le prix est mécanique et il est payé : la zone nette (FOCUS × vh)
+// monte à 522 px, donc plus de matière nette cohabite à l'écran. C'est pour ça
+// que `marginBottom` passe à 12vh plus bas — sans quoi, avec des phrases
+// désormais plus petites (donc plus courtes en hauteur), on serait remonté vers
+// trois phrases nettes en même temps.
+const FOCUS = 0.58; //   viewport fraction where the frontier sits
 // Hyper-sensitive to scroll: a TIGHT transition band (~one line of reading
 // distance) so the reveal edge is crisp and each letter flips blurred→sharp
 // with only a few px of scroll — the sweep tracks the finger letter by letter.
-const BAND = 0.085; //   height of the sharp→blurred transition band
-const BLUR_MAX = 11; //  px on unread letters (lighter = cheaper to repaint)
+// RESSERRÉE de 0,085 à 0,05 puis à 0,03 (client 2026-08-05 : « plus rapide »,
+// puis « que la sensibilité d'affichage des lettres par rapport au scroll soit
+// plus forte »). C'est LE levier de sensibilité : la bande est la distance de
+// scroll sur laquelle un mot passe de flou à net. Elle est tombée de 76 px à
+// 45 px puis à 27 px. En dessous de ça la révélation cesserait d'être un
+// dégradé pour devenir un interrupteur, mot par mot.
+const BAND = 0.03; //    height of the sharp→blurred transition band
+// ══ LISSAGE (client 2026-08-05 : « essaye que l'affichage des phrases soit
+// beaucoup plus smooth ») ═════════════════════════════════════════════════
+// La saccade ne venait PAS de la bande. Elle venait de trois choses, corrigées
+// ensemble ici et plus bas ; garder la bande étroite était la contrainte, la
+// demande précédente étant justement de la resserrer.
+//
+// 1. LE BALAYAGE PAR PAQUETS. Un mot devient net selon sa position dans l'ordre
+//    de LECTURE : `colShift` avance la frontière pour les mots de droite, d'une
+//    fraction de la hauteur de ligne. À ±0,5 hauteur de ligne, l'étalement d'une
+//    ligne entière (~50 px) était du même ordre que la bande (27 px) : tous les
+//    mots d'une ligne basculaient donc quasiment ensemble, par blocs. En étalant
+//    2,4 fois plus, une ligne met bien plus qu'une bande à se révéler, et les
+//    mots se déclenchent l'un après l'autre. C'est ÇA qui donne le glissement
+//    continu — sans toucher à la sensibilité de chaque mot pris isolément.
+const COL_SPREAD = 2.4;
+// 2. LE FLOU TROP FORT. 11 px sur un mot de 4,4rem, c'est une tache : l'œil ne
+//    suit pas une forme qui se reforme, il voit apparaître un mot. Plus c'est
+//    lourd, plus la rastérisation coûte cher aussi, à chaque image et sur
+//    chaque mot dans la bande.
+const BLUR_MAX = 7.5;
 const OP_MIN = 0.08; //  faintest opacity (upcoming text barely ghosted)
 const RISE_EM = 0.12; // unread letters sit slightly low and rise into place
 
 type Unit = { el: HTMLElement; yInSec: number; colShift: number; lastB: number; lastO: number };
 
-type Phrase = { text: string; gradient: string[] };
+type Phrase = { text: string };
 
 export default function ExcelReveal() {
   const { t } = useLang();
@@ -73,7 +108,6 @@ export default function ExcelReveal() {
         fr: "Votre temps est votre actif le plus précieux.",
         en: "Your time is your most valuable asset.",
       }),
-      gradient: ["temps", "time"],
     },
     {
       text: t({
@@ -82,21 +116,50 @@ export default function ExcelReveal() {
       }),
       // Highlight the manual TASK verbs — the action the accountant does by
       // hand is more telling than the file format.
-      gradient: ["ressaisir", "retraiter", "rapprocher", "re-key", "rework", "reconcile"],
+    },
+    // ── LE VIRAGE VERS LE CONSEIL (client 2026-08-07) ────────────────────
+    // Deux phrases là où il y en avait une. La séquence disait « on
+    // automatise, donc vous conseillez » ; le client veut que le POURQUOI
+    // soit dit, et il tient en une phrase : la production seule ne suffit
+    // plus à justifier les honoraires.
+    //
+    // Écrites sans chiffre ni promesse de gain : ni « x heures par mois », ni
+    // « + n % de marge ». Le constat du marché est une observation partagée
+    // par la profession, pas une statistique qu'Ora aurait produite — et le
+    // site ne s'autorise que ce qu'il peut tenir.
+    {
+      text: t({
+        fr: "La production seule ne suffit plus. Ce que vos clients attendent aujourd'hui, c'est le regard que vous portez sur leurs chiffres.",
+        en: "Production alone is no longer enough. What your clients want today is the reading you bring to their numbers.",
+      }),
     },
     {
       text: t({
-        fr: "On automatise cette chaîne de bout en bout, de la ressaisie au livrable, pour que vous consacriez votre expertise au conseil.",
-        en: "We automate that chain end to end, from data entry to deliverable, so your expertise goes to advisory.",
+        fr: "On automatise cette chaîne de bout en bout, de la ressaisie au livrable. Le cabinet produit plus vite, et votre expertise part là où elle crée de la valeur : le conseil.",
+        en: "We automate that chain end to end, from data entry to deliverable. The firm produces faster, and your expertise goes where it creates value: advisory.",
       }),
-      gradient: ["expertise", "conseil", "advisory"],
     },
+    // ── Deux phrases NOUVELLES (client 2026-08-04) : c'est ICI que le site
+    // casse l'argument « j'upload dans un chatbot ». Frontal sur la CATÉGORIE
+    // (IA générative), jamais sur une marque : décision client, le manifeste
+    // noir est le seul endroit frontal du site avec la FAQ, les cartes de
+    // vente restent obliques (voir la mémoire llm-differentiation-stance).
     {
       text: t({
-        fr: "Nous accompagnons les cabinets d'expertise comptable et d'audit. Gain de temps, confidentialité, meilleure organisation.",
-        en: "We work with accounting and audit firms. Time saved, confidentiality, better organisation.",
+        fr: "Là où une IA générative improvise, Ora calcule. Même fichier, même livrable, vérifiable ligne à ligne.",
+        en: "Where generative AI improvises, Ora computes. Same file, same deliverable, verifiable line by line.",
       }),
-      gradient: ["temps", "confidentialité", "organisation", "time", "confidentiality"],
+    },
+    // « Conforme au RGPD » : auto-déclaration standard, déjà revendiquée sur le
+    // site. Pour l'AI Act, « pensée pour » et jamais « conforme » : le cœur
+    // d'Ora est déterministe, donc hors du champ des systèmes d'IA du
+    // règlement, et aucune certification AI Act n'existe à revendiquer.
+    // Formulation validée par le client (2026-08-04).
+    {
+      text: t({
+        fr: "Vos données restent chez vous. Une solution européenne, conforme au RGPD, pensée pour l'AI Act.",
+        en: "Your data stays with you. A European solution, GDPR compliant, designed with the AI Act in mind.",
+      }),
     },
   ];
 
@@ -131,7 +194,7 @@ export default function ExcelReveal() {
         return {
           el,
           yInSec: r.top - secTop + r.height / 2,
-          colShift: (colP - 0.5) * lineH,
+          colShift: (colP - 0.5) * lineH * COL_SPREAD,
           lastB: -1,
           lastO: -1,
         };
@@ -155,16 +218,26 @@ export default function ExcelReveal() {
           const pEff = (secTop + u.yInSec + u.colShift) / vh;
           let x = (pEff - lo) / BAND;
           x = x < 0 ? 0 : x > 1 ? 1 : x;
-          const e = x * x * (3 - 2 * x); // smoothstep — buttery ramp
-          const bQ = Math.round(e * BLUR_MAX * 4) / 4; // 0.25px steps
-          const oQ = Math.round((1 - e * (1 - OP_MIN)) * 50) / 50; // 0.02 steps
+          // 3. LA MARCHE D'ESCALIER, les deux derniers points du lissage.
+          //    · SMOOTHERSTEP (6x⁵-15x⁴+10x³) au lieu de smoothstep : sa
+          //      dérivée SECONDE s'annule aussi aux deux bouts, donc le mot ne
+          //      démarre ni ne s'arrête par un à-coup. Avec une bande de 27 px,
+          //      soit trois ou quatre images de scroll, ce détail se voyait.
+          //    · QUANTIFICATION cinq fois plus fine : le flou avançait par
+          //      paliers de 0,25 px et l'opacité par paliers de 0,02, hérités
+          //      d'une bande trois fois plus large où ils passaient inaperçus.
+          //      Ramenés à 0,05 px et 0,005. Le garde-fou anti-réécriture reste
+          //      en place, il laisse simplement passer les vraies nuances.
+          const e = x * x * x * (x * (x * 6 - 15) + 10); // smootherstep
+          const bQ = Math.round(e * BLUR_MAX * 20) / 20; // 0.05px steps
+          const oQ = Math.round((1 - e * (1 - OP_MIN)) * 200) / 200; // 0.005 steps
           if (bQ === u.lastB && oQ === u.lastO) continue; // nothing to do
           u.lastB = bQ;
           u.lastO = oQ;
           const s = u.el.style;
-          s.filter = bQ < 0.06 ? "" : `blur(${bQ}px)`;
+          s.filter = bQ < 0.03 ? "" : `blur(${bQ}px)`;
           s.opacity = oQ >= 0.999 ? "" : String(oQ);
-          s.transform = e < 0.01 ? "" : `translateY(${(e * RISE_EM).toFixed(3)}em)`;
+          s.transform = e < 0.005 ? "" : `translateY(${(e * RISE_EM).toFixed(3)}em)`;
         }
       }
       if (active) raf = requestAnimationFrame(frame);
@@ -213,12 +286,23 @@ export default function ExcelReveal() {
      cascade (colShift per word) still sweeps word after word left→right, which
      at this font size reads as a continuous reveal — and matches how Bending
      Spoons blurs (by word/region, not per glyph). */
+  /* PHRASES tout blanc (client 2026-08-05, référence Bending Spoons fournie en
+     capture) : les mots-clés portaient `text-brand-gradient`, donc un bleu
+     plein, dans quatre phrases sur six. Chez Bending Spoons il n'y a aucun
+     accent de couleur — le seul relief du manifeste est la frontière de
+     netteté qui balaie le texte, et un mot bleu ajoutait un troisième signal
+     qui la diluait. Les listes `gradient` sont supprimées avec.
+     SEULE EXCEPTION, rétablie dans la foulée (même jour, message suivant :
+     « que la couleur bleue soit sur le mot Ora à la fin, juste sur ce mot-là
+     comme c'était avant ») : le tout dernier mot de la section. Là il ne
+     concurrence plus rien, il SIGNE. D'où le paramètre `blue`, réservé à ce
+     seul appel — ne pas le rouvrir aux phrases. */
   const wordStyle = { marginRight: "0.26em", willChange: "opacity, filter, transform" } as const;
-  const renderWord = (w: string, isGrad: boolean, key: number) => (
+  const renderWord = (w: string, key: number, blue = false) => (
     <span
       key={key}
       ref={collect}
-      className={`inline-block whitespace-nowrap ${isGrad ? "text-brand-gradient" : ""}`}
+      className={`inline-block whitespace-nowrap${blue ? " text-brand-gradient" : ""}`}
       style={wordStyle}
     >
       {w}
@@ -249,37 +333,45 @@ export default function ExcelReveal() {
           section met du temps à démarrer. */}
       <div className="px-6 md:px-[5.5vw] pt-[13vh] pb-[11vh]">
         {phrases.map((phrase, pi) => {
-          const grad = phrase.gradient.map((g) => g.toLowerCase());
           return (
             <p
               key={pi}
               className="font-instrument font-normal text-white text-left text-balance"
               style={{
-                fontSize: "clamp(2.1rem, 4.4vw, 5rem)",
-                lineHeight: 1.1,
-                letterSpacing: "-0.035em",
+                // Descendue de 5rem à 3,9rem (« des lettres moins grandes »),
+                // puis REMONTÉE à 4,4rem (client 2026-08-05, capture Bending
+                // Spoons à l'appui : « légèrement plus grande »). Atterrissage
+                // à mi-chemin de l'ancien réglage, ce qui est bien la taille
+                // de la référence : chez eux une phrase occupe deux ou trois
+                // lignes pleine largeur, pas plus.
+                fontSize: "clamp(1.95rem, 3.95vw, 4.4rem)",
+                lineHeight: 1.12,
+                // DESSERRÉ de -0,035 à -0,028em : à cette taille, un
+                // interlettrage aussi serré redensifie le mot et le fait paraître
+                // plus GRAS. Desserrer est, avec le lissage ci-dessous, ce qui
+                // affine réellement la police.
+                letterSpacing: "-0.028em",
+                // « Une police plus fine » : Instrument Sans s'arrête à 400, qui
+                // est DÉJÀ la graisse posée ici, il n'existe pas de 300 à
+                // demander. Le vrai levier sur un fond noir est le lissage : par
+                // défaut macOS rend le texte clair sur fond sombre en
+                // subpixel, ce qui l'ÉPAISSIT visiblement. En antialiased, les
+                // mêmes glyphes retrouvent leur graisse dessinée.
+                WebkitFontSmoothing: "antialiased",
+                MozOsxFontSmoothing: "grayscale",
                 // Balance the wrapped lines so no lone word is left on the last
                 // line (a widow) — complete, even lines read much better.
                 textWrap: "balance",
-                // Tighter spacing = the next phrase reaches the reveal line
-                // after much less scrolling (client: "plus rapide").
-                // REDONNÉ de 3,5 à 4,5vh (client 2026-08-04, quatrième passe :
-                // « les phrases sont trop haute et quand l'on scroll on ne les
-                // voit plus s'animé »). Le vrai coupable était FOCUS (voir son
-                // commentaire), mais un pas trop serré aggravait le ratio de
-                // recouvrement une fois FOCUS remonté à 0,46 : redonner un peu
-                // de marge ici le ramène à 1,83 au lieu de 2,20. La distance
-                // totale à parcourir dans la section (1280x900, DOM réel) passe
-                // donc de 1043 à 1079 px : encore 16 % de moins que le tout
-                // premier réglage (1286 px), contre 19 % à l'étape précédente —
-                // un léger compromis pour corriger la position de la netteté.
-                marginBottom: "4.5vh",
+                // PORTÉ de 4,5 à 9vh (client 2026-08-04), puis à 12vh
+                // (2026-08-05) : les phrases ayant rapetissé, leur bloc de texte
+                // occupe moins de hauteur, donc le PAS entre deux phrases s'est
+                // resserré tout seul. Sans compensation, et avec FOCUS remonté à
+                // 0,58, on serait passé de moins de deux phrases nettes à
+                // presque trois. À 12vh le pas revient vers 245 px.
+                marginBottom: "12vh",
               }}
             >
-              {phrase.text.split(" ").map((w, wi) => {
-                const clean = w.replace(/[.,;:!?]/g, "").toLowerCase();
-                return renderWord(w, grad.includes(clean), wi);
-              })}
+              {phrase.text.split(" ").map((w, wi) => renderWord(w, wi))}
             </p>
           );
         })}
@@ -288,10 +380,18 @@ export default function ExcelReveal() {
             word-by-word LAST, like the phrases (no pinned panel). */}
         <p
           className="font-instrument font-normal text-white text-left"
-          style={{ fontSize: "clamp(2.6rem, 6vw, 6.5rem)", lineHeight: 1.05, letterSpacing: "-0.04em", marginBottom: 0 }}
+          style={{
+            // Suit la même trajectoire que les phrases, ratio conservé.
+            fontSize: "clamp(2.4rem, 5.4vw, 5.7rem)",
+            lineHeight: 1.05,
+            letterSpacing: "-0.032em",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+            marginBottom: 0,
+          }}
         >
-          {renderWord(t({ fr: "Découvrez", en: "Meet" }), false, 90)}
-          {renderWord("Ora.", true, 91)}
+          {renderWord(t({ fr: "Découvrez", en: "Meet" }), 90)}
+          {renderWord("Ora.", 91, true)}
         </p>
       </div>
     </section>

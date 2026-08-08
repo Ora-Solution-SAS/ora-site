@@ -27,11 +27,17 @@ import StackingCards, { FileChipStrip } from "./components/StackingCards";
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
 import PrivacyShowcase from "./components/PrivacyShowcase";
+import ControlShowcase from "./components/ControlShowcase";
 import ExcelReveal from "./components/ExcelReveal";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 // import ProblemSection from "./components/ProblemSection"; // masqué pour l'instant
-import UseCases from "./components/UseCases";
+// UseCases (encadrés classiques + mur de dézoom) REMPLACÉ le 2026-08-06 par
+// UseCasesBento, le clone de la grille bento stripe.com en pervenche (décision
+// client : « remplace la partie ancienne, les encadrés classiques ne rendent
+// pas très bien »). Le fichier UseCases.tsx reste dans le dépôt, prêt à être
+// réimporté ici si on revient en arrière.
+import UseCasesBento from "./components/UseCasesBento";
 import FAQ from "./components/FAQ";
 // === Subtle "bubble" animation for HOW IT WORKS steps ===
 const bubbleStyles = `
@@ -532,8 +538,12 @@ import {
 // Example: "raphael-gaugain/discovery-call"
 const CAL_LINK = "raphael-gaugain-cfjl0b/discovery-call";
 
-// Direct booking / contact email shown as an alternative to the calendar.
-const BOOKING_EMAIL = "raphael.gaugain@ora-solution.com";
+// Adresse affichée en alternative au calendrier. Passée à la boîte générique le
+// 2026-08-03 sur demande du client : c'est celle qu'il relève, et elle est déjà
+// annoncée à douze autres endroits du site. Une adresse nominative sur un bouton
+// de prise de rendez-vous fait perdre des prospects sans que personne ne s'en
+// aperçoive, le jour où elle n'est plus relevée.
+const BOOKING_EMAIL = "contact@ora-solution.com";
 
 // === Scroll Fade-In Wrapper ===
 type FadeInOnScrollProps = {
@@ -666,10 +676,16 @@ const App = () => {
 
   // Smooth scroll with inertia (Lenis)
   useEffect(() => {
+    // Réglage 2026-08-06 (client : « sur tout le site le scroll vers le bas
+    // doit être plus fluide ») : lerp 0,15 → 0,18, la page suit la molette de
+    // plus près, et wheelMultiplier 1,0 → 1,2, chaque cran parcourt 20 % de
+    // distance en plus. Les sections épinglées (hero, mur des cas d'usage,
+    // cartes empilées) se traversent d'autant plus vite sans toucher à leurs
+    // chorégraphies.
     const lenis = new Lenis({
-      lerp: 0.15,
+      lerp: 0.18,
       smoothWheel: true,
-      wheelMultiplier: 1.0,
+      wheelMultiplier: 1.2,
       touchMultiplier: 1.5,
     });
     (window as any).__lenis = lenis;
@@ -1024,7 +1040,7 @@ const App = () => {
           séparés par une ligne franche : ce n'était pas une transition mais une
           couture entre deux blocs de couleurs différentes. Les deux basculent
           désormais ensemble, donc l'écran entier passe du blanc au noir. */}
-      {/* `pt-[36vh]` : les phrases sont descendues (client 2026-08-03 : « un peu
+      {/* `pt-[50vh]` : les phrases sont descendues (client 2026-08-03 : « un peu
           plus bas, pour qu'on voie l'animation d'arrivée de chaque lettre »).
           Ce coussin remplit DEUX rôles, et c'est le second qui a motivé cette
           valeur :
@@ -1039,15 +1055,44 @@ const App = () => {
                noir s'installe d'abord, puis le texte monte depuis le bas de l'écran
                et traverse la frontière lettre par lettre, sous les yeux du lecteur.
           Cela réintroduit sciemment une partie de l'espace retiré plus tôt, mais
-          cet espace est NOIR et non blanc : il ne se lit plus comme un vide. */}
-      <div data-hero-bg className="relative bg-black pt-[36vh]">
+          cet espace est NOIR et non blanc : il ne se lit plus comme un vide.
+
+          PORTÉ de 36 à 50vh le 2026-08-05 (client : « fais en sorte que
+          l'utilisateur voie le défilement de la phrase Votre temps est votre
+          actif le plus précieux »). C'est la dette du point 1 ci-dessus, que je
+          n'avais pas honorée : FOCUS est passé de 0,46 à 0,58 dans ExcelReveal
+          en deux temps, sans revérifier ici. Monter FOCUS descend la frontière
+          dans l'écran, donc un mot devient net PLUS TÔT dans le scroll — et la
+          première phrase franchissait la frontière alors que le fond n'avait pas
+          fini de basculer. Du blanc sur du blanc : elle n'était visible qu'une
+          fois déjà nette, sa révélation passait à la trappe.
+          Le coussin doit croître d'au moins autant que FOCUS, soit +12vh ; 50vh
+          rétablit en plus la marge de sécurité d'origine. Si FOCUS rebouge,
+          rebouger cette valeur du même écart. */}
+      <div data-hero-bg className="relative bg-black pt-[50vh]">
         <ExcelReveal />
       </div>
 
       {/* FEATURES — use-cases. Flows right after the black reveal (which ends
           on « Découvrez Ora »); generous top padding gives « Concrètement, ce
           qu'Ora peut automatiser » plenty of breathing room. */}
-      <section id="features" className="relative pt-[22vh] md:pt-[26vh] pb-0 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
+      {/* FOND CLAIR À #f5f7fd, un blanc très légèrement bleuté fourni en capture
+          par le client le 2026-08-07 (« applique la couleur du screen pour le
+          background global du site pour cette partie »).
+
+          ⚠ EXCEPTION ASSUMÉE À CLAUDE.md, qui réserve les fonds de section
+          clairs à #fcfbf7 et #ffffff. Elle est CIRCONSCRITE à cette section,
+          comme l'est déjà le noir permanent de la section des phrases juste
+          au-dessus. Ce qui la justifie : les six cartes de la grille sont
+          BLANCHES, et sur un fond blanc elles ne se détachaient que par leur
+          liseré. Un fond à peine teinté leur rend un bord sans qu'aucune n'ait
+          à s'assombrir.
+
+          Le blanc chaud de la charte (#fcfbf7) ne convenait pas ici : la
+          section est entièrement bleue, une base jaunie l'aurait fait virer au
+          sale. Les variantes sombres ne bougent pas — le noir de cette section
+          enchaîne sur celui de la révélation qui la précède. */}
+      <section id="features" className="relative pt-[22vh] md:pt-[26vh] pb-0 px-6 md:px-12 bg-[#f5f7fd] dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1074,11 +1119,11 @@ const App = () => {
               "linear-gradient(to bottom, transparent 0, transparent 360px, #000 620px, #000 calc(100% - 200px), transparent 100%)",
           }}
         />
-        {/* Use cases — Bending-Spoons-style blue cards showing concretely
-            what Ora automates (FEC Studio, monthly reporting), with the real
-            demo clips. Placed right above the "coûte plus que du temps"
-            problem section. */}
-        <UseCases />
+        {/* Use cases — grille bento clonée sur stripe.com, en pervenche
+            (UseCasesBento). Défilement normal : le mur de dézoom est parti
+            avec l'ancien composant UseCases. `openBooking` alimente le CTA
+            du panneau de présentation (la flèche de la carte FEC). */}
+        <UseCasesBento openBooking={openBooking} />
 
         {/* Problem — « Votre Excel vous coûte plus que du temps » : masqué
             pour l'instant (à replacer ailleurs / en FAQ plus tard). Réactiver :
@@ -1171,6 +1216,19 @@ const App = () => {
       {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
           3 trust cards. See PrivacyShowcase.tsx. */}
       <PrivacyShowcase theme={theme} />
+
+      {/* ── CONTRÔLE TOTAL ───────────────────────────────────────────── */}
+      {/* Réplique de la section monday.com du même nom, capture fournie : grand
+          titre à gauche, six entrées sur trois colonnes, ni cartes ni aplats.
+          DÉPLACÉE ici le 2026-08-05, juste sous « Vos données vous
+          appartiennent » (elle était après la FAQ). Les deux sections disent la
+          même chose sous deux formes, l'une en trois cartes chiffrées, l'autre
+          en six colonnes de texte : les coller met le développement au contact
+          de son titre, au lieu de le renvoyer en fin de page après une FAQ qui
+          coupait le fil. C'est aussi pour ça que ControlShowcase porte
+          désormais le MÊME fond que PrivacyShowcase, blanc pur ou noir pur : les
+          deux doivent se lire comme une seule surface, sans couture. */}
+      <ControlShowcase theme={theme} />
 
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
       <FAQ />
@@ -1336,14 +1394,23 @@ const App = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-5">
                 {/* LEFT — Brand panel (copy adapts across all 3 phases) */}
-                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] to-[#0d9488] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
+                {/* Dégradé BLEU et non plus bleu vers teal (client 2026-08-03 :
+                    « supprimer les couleurs verte sur le côté pour un beau bleu »).
+                    Le dégradé de marque va de #3b82f6 à #0d9488 : sur un panneau
+                    large et haut comme celui-ci, son tiers inférieur virait
+                    franchement au vert. Il reste légitime sur un trait ou un
+                    bouton, où la course est trop courte pour que le teal
+                    apparaisse, mais pas sur un aplat de cette taille.
+                    Trois bleus successifs plutôt qu'un aplat : le panneau garde
+                    du relief sans sortir de la teinte. */}
+                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
                   <div>
                     <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
                     <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
                       {bookingPhase === "qualifier"
                         ? t({ fr: "Préparons votre appel.", en: "Let's prep your call." })
                         : bookingPhase === "result"
-                          ? t({ fr: "Votre estimation.", en: "Your estimate." })
+                          ? t({ fr: "Votre chiffre.", en: "Your figure." })
                           : bookingPhase === "gift"
                             ? t({ fr: "Un cadeau pour démarrer.", en: "A gift to get started." })
                             : t({ fr: "Choisissez votre créneau", en: "Pick your time slot" })}
@@ -1351,13 +1418,18 @@ const App = () => {
                     <p className="mt-3 text-white/75 text-sm leading-relaxed">
                       {bookingPhase === "qualifier"
                         ? t({
-                            fr: "3 questions rapides, et on vous prépare un audit et une démo d'automatisation offerts, adaptés à votre métier.",
-                            en: "3 quick questions, and we'll prepare a free audit and an automation demo tailored to your field.",
+                            // « 4 » et non « 3 » : le questionnaire en compte
+                            // quatre (canal, secteur, tâche, heures), et le
+                            // repère à droite affichait bien « étape 1 / 4 ».
+                            // Annoncer moins d'étapes qu'il n'y en a se paie à la
+                            // troisième, quand le lecteur se croyait au bout.
+                            fr: "4 questions rapides, et on arrive à l'appel avec un plan adapté à votre métier.",
+                            en: "4 quick questions, and we'll arrive at the call with a plan tailored to your field.",
                           })
                         : bookingPhase === "result"
                           ? t({
-                              fr: "Voici ce que cette tâche coûte à votre équipe chaque année, et ce qu'Ora pourrait changer.",
-                              en: "Here's what this task costs your team every year, and what Ora could change.",
+                              fr: "Votre propre chiffre, ramené à l'année. À vous de juger s'il vaut une demi-heure.",
+                              en: "Your own figure, brought to the year. Yours to judge whether it's worth half an hour.",
                             })
                           : bookingPhase === "gift"
                             ? t({

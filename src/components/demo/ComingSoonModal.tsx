@@ -14,9 +14,10 @@ import { useLang } from "@/lib/i18n";
  * La cible porte son DÉCALAGE HORAIRE (+02:00, heure d'été de Paris) : sans lui,
  * la chaîne serait lue dans le fuseau du visiteur et le compte à rebours
  * afficherait une autre heure d'un pays à l'autre.
- * Vérifié : le 7 août 2026 est bien un vendredi.
+ * Vérifié : le 10 août 2026 est bien un lundi (ouverture repoussée du 7 au
+ * 10 par le client le 2026-08-07).
  */
-const OUVERTURE = new Date("2026-08-07T10:00:00+02:00");
+const OUVERTURE = new Date("2026-08-10T10:00:00+02:00");
 
 /** Décompose l'écart restant. Jamais négatif : passé la date, tout est à zéro. */
 function reste(cible: Date) {
@@ -106,8 +107,8 @@ export default function ComingSoonModal({ onClose }: { onClose: () => void }) {
 
           <p className="mt-3 font-inter text-[14.5px] leading-relaxed text-gray-600 dark:text-gray-300">
             {t({
-              fr: "La web app qui réplique notre logiciel, pour vous permettre de tester l'automatisation sur vos propres fichiers sans téléchargement, sera disponible ce vendredi 7 août à 10 h 00.",
-              en: "The web app that mirrors our software, so you can test the automation on your own files without downloading anything, opens this Friday, 7 August at 10:00.",
+              fr: "La web app qui réplique notre logiciel, pour vous permettre de tester l'automatisation sur vos propres fichiers sans téléchargement, sera disponible lundi 10 août à 10 h 00.",
+              en: "The web app that mirrors our software, so you can test the automation on your own files without downloading anything, opens on Monday, 10 August at 10:00.",
             })}
           </p>
 

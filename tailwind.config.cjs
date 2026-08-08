@@ -24,6 +24,11 @@ module.exports = {
                 poppins: ["Poppins", "sans-serif"],
                 inter: ["Inter", "sans-serif"],
                 instrument: ["Instrument Sans", "Inter", "sans-serif"],
+                // Figtree = la fonte de marque de monday.com (client 2026-08-08).
+                // Repli sur Poppins et non sur Inter : c'est la plus proche des
+                // deux, géométrique et ronde comme elle, donc la carte garde son
+                // caractère si le webfont manque.
+                figtree: ["Figtree", "Poppins", "sans-serif"],
                 sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
             },
             animation: {
