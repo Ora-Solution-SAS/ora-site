@@ -27,12 +27,33 @@ import { useLang } from "@/lib/i18n";
 
 const W = 1180, H = 720;
 
-/** Liste « Reprendre » — fichiers de la capture client. */
+/** Liste « Reprendre » — fichiers de la capture client. Ramenée de quatre à
+ *  DEUX entrées le 2026-08-07 : l'accès rapide passe à deux rangs, et la scène
+ *  garde sa hauteur de 720 px. Ce sont les deux premières de la capture. */
 const FILES: { name: string; meta: string; kind: "xlsx" | "txt"; state: "run" | "todo" }[] = [
   { name: "01_grand_livre_client_a_nettoyer", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "run" },
   { name: "demo_petit_5k_2024_N_studio (2)", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "todo" },
-  { name: "FEC_demo_petit_5k_2024_N", meta: "TXT · il y a 7 h", kind: "txt", state: "todo" },
-  { name: "FEC_demo_2024_398k_lignes (2)", meta: "XLSX · 20 juil.", kind: "xlsx", state: "todo" },
+];
+
+/** ACCÈS RAPIDE — les MODULES RÉELS du logiciel, relevés un par un sur la
+ *  capture de l'application fournie le 2026-08-07 (« intègre deux ou trois
+ *  features issues du screen : prévisionnel, bilan développé, changement de
+ *  structure »).
+ *
+ *  La scène n'en montrait que trois, dont deux qui ne sont pas des modules
+ *  métier (« Tous les Atlas », « Ora Engineering ») : elle donnait donc à voir
+ *  un logiciel sans fonctions. Ces six-là sont les six premières vignettes de
+ *  l'écran d'accueil réel, libellés et sous-titres compris. Rien d'inventé.
+ *
+ *  ⚠ Ce tableau alimente AUSSI le hero de la page d'accueil, qui monte la même
+ *  scène. C'est voulu : les deux endroits montrent le même logiciel. */
+const QUICK: { title: string; sub: { fr: string; en: string }; tone: string; icon: "bank" | "swap" | "scale" | "pie" | "gauge" | "plus" }[] = [
+  { title: "Prévisionnel immobilier", sub: { fr: "Dossier banque en 5 min", en: "Bank file in 5 min" }, tone: "emerald", icon: "bank" },
+  { title: "Changement de structure", sub: { fr: "Comparatif avant / après", en: "Before / after comparison" }, tone: "amber", icon: "swap" },
+  { title: "Évaluation d'entreprise", sub: { fr: "Cinq approches combinées", en: "Five combined approaches" }, tone: "rose", icon: "scale" },
+  { title: "Bilan développé", sub: { fr: "Le bilan en un coup d'œil", en: "The balance sheet, detailed" }, tone: "violet", icon: "pie" },
+  { title: "Suivi budgétaire", sub: { fr: "Réalisé contre budget", en: "Actual versus budget" }, tone: "blue", icon: "gauge" },
+  { title: "Nouveau projet", sub: { fr: "Deal PE, audit, M&A...", en: "PE deal, audit, M&A..." }, tone: "blue", icon: "plus" },
 ];
 
 const OA_CSS = `
@@ -104,8 +125,14 @@ const OA_CSS = `
 .oa-qcard .ic.blue{background:linear-gradient(135deg,#e8f0ff,#d7e5ff);color:#2f6ff0}
 .oa-qcard .ic.violet{background:linear-gradient(135deg,#f0ecfe,#e5dcfd);color:#7c53e8}
 .oa-qcard .ic.amber{background:linear-gradient(135deg,#fef3e2,#fde7c8);color:#d97a06}
-.oa-qcard b{display:block;font-size:13px;font-weight:700;color:#111827}
-.oa-qcard span{display:block;margin-top:2px;font-size:11px;color:#8b909b}
+.oa-qcard .ic.emerald{background:linear-gradient(135deg,#e6f7ee,#d3f0e0);color:#12855a}
+.oa-qcard .ic.rose{background:linear-gradient(135deg,#fdeaee,#fbd9e0);color:#d6416a}
+/* Coupe à l'ellipse, comme l'application : « Changement de structure » y est
+   rendu « Changement de struct... » sur la capture du client. */
+.oa-qcard b{display:block;font-size:13px;font-weight:700;color:#111827;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oa-qcard span{display:block;margin-top:2px;font-size:11px;color:#8b909b;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oa-qcard .arw{margin-left:auto;color:#c3c6cd;flex-shrink:0}
 
 /* REPRENDRE */
@@ -213,6 +240,16 @@ const OA_CSS = `
 .oa-flow{position:absolute;z-index:4;left:-8px;top:222px;width:288px;height:2px;
   background:repeating-linear-gradient(90deg,#b9c7de 0 7px,transparent 7px 13px)}
 
+/* ── Variante ROGNÉE (carte de la grille bento) ──
+   Hors du hero, la scène n'a plus de marge à sa gauche : la pastille entrante,
+   qui déborde de 216 px, sortirait de la carte et se ferait trancher net. Elle
+   est donc RAMENÉE SUR la barre latérale — elle y flotte au-dessus du logiciel
+   au lieu d'être posée à côté, ce qui est la même lecture. Le trait pointillé
+   raccourcit d'autant pour continuer de relier la pastille à la carte
+   « Ouvrir un fichier », dont le bord gauche est à 280 px. */
+.oa-crop .oa-chip.in{right:calc(100% - 196px)}
+.oa-crop .oa-flow{left:152px;width:128px}
+
 @media (prefers-reduced-motion:reduce){
   .oa-armed .oa-chip,.oa-armed .oa-flow{opacity:1}
   .oa-in .oa-chip,.oa-in .oa-flow,.oa-in .oa-chip .oa-fl{animation:none}}
@@ -249,8 +286,46 @@ const IcoCheck = ({ s = 16 }: { s?: number }) => (
 const IcoChart = ({ s = 16 }: { s?: number }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
 );
+/* Icônes des modules réels, calquées sur celles de l'application. */
+const IcoBank = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-5 9 5" /><path d="M5 9v8M10 9v8M14 9v8M19 9v8" /><path d="M3 20h18" /></svg>
+);
+const IcoSwap = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 8h13l-3-3" /><path d="M20 16H7l3 3" /></svg>
+);
+const IcoScale = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4v16M7 20h10" /><path d="M4 8h16" /><path d="m4 8-2.5 5a3 3 0 0 0 5 0z" /><path d="m20 8-2.5 5a3 3 0 0 0 5 0z" /></svg>
+);
+const IcoPie = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12A9 9 0 1 1 12 3v9z" /><path d="M15.5 3.6A9 9 0 0 1 20.4 8.5L12 12z" /></svg>
+);
+const IcoGauge = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="m15 9-4 4" /></svg>
+);
+const QUICK_ICON = { bank: IcoBank, swap: IcoSwap, scale: IcoScale, pie: IcoPie, gauge: IcoGauge, plus: IcoPlus } as const;
 
-export default function OraAppScene({ playing = true }: { playing?: boolean }) {
+type SceneProps = {
+  playing?: boolean;
+  /** ÉCHELLE FIXE au lieu de « faire tenir dans le cadre » (client 2026-08-07 :
+   *  « répliquer le design du logiciel du haut de la page dans l'encadré, avec
+   *  exactement la même netteté »).
+   *
+   *  C'est LE point de la demande, et il tient en une phrase : la netteté ne
+   *  vient pas du rendu, elle vient de l'échelle. La scène est composée à
+   *  1180×720 avec des corps de texte réels (13 à 29 px) ; la faire tenir dans
+   *  une carte de 840 px la ramène à 0,58, soit du 7,5 px à l'écran — flou par
+   *  construction. À l'échelle 1 les mêmes 13 px restent 13 px, et c'est la
+   *  CARTE qui rogne ce qui dépasse, comme la fenêtre débordante de Stripe.
+   *
+   *  Non renseigné : comportement d'origine, la scène tient entière. */
+  cropScale?: number;
+  /** Pastilles flottantes à garder. Rognée, la scène n'a plus de place à
+   *  droite : les trois livrables sortants tomberaient hors carte, seule
+   *  l'entrée reste visible. */
+  chips?: "all" | "in" | "none";
+};
+
+export default function OraAppScene({ playing = true, cropScale, chips: chipMode = "all" }: SceneProps) {
   const { t } = useLang();
   const mediaRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -259,6 +334,15 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
     const media = mediaRef.current, stage = stageRef.current;
     if (!media || !stage) return;
     const fit = () => {
+      if (cropScale) {
+        // Calée à GAUCHE et non centrée : c'est le flanc gauche du logiciel
+        // (barre latérale, accueil, grande carte bleue) qui doit rester à
+        // l'écran, le reste sort par la droite de la carte.
+        stage.style.left = "0";
+        stage.style.transformOrigin = "top left";
+        stage.style.transform = `scale(${cropScale})`;
+        return;
+      }
       const s = Math.min(media.clientWidth / W, media.clientHeight / H);
       stage.style.transform = `translateX(-50%) scale(${s})`;
     };
@@ -266,7 +350,7 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
     ro.observe(media);
     fit();
     return () => ro.disconnect();
-  }, []);
+  }, [cropScale]);
 
   // ── Les pastilles fuient légèrement le curseur ───────────────────────────
   useEffect(() => {
@@ -328,7 +412,10 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
   return (
     <>
       <style>{OA_CSS}</style>
-      <div className={`oa-media oa-armed${playing ? " oa-in" : ""}`} ref={mediaRef}>
+      <div
+        className={`oa-media oa-armed${playing ? " oa-in" : ""}${cropScale ? " oa-crop" : ""}`}
+        ref={mediaRef}
+      >
         <div className="oa-stage" ref={stageRef}>
           <div className="oa-win">
             {/* Barre de titre macOS */}
@@ -388,30 +475,19 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
                   {/* ACCÈS RAPIDE */}
                   <div className="oa-sec">{t({ fr: "ACCÈS RAPIDE", en: "QUICK ACCESS" })}</div>
                   <div className="oa-quick">
-                    <div className="oa-qcard">
-                      <span className="ic blue"><IcoPlus /></span>
-                      <div>
-                        <b>{t({ fr: "Nouveau projet", en: "New project" })}</b>
-                        <span>Deal PE, audit, M&amp;A...</span>
-                      </div>
-                      <span className="arw"><IcoArrow s={15} /></span>
-                    </div>
-                    <div className="oa-qcard">
-                      <span className="ic violet"><IcoGlobe /></span>
-                      <div>
-                        <b>{t({ fr: "Tous les Atlas", en: "All Atlas" })}</b>
-                        <span>{t({ fr: "Liste de vos projets", en: "Your projects" })}</span>
-                      </div>
-                      <span className="arw"><IcoArrow s={15} /></span>
-                    </div>
-                    <div className="oa-qcard">
-                      <span className="ic amber"><IcoSparkle /></span>
-                      <div>
-                        <b>Ora Engineering</b>
-                        <span>{t({ fr: "Automatisation sur-mesure", en: "Custom automation" })}</span>
-                      </div>
-                      <span className="arw"><IcoArrow s={15} /></span>
-                    </div>
+                    {QUICK.map((q) => {
+                      const Ico = QUICK_ICON[q.icon];
+                      return (
+                        <div className="oa-qcard" key={q.title}>
+                          <span className={`ic ${q.tone}`}><Ico /></span>
+                          <div style={{ minWidth: 0 }}>
+                            <b>{q.title}</b>
+                            <span>{t(q.sub)}</span>
+                          </div>
+                          <span className="arw"><IcoArrow s={15} /></span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* REPRENDRE */}
@@ -437,7 +513,8 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
           </div>
 
           {/* ══ L'histoire : un Excel entre, des livrables sortent ══ */}
-          <div className="oa-flow" />
+          {chipMode !== "none" && <div className="oa-flow" />}
+          {chipMode !== "none" && (
           <div className="oa-chip in">
             <span className="oa-fl" style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="ic x"><IcoDoc s={19} /></span>
@@ -447,6 +524,9 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
               </span>
             </span>
           </div>
+          )}
+          {chipMode === "all" && (
+          <>
           <div className="oa-chip out1">
             <span className="oa-fl" style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="ic blue"><IcoChart s={19} /></span>
@@ -474,6 +554,8 @@ export default function OraAppScene({ playing = true }: { playing?: boolean }) {
               </span>
             </span>
           </div>
+          </>
+          )}
         </div>
       </div>
     </>

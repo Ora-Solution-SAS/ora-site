@@ -1,8 +1,17 @@
 import { ChevronDown, FileSpreadsheet, MoveRight, Play, Plus, Search, Send, Star, TriangleAlert } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { useEnterOnScroll } from "@/lib/useEnterOnScroll";
-import SurMesureMockup from "./SurMesureMockup";
+// ⚠ SurMesureMockup N'EST PLUS IMPORTÉ, et ce n'est pas un oubli. Le client a
+// demandé le 2026-08-08, après avoir validé le panneau-tableau de la carte
+// précédente : « fais la même chose pour la carte d'après, mais en noir, pour
+// voir ce que ça donne ». C'est donc un ESSAI, et le composant reste dans le
+// dépôt, intact, avec sa chorégraphie d'entrée en trois temps. Y revenir tient
+// en deux lignes : remettre l'import et rendre <SurMesureMockup /> à la place du
+// <AppTablePanel variant="surmesure" tone="dark" /> plus bas. L'import est retiré
+// et non commenté parce que `noUnusedLocals` est actif dans tsconfig.app.json.
 import LocalSecurityMockup from "./LocalSecurityMockup";
+import OraHomeMockup from "./OraHomeMockup";
+import AppTablePanel from "./AppTablePanel";
 
 /**
  * StackingCards — three product cards restyled after monday.com's AI cards
@@ -21,7 +30,7 @@ import LocalSecurityMockup from "./LocalSecurityMockup";
  * rises over it.
  */
 
-type Card = { tag: string; title: string; desc: string; video: string; visual?: "atlas" | "sur-mesure" | "local" };
+type Card = { tag: string; title: string; desc: string; video: string; visual?: "atlas" | "home" | "sur-mesure" | "local" | "livrable" };
 
 
 
@@ -288,16 +297,48 @@ export function FileChipStrip({ withOrigin = false }: { withOrigin?: boolean }) 
   );
 }
 
-// One pastel blue per card (client request: keep the "different blues"): as
-// each card fully covers the previous one, the change of shade signals the
-// new card. Full literal strings so Tailwind's JIT can extract them.
+// NEUTRAL LIGHT GREY, from the monday.com reference the client sent on
+// 2026-08-07 ("fais en sorte que la couleur des encadrés soit celle du screen").
+// The three pastel blues are gone.
+//
+// The three values stay MINUTELY different on purpose. Each card fully covers
+// the previous one as it stacks, and it was the change of shade that signalled
+// a new card had arrived; making all three identical would have made the
+// transition invisible — a regression nobody asked for. The difference is a
+// couple of points of luminance, far below "another colour".
+//
+// ⚠ INTENSIFIED 2026-08-08 ("intensifie le gris des encadrés, comme le
+// screen"): the first pass undershot the reference — every stop landed within
+// a handful of points of pure white (#fafafb to #eeeef1), which reads as
+// "barely tinted white" rather than the visibly grey card in the monday.com
+// reference. The client then supplied a flat grey SWATCH as the target, which
+// measures around #f1f2f4.
+//
+// ⚠ TROIS PASSES SUR CE GRIS, ET LA BONNE EST LA MOYENNE DES DEUX RATÉES.
+// Le barème, pour ne pas recommencer :
+//   · départ  #fafafb → #eeeef1 — « pas assez intense », moyenne rgb(247,247,249)
+//   · passe 1 #f1f2f4 → #dfe1e5 — trop foncé, l'échantillon servait de point de
+//     DÉPART et tout descendait sous lui
+//   · passe 2 #f2f3f5 → #e4e6ea — « le gris est trop foncé là » (2026-08-08),
+//     moyenne rgb(236,237,240), encore un cran sous la cible
+//   · passe 3, celle-ci — l'échantillon #f1f2f4 devient la valeur MÉDIANE et non
+//     l'extrême : le haut s'éclaircit au-dessus de lui, le pied descend à peine
+//     en dessous. Moyenne rgb(241,242,244), soit pile l'échantillon.
+//
+// LA LEÇON : sur un dégradé, viser une couleur cible veut dire la mettre AU
+// MILIEU. La poser à une extrémité déplace toute la surface d'un côté, et c'est
+// la moyenne, pas le premier arrêt, que l'œil lit comme « le gris de la carte ».
+//
+// The same MINUTE per-card offsets are preserved so the stacking cue holds.
+// Dark mode is untouched — it already reads as grey there.
+// Full literal strings so Tailwind's JIT can extract them.
 const CARD_BGS = [
-  // Card 0 — azure
-  "bg-gradient-to-br from-[#eef5ff] via-[#ddebfe] to-[#c6dcf9] dark:from-[#0c1830] dark:via-[#0f1d3a] dark:to-[#14264a]",
-  // Card 1 — periwinkle
-  "bg-gradient-to-br from-[#eef1ff] via-[#dfe4fd] to-[#c5cffa] dark:from-[#0d162e] dark:via-[#131d3f] dark:to-[#1b2a58]",
-  // Card 2 — cyan
-  "bg-gradient-to-br from-[#f0faff] via-[#def3fe] to-[#c6e9fb] dark:from-[#0a1a2e] dark:via-[#0e2340] dark:to-[#143152]",
+  // Card 0
+  "bg-gradient-to-br from-[#f6f7f8] via-[#f1f2f4] to-[#eaebee] dark:from-[#15171c] dark:via-[#131519] dark:to-[#101216]",
+  // Card 1
+  "bg-gradient-to-br from-[#f4f5f7] via-[#eff0f2] to-[#e8e9ec] dark:from-[#16181d] dark:via-[#14161a] dark:to-[#111317]",
+  // Card 2
+  "bg-gradient-to-br from-[#f7f8f9] via-[#f2f3f5] to-[#ebeced] dark:from-[#14161b] dark:via-[#121419] dark:to-[#0f1115]",
 ];
 
 export default function StackingCards() {
@@ -305,14 +346,36 @@ export default function StackingCards() {
 
   const cards: Card[] = [
     {
-      tag: t({ fr: "Automatisation", en: "Automation" }),
-      title: t({ fr: "Automatisez ce qui vous fait perdre du temps", en: "Automate what's eating your time" }),
+      // Repositionnée (client 2026-08-04) : l'ancien message « Automatisez ce
+      // qui vous fait perdre du temps » était le seul des trois qu'un chatbot
+      // généraliste pouvait revendiquer aussi. La carte porte désormais la
+      // fiabilité du chiffré, SANS nommer l'IA générative : l'objection
+      // frontale (« pourquoi pas ChatGPT ? ») est traitée dans la FAQ.
+      tag: t({ fr: "Fiabilité & rapidité", en: "Reliability & speed" }),
+      title: t({ fr: "Des chiffres exacts, les mêmes à chaque exécution", en: "Exact numbers, the same on every run" }),
       desc: t({
-        fr: "Vos tâches Excel répétitives, exécutées en un clic. Concentrez-vous sur l'analyse, plus sur la saisie.",
-        en: "Your repetitive Excel tasks, executed in one click. Focus on analysis, not data entry.",
+        fr: "Ora ne devine pas : des règles de calcul déterministes produisent votre livrable, contrôlable ligne à ligne. Même fichier en entrée, même résultat en sortie. Vous savez exactement ce que vous signez.",
+        en: "Ora doesn't guess: deterministic calculation rules produce your deliverable, checkable line by line. Same file in, same result out. You know exactly what you sign.",
       }),
       video: "/ora_story3-v2.mp4",
-      visual: "atlas",
+      // L'ÉCRAN « BILAN DÉVELOPPÉ ET SIG », ÉTAPE DOSSIER (client 2026-08-08 :
+      // « réplique le 3e screen et mets-le à la place du design dans cet
+      // encadré »), soit BilanDossierMockup.
+      //
+      // ⚠ IL REMPLACE DownloadShowcase, le panneau de la page de
+      // téléchargement, qui occupait la place depuis le 2026-08-07. Ce dernier
+      // n'est pas supprimé : il reste le hero de sa propre page, sa destination
+      // d'origine, et c'est là qu'il continue de vivre. Seul son emprunt ici
+      // prend fin.
+      //
+      // La réplique sert mieux le propos de la carte, et c'est la raison de
+      // fond de l'échange : la carte promet des chiffres exacts et
+      // reproductibles, or cet écran MONTRE les chiffres et leur relecture,
+      // là où le panneau emprunté ne montrait qu'une demande et un livrable.
+      //
+      // OraHomeMockup, qui occupait la place avant lui, reste branché sur le
+      // type "home", comme AtlasListMockup sur "atlas".
+      visual: "livrable",
     },
     {
       tag: t({ fr: "Sur-mesure", en: "Tailored" }),
@@ -324,18 +387,19 @@ export default function StackingCards() {
       video: "/ora_story4-v2.mp4",
       visual: "sur-mesure",
     },
-    {
-      tag: t({ fr: "Local & sécurisé", en: "Local & secure" }),
-      title: t({ fr: "Vos données restent chez vous", en: "Your data stays with you" }),
-      desc: t({
-        // Précision client 2026-07-28 : l'hébergement suisse ne concerne QUE
-        // Atlas (l'orchestration de fichiers) ; le reste ne quitte pas le poste.
-        fr: "Le traitement s'exécute en local, sur votre machine, rien ne quitte votre poste. Et si vous adoptez Atlas, notre solution d'orchestration de fichiers, vos fichiers sont chiffrés sur votre appareil avant tout envoi, puis hébergés exclusivement en Suisse, illisibles sur nos serveurs.",
-        en: "Processing runs locally, on your machine, nothing leaves your computer. And if you adopt Atlas, our file-orchestration solution, your files are encrypted on your device before anything is sent, then hosted exclusively in Switzerland, unreadable on our servers.",
-      }),
-      video: "/feature-secure.mp4",
-      visual: "local",
-    },
+    // ⚠ LA CARTE « LOCAL & SÉCURISÉ » A ÉTÉ RETIRÉE le 2026-08-08 (client :
+    // « enlève la dernière carte, celle-ci »). La section n'en compte donc plus
+    // que deux.
+    //
+    // Le PROPOS n'est pas perdu pour autant, et c'est ce qui rend le retrait sans
+    // risque : la promesse locale est déjà portée trois fois ailleurs sur la page
+    // (la section « Confidentialité », la section « Contrôle total » et sa tuile
+    // « Traitement en local », plus la coche « Traitement 100 % local » sur chaque
+    // fiche de cas d'usage). Elle était ici la quatrième redite.
+    //
+    // Son visuel LocalSecurityMockup reste dans le dépôt, intact, et le type
+    // "local" reste dans l'union `Card["visual"]` avec sa branche de rendu : la
+    // remettre tient en une entrée de ce tableau.
   ];
 
   return (
@@ -373,10 +437,37 @@ function StackCard({ card: c, index: i }: { card: Card; index: number }) {
             <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-blue-600 dark:text-blue-400">
               {c.tag}
             </span>
-            <h3 className="font-poppins font-semibold text-[1.9rem] md:text-[2.4rem] lg:text-[2.7rem] leading-[1.08] tracking-[-0.03em] text-[#111827] dark:text-white mt-3 max-w-md">
+            {/* ── FIGTREE, LA FONTE DE monday.com, 2026-08-08 ───────────────
+                Client : « reprends la même police que le deuxième screen »,
+                c'est-à-dire la carte monday « Utilisez votre propre agent ».
+
+                ⚠ C'EST LA TROISIÈME TENTATIVE SUR CETTE MÊME RÉFÉRENCE, et les
+                deux premières se sont trompées de méthode plutôt que de degré :
+                Poppins medium (jugé pas assez fin), puis Instrument Sans normal
+                (2026-08-04). Les deux CHOISISSAIENT une fonte du site en
+                espérant tomber juste. Or monday.com ne compose pas dans l'une
+                des nôtres : sa fonte de marque est FIGTREE, plus large et plus
+                ronde qu'Instrument Sans, qui est un grotesque resserré. Aucun
+                réglage de graisse ne fait passer l'un pour l'autre — d'où
+                l'ajout de la vraie fonte plutôt qu'un quatrième essai.
+
+                ⚠ PORTÉE VOLONTAIREMENT LIMITÉE AUX TROIS CARTES. Instrument Sans
+                est la face d'AFFICHAGE DE TOUT LE SITE (hero, page de
+                téléchargement, phrases ExcelReveal, et le heading « Automatisez
+                de bout en bout » juste au-dessus de ces cartes). La demande porte
+                sur « les encadrés », comme la demande de gris qui l'accompagne :
+                le titre de section reste donc en Instrument Sans, en unité avec
+                le hero. Élargir aurait rhabillé la moitié du site pour une
+                consigne qui parlait de trois cartes.
+
+                Le paragraphe passe en Figtree avec le titre : sur la carte de
+                référence, titre et corps sont de la même famille. Exception
+                assumée à la règle Poppins de CLAUDE.md, comme l'était déjà
+                Instrument Sans ici. */}
+            <h3 className="font-figtree font-normal text-[1.9rem] md:text-[2.4rem] lg:text-[2.7rem] leading-[1.08] tracking-[-0.025em] text-[#111827] dark:text-white mt-3 max-w-md">
               {c.title}
             </h3>
-            <p className="font-inter mt-5 text-[15.5px] md:text-[17px] leading-relaxed text-gray-600 dark:text-gray-300 max-w-md">
+            <p className="font-figtree mt-5 text-[15.5px] md:text-[17px] leading-relaxed text-gray-600 dark:text-gray-300 max-w-md">
               {c.desc}
             </p>
           </div>
@@ -384,21 +475,36 @@ function StackCard({ card: c, index: i }: { card: Card; index: number }) {
           {/* Product visual — floating rounded panel, like monday's mockups.
               Card 1 shows the Atlas replica (lagging in on scroll); the
               others keep their demo clip. */}
-          {/* The Sur-mesure composition is sized by its aspect-ratio against
-              the row height, so widening the grid column alone does nothing:
-              it bleeds into the card padding instead (top/bottom/right) to
-              gain real estate. The Atlas panel keeps its margins — it is a
-              floating card and would look broken flush to the edges. */}
+          {/* The Local composition is sized by its aspect-ratio against the row
+              height, so widening the grid column alone does nothing: it bleeds
+              into the card padding instead (top/bottom/right) to gain real
+              estate. The Atlas panel keeps its margins — it is a floating card
+              and would look broken flush to the edges.
+              ⚠ « sur-mesure » A QUITTÉ CETTE LISTE le 2026-08-08 avec le passage
+              au panneau-tableau : le débord n'avait de sens que pour la
+              composition qu'il remplace, dimensionnée par son ratio. Un panneau
+              flottant collé aux bords de la carte se lirait comme rogné. */}
           <div
             className={`flex items-center lg:items-stretch${
-              c.visual === "sur-mesure" || c.visual === "local" ? " lg:-my-10 lg:-mr-10" : ""
+              c.visual === "local" ? " lg:-my-10 lg:-mr-10" : ""
             }`}
           >
-            {c.visual === "atlas" ? (
+            {c.visual === "livrable" ? (
+              // Le panneau-tableau REMPLIT la colonne, sans la borne de largeur
+              // qu'avait le panneau carré qu'il remplace : la centrer dans 480 px
+              // l'aurait rendu illisible.
+              <AppTablePanel variant="bilan" />
+            ) : c.visual === "atlas" ? (
               <AtlasListMockup />
+            ) : c.visual === "home" ? (
+              <OraHomeMockup />
             ) : c.visual === "sur-mesure" ? (
-              // Orchestrates its own staged entrance (see SurMesureMockup).
-              <SurMesureMockup />
+              // ESSAI DU 2026-08-08 : le même panneau-tableau que la carte
+              // précédente, en NOIR (« fais la même chose pour la carte d'après,
+              // mais en noir, pour voir ce que ça donne »). Il remplace
+              // SurMesureMockup, qui reste dans le dépôt — voir le pavé sur son
+              // import retiré, en tête de fichier.
+              <AppTablePanel variant="surmesure" tone="dark" />
             ) : c.visual === "local" ? (
               <LocalSecurityMockup />
             ) : (

@@ -25,11 +25,43 @@ const BASE = process.argv[2] || 'http://localhost:5180';
 const SHOTS = path.join(__dirname, 'temporary screenshots');
 if (!fs.existsSync(SHOTS)) fs.mkdirSync(SHOTS, { recursive: true });
 
+// `bg` doit rester la copie EXACTE du `bg` de la carte dans UseCases.tsx : le
+// poster est recomposé dessus. Valeurs alignées sur la palette du 2026-08-05
+// (voir le pavé « PALETTE DU MUR » dans UseCases.tsx).
+//
+// ÉTENDU AUX SEPT cartes à maquette (2026-08-05). Il n'y en avait que quatre :
+// « Reporting mensuel », « Pointage de comptes » et « Formatage » se rabattaient
+// sur un still de leur VIDÉO DE DÉMO, qui ne montre pas du tout la même chose
+// que la maquette affichée sur la carte, et dont le fond est celui du clip et
+// non celui de la carte. Le mur affichait donc, pendant le dézoom, un visuel
+// pour un autre. C'est réglé : chaque poster est maintenant une image de SA
+// PROPRE maquette, recomposée sur SA couleur de carte.
+// Essai « bento Stripe » du 2026-08-06 (itération 2) : toutes les cartes sont
+// BLANCHES, les posters se recomposent donc sur blanc. (Le canvas accepte
+// n'importe quelle valeur CSS de `background`, dégradés compris, si une
+// itération future remet de la couleur.)
+const CARD_BG = '#ffffff';
 const CARDS = [
-  { key: 'previsionnel', media: '.pv-media', bg: '#1e3a8a', labels: ['.pv-head', '.pv-kpi .val'] },
-  { key: 'evaluation', media: '.ev-media', bg: '#d7efe9', labels: ['.ev-head .h', '.ev-val'] },
-  { key: 'crm', media: '.cm-media', bg: '#e3e9fc', labels: ['.cm-conn .t', '.cm-tally .t1'] },
-  { key: 'organisation', media: '.og-media', bg: '#0d9488', labels: ['.og-client .t', '.og-tally .t1'] },
+  // `labels` VIDE pour ces trois-là : l'audit de la passe 2 ne vaut que pour les
+  // « libellés porteurs », ces mots de 40 px et plus dessinés exprès pour rester
+  // lisibles une fois la scène réduite sur mobile. Ces trois maquettes-ci n'en
+  // ont pas : elles racontent par la composition, tout leur texte est de la
+  // texture. Y pointer un texte d'interface produit un échec qui ne veut rien
+  // dire, puisqu'il n'a jamais été prévu pour être lu à cette échelle.
+  { key: 'reporting', media: '.rm-media', bg: CARD_BG, labels: [] },
+  { key: 'pointage', media: '.pm-media', bg: CARD_BG, labels: [] },
+  { key: 'formatage', media: '.fm-media', bg: CARD_BG, labels: [] },
+  // Listes RECALÉES le 2026-08-05 sur ce qui existe encore. Plusieurs libellés
+  // porteurs ont disparu des maquettes lors des épurations successives (les
+  // pastilles « Connecté au CRM » et « 4 affaires importées » de CrmMockup ont
+  // été retirées le 2026-08-04, par exemple), et leurs sélecteurs pointaient
+  // depuis dans le vide. Le script les signalait comme illisibles — en réalité
+  // ils n'existaient plus. Une liste vide veut dire : cette maquette n'a pas de
+  // libellé porteur, elle raconte par la composition.
+  { key: 'previsionnel', media: '.pv-media', bg: CARD_BG, labels: ['.pv-val'] },
+  { key: 'evaluation', media: '.ev-media', bg: CARD_BG, labels: ['.ev-val'] },
+  { key: 'crm', media: '.cm-media', bg: CARD_BG, labels: [] },
+  { key: 'organisation', media: '.og-media', bg: CARD_BG, labels: ['.og-client .t'] },
 ];
 
 const POSTER_W = 1664, POSTER_H = 936;
@@ -112,13 +144,22 @@ try {
     const report = await page.evaluate((sel, labels) => {
       const stage = document.querySelector(sel).querySelector('[class$="-stage"], [class*="-stage"]');
       const scale = new DOMMatrixReadOnly(getComputedStyle(stage).transform).a;
+      // Un sélecteur qui ne matche rien est une ERREUR DE CONFIG, pas un échec
+      // de lisibilité : il est signalé comme tel au lieu de faire planter le
+      // script sur un `getComputedStyle(null)`.
       return labels.map((l) => {
         const el = document.querySelector(l);
+        if (!el) return { label: l, missing: true };
         const fs = parseFloat(getComputedStyle(el).fontSize);
         return { label: l, stagePx: fs, screenPx: +(fs * scale).toFixed(1), scale: +scale.toFixed(3) };
       });
     }, card.media, card.labels);
     for (const r of report) {
+      if (r.missing) {
+        failed = true;
+        console.log(`✗ ${card.key} ${r.label}: sélecteur introuvable`);
+        continue;
+      }
       const ok = r.screenPx >= 11;
       if (!ok) failed = true;
       console.log(`${ok ? '✓' : '✗'} ${card.key} ${r.label}: ${r.stagePx}px × ${r.scale} = ${r.screenPx}px on screen`);

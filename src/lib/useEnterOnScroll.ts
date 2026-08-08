@@ -60,12 +60,46 @@ export function useEnterOnScroll<T extends HTMLElement>() {
     // déclenchement. Deux garde-fous couvrent ce cas : une mesure DIRECTE au
     // retour au premier plan, et une autre au redimensionnement. Le
     // déclenchement reste donc fiable, sans le coût par événement.
+    //
+    // INTERRUPTEUR D'ACTIVITÉ (2026-08-05, client : « fluidifie le scroll dans
+    // la partie des encadrés, c'est encore un peu bugué »). Le throttle en rAF
+    // ci-dessus avait plafonné le coût à une lecture par image et par instance,
+    // mais ce coût était payé EN PERMANENCE : dix instances vivantes sur la
+    // page, donc dix `getBoundingClientRect` — dix recalculs de mise en page
+    // forcés — à chaque image de chaque défilement, y compris quand la section
+    // est à des milliers de pixels de l'écran et qu'aucune de ces animations
+    // n'a la moindre chance de se déclencher.
+    //
+    // Un IntersectionObserver sert ici d'INTERRUPTEUR, et surtout PAS d'oracle :
+    // la décision de jouer l'entrée reste prise par `measure()`, sur la
+    // géométrie réelle, pour les raisons expliquées en tête de ce fichier. L'IO
+    // ne fait que dire « cet élément est assez près pour que ça vaille la peine
+    // de mesurer ». La marge le réveille avant que ça compte, donc il est
+    // toujours actif au moment où la décision se joue.
+    //
+    // MARGE RAMENÉE DE 150 À 40 % le 2026-08-07 (« fluidifie le scroll »). À
+    // 150 %, un élément se déclarait vivant trois écrans avant d'être visible,
+    // et le hook a une dizaine d'instances sur la page : la moitié d'entre
+    // elles lisaient donc `getBoundingClientRect` à chaque image, ce qui force
+    // un recalcul de style. À 40 % la décision se prend toujours largement à
+    // temps — l'entrée se joue à 95 % de la hauteur d'écran — mais deux ou
+    // trois instances mesurent au lieu de cinq ou six.
     let rafId = 0;
+    let live = false;
     const onScroll = () => {
-      if (rafId) return;
+      if (!live || rafId) return;
       rafId = requestAnimationFrame(() => { rafId = 0; measure(); });
     };
-    const onVisible = () => { if (!document.hidden) measure(); };
+    const onVisible = () => { if (!document.hidden && live) measure(); };
+
+    const io = new IntersectionObserver(
+      ([e]) => {
+        live = e.isIntersecting;
+        if (live) measure();
+      },
+      { rootMargin: "40% 0px 40% 0px" },
+    );
+    io.observe(el);
 
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -73,6 +107,7 @@ export function useEnterOnScroll<T extends HTMLElement>() {
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
+      io.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", measure);
       document.removeEventListener("visibilitychange", onVisible);

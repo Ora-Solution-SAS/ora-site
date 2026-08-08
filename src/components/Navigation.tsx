@@ -204,7 +204,18 @@ const Navigation: React.FC<NavigationProps> = ({
     >
       {/* Bandeau plus large et logo calé à gauche (monday.com) : plus de
           max-w-7xl centré qui décollait le logo du bord. */}
-      <nav className="max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 h-[68px]">
+      {/* POPPINS SUR TOUTE LA NAV (client 2026-08-06 : « réplique la même police
+          que le screen de monday.com », capture de leur barre de navigation).
+          Mesuré sur monday.com plutôt que supposé : leur `body` est en
+          `Poppins, Arial, sans-serif` et leurs liens de nav sont en Poppins 400
+          à 16 px. La nôtre était en Inter — c'était LA différence visible entre
+          la capture et le site, la famille de titres étant déjà la bonne
+          partout ailleurs.
+          Exception assumée à la règle « corps et UI en Inter » de CLAUDE.md, au
+          même titre qu'Instrument Sans sur les phrases du manifeste : elle est
+          limitée à la barre de navigation, qui est de la typographie
+          d'enseigne, pas du texte courant. */}
+      <nav className="font-poppins max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 h-[68px]">
 
         {/* ── Left: Logo + NavigationMenu ─────────────────── */}
         <div className="flex items-center">
@@ -315,7 +326,7 @@ const Navigation: React.FC<NavigationProps> = ({
                de monday.com, client 2026-07-28) : contour et texte bleus, fond
                transparent, qui se remplit très légèrement au survol. */
             className={cn(
-              "hidden md:inline-flex items-center px-5 py-2.5 rounded-full border text-[13.5px] font-semibold font-inter transition-colors duration-150",
+              "hidden md:inline-flex items-center px-5 py-2.5 rounded-full border text-[13.5px] font-semibold transition-colors duration-150",
               overDark
                 ? "border-white/45 text-white hover:bg-white/10"
                 : "border-[#3b82f6] text-[#3b82f6] hover:bg-[#3b82f6]/[0.07] dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
@@ -327,7 +338,7 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
-            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
           </button>
@@ -377,13 +388,13 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="mt-4 flex flex-col gap-2">
               <button
                 onClick={() => { setMobileOpen(false); onNavigate("espace-client"); }}
-                className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/15 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150"
+                className="w-full py-3 rounded-xl text-[15px] font-semibold text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/15 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150"
               >
                 {t({ fr: "Mon espace Ora", en: "My Ora space" })}
               </button>
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
-                className="w-full py-3 rounded-xl text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_14px_rgba(59,130,246,0.22)] transition-colors duration-150"
+                className="w-full py-3 rounded-xl text-[15px] font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_14px_rgba(59,130,246,0.22)] transition-colors duration-150"
               >
                 {t({ fr: "Réserver un appel", en: "Book a call" })}
               </button>

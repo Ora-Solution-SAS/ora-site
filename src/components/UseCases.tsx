@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowLeftRight, ArrowUpRight, ClipboardCheck, FileText, FolderCheck, Mail, PieChart, PlugZap, Scale, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, ClipboardCheck, FileText, FolderCheck, Mail, Maximize2, PieChart, PlugZap, Scale, TrendingUp, Wand2, X, type LucideIcon } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
@@ -34,6 +34,10 @@ type UseCase = {
   poster: string;
   /** Card background (blue family, pastel or saturated). */
   bg: string;
+  /** Voile décoratif posé PAR-DESSUS `bg` (essai bento 2026-08-06) : nuages et
+   *  halos pervenche en radial-gradients empilés. Couche `absolute inset-0`
+   *  sous le contenu, qui est déjà `relative`. */
+  wash?: string;
   /** Primary ink color on that background. */
   ink: string;
   /** Secondary text color. */
@@ -50,6 +54,31 @@ type UseCase = {
    *  (Bending-Spoons style). The video is kept for the "Voir la démo"
    *  lightbox. */
   mockup?: "reporting" | "pointage" | "formatage" | "previsionnel" | "evaluation" | "crm" | "organisation";
+  /** Image des tuiles DUPLIQUÉES du mur (`WallCard`), quand elle ne peut pas
+   *  être `poster`.
+   *
+   *  `poster` a deux clients aux besoins opposés : la balise `<video poster>`
+   *  de la lightbox, qui veut une image DU CLIP, et les tuiles du mur, qui
+   *  veulent une image DE LA CARTE. Sur les sept cartes à maquette les deux ne
+   *  montrent pas la même chose du tout, puisque la carte affiche une maquette
+   *  et la lightbox une démo filmée. `tile` sert donc le mur, `poster` sert la
+   *  lightbox, et `tile` retombe sur `poster` quand les deux coïncident (les
+   *  trois cartes sans maquette, où la carte EST le clip). */
+  tile?: string;
+  /** Poster au fond DÉPAREILLÉ de la carte : pendant le mur / dézoom il était
+   *  fondu en DUOTONE, sa luminance seule posée sur la couleur de la carte.
+   *  Rustine du 2026-08-04, quand les tuiles du mur montraient un still de la
+   *  VIDÉO sur une carte d'une autre couleur (client : « le mélange entre la
+   *  couleur du background de la vidéo et celle de l'encadré ne va pas du
+   *  tout, propose la solution la plus efficiente en attendant la création de
+   *  design »).
+   *
+   *  PLUS UTILISÉ depuis le 2026-08-05 : `capture-posters.mjs` couvre
+   *  désormais les sept maquettes et produit, pour chacune, une image d'ELLE
+   *  recomposée sur SA couleur de carte. Il n'y a donc plus de fond dépareillé
+   *  à rattraper. Le drapeau reste dans le type pour la prochaine carte dont le
+   *  visuel arriverait avant son poster. */
+  posterTone?: boolean;
 };
 
 const fadeUp = {
@@ -100,6 +129,90 @@ const PULLBACK_FILL_H = 3.3;
  *  j'invoquais concernaient le mur, pas la bande où l'on voit quelque chose. */
 const WALL_DRIFT = 170;
 
+/* ══ COMPOSITION DU MUR ═══════════════════════════════════════════════════
+ * Les dix-huit tuiles du mur (dix vraies cartes + huit copies) rangée par
+ * rangée, trois par rangée. `["r", i]` = la vraie carte `cases[i]`,
+ * `["f", i]` = la copie `wallDupes[i]`.
+ *
+ * Remplace l'ancienne alternance stricte carte / copie (r0,f0,r1,f1…). Cette
+ * alternance imposait aux vraies cartes les positions paires, donc une
+ * répartition figée en colonnes, et c'est elle qui rendait la contrainte
+ * ci-dessous impossible à satisfaire.
+ *
+ * ── LA CONTRAINTE (client 2026-08-05) ────────────────────────────────────
+ * « Qu'il n'y ait jamais deux encadrés côte à côte qui sont la même couleur
+ * et qui se rencontrent. » Difficile parce que la palette ne compte plus que
+ * QUATRE couleurs pour dix-huit tuiles, et surtout parce que les colonnes
+ * DÉRIVENT en sens inverse pendant la seconde phase : la tuile qui se
+ * retrouve à côté d'une autre change en permanence. Un simple damier ne
+ * suffit donc pas — il tient à l'arrêt, et casse au premier cran de dérive,
+ * puisque la rangée i d'une colonne finit face à la rangée i±1 de sa voisine.
+ *
+ * ── LA SOLUTION : DES COLONNES À COULEURS DISJOINTES ─────────────────────
+ * Chaque colonne ne tire que dans un jeu de deux couleurs, et deux colonnes
+ * VOISINES n'ont aucune couleur en commun :
+ *
+ *   colonne 0   #d2e4fa / #E5E7F9   (les deux clairs)
+ *   colonne 1   #2463D8 / #17479C   (les deux profonds)
+ *   colonne 2   #d2e4fa / #E5E7F9   (les deux clairs)
+ *
+ * Deux voisines horizontales sont donc toujours de couleurs différentes,
+ * QUEL QUE SOIT le décalage vertical de la dérive : la propriété ne dépend
+ * plus de l'alignement des rangées. Les colonnes 0 et 2 peuvent partager leur
+ * jeu sans risque, elles ne se touchent jamais, la colonne 1 est entre elles.
+ *
+ * À l'intérieur d'une colonne, les deux couleurs ALTERNENT, ce qui règle
+ * l'adjacence verticale. Et comme deux colonnes voisines n'ont aucune couleur
+ * commune, elles n'ont a fortiori aucune CARTE commune : l'ancienne garantie
+ * d'identité (« jamais deux fois la même carte côte à côte ») est conservée
+ * sans avoir à la traiter à part.
+ *
+ * ── CE QUI EN DÉCOULE ────────────────────────────────────────────────────
+ * Douze tuiles claires et six profondes. Il y a cinq vraies cartes de chaque,
+ * d'où sept copies claires et une seule profonde. Les cinq cartes profondes
+ * occupent donc cinq des six cases de la colonne du milieu, ce que
+ * l'alternance stricte interdisait (elle ne leur en laissait que trois).
+ *
+ * Le trajet des vraies cartes reste borné à UNE rangée, comme avant : c'est
+ * ce qui garde le recul propre (voir le commentaire sur les cartes en tête).
+ */
+const WALL_REALS = 10;
+const WALL_FILLS = 8;
+const WALL_ORDER: readonly (readonly ["r" | "f", number])[] = [
+  // rangée 0 — clair, profond, clair
+  ["r", 0], ["r", 2], ["f", 0],
+  // rangée 1
+  ["r", 3], ["r", 1], ["f", 1],
+  // rangée 2
+  ["r", 4], ["r", 5], ["f", 2],
+  // rangée 3
+  ["f", 3], ["f", 4], ["r", 7],
+  // rangée 4
+  ["f", 5], ["r", 6], ["r", 8],
+  // rangée 5
+  ["f", 6], ["r", 9], ["f", 7],
+] as const;
+
+/* BASCULE VERS LES POSTERS RETIRÉE (client 2026-08-05 : « on est sur un écran
+ * figé avec des écritures bleues à l'intérieur alors que la vidéo contenue
+ * n'est pas comme ça », « fais aussi en sorte que les vidéos continuent même au
+ * dézoom »).
+ *
+ * Pendant le recul, les VRAIES cartes troquaient leur contenu vivant contre
+ * leur poster, pour n'avoir qu'une image à repeindre par carte au lieu d'une
+ * maquette détaillée. Deux défauts, tous les deux visibles :
+ *   · les posters des cartes à maquette (« Pointage », « Reporting »,
+ *     « Formatage ») sont des STILLS DE LA VIDÉO DE DÉMO, pas de la maquette
+ *     affichée sur la carte. Le dézoom remplaçait donc un visuel par un AUTRE
+ *     visuel. Pire, avec `posterTone` le still est fondu en luminosité sur la
+ *     couleur de la carte : d'où les « écritures bleues » du signalement ;
+ *   · les clips étaient mis en pause pendant toute la séquence épinglée.
+ *
+ * Les tuiles dupliquées du mur (`WallCard`) restent, elles, en poster : elles
+ * n'ont jamais rien eu d'autre, et ce sont elles qui étoffent le mur. Le coût de
+ * repeinte se limite donc aux sept cartes réelles.
+ */
+
 /**
  * WallCard — copie VISUELLE d'une carte de cas d'usage, pour étoffer le mur
  * pendant le dézoom (client 2026-08-01 : « mets des encadrés qui existent déjà,
@@ -122,11 +235,11 @@ const WALL_DRIFT = 170;
  *     `pointer-events-none`, et la pastille « Voir la démo » n'est qu'un décor.
  */
 function WallCard({ item }: { item: UseCase }) {
-  const { t } = useLang();
   const Icon = item.metaIcon;
   return (
     <div
-      className={`relative h-full overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)]${item.mockup ? " flex flex-col" : ""}`}
+      // Même enveloppe Stripe que la vraie carte (liseré, coins, ombre).
+      className={`relative h-full overflow-hidden rounded-[16px] md:rounded-[20px] p-8 md:p-10 ring-1 ring-[#0a2540]/[0.08] shadow-[0_6px_24px_-14px_rgba(10,37,64,0.25)]${item.mockup ? " flex flex-col" : ""}`}
       style={{ background: item.bg }}
     >
       {item.decor === "circle" && (
@@ -143,20 +256,17 @@ function WallCard({ item }: { item: UseCase }) {
           <div className="absolute left-1/2 top-[58%] w-[102%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[80px] border-2 border-white/[0.08]" />
         </div>
       )}
+      {item.wash && (
+        <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: item.wash }} />
+      )}
 
-      <div className="relative flex items-center justify-between gap-4">
-        <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: item.ink }}>
+      <div className="relative flex items-start justify-between gap-4">
+        <h3 className="font-poppins font-medium text-[1.45rem] md:text-[1.8rem] tracking-[-0.02em] leading-[1.15]" style={{ color: item.ink }}>
           {item.title}
         </h3>
         {item.video && (
-          <span
-            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] ${
-              item.dark ? "bg-white/15" : "bg-white/70"
-            }`}
-            style={{ color: item.ink }}
-          >
-            {t({ fr: "Voir la démo", en: "Watch the demo" })}
-            <ArrowUpRight className="w-4 h-4" />
+          <span className="inline-flex shrink-0 items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-[10px] bg-[#6c72ec] text-white shadow-[0_6px_16px_-6px_rgba(108,114,236,0.6)]">
+            <Maximize2 className="w-[18px] h-[18px]" />
           </span>
         )}
       </div>
@@ -179,24 +289,51 @@ function WallCard({ item }: { item: UseCase }) {
         ))}
       </ul>
 
-      {/* Même emplacement que le média de la vraie carte, poster en image. */}
+      {/* Même emplacement que le média de la vraie carte, poster en image.
+          Cartes à maquette : le poster est ENCADRÉ (coins arrondis, liseré,
+          ombre) au lieu de saigner jusqu'aux bords (client 2026-08-04 : le
+          still vidéo au fond sombre de « Reporting mensuel » ou « Pointage »
+          tranchait comme une tache sur l'aplat de la carte ; encadré, il se
+          lit comme une capture d'écran posée volontairement). */}
       <div
         className={
           item.mockup
-            ? "relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-8 md:-mb-12"
+            ? "relative mt-auto pt-7 md:pt-9"
             : item.blend
               ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
-              : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
+              : "relative mt-7 md:mt-9 rounded-[12px] md:rounded-[14px] overflow-hidden ring-1 ring-[#0a2540]/[0.07] shadow-[0_14px_36px_-16px_rgba(10,37,64,0.3)]"
         }
       >
-        <img
-          src={item.poster}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          draggable={false}
-          className="w-full aspect-video object-cover block"
-        />
+        {item.mockup ? (
+          // `tile` et non `poster` : sur une carte à maquette, c'est l'image de
+          // LA MAQUETTE, recomposée sur la couleur de la carte par
+          // capture-posters.mjs. Le fond y est donc déjà le bon, et le duotone
+          // de secours (`posterTone`) n'a plus lieu de servir.
+          <div
+            className={`rounded-[12px] md:rounded-[14px] overflow-hidden ring-1 ring-[#0a2540]/[0.07] shadow-[0_14px_36px_-16px_rgba(10,37,64,0.3)]${
+              item.posterTone ? " ring-black/[0.08]" : ""
+            }`}
+            style={item.posterTone ? { background: item.bg } : undefined}
+          >
+            <img
+              src={item.tile ?? item.poster}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              draggable={false}
+              className={`w-full aspect-video object-cover block${item.posterTone ? " mix-blend-luminosity" : ""}`}
+            />
+          </div>
+        ) : (
+          <img
+            src={item.tile ?? item.poster}
+            alt=""
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="w-full aspect-video object-cover block"
+          />
+        )}
         {item.blend && (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${item.bg} 0%, transparent 100%)` }} />
@@ -262,6 +399,11 @@ export default function UseCases() {
       /** Colonne 1 = celle du milieu en trois colonnes ; en repli à deux, c'est
        *  celle de droite, et les deux dérivent encore en sens opposé. */
       mid: boolean;
+      /** Rangée dans le mur, 0 en haut. Sert au DÉCALAGE d'arrivée : sans lui
+       *  les dix-huit tuiles voyageaient d'un seul bloc, à la même vitesse et
+       *  sur la même courbe, ce qui donnait un basculement de bloc au lieu
+       *  d'une réorganisation. */
+      row: number;
       /** Position et hauteur de MISE EN PAGE, pour situer la carte à l'écran sans
        *  aucune lecture pendant le scroll. */
       top0: number;
@@ -293,38 +435,53 @@ export default function UseCases() {
       trackH: number;
       /** Hauteur de l'enveloppe épinglée, pour la découpe basse. */
       pinH: number;
+      /** Nombre de rangées du mur, pour normaliser le décalage d'arrivée. */
+      nRows: number;
       slots: Slot[];
     };
-    // Les VIDÉOS des cartes tournent en autoplay/loop. Pendant le recul, elles se
-    // trouvent dans un sous-arbre dont l'échelle change à chaque image : chaque
-    // image de chaque vidéo doit alors être recomposée dans une couche
-    // retransformée. C'est du travail de DESSIN, invisible pour un profil de mise
-    // en page, et c'est aujourd'hui le coût dominant de la séquence, d'autant que
-    // la grille contient désormais sept scènes de maquette. On les met donc en
-    // pause le temps de l'animation : à l'échelle où les cartes se retrouvent,
-    // une image figée est indiscernable d'une vidéo qui joue.
+    // MISE EN PAUSE PENDANT LE RECUL RETIRÉE (client 2026-08-05 : « fais aussi
+    // en sorte que les vidéos continuent même au dézoom »). L'argument d'avant
+    // — « à l'échelle où les cartes se retrouvent, une image figée est
+    // indiscernable d'une vidéo qui joue » — ne tient pas au DÉBUT du recul, où
+    // les cartes sont encore presque à taille réelle et où le gel se voit.
+    // La visibilité reste, elle, le seul critère de lecture : c'est le seul
+    // filtre qui ne coûte rien à l'œil.
     const videos = [...grid.querySelectorAll("video")];
+    // Chrome ne suspend PAS une vidéo muette sortie de l'écran : les clips
+    // continueraient de décoder leurs images en boucle pendant tout le
+    // défilement de la page, un coût payé même cartes hors champ. L'observer
+    // met donc en pause ce qui est hors écran et relance ce qui y entre.
     let geo: Geo | null = null;
     let rafId = 0;
     let hinted = false;
-    let videosOff = false;
     /** Vrai quand l'état de repos a déjà été posé : évite de le réécrire. */
     let auRepos = false;
     /** Vrai quand les deux bandes de fondu sont visibles. */
     let fondus = false;
     /** Dernier transform posé sur la grille, pour ne pas le réécrire à l'identique. */
     let dernierGT = "";
+    /** Vrai tant que la séquence épinglée est engagée. Seul cas où les cartes
+     *  bougent sous le curseur, donc seul cas où le survol doit être coupé. */
+    let dansLeMur = false;
 
-    const setVideos = (off: boolean) => {
-      if (off === videosOff) return;
-      videosOff = off;
-      for (const v of videos) {
-        if (off) v.pause();
-        // `play()` renvoie une promesse qui peut être rejetée (onglet masqué,
-        // politique d'autoplay) : on l'ignore volontairement.
-        else void v.play().catch(() => {});
-      }
-    };
+    const vio = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          const v = e.target as HTMLVideoElement;
+          // `play()` renvoie une promesse qui peut être rejetée (onglet masqué,
+          // politique d'autoplay) : on l'ignore volontairement.
+          if (e.isIntersecting) void v.play().catch(() => {});
+          else v.pause();
+        }
+      },
+      // Seuil à un tiers de la vidéo VISIBLE, sans marge : les clips n'ont
+      // plus d'autoPlay (client 2026-08-04 : « démarre quand l'utilisateur
+      // arrive dessus et pas avant »), c'est donc cet observer qui déclenche
+      // la toute première lecture, au moment où la carte est réellement sous
+      // les yeux. Le poster occupe l'image jusque-là.
+      { threshold: 0.35 },
+    );
+    videos.forEach((v) => vio.observe(v));
     /** Dernières bornes du masque posées, pour ne pas le réécrire à l'identique. */
     const lastMask: { haut: number | null; bas: number | null } = { haut: null, bas: null };
 
@@ -344,7 +501,7 @@ export default function UseCases() {
         if (el) { el.style.transform = ""; el.style.willChange = ""; el.style.opacity = "0"; el.style.pointerEvents = ""; el.style.visibility = ""; }
       });
       hinted = false;
-      setVideos(false);
+      dansLeMur = false;
       // Sans ça, un retour aux MÊMES bornes après un reset sauterait la
       // réécriture et le masque resterait absent.
       lastMask.haut = null;
@@ -376,7 +533,6 @@ export default function UseCases() {
       fondus = false;
       lastMask.haut = null;
       lastMask.bas = null;
-      setVideos(false);
     };
 
     // ── Mesures : tout ce qui ne dépend PAS de la position de scroll ─────────
@@ -445,12 +601,20 @@ export default function UseCases() {
       // 936 px au-dessus de la bande, pour un bloc de cartes qui en couvre 1 866).
       // À 7 rangées les tuiles occupent déjà 23 % de la bande, à 10 les cartes en
       // sortent complètement.
-      // L'alternance carte / tuile fait le damier.
-      const cards: HTMLDivElement[] = [];
-      for (let i = 0; i < Math.max(reals.length, fills.length); i++) {
-        if (i < reals.length) cards.push(reals[i]);
-        if (i < fills.length) cards.push(fills[i]);
-      }
+      // Composition du mur : voir WALL_ORDER. Repli sur l'ancienne alternance
+      // carte / tuile si le compte de cartes a changé, pour que l'ajout d'un cas
+      // d'usage dégrade le damier au lieu de casser le mur.
+      const cards: HTMLDivElement[] =
+        reals.length === WALL_REALS && fills.length === WALL_FILLS
+          ? WALL_ORDER.map(([kind, i]) => (kind === "r" ? reals[i] : fills[i]))
+          : (() => {
+              const a: HTMLDivElement[] = [];
+              for (let i = 0; i < Math.max(reals.length, fills.length); i++) {
+                if (i < reals.length) a.push(reals[i]);
+                if (i < fills.length) a.push(fills[i]);
+              }
+              return a;
+            })();
 
       const rows: HTMLDivElement[][] = [];
       for (let i = 0; i < cards.length; i += cols) rows.push(cards.slice(i, i + cols));
@@ -482,7 +646,7 @@ export default function UseCases() {
       const rowLeft0 = (gridW - (cols * (colW + gapX) - gapX)) / 2;
       const slots: Slot[] = [];
       let rowTop = 0;
-      for (const row of rows) {
+      rows.forEach((row, ri) => {
         let cardLeft = rowLeft0;
         row.forEach((card, ci) => {
           const prev = oldByCard.get(card);
@@ -492,6 +656,7 @@ export default function UseCases() {
             dx: cardLeft - leftOf(card),
             dy: rowTop - topOf(card),
             mid: ci === 1,
+            row: ri,
             top0: topOf(card),
             h: hOf(card),
             off: prev?.off ?? false,
@@ -502,7 +667,7 @@ export default function UseCases() {
           cardLeft += colW + gapX;
         });
         rowTop += Math.max(...row.map(hOf)) + gapY;
-      }
+      });
 
       // Les deux DERNIÈRES lectures, encore AVANT les écritures qui suivent :
       // aucune des écritures ci-dessous ne change la hauteur de `track` ou de
@@ -533,7 +698,7 @@ export default function UseCases() {
       geo = {
         pinTop, scrub: vh * PULLBACK_VH, scroll: vh * SCROLL_VH,
         fit, gridH, wallFullH,
-        fadeH, trackH, pinH, slots,
+        fadeH, trackH, pinH, nRows: rows.length, slots,
       };
     };
 
@@ -560,8 +725,12 @@ export default function UseCases() {
       // ce coût était payé en permanence, d'où les accrocs ressentis AVANT le
       // dézoom, quand les cartes sont encore en deux colonnes.
       //   1. Avant l'épinglage : on pose l'état de repos UNE fois, puis plus rien.
-      if (d <= 0) return settleAtRest();
+      if (d <= 0) {
+        dansLeMur = false;
+        return settleAtRest();
+      }
       auRepos = false;
+      dansLeMur = true;
       //   2. Épinglage entièrement hors de l'écran : rien de visible à mettre à
       //      jour, on garde l'état tel quel, il sera recalculé au retour.
       const vhNow = window.innerHeight;
@@ -571,13 +740,24 @@ export default function UseCases() {
       const u = ease(p);
       const s = 1 - (1 - g.fit) * u;
       // Dérive inverse : la colonne du MILIEU descend pendant que les deux
-      // extérieures montent. Décalée de 0,15 pour que le mur soit déjà en
-      // mouvement en arrivant. Exprimée en pixels d'écran, donc divisée par
+      // extérieures montent. Exprimée en pixels d'écran, donc divisée par
       // l'échelle du mur.
-      const drift = (u * (p - 0.15) * WALL_DRIFT) / s;
-      // Apparition RETARDÉE des tuiles : elles ne se révèlent qu'une fois le
-      // mur bien engagé.
-      const fade = clamp01((u - 0.82) / 0.18);
+      //
+      // DEMI-TOUR SUPPRIMÉ (client 2026-08-05 : « l'animation du dézoom quand on
+      // arrive aux deux dernières cartes, je ne trouve pas ça stylé du tout »).
+      // Le facteur valait `(p - 0.15)`, donc NÉGATIF sur les quinze premiers
+      // pour-cent : les colonnes partaient dans le mauvais sens, s'arrêtaient,
+      // puis repartaient dans l'autre. Ce demi-tour, en plein début du recul,
+      // est très exactement ce qu'on lit comme un raté. L'intention d'origine
+      // — que le mur soit « déjà en mouvement en arrivant » — est conservée
+      // autrement : le facteur démarre à zéro et croît, la dérive s'installe
+      // sans jamais s'inverser.
+      const drift = (u * clamp01((p - 0.15) / 0.85) * WALL_DRIFT) / s;
+      // Apparition des tuiles, DÉCALÉE RANGÉE PAR RANGÉE plus bas. Avant, les
+      // huit apparaissaient d'un bloc sur les derniers pour-cent : un mur vide
+      // qui se remplit d'un coup, juste au moment où le regard est encore sur les
+      // deux dernières cartes. La base reste la même, la répartition change.
+      const fadeBase = clamp01((u - 0.72) / 0.2);
       // SECONDE PHASE. `q` reste à zéro tant que la distance parcourue n'a pas
       // dépassé la longueur du recul : le dézoom se déroule donc exactement comme
       // avant, on n'y touche pas. Ensuite le mur reste épinglé et les colonnes
@@ -630,9 +810,25 @@ export default function UseCases() {
       const wallH = g.gridH + (g.wallFullH - g.gridH) * u;
       const gridT = u * (s * g.gridH - (s * wallH) / 2 - vhNow / 2);
 
+      // ── DÉCALAGE D'ARRIVÉE ───────────────────────────────────────────────
+      // Avant, les dix cartes partageaient le MÊME `u` : elles voyageaient donc
+      // en bloc, à la même vitesse, sur la même courbe, et la grille basculait
+      // d'un seul tenant. C'est ce qui n'avait rien d'une réorganisation.
+      // Chaque rangée démarre maintenant un peu après la précédente, du haut
+      // vers le bas : le mur s'assemble en vague, dans le sens de la lecture, et
+      // les deux dernières cartes — celles que le lecteur a encore sous les yeux
+      // quand le recul s'amorce — restent en place le temps que le reste se
+      // range, au lieu de se dérober sous son regard.
+      // La course de chaque carte est comprimée d'autant (dénominateur
+      // `1 - SPREAD`), donc toutes atteignent leur place à p = 1 exactement : la
+      // disposition finale est rigoureusement inchangée.
+      const SPREAD = 0.28;
+      const denomRow = Math.max(1, g.nRows - 1);
+
       // ÉCRITURES.
       for (const slot of g.slots) {
-        const t = slot.still ? 1 : u;
+        const lag = (slot.row / denomRow) * SPREAD;
+        const t = slot.still ? 1 : ease(clamp01((p - lag) / (1 - SPREAD)));
         // Les deux mouvements vont dans le MÊME sens et s'additionnent : la
         // colonne du milieu descend pendant le recul puis continue de descendre
         // pendant le défilement, les extérieures montent puis continuent de
@@ -675,10 +871,13 @@ export default function UseCases() {
         }
 
         if (slot.still) {
-          // Écrit seulement quand la valeur change VRAIMENT. `fade` reste à
-          // zéro pendant les 82 premiers pour-cent du recul : on y réécrivait
+          // Écrit seulement quand la valeur change VRAIMENT. `fadeBase` reste à
+          // zéro pendant la plus grande partie du recul : on y réécrivait
           // « 0 » sur huit tuiles à chaque image, pour rien.
-          const op = Math.round(fade * 100) / 100;
+          // Le décalage par rangée suit celui des cartes : chaque tuile
+          // n'apparaît qu'une fois sa rangée arrivée, la cascade descend donc le
+          // mur au lieu de le remplir d'un bloc.
+          const op = Math.round(clamp01((fadeBase - lag * 0.55) / (1 - SPREAD)) * 100) / 100;
           if (op !== slot.op) {
             slot.op = op;
             slot.card.style.opacity = String(op);
@@ -703,10 +902,6 @@ export default function UseCases() {
         dernierGT = gt;
         grid.style.transform = gt;
       }
-
-      // Vidéos en pause pendant toute la séquence épinglée, rendues à la lecture
-      // dès qu'on en sort.
-      setVideos(d > 0);
 
       // La grille suit `engaged` : promue tant que le mur est en disposition de
       // mur, donc aucune bascule à la fin de l'animation. Écrit au changement
@@ -768,8 +963,51 @@ export default function UseCases() {
       }
     };
 
+    /** Survol coupé pendant le défilement, mais SEULEMENT dans la séquence
+     *  épinglée (client 2026-08-05 : « quand on passe le curseur au-dessus des
+     *  encadrés il faut le passer deux fois »).
+     *
+     *  C'ÉTAIT LE BUG. Couper `pointer-events` puis les rendre ne suffit pas à
+     *  réveiller le `:hover` : le navigateur ne réévalue l'état de survol qu'au
+     *  prochain ÉVÉNEMENT de souris. Curseur posé sur une carte et page
+     *  immobilisée, la restauration 160 ms plus tard ne déclenchait donc rien —
+     *  il fallait bouger la souris une deuxième fois. Et comme la coupure valait
+     *  pour TOUT défilement, le cas se produisait à chaque fois qu'on
+     *  s'arrêtait sur une carte, c'est-à-dire exactement le geste voulu.
+     *
+     *  La coupure ne sert vraiment que pendant le mur : là, ce sont les cartes
+     *  qui bougent sous un curseur immobile, et elles enchaînent enter/leave à
+     *  chaque image. Hors mur, la page défile mais le curseur ne traverse au
+     *  pire qu'une ou deux frontières de carte : il n'y a pas de rafale à
+     *  éteindre. La coupure y est donc levée, et le survol répond du premier
+     *  coup.
+     *
+     *  Le levage de la carte est passé de `whileHover` (Framer, donc JavaScript
+     *  sur événement de pointeur) à une transition CSS sur l'enveloppe : plus
+     *  rien ne dépend d'un rappel JS dans le chemin de survol, et l'état se
+     *  rétablit tout seul avec `:hover`. */
+    let hoverTimer = 0;
+    let hoverOff = false;
+    const restoreHover = () => {
+      hoverOff = false;
+      grid.style.pointerEvents = "";
+    };
     const onScroll = () => {
       if (!rafId) rafId = requestAnimationFrame(apply);
+      // `dansLeMur` est posé par `apply()`, donc avec une image de retard : sans
+      // conséquence, la rafale d'enter/leave ne commence qu'une fois les cartes
+      // réellement transformées.
+      if (desktop.matches && dansLeMur) {
+        if (!hoverOff) {
+          hoverOff = true;
+          grid.style.pointerEvents = "none";
+        }
+        clearTimeout(hoverTimer);
+        hoverTimer = window.setTimeout(restoreHover, 160);
+      } else if (hoverOff) {
+        clearTimeout(hoverTimer);
+        restoreHover();
+      }
     };
     const remeasure = () => {
       measure();
@@ -786,12 +1024,56 @@ export default function UseCases() {
     ro.observe(pin);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
+      clearTimeout(hoverTimer);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", remeasure);
       ro.disconnect();
+      vio.disconnect();
     };
   }, []);
 
+  // ══ ESSAI « BENTO STRIPE » (client 2026-08-06, itération 2) ══════════════
+  // Consigne exacte : « copie exactement les encadrés [de stripe.com], leur
+  // design, etc., juste que tu mettes de la couleur bleue » — le bleu étant
+  // celui de la carte GPT-Live fournie en capture (pervenche nuageux).
+  // La première itération (quatre habillages clairs/profonds maison) est dans
+  // git ; celle-ci colle à l'anatomie Stripe :
+  //   · cartes BLANCHES uniformes, liseré marine hairline, ombre discrète,
+  //     coins bien plus modestes que les 40 px d'avant ;
+  //   · encre des titres #0a2540 et corps #425466, les valeurs de stripe.com ;
+  //   · le BOUTON CARRÉ d'agrandissement en haut à droite (pervenche plein,
+  //     glyphe Maximize2) remplace la pastille « Voir la démo » — c'est lui
+  //     qui ouvre la lightbox, aria-label conservé ;
+  //   · un voile pervenche par carte, direction variée, là où Stripe pose ses
+  //     orangés. Quatre voiles pour dix cartes, jamais deux identiques côte à
+  //     côte.
+  // L'ancien damier clair/profond disparaît : toutes les cartes partagent le
+  // même blanc, comme la grille Stripe. La garantie « jamais deux couleurs
+  // identiques côte à côte » du mur est donc DISSOUTE d'office — c'est le
+  // parti pris de la référence, pas un oubli.
+  // ⚠ Toujours vrai depuis l'itération 1 : les clips FEC / Extraction /
+  // Réconciliation gardent leur canvas bleu pâle cuit dans le MP4, d'où leurs
+  // vidéos ENCADRÉES (plus de `blend`). Réexporter sur blanc pour le fondu.
+  const STRIPE = {
+    bg: "#ffffff",
+    ink: "#0a2540",
+    sub: "#425466",
+    /** Pervenche GPT-Live — bouton carré et accents (le #635bff de Stripe). */
+    accent: "#6c72ec",
+    accentHover: "#585fe6",
+    /** Voile montant du bas, le plus marqué (l'orangé de la grande carte). */
+    washBas:
+      "linear-gradient(0deg, #b6befa 0%, rgba(214,220,252,0.55) 34%, rgba(255,255,255,0) 62%)",
+    /** Voile descendant du haut (la carte au bandeau violet). */
+    washHaut:
+      "linear-gradient(180deg, #aab2f8 0%, rgba(214,220,252,0.5) 34%, rgba(255,255,255,0) 62%)",
+    /** Halo de coin bas-droit. */
+    washCoin:
+      "radial-gradient(92% 76% at 100% 100%, #b3bbf9 0%, rgba(214,220,252,0.45) 42%, rgba(255,255,255,0) 70%)",
+    /** Halo discret bas-gauche, pour les cartes presque blanches. */
+    washDoux:
+      "radial-gradient(80% 55% at 12% 108%, rgba(170,178,248,0.55) 0%, rgba(255,255,255,0) 68%)",
+  };
   const cases: UseCase[] = [
     {
       title: t({ fr: "Automatisation FEC", en: "FEC automation" }),
@@ -803,12 +1085,13 @@ export default function UseCases() {
       ],
       video: "/final-fec.mp4",
       poster: "/posters/final-fec.jpg",
-      // Sampled from the FEC clip's own canvas background so the card and the
-      // video blend into one continuous surface.
-      bg: "#d2e4fa",
-      ink: "#0c2d4d",
-      sub: "#2f5474",
-      blend: true,
+      // `blend` abandonné pour l'essai bento : le canvas #d2e4fa du clip ne
+      // correspond plus à la carte, la vidéo passe en ENCADRÉ (voir le pavé
+      // en tête de la liste).
+      bg: STRIPE.bg,
+      wash: STRIPE.washDoux,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
     },
     {
       title: t({ fr: "Reporting mensuel", en: "Monthly reporting" }),
@@ -820,12 +1103,14 @@ export default function UseCases() {
       ],
       video: "/ora_reporting_v3.mp4",
       poster: "/posters/ora_reporting_v3.jpg",
-      // WeTransfer indigo — white text. Media zone = custom Ora+PDF mockup
-      // (see `mockup`), so the decorative circle is dropped.
-      bg: "#5865E3",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.78)",
-      dark: true,
+      tile: "/posters/ora_reporting.jpg",
+      // Voile montant, le plus marqué de la grille (voir le pavé en tête).
+      // Media zone = custom Ora+PDF mockup (see `mockup`), so the decorative
+      // circle is dropped.
+      bg: STRIPE.bg,
+      wash: STRIPE.washBas,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "reporting",
     },
     {
@@ -836,16 +1121,24 @@ export default function UseCases() {
         t({ fr: "Vos comptes sont pointés automatiquement, les écarts ressortent immédiatement", en: "Your accounts are matched automatically, discrepancies stand out immediately" }),
         t({ fr: "La révision démarre sur des soldes justifiés, sans pointage manuel", en: "Review starts from justified balances, no manual ticking" }),
       ],
-      video: "/ora_pointage_v3.mp4",
-      poster: "/posters/ora_pointage_v3.jpg",
-      // Bleu franc et saturé (client 2026-07-30 : « un bleu plus pétant »), en
-      // remplacement du bleu-canard #0E7490 jugé trop éteint. Il reste bien
-      // distinct de l'indigo #5865E3 de « Reporting mensuel » : celui-ci tire
-      // vers le cyan, l'autre vers le violet.
-      bg: "#0A6BE1",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.78)",
-      dark: true,
+      // v4 : clip REPEINT sur le bleu #2F69D9 (client 2026-08-05, swatch
+      // fourni), en remplacement du canvas lavande #d9e2f6 d'origine. Le fond
+      // Screen Studio étant un aplat parfait, la famille de couleurs du décor
+      // est exactement { t × #d9e2f6 } : les ombres portées sont donc REPEINTES
+      // proportionnellement (t × #2F69D9) au lieu d'être détourées, et les
+      // fenêtres gardent leur profondeur. Le masque est restreint à la région
+      // connexe qui TOUCHE LE BORD de l'image : sans ça, les pastilles bleu
+      // clair de l'app (« Lancer », chips) tombent dans la même famille de
+      // couleurs que le décor et virent au bleu franc elles aussi.
+      video: "/ora_pointage_v4.mp4",
+      poster: "/posters/ora_pointage_v4.jpg",
+      tile: "/posters/ora_pointage.jpg",
+      // (Le clip v4, repeint en #2F69D9 pour l'ancienne palette, ne sert plus
+      // que la lightbox : pas de contrainte de couleur ici.)
+      bg: STRIPE.bg,
+      wash: STRIPE.washCoin,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "pointage",
     },
     {
@@ -856,28 +1149,31 @@ export default function UseCases() {
         t({ fr: "Vos PDF sont lus et transformés en tableau Excel exploitable, sans ressaisie", en: "Your PDFs are read and turned into a usable Excel table, no re-keying" }),
         t({ fr: "Chaque ligne, montant et référence extraits fidèlement, prêts à traiter", en: "Every line, amount and reference extracted faithfully, ready to work with" }),
       ],
-      // v4 : clip RÉEXPORTÉ sur le rose de la carte (client 2026-08-03). La v2
-      // était rendue sur une lavande #ebe0f9, héritée de l'ancienne couleur de
-      // carte, et la jonction se voyait depuis le passage au rose. Le fond a été
-      // changé à la SOURCE, dans la page qui génère la vidéo
-      // (Desktop/.../demo-video-pdf-extract/pdf-extract-demo.html, `#backdrop`),
-      // puis les 547 images ont été rendues et réencodées : les angles arrondis
-      // et les ombres portées des fenêtres se fondent donc vraiment dans le rose,
-      // ce qu'une incrustation de couleur n'aurait pas su faire.
-      video: "/ora_pdf_extract_v4.mp4",
-      poster: "/posters/ora_pdf_extract_v4.jpg",
-      // Rose poudré (client 2026-07-29 : « plus rose »), en remplacement de la
-      // lavande #eae6fb.
-      // #f6e3f0 et non #f7e3f0 : une unité de rouge en moins, invisible à l'œil,
-      // mais c'est la valeur que le navigateur DÉCODE réellement du clip. Le rose
-      // est encodé à #f7e3f0 à la source ; le passage en YUV 4:2:0, imposé par
-      // H.264, le ramène à #f6e3f0 et rien ne peut l'en empêcher. C'est donc au
-      // CSS, seul terme exact des deux, de s'aligner sur la vidéo. Jonction nulle
-      // pendant la lecture, une unité d'écart sur le poster JPEG.
-      bg: "#f6e3f0",
-      ink: "#3d1b36",
-      sub: "#7c4f6e",
-      blend: true,
+      // v5 : décor REPEINT du rose vers la pervenche de la carte (2026-08-05).
+      // La v4 était rendue sur le rose #f7e3f0 à la SOURCE, dans la page qui
+      // génère la vidéo — page introuvable sur ce poste, d'où une reprise sur le
+      // MP4 lui-même. Deux méthodes ont échoué avant celle-ci, et c'est utile de
+      // savoir pourquoi si le cas se représente :
+      //   · une incrustation de couleur simple repeint aussi les pastilles bleu
+      //     clair de l'app, qui tombent dans la même famille de couleurs ;
+      //   · un masque restreint à la région connexe touchant le bord de l'image
+      //     laisse un halo rose autour de la fenêtre Ora : ce clip la rend en
+      //     panneau DÉPOLI, qui échantillonne le rose derrière lui, et les pixels
+      //     ainsi maculés ne sont plus un multiple du fond.
+      // Ce qui a marché : une rotation de TEINTE. Le rose occupe une bande de
+      // teintes (268-345°) qu'aucun autre élément du clip n'utilise — les rouges
+      // sont vers 355°, les bleus vers 220°. Sélectionner sur la teinte attrape
+      // donc d'un coup le fond, ses ombres portées ET le voile dépoli, quelles
+      // que soient leur clarté et leur saturation. Chaque pixel garde ses
+      // rapports de saturation et de valeur, donc une ombre reste une ombre.
+      video: "/ora_pdf_extract_v5.mp4",
+      poster: "/posters/ora_pdf_extract_v5.jpg",
+      // `blend` abandonné pour l'essai bento (canvas #E5E7F9 cuit dans le
+      // clip) : vidéo ENCADRÉE, voir le pavé en tête de la liste.
+      bg: STRIPE.bg,
+      wash: STRIPE.washDoux,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
     },
     // ── Automatisations supplémentaires. PUBLIÉES depuis le 2026-07-30 sur
     // décision du client : le site en ligne n'affichait que quatre cartes
@@ -896,14 +1192,20 @@ export default function UseCases() {
         t({ fr: "Vos écritures sont rapprochées et lettrées automatiquement", en: "Your entries are reconciled and matched automatically" }),
         t({ fr: "Les écarts ressortent immédiatement, prêts à justifier", en: "Discrepancies stand out immediately, ready to justify" }),
       ],
-      video: "/ora_pointage_v3.mp4",
-      poster: "/posters/ora_pointage_v3.jpg",
-      // Fond EXACTEMENT égal au canvas de la vidéo (#d9e2f6, mesuré sur les
-      // coins du clip, swatch client 2026-07-28) : le clip fond dans la carte.
-      bg: "#d9e2f6",
-      ink: "#0c2d4d",
-      sub: "#2f5474",
-      blend: true,
+      // Clip PROPRE à cette carte depuis le 2026-08-05, au lieu de pointer sur
+      // /ora_pointage_v3.mp4. C'est toujours la même démo (un bouche-trou, voir
+      // l'avertissement ci-dessus, à remplacer par une vraie démo de
+      // réconciliation), mais son décor est REPEINT de la lavande #d9e2f6 vers
+      // #d2e4fa, la couleur de cette carte. Avant, la carte était calée sur le
+      // clip ; maintenant que la palette est fixée, c'est l'inverse.
+      video: "/ora_reconciliation.mp4",
+      poster: "/posters/ora_reconciliation.jpg",
+      // `blend` abandonné pour l'essai bento (canvas #d2e4fa cuit dans le
+      // clip) : vidéo ENCADRÉE, voir le pavé en tête de la liste.
+      bg: STRIPE.bg,
+      wash: STRIPE.washBas,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
     },
     {
       title: t({ fr: "Formatage pour logiciel métier", en: "Formatting for your software" }),
@@ -917,21 +1219,27 @@ export default function UseCases() {
       ],
       video: "/final-fec.mp4",
       poster: "/posters/final-fec.jpg",
-      // Indigo rétabli (client 2026-07-29) : le passage à la lavande a été
-      // essayé puis annulé. Les décors de FormatageMockup sont repassés au
-      // blanc avec lui.
-      bg: "#5865E3",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.78)",
-      dark: true,
+      tile: "/posters/ora_formatage.jpg",
+      // Voile descendant (le bandeau haut). Les décors de FormatageMockup
+      // restent blancs.
+      bg: STRIPE.bg,
+      wash: STRIPE.washHaut,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "formatage",
     },
     // ── Quatre cartes « conseil » ajoutées le 2026-08-02 : Prévisionnel,
-    // Évaluation financière, Connectivité CRM, Organisation. Le damier
+    // Connectivité CRM, Évaluation financière, Organisation. Le damier
     // continue (rangée 4 : saturé | pâle, rangée 5 : pâle | saturé) et la
     // palette reste dans la famille bleu / indigo / teal : navy #1e3a8a et
     // teal de marque #0d9488 côté saturé, menthe #d7efe9 et pervenche
     // #e3e9fc côté pastel.
+    // COULEURS RÉTABLIES à l'identique après un aller-retour (client
+    // 2026-08-04 : « reviens en arrière, je ne veux pas que tu changes la
+    // couleur des backgrounds ») : le « plus minimaliste, moins AI generated »
+    // demandé porte sur l'INTÉRIEUR des maquettes (blobs, chips flottantes,
+    // curseurs, cartes KPI retirés dans les composants *Mockup), pas sur les
+    // aplats des cartes.
     // ⚠ COPIE PROVISOIRE : titres, meta et puces sont des brouillons à faire
     // valider (formulation exacte) avant toute mise en ligne.
     // ⚠ VIDÉOS PROVISOIRES : les clips de la lightbox sont ceux d'AUTRES cas
@@ -947,13 +1255,29 @@ export default function UseCases() {
         t({ fr: "Une trajectoire claire sur plusieurs années, prête à présenter", en: "A clear multi-year trajectory, ready to present" }),
       ],
       poster: "/posters/ora_previsionnel.jpg",
-      // Bleu nuit, dans la famille du navy de la marque : bien distinct du
-      // bleu vif #0A6BE1 et de l'indigo #5865E3 déjà en place.
-      bg: "#1e3a8a",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.78)",
-      dark: true,
+      bg: STRIPE.bg,
+      wash: STRIPE.washHaut,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "previsionnel",
+    },
+    // « Connectivité CRM » et « Évaluation financière » ÉCHANGÉES (client
+    // 2026-08-04). Le damier tient toujours : les deux sont pastel, donc
+    // rangée 4 = saturé | pâle et rangée 5 = pâle | saturé, inchangé.
+    {
+      title: t({ fr: "Connectivité CRM", en: "CRM connectivity" }),
+      metaIcon: PlugZap,
+      meta: t({ fr: "CRM, facturation & suivi commercial", en: "CRM, invoicing & sales tracking" }),
+      bullets: [
+        t({ fr: "Les données de votre CRM alimentent directement vos fichiers de travail", en: "Your CRM data feeds directly into your working files" }),
+        t({ fr: "Fini les doubles saisies entre outils : une seule source à jour", en: "No more double entry between tools: one up-to-date source" }),
+      ],
+      poster: "/posters/ora_crm.jpg",
+      bg: STRIPE.bg,
+      wash: STRIPE.washCoin,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
+      mockup: "crm",
     },
     {
       title: t({ fr: "Évaluation financière", en: "Business valuation" }),
@@ -964,26 +1288,13 @@ export default function UseCases() {
         t({ fr: "Une fourchette argumentée, prête à défendre face au client", en: "A reasoned range, ready to defend with your client" }),
       ],
       poster: "/posters/ora_evaluation.jpg",
-      // Vert d'eau : le versant pastel du teal de marque #0d9488.
-      bg: "#d7efe9",
-      ink: "#0b3a33",
-      sub: "#33635c",
+      // Les dégradés de marque À L'INTÉRIEUR de la maquette (EvaluationMockup)
+      // gardent leur teal : ils sont posés sur des panneaux blancs.
+      bg: STRIPE.bg,
+      wash: STRIPE.washDoux,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "evaluation",
-    },
-    {
-      title: t({ fr: "Connectivité CRM", en: "CRM connectivity" }),
-      metaIcon: PlugZap,
-      meta: t({ fr: "CRM, facturation & suivi commercial", en: "CRM, invoicing & sales tracking" }),
-      bullets: [
-        t({ fr: "Les données de votre CRM alimentent directement vos fichiers de travail", en: "Your CRM data feeds directly into your working files" }),
-        t({ fr: "Fini les doubles saisies entre outils : une seule source à jour", en: "No more double entry between tools: one up-to-date source" }),
-      ],
-      poster: "/posters/ora_crm.jpg",
-      // Pervenche : pastel côté indigo, distinct des bleus pâles existants.
-      bg: "#e3e9fc",
-      ink: "#1b2a5e",
-      sub: "#4a5691",
-      mockup: "crm",
     },
     {
       title: t({ fr: "Organisation", en: "Organization" }),
@@ -994,12 +1305,10 @@ export default function UseCases() {
         t({ fr: "Chaque dossier client reste propre, sans tri manuel", en: "Every client folder stays tidy, no manual sorting" }),
       ],
       poster: "/posters/ora_organisation.jpg",
-      // Teal de marque, versant saturé : première carte de la série à le
-      // porter en aplat.
-      bg: "#0d9488",
-      ink: "#ffffff",
-      sub: "rgba(255,255,255,0.8)",
-      dark: true,
+      bg: STRIPE.bg,
+      wash: STRIPE.washBas,
+      ink: STRIPE.ink,
+      sub: STRIPE.sub,
       mockup: "organisation",
     },
   ];
@@ -1024,27 +1333,27 @@ export default function UseCases() {
   // COL_SCROLL 700) sont calées sur un mur de SIX rangées. 10 + 8 = 18 tuiles
   // conservent exactement la géométrie d'avant (6 rangées de 3), rien à
   // retuner.
-  // Affectation EXPLICITE, colonne par colonne, et plus un simple décalage
-  // (client 2026-08-02 : « il ne faut pas que, quand on défile, il y ait
-  // Prévisionnel 2 fois de suite à côté »). Pendant la seconde phase, les
-  // colonnes extérieures montent et celle du milieu descend : deux rangées
-  // différentes finissent côte à côte, donc l'ancien critère « les trois
-  // cartes d'une même rangée sont distinctes » ne suffisait pas (un décalage
-  // de 3 mettait par exemple les deux copies de « Prévisionnel » en vis-à-vis
-  // après deux crans de dérive).
-  // Le mur intercale vraie carte / copie : r0,f0,r1,f1..., rangées de trois.
-  // Les vraies cartes tombent donc en colonnes par résidu modulo 3 :
-  // colonne 0 = {0,3,6}, colonne 1 = {2,5,8}, colonne 2 = {1,4,7,9}. En
-  // choisissant les copies DANS le même ensemble que leur colonne
-  // (f1,f4,f7 → colonne 0 ; f0,f3,f6 → colonne 1 ; f2,f5 → colonne 2), les
-  // trois colonnes n'ont AUCUNE carte en commun : quel que soit le décalage
-  // vertical de la dérive, deux voisines horizontales ne peuvent jamais être
-  // identiques. À l'intérieur d'une colonne, l'ordre alterne pour qu'aucune
-  // copie ne soit non plus la voisine VERTICALE de sa jumelle.
-  // D'où f0..f7 = cases[5,6,9,8,0,1,2,3] :
-  //   colonne 0 : c0,c6,c3,c0,c6,c3 · colonne 1 : c5,c2,c8,c5,c2,c8 ·
-  //   colonne 2 : c1,c9,c4,c1,c7,c9 — rangées toutes distinctes, vérifié.
-  const wallDupes: UseCase[] = [5, 6, 9, 8, 0, 1, 2, 3].map((i) => cases[i]);
+  // Le CHOIX des copies découle de WALL_ORDER, où la règle est expliquée en
+  // entier : chaque colonne ne tire que dans un jeu de deux couleurs, et deux
+  // colonnes voisines n'ont aucune couleur en commun. Il faut donc douze tuiles
+  // claires et six profondes ; comme il y a cinq vraies cartes de chaque, les
+  // copies sont sept claires et une seule profonde.
+  //
+  // f0..f7 = cases[8, 0, 3, 8, 9, 7, 3, 4], soit :
+  //   Évaluation, Automatisation FEC, Extraction, Évaluation, Organisation,
+  //   Connectivité CRM, Extraction, Réconciliation.
+  //
+  // Le mur obtenu, rangée par rangée (C = clair, P = profond) :
+  //   r0  FEC C        | Pointage P     | Évaluation C
+  //   r1  Extraction C | Reporting P    | FEC C
+  //   r2  Réconcil. C  | Formatage P    | Extraction C
+  //   r3  Évaluation C | Organisation P | CRM C
+  //   r4  CRM C        | Prévisionnel P | Évaluation C
+  //   r5  Extraction C | Organisation P | Réconciliation C
+  // Colonnes : #d2e4fa/#E5E7F9 alternés · #2463D8/#17479C alternés ·
+  // #E5E7F9/#d2e4fa alternés. Aucune couleur partagée entre colonnes voisines,
+  // aucune répétition verticale, aucune carte identique en contact.
+  const wallDupes: UseCase[] = [8, 0, 3, 8, 9, 7, 3, 4].map((i) => cases[i]);
 
 
   // L'espace blanc entre le mur et « Automatisez de bout en bout » est CONSERVÉ
@@ -1086,15 +1395,29 @@ export default function UseCases() {
               // le transform de la carte elle-même appartient déjà à Framer
               // Motion (entrée + survol).
               return (
-                <div key={c.title} ref={(el) => { cardRefs.current[i] = el; }}>
+                // LEVAGE AU SURVOL porté par cette enveloppe, en CSS, et non
+                // plus par un `whileHover` de Framer sur la carte. Deux raisons :
+                //   · plus aucun rappel JavaScript dans le chemin de survol, donc
+                //     l'état se rétablit tout seul avec `:hover` — c'est ce qui
+                //     corrigeait le « il faut passer deux fois » ;
+                //   · Framer laisse un `transform` EN LIGNE sur la carte après
+                //     son animation d'entrée, qui aurait battu une règle CSS de
+                //     survol posée au même endroit. L'enveloppe, elle, n'a de
+                //     transform en ligne que pendant le mur, écrit par le moteur
+                //     — et pendant le mur le survol est justement coupé.
+                <div
+                  key={c.title}
+                  ref={(el) => { cardRefs.current[i] = el; }}
+                  className="h-full transition-transform duration-300 ease-out hover:-translate-y-2"
+                >
                   <motion.div
-                    className={`group relative h-full overflow-hidden rounded-[28px] md:rounded-[40px] p-8 md:p-12 shadow-[0_10px_30px_-18px_rgba(15,23,42,0.35)] transition-shadow duration-300 ease-out hover:shadow-[0_34px_70px_-24px_rgba(15,23,42,0.5)] ${c.mockup ? "flex flex-col" : ""}`}
+                    // Enveloppe Stripe : coins modestes, liseré marine
+                    // hairline, ombre légère qui s'affirme au survol.
+                    className={`group relative h-full overflow-hidden rounded-[16px] md:rounded-[20px] p-8 md:p-10 ring-1 ring-[#0a2540]/[0.08] shadow-[0_6px_24px_-14px_rgba(10,37,64,0.25)] transition-shadow duration-300 ease-out hover:shadow-[0_18px_44px_-18px_rgba(10,37,64,0.35)] ${c.mockup ? "flex flex-col" : ""}`}
                     style={{ background: c.bg }}
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-80px" }}
-                    whileHover={{ y: -8 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 22, mass: 0.6 }}
                     variants={{
                       hidden: { opacity: 0, y: 32 },
                       visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1], delay: (i % 2) * 0.12 } },
@@ -1117,24 +1440,24 @@ export default function UseCases() {
                         <div className="absolute left-1/2 top-[58%] w-[102%] aspect-[4/3] -translate-x-1/2 -translate-y-1/2 rounded-[80px] border-2 border-white/[0.08]" />
                       </div>
                     )}
+                    {c.wash && (
+                      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: c.wash }} />
+                    )}
 
-                    {/* Title + demo pill */}
-                    <div className="relative flex items-center justify-between gap-4">
-                      <h3 className="font-poppins font-semibold text-[1.7rem] md:text-[2.2rem] tracking-[-0.02em]" style={{ color: c.ink }}>
+                    {/* Title + Stripe expand button (top-right corner) */}
+                    <div className="relative flex items-start justify-between gap-4">
+                      <h3 className="font-poppins font-medium text-[1.45rem] md:text-[1.8rem] tracking-[-0.02em] leading-[1.15]" style={{ color: c.ink }}>
                         {c.title}
                       </h3>
-                      {/* Pas de vidéo qui corresponde, pas de pastille. */}
+                      {/* Pas de vidéo qui corresponde, pas de bouton. */}
                       {c.video && (
                       <button
                         type="button"
                         onClick={() => setActive(c)}
-                        className={`group inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 md:px-5 py-2 md:py-2.5 font-inter font-semibold text-[13px] md:text-[15px] transition-colors duration-200 ${
-                          c.dark ? "bg-white/15 hover:bg-white/25" : "bg-white/70 hover:bg-white"
-                        }`}
-                        style={{ color: c.ink }}
+                        aria-label={t({ fr: "Voir la démo en grand", en: "Watch the demo full size" })}
+                        className="inline-flex shrink-0 items-center justify-center w-10 h-10 md:w-11 md:h-11 rounded-[10px] bg-[#6c72ec] hover:bg-[#585fe6] text-white shadow-[0_6px_16px_-6px_rgba(108,114,236,0.6)] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
                       >
-                        {t({ fr: "Voir la démo", en: "Watch the demo" })}
-                        <ArrowUpRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        <Maximize2 className="w-[18px] h-[18px]" />
                       </button>
                       )}
                     </div>
@@ -1166,53 +1489,61 @@ export default function UseCases() {
                         clip's upper edge melts into the card (no visible seam). */}
                     {c.mockup ? (
                       <div className="relative mt-auto pt-7 md:pt-9 -mx-3 md:-mx-6 -mb-8 md:-mb-12 origin-bottom transition-transform duration-500 ease-out group-hover:scale-[1.05]">
-                        {c.mockup === "reporting" ? (
-                          <ReportingMockup />
-                        ) : c.mockup === "formatage" ? (
-                          <FormatageMockup />
-                        ) : c.mockup === "previsionnel" ? (
-                          <PrevisionnelMockup />
-                        ) : c.mockup === "evaluation" ? (
-                          <EvaluationMockup />
-                        ) : c.mockup === "crm" ? (
-                          <CrmMockup />
-                        ) : c.mockup === "organisation" ? (
-                          <OrganisationMockup />
-                        ) : (
-                          <PointageMockup />
-                        )}
+                        <div>
+                          {c.mockup === "reporting" ? (
+                            <ReportingMockup />
+                          ) : c.mockup === "formatage" ? (
+                            <FormatageMockup />
+                          ) : c.mockup === "previsionnel" ? (
+                            <PrevisionnelMockup />
+                          ) : c.mockup === "evaluation" ? (
+                            <EvaluationMockup />
+                          ) : c.mockup === "crm" ? (
+                            <CrmMockup />
+                          ) : c.mockup === "organisation" ? (
+                            <OrganisationMockup />
+                          ) : (
+                            <PointageMockup />
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <div
                         className={
                           c.blend
                             ? "relative mt-6 md:mt-7 -mx-7 md:-mx-10 -mb-7 md:-mb-10"
-                            : "relative mt-7 md:mt-9 rounded-[18px] md:rounded-[22px] overflow-hidden shadow-[0_18px_44px_-18px_rgba(15,23,42,0.3)]"
+                            : "relative mt-7 md:mt-9 rounded-[12px] md:rounded-[14px] overflow-hidden ring-1 ring-[#0a2540]/[0.07] shadow-[0_14px_36px_-16px_rgba(10,37,64,0.3)]"
                         }
                       >
-                        <video
-                          src={c.video}
-                          poster={c.poster}
-                          autoPlay
-                          muted
-                          loop
-                          playsInline
-                          preload="metadata"
-                          className="w-full aspect-video object-cover block"
-                        />
-                        {c.blend && (
-                          /* Voile de fusion sur les QUATRE bords (client 2026-07-28) :
-                             certains passages du clip poussent du contenu blanc
-                             jusqu'au cadre, ce qui créait une démarcation nette avec
-                             la couleur de la carte. Chaque bord fond maintenant vers
-                             le fond de la carte. */
-                          <div aria-hidden className="pointer-events-none absolute inset-0">
-                            <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }} />
-                            <div className="absolute inset-x-0 bottom-0 h-10 md:h-12" style={{ background: `linear-gradient(to top, ${c.bg} 0%, transparent 100%)` }} />
-                            <div className="absolute inset-y-0 left-0 w-10 md:w-14" style={{ background: `linear-gradient(to right, ${c.bg} 0%, transparent 100%)` }} />
-                            <div className="absolute inset-y-0 right-0 w-10 md:w-14" style={{ background: `linear-gradient(to left, ${c.bg} 0%, transparent 100%)` }} />
-                          </div>
-                        )}
+                        <div>
+                          {/* PAS d'autoPlay (client 2026-08-04 : « les vidéos
+                              démarrent quand l'utilisateur arrive dessus, pas
+                              avant ») : l'attribut `poster` tient l'affichage, et
+                              c'est l'IntersectionObserver du moteur qui lance la
+                              lecture à l'entrée de la carte dans l'écran. */}
+                          <video
+                            src={c.video}
+                            poster={c.poster}
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                            className="w-full aspect-video object-cover block"
+                          />
+                          {c.blend && (
+                            /* Voile de fusion sur les QUATRE bords (client 2026-07-28) :
+                               certains passages du clip poussent du contenu blanc
+                               jusqu'au cadre, ce qui créait une démarcation nette avec
+                               la couleur de la carte. Chaque bord fond maintenant vers
+                               le fond de la carte. */
+                            <div aria-hidden className="pointer-events-none absolute inset-0">
+                              <div className="absolute inset-x-0 top-0 h-10 md:h-12" style={{ background: `linear-gradient(to bottom, ${c.bg} 0%, transparent 100%)` }} />
+                              <div className="absolute inset-x-0 bottom-0 h-10 md:h-12" style={{ background: `linear-gradient(to top, ${c.bg} 0%, transparent 100%)` }} />
+                              <div className="absolute inset-y-0 left-0 w-10 md:w-14" style={{ background: `linear-gradient(to right, ${c.bg} 0%, transparent 100%)` }} />
+                              <div className="absolute inset-y-0 right-0 w-10 md:w-14" style={{ background: `linear-gradient(to left, ${c.bg} 0%, transparent 100%)` }} />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                   </motion.div>

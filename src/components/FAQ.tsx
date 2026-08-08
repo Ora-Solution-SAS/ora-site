@@ -29,6 +29,17 @@ export default function FAQ() {
       }),
     },
     {
+      // Objection devenue ambiante depuis les déploiements Claude des Big Four
+      // (décision client 2026-08-04) : frontale ICI, et seulement ici. Les
+      // cartes de la section « bout en bout » restent obliques, sans nommer
+      // l'IA générative. Ton : complémentarité, pas opposition.
+      q: t({ fr: "Pourquoi ne pas simplement utiliser ChatGPT ou Claude ?", en: "Why not just use ChatGPT or Claude?" }),
+      a: t({
+        fr: "Pour rédiger un mail ou synthétiser un document, un chatbot fait très bien l'affaire. Vos livrables chiffrés sont un autre sujet : une IA générative produit un résultat plausible, différent à chaque essai, impossible à contrôler ligne à ligne. Ora repose sur des règles de calcul explicites : même fichier, même livrable, vérifiable et opposable. Et vos dossiers clients ne partent pas dans un chatbot.",
+        en: "For drafting an email or summarising a document, a chatbot does the job. Your numbers deliverables are a different matter: generative AI produces a plausible result, different on every try, impossible to check line by line. Ora runs on explicit calculation rules: same file, same deliverable, verifiable and defensible. And your client files never go into a chatbot.",
+      }),
+    },
+    {
       q: t({ fr: "Faut-il maîtriser Excel pour utiliser Ora ?", en: "Do we need to master Excel to use Ora?" }),
       a: t({
         fr: "Non. Vous décrivez votre tâche, on l'automatise. Vos équipes lancent l'automatisation sans connaître les formules ni les macros.",

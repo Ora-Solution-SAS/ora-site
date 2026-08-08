@@ -203,7 +203,11 @@ export default function CrmMockup() {
       >
         <div className="cm-fit">
           <div className="cm-stage" ref={stageRef}>
-            <div className="cm-blob" />
+            {/* Épure 2026-08-04 (client : « plus minimaliste, moins AI
+                generated ») : halo radial et les deux pastilles flottantes
+                (« Connecté au CRM », « 4 affaires importées ») RETIRÉS.
+                Restent les deux panneaux et le flux qui les relie : c'est
+                l'histoire de la carte. */}
 
             {/* A · Panneau CRM générique : le pipeline commercial */}
             <div className="cm-crm">
@@ -290,24 +294,6 @@ export default function CrmMockup() {
               </div>
             </div>
 
-            {/* D · Pastille porteuse : la connexion elle-même */}
-            <div className="cm-conn">
-              <span className="ic">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z" /><path d="m2 22 3-3" /><path d="M7.5 13.5 10 11" /><path d="M10.5 16.5 13 14" /><path d="m18 12 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0L12 6Z" /><path d="m22 2-3 3" /></svg>
-              </span>
-              <span className="t">{t({ fr: "Connecté au CRM", en: "Connected to the CRM" })}</span>
-            </div>
-
-            {/* E · Pastille de résultat */}
-            <div className="cm-tally">
-              <span className="ck">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-              </span>
-              <div>
-                <div className="t1">{t({ fr: "4 affaires importées", en: "4 deals imported" })}</div>
-                <div className="t2">{t({ fr: "Montants et statuts à jour dans Excel", en: "Amounts and statuses up to date in Excel" })}</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

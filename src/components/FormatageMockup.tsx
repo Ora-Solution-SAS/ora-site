@@ -92,9 +92,11 @@ const FM_CSS = `
 /* ── Badge de transformation, posé sur la bande entre les panneaux ── */
 .fm-mid{position:absolute;z-index:4;left:498px;top:312px;transform:translate(-50%,-50%)}
 .fm-chip{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;
-  border-radius:13px;background:#fff;font-size:13.5px;font-weight:700;color:#1e3a8a;
+  border-radius:13px;background:#fff;font-size:13.5px;font-weight:700;color:#12336b;
   white-space:nowrap;box-shadow:0 12px 30px -10px rgba(15,23,42,.55)}
-.fm-chip .sw{color:#2563eb}
+/* Encre du badge alignée sur le bleu du mur (palette à deux couleurs du
+   2026-08-05), après un aller-retour par le navy puis le teal. */
+.fm-chip .sw{color:#2969df}
 
 /* ── Pastille de résultat ── */
 .fm-pill{position:absolute;z-index:5;left:28px;bottom:22px;

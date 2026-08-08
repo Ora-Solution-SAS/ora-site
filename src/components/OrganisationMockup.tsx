@@ -194,7 +194,10 @@ export default function OrganisationMockup() {
       >
         <div className="og-fit">
           <div className="og-stage" ref={stageRef}>
-            <div className="og-blob" />
+            {/* Épure 2026-08-04 (client : « plus minimaliste, moins AI
+                generated ») : halo radial et pastille « 27 fichiers classés »
+                RETIRÉS. Restent le vrac, le geste flèche + étincelle et le
+                dossier rangé : la transformation se suffit. */}
 
             {/* A · Le vrac : les fichiers tels qu'ils arrivent */}
             {MESSY.map(([label, kind, left, top, rot], i) => (
@@ -266,16 +269,6 @@ export default function OrganisationMockup() {
               </div>
             </div>
 
-            {/* D · Pastille de résultat */}
-            <div className="og-tally">
-              <span className="ck">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
-              </span>
-              <div>
-                <div className="t1">{t({ fr: "27 fichiers classés", en: "27 files organized" })}</div>
-                <div className="t2">{t({ fr: "Renommés, datés, rangés au bon endroit", en: "Renamed, dated, filed where they belong" })}</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

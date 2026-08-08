@@ -49,19 +49,19 @@ const APP_LEFT = 155, APP_TOP = 66, APP_W = 730, APP_H = 512;
 const V_INTRO = 0.125;
 
 /** Fraction de la course d'épinglage consacrée à l'intro, quand la démo n'est
- *  PAS lancée. Le reste (40 %) est une PALIER : la réplique reste immobile,
- *  la notification est affichée, et il faut continuer de défiler pour en sortir.
+ *  PAS lancée. Le reste est un court BATTEMENT : la réplique reste immobile,
+ *  la notification est affichée, et le défilement suivant libère la scène.
  *
- *  Ce palier remplace le lenis.stop() du 2026-08-03 (client : « il ne faudrait
- *  pas que le scroll soit bloqué quand le bouton s'affiche mais ralenti, sinon
- *  on dirait que le site bugue »). Le constat est juste : à l'arrêt, la molette
- *  ne produit STRICTEMENT rien, ce qui se lit comme une page cassée. Ici la page
- *  continue de défiler, l'ascenseur avance, et c'est la scène épinglée qui
- *  patiente, comportement normal et lisible d'une section épinglée.
- *  Bénéfice secondaire, et il est important : plus de Lenis à l'arrêt, donc plus
- *  de compteurs d'insistance, de minuteries de secours ni de risque de laisser
- *  le défilement bloqué, qui est un piège connu du projet. */
-const V_HOLD = 0.60;
+ *  HISTORIQUE, dans l'ordre : lenis.stop() (2026-08-03, retiré — « on dirait
+ *  que le site bugue »), puis un palier de 46 vh à V_HOLD = 0,60 (la page
+ *  défilait mais la scène patientait longuement). RAMENÉ à un battement de
+ *  ~11 vh le 2026-08-06 (client : « enlève le léger blocage du scroll vers le
+ *  bas quand l'utilisateur passe à l'endroit du logiciel ») : l'intro garde
+ *  exactement sa longueur de 69 vh (0,86 x 80 vh), et il ne reste après elle
+ *  que le temps de VOIR la notification s'allumer avant que la scène ne se
+ *  libère. La hauteur du cadenceur (`md:h-[180vh]`) et cette constante se
+ *  règlent ENSEMBLE : intro = V_HOLD x (hauteur - 100 vh). */
+const V_HOLD = 0.86;
 
 /** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
  *  il est visible dès la première image et son trajet vers la carte « Ouvrir
@@ -1057,9 +1057,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       lastVRef.current = vRaw;
       // Heavy-scroll remap: raw scroll (linear) → demo time (weighted zones).
       // Démo NON lancée : le temps est étalé sur les V_HOLD premiers pour cent de
-      // la course, puis plafonné à V_INTRO. L'intro se joue donc sur la même
-      // distance qu'avant (0,60 x 115 vh = 69 vh, contre 70 vh), et les 40 %
-      // restants forment le palier pendant lequel la notification est visible.
+      // la course, puis plafonné à V_INTRO. L'intro se joue sur la même distance
+      // qu'avant (0,86 x 80 vh = 69 vh), et il ne reste qu'un battement de
+      // ~11 vh, le temps de voir la notification s'allumer (le palier de 46 vh
+      // a été retiré le 2026-08-06, client : « enlève le léger blocage »).
       // Le récit, lui, ne démarre jamais sans invitation.
       const v = lance
         ? remap(vRaw)
@@ -1512,11 +1513,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
           ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
           fois le bouton passé (choix client 2026-08-03). */}
-      {/* 215vh et non 170 quand la démo n'est pas lancée : la course d'épinglage
-          passe de 70 à 115 vh. L'intro en consomme 69, autant qu'avant, et les
-          46 vh restants sont le palier où la notification s'affiche. C'est cette
-          distance qui donne la sensation de lourdeur, sans jamais rien bloquer. */}
-      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[215vh]"}`}>
+      {/* 180vh quand la démo n'est pas lancée (215 avant le 2026-08-06) : la
+          course d'épinglage vaut 80 vh. L'intro en consomme 69, exactement
+          comme avant, et il ne reste que ~11 vh de battement pour voir la
+          notification s'allumer. Le palier de 46 vh a été retiré (client :
+          « enlève le léger blocage du scroll ») — voir V_HOLD. */}
+      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[180vh]"}`}>
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}

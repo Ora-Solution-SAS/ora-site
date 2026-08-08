@@ -1,0 +1,171 @@
+import { motion } from "framer-motion";
+import {
+  Ban,
+  Eye,
+  Laptop,
+  Lock,
+  Repeat,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+import { useLang } from "@/lib/i18n";
+
+/**
+ * ControlShowcase — section de clôture « Contrôle total ».
+ *
+ * RÉPLIQUE ASSUMÉE de la section monday.com du même nom (capture fournie par le
+ * client, 2026-08-05). Sa grammaire, reprise telle quelle :
+ *   · un très grand titre noir, aligné à GAUCHE, cassé sur deux lignes, occupant
+ *     la moitié gauche de l'écran et suivi d'un grand vide à droite ;
+ *   · en dessous, six entrées sur trois colonnes et deux rangées ;
+ *   · chaque entrée = une petite icône de contour à la couleur de marque, un
+ *     titre en gras, un paragraphe gris. AUCUNE carte, aucun aplat, aucun
+ *     liseré : c'est le blanc qui sépare, rien d'autre.
+ *
+ * ⚠ AUCUNE PREUVE FABRIQUÉE (règle projet). Les six entrées ne sont pas des
+ * fonctionnalités inventées pour remplir la grille : chacune reprend un
+ * engagement DÉJÀ formulé ailleurs sur le site, et rien de plus.
+ *   · local, chiffrement, Suisse/Europe, cloisonnement, zéro entraînement
+ *     → PrivacyShowcase et la carte « Local & sécurisé » de StackingCards ;
+ *   · calcul déterministe et vérifiable ligne à ligne
+ *     → la carte « Fiabilité & rapidité » de StackingCards et le manifeste noir
+ *       d'ExcelReveal.
+ * Ne rien ajouter ici qui ne soit pas déjà tenu ailleurs.
+ */
+
+interface ControlShowcaseProps {
+  theme: "light" | "dark";
+}
+
+const fadeUp = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-80px" },
+} as const;
+
+type Item = { icon: LucideIcon; title: string; body: string };
+
+export default function ControlShowcase({ theme }: ControlShowcaseProps) {
+  const { t } = useLang();
+  const dk = theme === "dark";
+
+  const items: Item[] = [
+    {
+      icon: Laptop,
+      title: t({ fr: "Traitement en local", en: "Local processing" }),
+      body: t({
+        fr: "Vos automatisations s'exécutent sur votre machine. Les fichiers que vous traitez ne quittent pas votre poste.",
+        en: "Your automations run on your own machine. The files you process never leave your computer.",
+      }),
+    },
+    {
+      icon: Lock,
+      title: t({ fr: "Chiffré avant l'envoi", en: "Encrypted before it is sent" }),
+      body: t({
+        fr: "Avec Atlas, notre orchestration de fichiers, vos données sont chiffrées sur votre appareil avant tout envoi. Nos serveurs ne stockent que de l'illisible.",
+        en: "With Atlas, our file orchestration, your data is encrypted on your device before anything is sent. Our servers only ever store unreadable data.",
+      }),
+    },
+    {
+      icon: Eye,
+      title: t({ fr: "Hébergement européen", en: "European hosting" }),
+      body: t({
+        fr: "Francfort et Genève, hors de portée du CLOUD Act américain. Aucune donnée ne transite par un hébergeur soumis au droit américain.",
+        en: "Frankfurt and Geneva, out of reach of the US CLOUD Act. No data passes through a host subject to US law.",
+      }),
+    },
+    {
+      icon: Users,
+      title: t({ fr: "Accès cloisonné", en: "Compartmentalised access" }),
+      body: t({
+        fr: "L'accès est cloisonné par organisation, par équipe et par utilisateur. Ce qui n'a pas été ouvert reste fermé, par défaut.",
+        en: "Access is isolated per organisation, per team and per user. Whatever has not been opened stays closed, by default.",
+      }),
+    },
+    {
+      icon: Ban,
+      title: t({ fr: "Aucun entraînement de modèle", en: "No model training" }),
+      body: t({
+        fr: "Vos fichiers servent à votre travail, à rien d'autre. Aucune donnée client n'a jamais été utilisée pour entraîner un modèle d'IA.",
+        en: "Your files serve your work, nothing else. No client data has ever been used to train an AI model.",
+      }),
+    },
+    {
+      icon: Repeat,
+      title: t({ fr: "Résultat reproductible", en: "Reproducible output" }),
+      body: t({
+        fr: "Des règles de calcul déterministes produisent votre livrable. Même fichier en entrée, même résultat en sortie, vérifiable ligne à ligne.",
+        en: "Deterministic calculation rules produce your deliverable. Same file in, same result out, verifiable line by line.",
+      }),
+    },
+  ];
+
+  return (
+    <section
+      id="controle"
+      data-nav-shy
+      // MÊME FOND que PrivacyShowcase juste au-dessus, blanc pur en clair et
+      // noir pur en sombre (client 2026-08-05 : « mets un fond blanc pour
+      // Contrôle total et mets cette partie en dessous de Vos données vous
+      // appartiennent »). Les deux sections ne doivent plus se lire comme deux
+      // blocs empilés mais comme UNE surface continue, d'où l'abandon de
+      // l'alternance #fcfbf7 / #0f172a : une couture de couleur entre elles
+      // annulerait le rapprochement demandé.
+      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-28 md:pb-40"
+      style={{ background: dk ? "#000000" : "#ffffff" }}
+    >
+      <div className="relative max-w-7xl mx-auto">
+        {/* Titre monday : très grand, à GAUCHE, cassé en deux lignes par des
+            `block` explicites et non par le retour à la ligne naturel. La moitié
+            droite reste vide, c'est ce déséquilibre qui fait la respiration de
+            la section d'origine. `max-w-[10ch]` tient la casse quelle que soit
+            la langue, sans quoi l'anglais (« Full control ») repasserait sur une
+            seule ligne. */}
+        <motion.h2
+          {...fadeUp}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="font-poppins font-semibold tracking-[-0.04em] leading-[0.95] text-[#111827] dark:text-white max-w-[10ch]"
+          style={{ fontSize: "clamp(3.2rem, 8vw, 7rem)" }}
+        >
+          <span className="block">{t({ fr: "Contrôle", en: "Full" })}</span>
+          <span className="block">{t({ fr: "total", en: "control" })}</span>
+        </motion.h2>
+
+        {/* Grille 3 × 2. `gap-y` bien plus grand que `gap-x` : chez monday ce
+            sont les rangées qui respirent, les colonnes restent serrées. */}
+        <div className="mt-20 md:mt-28 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-14 md:gap-y-20">
+          {items.map((it, i) => {
+            const Icon = it.icon;
+            return (
+              <motion.div
+                key={it.title}
+                {...fadeUp}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.22, 1, 0.36, 1],
+                  // Décalage par COLONNE et non par index : les trois entrées
+                  // d'une même rangée arrivent en cascade de gauche à droite,
+                  // puis la rangée suivante repart de la gauche.
+                  delay: 0.06 * (i % 3),
+                }}
+                className="max-w-[34ch]"
+              >
+                <Icon
+                  className="w-[22px] h-[22px] text-blue-600 dark:text-blue-400"
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+                <h3 className="font-poppins font-semibold text-[17px] md:text-[18px] tracking-[-0.01em] text-[#111827] dark:text-white mt-5">
+                  {it.title}
+                </h3>
+                <p className="font-inter mt-3 text-[15px] md:text-[16px] leading-relaxed text-gray-600 dark:text-gray-400">
+                  {it.body}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}

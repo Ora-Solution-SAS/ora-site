@@ -87,8 +87,8 @@ const ITEMS: Item[][] = [
   ],
   // Colonne 3
   [
-    { name: "Extraction PDF", family: "Ressaisie", glyph: "pdf", video: "/ora_pdf_extract.mp4" },
-    { name: "Pointage de comptes", family: "Révision", glyph: "match", video: "/ora_pointage_v3.mp4" },
+    { name: "Extraction PDF", family: "Ressaisie", glyph: "pdf", video: "/ora_pdf_extract_v5.mp4" },
+    { name: "Pointage de comptes", family: "Révision", glyph: "match", video: "/ora_pointage_v4.mp4" },
     { name: "Tests sur le journal", family: "Audit", glyph: "rows" },
     { name: "Formatage pour logiciel métier", family: "Export", glyph: "merge" },
     { name: "Nettoyage des doublons", family: "Qualité", glyph: "check" },
