@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Sun, Moon, Briefcase, PieChart, TrendingUp, Building2 } from "lucide-react";
+import { ArrowRight, Sun, Moon, Briefcase, PieChart, TrendingUp, Building2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
   NavigationMenu,
@@ -204,18 +204,19 @@ const Navigation: React.FC<NavigationProps> = ({
     >
       {/* Bandeau plus large et logo calé à gauche (monday.com) : plus de
           max-w-7xl centré qui décollait le logo du bord. */}
-      {/* POPPINS SUR TOUTE LA NAV (client 2026-08-06 : « réplique la même police
-          que le screen de monday.com », capture de leur barre de navigation).
-          Mesuré sur monday.com plutôt que supposé : leur `body` est en
-          `Poppins, Arial, sans-serif` et leurs liens de nav sont en Poppins 400
-          à 16 px. La nôtre était en Inter — c'était LA différence visible entre
-          la capture et le site, la famille de titres étant déjà la bonne
-          partout ailleurs.
+      {/* FIGTREE SUR TOUTE LA NAV (client 2026-08-08 : « réplique exactement la
+          même police, même couleur et même design que ce screen », capture de
+          la barre monday.com — deuxième passe sur cette même référence).
+          La première passe (2026-08-06) avait mesuré « Poppins, Arial » sur
+          leur body et posé Poppins ici ; c'était la pile de REPLI. La vraie
+          fonte de marque monday est FIGTREE, chargée chez nous depuis le
+          2026-08-08 pour les cartes « Automatisez de bout en bout » — la nav la
+          rejoint, liens en 400, comme l'original.
           Exception assumée à la règle « corps et UI en Inter » de CLAUDE.md, au
           même titre qu'Instrument Sans sur les phrases du manifeste : elle est
           limitée à la barre de navigation, qui est de la typographie
           d'enseigne, pas du texte courant. */}
-      <nav className="font-poppins max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 h-[68px]">
+      <nav className="font-figtree max-w-[1600px] mx-auto flex items-center justify-between px-6 lg:px-8 h-[68px]">
 
         {/* ── Left: Logo + NavigationMenu ─────────────────── */}
         <div className="flex items-center">
@@ -233,10 +234,17 @@ const Navigation: React.FC<NavigationProps> = ({
             className="flex-shrink-0 mr-4"
             aria-label={t({ fr: "Ora, Accueil", en: "Ora, Home" })}
           >
+            {/* AGRANDI le 2026-08-08 au soir (client : « le logo doit prendre
+                plus de place en largeur, tout en étant aligné avec ce qui est
+                sur le bandeau ») : h-9 → h-11, soit ~22 % de largeur en plus,
+                le ratio étant fixe. L'alignement ne bouge pas : le flex
+                items-center du bandeau le centre verticalement dans les 68 px,
+                et son bord gauche reste sur le padding du conteneur, comme les
+                boutons du bord droit. */}
             <img
               src={(theme === "dark" || overDark) ? "/logos/logo-color-light.png" : "/logos/logo-color-dark.png"}
               alt="Ora"
-              className="h-9 w-auto"
+              className="h-11 w-auto"
             />
           </button>
 
@@ -245,8 +253,18 @@ const Navigation: React.FC<NavigationProps> = ({
             <NavigationMenuList>
 
               {/* Solutions */}
+              {/* Liens en Figtree 400, 15,5 px, encre quasi noire #323338 — les
+                  valeurs de la barre monday (client 2026-08-08 : « même police,
+                  même couleur, même design »). Le style partagé de
+                  navigationMenuTriggerStyle (13,5 px, medium, gris) est
+                  surchargé ici plutôt que modifié : il sert de base neutre. */}
               <NavigationMenuItem value="solutions">
-                <NavigationMenuTrigger className={overDark ? "text-white/85 hover:text-white hover:bg-white/10" : undefined}>{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
+                <NavigationMenuTrigger
+                  className={cn(
+                    "text-[15.5px] font-normal text-[#323338] hover:text-[#323338] dark:text-gray-300",
+                    overDark && "text-white/85 hover:text-white hover:bg-white/10",
+                  )}
+                >{t({ fr: "Solutions", en: "Solutions" })}</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="w-72 p-2">
                     {solutionsLinks.map((item) => (
@@ -269,6 +287,7 @@ const Navigation: React.FC<NavigationProps> = ({
                     onClick={() => goToSection(s.id)}
                     className={cn(
                       navigationMenuTriggerStyle(),
+                      "text-[15.5px] font-normal text-[#323338] hover:text-[#323338] dark:text-gray-300",
                       overDark && "text-white/85 hover:text-white hover:bg-white/10",
                     )}
                   >
@@ -320,16 +339,24 @@ const Navigation: React.FC<NavigationProps> = ({
 
           {/* Espace client — secondary, desktop. Client login: routes to the
               404 placeholder until the real login page / app URL exists. */}
+          {/* ── Les deux boutons de la barre monday, pris au mot (client
+              2026-08-08 : « même police, même couleur, même design ») ──
+              · contour fin + encre INDIGO #6161FF, le « basic blue » de
+                monday, sur le bouton secondaire — c'est bien LEUR couleur, pas
+                le bleu de marque Ora ; « même couleur » a été pris
+                littéralement, revenir à #3b82f6 tient en deux constantes ;
+              · plein #6161FF + flèche sur le principal, sans ombre ni
+                soulèvement — la barre monday n'en a pas ;
+              · Figtree 500 à 15 px, gabarit px-6/py-2,5, coins pleins.
+              Exception assumée à la règle « CTA en font-inter font-semibold »
+              de CLAUDE.md, dans le périmètre de la barre seulement. */}
           <button
             onClick={() => onNavigate("espace-client")}
-            /* Bouton blanc cerclé de bleu (réplique du « Contact commercial »
-               de monday.com, client 2026-07-28) : contour et texte bleus, fond
-               transparent, qui se remplit très légèrement au survol. */
             className={cn(
-              "hidden md:inline-flex items-center px-5 py-2.5 rounded-full border text-[13.5px] font-semibold transition-colors duration-150",
+              "hidden md:inline-flex items-center px-6 py-2.5 rounded-full border text-[15px] font-medium transition-colors duration-150",
               overDark
                 ? "border-white/45 text-white hover:bg-white/10"
-                : "border-[#3b82f6] text-[#3b82f6] hover:bg-[#3b82f6]/[0.07] dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
+                : "border-[#6161FF] text-[#6161FF] hover:bg-[#6161FF]/[0.06] dark:border-[#8B8BFF] dark:text-[#8B8BFF] dark:hover:bg-[#8B8BFF]/10"
             )}
           >
             {t({ fr: "Mon espace Ora", en: "My Ora space" })}
@@ -338,9 +365,10 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
-            className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full text-[13.5px] font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_10px_rgba(59,130,246,0.22)] hover:shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
+            className="hidden md:inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[15px] font-medium text-white bg-[#6161FF] hover:bg-[#4E4EDB] transition-colors duration-150"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
+            <ArrowRight className="w-4 h-4" />
           </button>
 
           {/* Mobile hamburger */}
@@ -385,16 +413,18 @@ const Navigation: React.FC<NavigationProps> = ({
             {/* NOTE: "L'expérience Ora", "Tarifs" and "Confidentialité"
                 links are temporarily hidden until those pages go live. */}
 
+            {/* Mêmes couleurs monday que la barre (2026-08-08) : le tiroir
+                mobile ne doit pas raconter une autre marque que le bandeau. */}
             <div className="mt-4 flex flex-col gap-2">
               <button
                 onClick={() => { setMobileOpen(false); onNavigate("espace-client"); }}
-                className="w-full py-3 rounded-xl text-[15px] font-semibold text-gray-800 dark:text-gray-100 border border-gray-200 dark:border-white/15 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors duration-150"
+                className="w-full py-3 rounded-full text-[15px] font-medium text-[#6161FF] border border-[#6161FF] hover:bg-[#6161FF]/[0.06] dark:text-[#8B8BFF] dark:border-[#8B8BFF] dark:hover:bg-[#8B8BFF]/10 transition-colors duration-150"
               >
                 {t({ fr: "Mon espace Ora", en: "My Ora space" })}
               </button>
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
-                className="w-full py-3 rounded-xl text-[15px] font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_14px_rgba(59,130,246,0.22)] transition-colors duration-150"
+                className="w-full py-3 rounded-full text-[15px] font-medium text-white bg-[#6161FF] hover:bg-[#4E4EDB] transition-colors duration-150"
               >
                 {t({ fr: "Réserver un appel", en: "Book a call" })}
               </button>

@@ -314,31 +314,30 @@ export function FileChipStrip({ withOrigin = false }: { withOrigin?: boolean }) 
 // reference. The client then supplied a flat grey SWATCH as the target, which
 // measures around #f1f2f4.
 //
-// ⚠ TROIS PASSES SUR CE GRIS, ET LA BONNE EST LA MOYENNE DES DEUX RATÉES.
-// Le barème, pour ne pas recommencer :
-//   · départ  #fafafb → #eeeef1 — « pas assez intense », moyenne rgb(247,247,249)
-//   · passe 1 #f1f2f4 → #dfe1e5 — trop foncé, l'échantillon servait de point de
-//     DÉPART et tout descendait sous lui
-//   · passe 2 #f2f3f5 → #e4e6ea — « le gris est trop foncé là » (2026-08-08),
-//     moyenne rgb(236,237,240), encore un cran sous la cible
-//   · passe 3, celle-ci — l'échantillon #f1f2f4 devient la valeur MÉDIANE et non
-//     l'extrême : le haut s'éclaircit au-dessus de lui, le pied descend à peine
-//     en dessous. Moyenne rgb(241,242,244), soit pile l'échantillon.
+// ⚠ LE GRIS EST PARTI : cartes BLANCHES À DÉGRADÉ DE BLEU depuis le 2026-08-08
+// (client : « fais en sorte que les deux encadrés soient blanches avec un
+// dégradé de bleu »). La saga du gris qui précède reste consignée dans le
+// changelog — trois passes pour apprendre qu'une couleur cible se met au MILIEU
+// d'un dégradé, jamais à une extrémité, parce que c'est la moyenne que l'œil
+// lit. La règle vaut encore ici.
 //
-// LA LEÇON : sur un dégradé, viser une couleur cible veut dire la mettre AU
-// MILIEU. La poser à une extrémité déplace toute la surface d'un côté, et c'est
-// la moyenne, pas le premier arrêt, que l'œil lit comme « le gris de la carte ».
+// Le dégradé part du BLANC FRANC en haut-gauche — c'est lui qui fait la carte
+// « blanche » — et descend vers un bleu de marque très délavé au coin bas-droit,
+// la même lecture que le fond du hero (blanc, halo bleu bas-droit). Le bleu est
+// une teinte de #3b82f6 (mélanges au blanc sur le même axe), pas une couleur
+// tierce.
 //
 // The same MINUTE per-card offsets are preserved so the stacking cue holds.
-// Dark mode is untouched — it already reads as grey there.
+// Dark mode keeps its established near-blacks: a white card in dark mode would
+// glare, and the client's reference screenshots are light mode.
 // Full literal strings so Tailwind's JIT can extract them.
 const CARD_BGS = [
   // Card 0
-  "bg-gradient-to-br from-[#f6f7f8] via-[#f1f2f4] to-[#eaebee] dark:from-[#15171c] dark:via-[#131519] dark:to-[#101216]",
+  "bg-gradient-to-br from-white via-[#f1f6fe] to-[#ddeafc] dark:from-[#15171c] dark:via-[#131519] dark:to-[#101216]",
   // Card 1
-  "bg-gradient-to-br from-[#f4f5f7] via-[#eff0f2] to-[#e8e9ec] dark:from-[#16181d] dark:via-[#14161a] dark:to-[#111317]",
+  "bg-gradient-to-br from-white via-[#eff4fd] to-[#d9e7fb] dark:from-[#16181d] dark:via-[#14161a] dark:to-[#111317]",
   // Card 2
-  "bg-gradient-to-br from-[#f7f8f9] via-[#f2f3f5] to-[#ebeced] dark:from-[#14161b] dark:via-[#121419] dark:to-[#0f1115]",
+  "bg-gradient-to-br from-white via-[#f3f7fe] to-[#e0ecfd] dark:from-[#14161b] dark:via-[#121419] dark:to-[#0f1115]",
 ];
 
 export default function StackingCards() {

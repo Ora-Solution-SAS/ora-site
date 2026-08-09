@@ -420,10 +420,25 @@ const SKY_BILAN = [
  *  LA GÉOMÉTRIE NE BOUGE PAS : halo borné au pied, voile qui ne démarre qu'à
  *  56 % de hauteur. C'est le réglage validé au tour précédent (« moins intense
  *  et sur une partie plus restreinte »), et seule la teinte est en cause ici. */
+/*  ── ÉCLAIRCIES D'UN CRAN le 2026-08-08 au soir (client : « un bleu un tout
+ *  petit peu plus clair pour les ombres ») : chaque teinte monte d'UN pas dans
+ *  la gamme — #1d4ed8 → #3b82f6 sur le cœur du halo, #3b82f6 → #93b8f8 sur sa
+ *  frange et sur le voile de pied. Géométrie et opacités inchangées au chiffre
+ *  près : la consigne porte sur la CLARTÉ, pas sur la couverture.
+ *  ⚠ La carte se DÉTACHE ce faisant de RING_BLUE : ses ombres ne suivent plus
+ *  les couleurs du shader de l'anneau, et c'est voulu — le lien datait d'une
+ *  consigne du 07/08, celle-ci est plus récente. */
+const FORMATAGE_BLUE = {
+  /** #3b82f6 — le cœur du halo, un cran au-dessus de l'ancien #1d4ed8. */
+  core: "59,130,246",
+  /** #93b8f8 — frange du halo et voile de pied, un cran au-dessus de #3b82f6. */
+  pale: "147,184,248",
+} as const;
+
 const SKY_FORMATAGE = [
   GRAIN,
-  `radial-gradient(52% 46% at 50% 118%, rgba(${RING_BLUE.bot},0.3) 0%, rgba(${RING_BLUE.top},0.14) 48%, rgba(255,255,255,0) 76%)`,
-  `linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 56%, rgba(${RING_BLUE.top},0.1) 82%, rgba(${RING_BLUE.top},0.17) 100%)`,
+  `radial-gradient(52% 46% at 50% 118%, rgba(${FORMATAGE_BLUE.core},0.3) 0%, rgba(${FORMATAGE_BLUE.pale},0.14) 48%, rgba(255,255,255,0) 76%)`,
+  `linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 56%, rgba(${FORMATAGE_BLUE.pale},0.1) 82%, rgba(${FORMATAGE_BLUE.pale},0.17) 100%)`,
 ].join(", ");
 
 /** Les deux OMBRES MOBILES de la carte pleine largeur. Elles restent — le
@@ -436,8 +451,10 @@ const SKY_FORMATAGE = [
  *  Le déplacement porte sur `transform` : deux couches translatées, aucun
  *  repeint. Déplacer le centre d'un `radial-gradient` aurait repeint la carte
  *  entière à chaque image, et c'est la plus large de la page. */
+// ÉCLAIRCIE d'un cran le 2026-08-08 au soir avec le reste des ombres de la
+// carte : #93b8f8 → #a9c8fa, mêmes alphas.
 const DRIFT_A =
-  "radial-gradient(closest-side, rgba(147,184,248,0.2) 0%, rgba(147,184,248,0.09) 44%, transparent 82%)";
+  "radial-gradient(closest-side, rgba(169,200,250,0.2) 0%, rgba(169,200,250,0.09) 44%, transparent 82%)";
 // ⚠ CETTE NAPPE ÉTAIT VERTE, et c'était bien elle que le client voyait : le
 // pavé ci-dessus dit qu'elle « emprunte au teal de la charte plutôt qu'au
 // bleu ». Sur une carte dont tout le reste est bleu, elle ne se lisait pas comme
@@ -446,8 +463,11 @@ const DRIFT_A =
 // Elle passe au bleu de tête de l'anneau, en restant la plus diluée des deux :
 // son rôle — donner de la vie sans rajouter du bleu — est tenu par sa densité,
 // pas par sa teinte.
+// ÉCLAIRCIE d'un cran le 2026-08-08 au soir avec le reste des ombres de la
+// carte : #3b82f6 → #93b8f8 (FORMATAGE_BLUE.pale), mêmes alphas. Elle aussi se
+// détache donc de RING_BLUE.
 const DRIFT_B =
-  `radial-gradient(closest-side, rgba(${RING_BLUE.top},0.14) 0%, rgba(${RING_BLUE.top},0.05) 48%, transparent 84%)`;
+  `radial-gradient(closest-side, rgba(${FORMATAGE_BLUE.pale},0.14) 0%, rgba(${FORMATAGE_BLUE.pale},0.05) 48%, transparent 84%)`;
 
 /** Les soldes intermédiaires de gestion, semés dans la carte « Bilan développé ».
  *  Les abscisses ont été décalées de +2,5 points le 2026-08-07 : mesuré, le
@@ -1907,7 +1927,12 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                   size={980}
                   count={12000}
                   radius={0.42}
-                  scatterPower={5.4}
+                  // 5,4 → 6,4 le 2026-08-08 au soir (« un peu plus en forme de
+                  // galaxie ») : l'exposant raréfie les particules que le bruit
+                  // du shader envoie loin de leur bras. Avec le halo et la
+                  // dispersion du semis resserrés en face (ParticleOrbGL), les
+                  // trois courbes se dessinent au lieu de moutonner.
+                  scatterPower={6.4}
                   pointSize={3.4}
                   // Le facteur porte sur les trois horloges à la fois, houle
                   // du bruit comprise — c'est elle, et non la rotation, qui

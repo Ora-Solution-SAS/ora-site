@@ -60,6 +60,13 @@ uniform float u_discRadius;
 /* Variante PLANÈTE : 1 pour l'activer, et l'angle de rotation propre. */
 uniform float u_planet;
 uniform float u_spin;
+/* Drapeau GALAXIE, 1 quand la variante est active. Declare ICI parce que le
+ * resserrement au curseur s en sert dans CE shader : un uniform utilise sans
+ * declaration dans son etage fait echouer la compilation du programme entier,
+ * et les DEUX decors disparaissent — deja paye le 2026-08-08. Ne pas le
+ * remplacer par un test sur u_swirl, qui part de zero et croit avec le temps.
+ * (Sans accents ni backticks : ce bloc vit dans un template literal.) */
+uniform float u_galaxy;
 
 varying float v_radial;
 varying float v_random;
@@ -228,12 +235,41 @@ void main() {
 
   vec4 modelPosition = modelMatrix * vec4(pos, 1.0);
   float mouseDistance = distance(u_mousePosition, modelPosition.xy) / u_resolution.x;
-  mouseDistance = smoothstep(0.2, 0.0, mouseDistance);
+  // Zone du curseur RETRECIE le 2026-08-08 au soir (client : « pas une grosse
+  // portion de l'anneau, vraiment une toute petite portion ») : 0,09 de la
+  // largeur du canvas au lieu de 0,2, soit ~68 px sur la carte. La zone et la
+  // force sont deux reglages independants — la demande precedente avait
+  // echoue en elargissant la zone pour chercher de la force.
+  mouseDistance = smoothstep(0.09, 0.0, mouseDistance);
 
   pos += dir * noiseInner * 100.0 * pow(v_random, u_scatterPower + (u_scatterPower * thinkingAlignment));
   pos += dir * noiseInner * 20.0 * thinkingAlignment;
   pos += dir * noiseOuter * 5.0 * thinkingAlignment;
   pos = mix(pos, position, mouseDistance * u_mouseStrength + noiseOuter * 0.5);
+
+  // LE RESSERREMENT LOCAL, meme date. Le mix ci-dessus ne peut que RENDRE a la
+  // particule sa position de repos : sous le curseur l'anneau redevient net,
+  // il ne devient pas plus serre. Pour serrer vraiment, la particule est tiree
+  // sur la circonference exacte : le semis de +/-4,5 pour cent se resorbe et
+  // la bande floue devient un trait, uniquement dans la petite zone.
+  // SANS CONTRACTION depuis le 2026-08-08 au soir (client : « pas que le
+  // cercle se deforme, juste que les particules se resserrent ») : la version
+  // precedente contractait aussi le rayon de 12 pour cent, et c est cette
+  // rentree locale qui se lisait comme une deformation du cercle. Le rayon
+  // vise est donc u_discRadius TEL QUEL — le cercle garde sa forme, seule
+  // l epaisseur de la couronne fond. La GALAXIE est exclue : ses bras
+  // tiennent a leur geometrie, les rabattre sur un cercle les effacerait.
+  // (Pas de backticks ni d accents dans ce bloc : template literal, et le
+  // drapeau u_galaxy DOIT etre declare dans CE shader — les deux pieges ont
+  // deja ete payes, voir la note memoire glsl-template-literal-backticks.)
+  float grip = clamp(mouseDistance * u_mouseStrength, 0.0, 1.0);
+  if (u_galaxy < 0.5 && grip > 0.001) {
+    float rad2 = length(pos.xy);
+    vec2 radial = rad2 > 0.001 ? pos.xy / rad2 : vec2(0.0);
+    vec2 serre = radial * u_discRadius;
+    pos.xy = mix(pos.xy, serre, grip * 0.95);
+    pos.z = mix(pos.z, 0.0, grip * 0.95);
+  }
 
   vec4 finalModelPosition = modelMatrix * vec4(pos, 1.0);
   vec4 viewPosition = viewMatrix * finalModelPosition;
@@ -371,7 +407,11 @@ function galaxyPositions(count: number, R: number, ARMS: number) {
   // Halo DOUBLÉ au-delà de deux bras : ce sont les étoiles semées large et au
   // hasard qui donnent la dispersion, pas l'écartement des bras eux-mêmes —
   // écarter les bras finit par les fondre entre eux.
-  const HALO = ARMS > 2 ? 0.16 : 0.07;
+  // REDESCENDU de 0,16 à 0,11 le 2026-08-08 au soir (client : « un peu plus en
+  // forme de galaxie ») : le halo était devenu si fourni que la spirale se
+  // lisait comme une brume à peine structurée. Un point sur neuf hors des bras
+  // suffit à casser le bord net, sans noyer les courbes.
+  const HALO = ARMS > 2 ? 0.11 : 0.07;
   const pos = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     const q = rnd();
@@ -387,7 +427,12 @@ function galaxyPositions(count: number, R: number, ARMS: number) {
       const t = Math.pow(rnd(), 0.78);
       r = R * (0.05 + t * 1.0);
       const arm = Math.floor(rnd() * ARMS) * ((Math.PI * 2) / ARMS);
-      a = arm + TWIST * Math.pow(r / R, 0.7) + gauss() * (0.1 + (ARMS > 2 ? 0.4 : 0.24) * (r / R));
+      // Dispersion autour des bras RESSERRÉE à trois bras et plus (0,4 → 0,26,
+      // même passage que le halo ci-dessus) : c'est l'écart-type qui décide si
+      // l'œil voit des COURBES ou un disque grumeleux. Le resserrement ne vaut
+      // que loin du cœur — près du centre les bras se confondent de toute
+      // façon, par construction de la spirale.
+      a = arm + TWIST * Math.pow(r / R, 0.7) + gauss() * (0.1 + (ARMS > 2 ? 0.26 : 0.24) * (r / R));
     }
     pos[i * 3] = Math.cos(a) * r;
     pos[i * 3 + 1] = Math.sin(a) * r;
@@ -630,11 +675,17 @@ export default function ParticleOrbGL({
     // par Lenis, donc sur le thread principal : tout ce qu'on lui rend, il le
     // rend au scroll. La rAF continue de cadencer, on se contente de sauter
     // le rendu une image sur deux.
-    // 30 au repos, 60 SOUS LE CURSEUR : la dérive de fond ne mérite pas la
-    // pleine cadence, un effet qui suit la souris si. Le surcoût ne dure que le
-    // temps du survol, et un seul décor est survolé à la fois.
+    // 30 au repos, PLEINE CADENCE SOUS LE CURSEUR : la dérive de fond ne mérite
+    // pas la pleine cadence, un effet qui suit la souris si. Le surcoût ne dure
+    // que le temps du survol, et un seul décor est survolé à la fois.
+    // DÉPLAFONNÉ le 2026-08-09 (client : « rendre l'animation du hover plus
+    // smooth ») : le plafond de survol était à 60 Hz, or les Mac récents
+    // affichent à 120 — l'écran passait donc une image sur deux, et c'est un
+    // plafond de cadence qu'aucun réglage d'inertie ne peut compenser. À 8 ms,
+    // la rAF cadence naturellement à la fréquence de l'écran (les lissages
+    // étant exponentiels sur le temps écoulé, la vitesse perçue ne change pas).
     const INTERVALLE_REPOS = 1000 / 30;
-    const INTERVALLE_SURVOL = 1000 / 60;
+    const INTERVALLE_SURVOL = 8;
     let dernier = 0;
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -658,15 +709,21 @@ export default function ParticleOrbGL({
       // Lissages EXPONENTIELS sur le temps écoulé : `1 - exp(-dt/τ)` donne la
       // même vitesse de convergence quelle que soit la cadence, là où un facteur
       // fixe par image allait deux fois plus vite à 60 Hz qu'à 30.
-      // τ = 90 ms sur la position — assez pour arrondir le geste, trop court
-      // pour qu'on sente un décalage.
-      mouse.lerp(mouseCible, 1 - Math.exp(-dt / 0.09));
+      // τ = 150 ms sur la position (90 ms à l'origine, 130 la veille) —
+      // RALENTI en deux passes avec l'intensité ci-dessous (client : « less
+      // fast », puis « rendre l'animation du hover plus smooth »). Le gros du
+      // gain de fluidité vient du déplafonnement de la cadence de survol,
+      // plus haut ; l'inertie n'ajoute que la rondeur du geste.
+      mouse.lerp(mouseCible, 1 - Math.exp(-dt / 0.15));
       uniforms.u_mousePosition.value.copy(mouse);
-      // τ = 420 ms sur l'intensité : l'anneau doit se recomposer et se défaire
-      // en douceur, pas s'allumer. Sensiblement la même durée qu'avant (0,06 par
-      // image à 30 Hz ≈ 550 ms), mais désormais stable d'une cadence à l'autre.
+      // τ = 750 ms sur l'intensité (420 ms à l'origine). C'est LE levier de la
+      // vitesse de contraction : le resserrement était jugé trop rapide pour
+      // être vu se faire (« too fast for the particles to be contracted »).
+      // À 750 ms, la pincée s'installe en ~2 s au lieu de ~1,2 s — on la voit
+      // se former, et elle se défait à la même douceur. Le mécanisme reste
+      // exponentiel sur le temps écoulé, donc identique à 30 et à 60 Hz.
       uniforms.u_mouseStrength.value +=
-        (wantStrength - uniforms.u_mouseStrength.value) * (1 - Math.exp(-dt / 0.42));
+        (wantStrength - uniforms.u_mouseStrength.value) * (1 - Math.exp(-dt / 0.75));
       renderer.render(scene, camera);
     };
 

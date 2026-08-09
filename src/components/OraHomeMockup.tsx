@@ -40,9 +40,12 @@ const MODULES = [
 /** `plain` : SANS le cadre propre (coins, liseré, ombre) ni l'animation
  *  d'entrée — pour l'embarquer dans une enveloppe qui fournit déjà les deux,
  *  comme la fenêtre navigateur de la carte « Automatisation FEC »
- *  (UseCasesBento, 2026-08-06). Par défaut, rendu inchangé. */
-export default function OraHomeMockup({ plain = false }: { plain?: boolean }) {
-  const { ref, hidden, armed } = useEnterOnScroll<HTMLDivElement>();
+ *  (UseCasesBento, 2026-08-06). Par défaut, rendu inchangé.
+ *  `still` : garde le cadre mais SAUTE l'entrée au scroll — pour les copies du
+ *  MUR du hero, dans une scène épinglée où ce mécanisme ne peut pas
+ *  fonctionner (voir useEnterOnScroll). */
+export default function OraHomeMockup({ plain = false, still = false }: { plain?: boolean; still?: boolean }) {
+  const { ref, hidden, armed } = useEnterOnScroll<HTMLDivElement>(still);
 
   return (
     <div ref={ref} className="relative w-full lg:h-full">

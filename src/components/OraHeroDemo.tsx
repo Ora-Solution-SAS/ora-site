@@ -4,6 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraAppScene from "./OraAppScene";
 import OraHeroMobile from "./OraHeroMobile";
+import AppTablePanel from "./AppTablePanel";
+import OraHomeMockup from "./OraHomeMockup";
 
 /**
  * OraHeroDemo — scroll-driven product demo in the hero (Bending-Spoons style).
@@ -57,11 +59,98 @@ const V_INTRO = 0.125;
  *  défilait mais la scène patientait longuement). RAMENÉ à un battement de
  *  ~11 vh le 2026-08-06 (client : « enlève le léger blocage du scroll vers le
  *  bas quand l'utilisateur passe à l'endroit du logiciel ») : l'intro garde
- *  exactement sa longueur de 69 vh (0,86 x 80 vh), et il ne reste après elle
+ *  exactement sa longueur de 69 vh, et il ne reste après elle
  *  que le temps de VOIR la notification s'allumer avant que la scène ne se
- *  libère. La hauteur du cadenceur (`md:h-[180vh]`) et cette constante se
- *  règlent ENSEMBLE : intro = V_HOLD x (hauteur - 100 vh). */
-const V_HOLD = 0.86;
+ *  libère. La hauteur du cadenceur (`md:h-[280vh]`) et cette constante se
+ *  règlent ENSEMBLE : intro = V_HOLD x (hauteur - 100 vh).
+ *
+ *  ⚠ RECALCULÉ le 2026-08-08 avec l'arrivée du MUR (voir DZ_START) : la course
+ *  d'épinglage passe de 80 à 260 vh, donc la MÊME intro de 69 vh vaut
+ *  désormais 69/260 = 0,2654. Si la hauteur du cadenceur change, cette
+ *  constante et les deux bornes du dézoom se recalculent ensemble — toutes
+ *  trois sont des fractions de la même course. */
+const V_HOLD = 0.2654;
+
+/* ── LE MUR DU DÉZOOM (client 2026-08-08, réplique de monday.com) ────────────
+ * « Quand on arrive à l'endroit de la réplique, un dézoom avec d'autres
+ * encadrés ensuite qui défilent quand l'utilisateur scroll vers le bas », puis,
+ * capture de la page d'accueil monday à l'appui : « créer trois colonnes avec
+ * plusieurs lignes où ça défile, même si c'est une réplication des mêmes
+ * encadrés ».
+ *
+ * Le mur est une GRILLE 3 × 3 ALIGNÉE EN BANDES, comme la page monday : trois
+ * colonnes, trois lignes, les hauts de cartes alignés par ligne (align-items:
+ * start), PAS de maçonnerie décalée — une version à cinq colonnes étagées a
+ * été montrée au client le jour même, verdict : « le bazar absolu ». Les neuf
+ * cellules répètent trois designs — la réplique du logiciel (copies via
+ * OraHomeMockup, le même écran d'accueil en fenêtre), le panneau « Bilan
+ * développé et SIG », le panneau sombre « Rapprochement bancaire » — la
+ * duplication est explicitement actée (« je n'ai pas assez de designs,
+ * duplique simplement »). La cellule CENTRALE est un TROU : c'est la réplique
+ * VIVANTE du hero qui vient s'y loger en rétrécissant, au pixel près, puis
+ * grille et réplique se traversent d'un seul bloc.
+ *
+ * ⚠ LES CELLULES SONT RÉDUITES PAR transform: scale, JAMAIS PAR zoom. La
+ * première version zoomait, et Chromium (mes vérifications) rendait juste —
+ * mais Safari (le navigateur du client) déchirait le mur : fragments de
+ * cartes, pastilles à taille naturelle flottant hors de leur fenêtre, vides.
+ * Le zoom de WebKit est notoirement fragile sur les descendants positionnés
+ * en absolu. transform ne participe pas à la mise en page, donc chaque
+ * cellule reçoit AUSSI sa hauteur calculée (hauteur naturelle × échelle),
+ * écrite par fit() — c'est le prix de la fiabilité, et il est mesuré, pas
+ * supposé.
+ *
+ * La chorégraphie, en fractions de la course d'épinglage de 260 vh :
+ *   · 0 → V_HOLD (69 vh)         l'intro existante, au vh près ;
+ *   · V_HOLD → DZ_START (11 vh)  le battement existant — la notification
+ *                                d'invitation s'allume ici, et c'est AUSSI sa
+ *                                fenêtre de clic : passé DZ_START elle
+ *                                s'éteint, le mur prend la place ;
+ *   · DZ_START → DZ_END (70 vh)  le DÉZOOM : la réplique rétrécit vers son
+ *                                trou pendant que les colonnes convergent des
+ *                                bords et que la grille se révèle ;
+ *   · DZ_END → 1 (110 vh)        la TRAVERSÉE : tout le mur remonte, les
+ *                                lignes suivantes défilent dans le cadre,
+ *                                puis l'épinglage se libère et le mur sort
+ *                                naturellement avec la page.
+ *
+ * La géométrie de la grille n'est PAS codée en dur : les cellules ont des
+ * hauteurs naturelles différentes (c'est la maçonnerie), donc la position du
+ * trou et la course de traversée sont MESURÉES (voir wallGeomRef) à chaque
+ * redimensionnement, jamais supposées.
+ *
+ * Le dézoom ne vit QUE dans le parcours sans démo : dès que la démo est lancée
+ * (`lance`), le cadenceur passe à 800 vh, remap() reprend la main et tout ce
+ * bloc est inerte — la grille reste à opacité zéro. */
+const DZ_START = 0.3077;
+const DZ_END = 0.6538;
+/* ── LE CONTRE-DÉFILEMENT (client 2026-08-08 au soir) ────────────────────────
+ * « Quand l'utilisateur scroll vers le bas, la colonne du milieu descend et
+ * celles de gauche et de droite remontent. » C'est le mouvement signature du
+ * mur monday, et il remplace la traversée d'un seul bloc.
+ *
+ * Il démarre À L'INTÉRIEUR du dézoom, pas après lui, et c'est le cœur de la
+ * demande « rends l'animation plus smooth » : l'ancienne traversée partait de
+ * DZ_END avec une vitesse non nulle — une couture visible entre deux phases.
+ * Ici la progression est une accélération douce (q², dérivée nulle au départ)
+ * ouverte AVANT la fin du dézoom : les colonnes s'ébranlent pendant que le mur
+ * finit de se poser, aucune rupture de vitesse nulle part. Et elle ne
+ * décélère PAS à l'arrivée : à la libération de l'épinglage, le défilement de
+ * page prend le relais d'un mouvement encore vivant, sans temps mort. */
+const TRAV_START = 0.498;
+/** Largeur d'une cellule du mur (et donc de la fenêtre applicative à
+ *  l'arrivée du dézoom), en fraction du viewport. À 0,30 sur TROIS colonnes,
+ *  la grille fait ~94 % de l'écran : pleine largeur à un liseré près, sans
+ *  fond perdu — les colonnes tranchées de l'essai précédent participaient au
+ *  « bazar » relevé par le client. */
+const WALL_APP_W = 0.30;
+/** Gouttières de la grille, colonnes et lignes, en pixels ÉCRAN. */
+const WALL_GAP = 28;
+/** Largeur NATURELLE des cellules (les panneaux s'y composent avant le zoom
+ *  qui les amène à la largeur de cellule). Le TROU de la réplique suit le même
+ *  zoom : sa hauteur naturelle est 640 × APP_H / APP_W, si bien qu'à l'écran il
+ *  fait exactement la taille de la fenêtre applicative réduite. */
+const WALL_SIDE_NAT = 640;
 
 /** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
  *  il est visible dès la première image et son trajet vers la carte « Ouvrir
@@ -102,6 +191,40 @@ const HD_CSS = `
 .hd-pkok{font-size:12px;font-weight:600;color:#fff;padding:6px 15px;border-radius:8px;background:#2f6ff0}
 
 .hd-stagebox{position:relative;flex:1;min-height:0;width:100%}
+/* ── La grille du mur (dézoom, 2026-08-08) ──
+   Ancrée au CENTRE du sticky et pilotée image par image par apply(), dans le
+   même repère écran que la scène — jamais par une animation CSS, qui ne
+   pourrait pas suivre une géométrie recalculée au scroll. Elle naît invisible :
+   c'est le moteur qui l'allume pendant le dézoom, et lui seul.
+   pointer-events:none : ce sont des décors dans le mur, leurs vrais
+   exemplaires interactifs vivent plus bas dans les cartes de StackingCards.
+   La largeur des cellules et leur zoom sont écrits par fit() à chaque
+   redimensionnement : la cellule se compose à ${WALL_SIDE_NAT}px puis est
+   zoomée à la largeur de colonne — zoom et non transform, parce que le zoom
+   participe à la MISE EN PAGE, donc les colonnes s'empilent juste.
+   (Pas de backticks dans ce bloc : il vit dans un template literal.) */
+.hd-wallgrid{position:absolute;left:50%;top:50%;z-index:9;opacity:0;
+  pointer-events:none;will-change:transform,opacity;
+  display:grid;grid-template-columns:repeat(3,auto);align-items:start;
+  gap:${WALL_GAP}px}
+/* Largeur et hauteur des cellules écrites par fit() : transform ne participe
+   pas à la mise en page, la hauteur visuelle (naturelle x échelle) doit donc
+   être posée sur la boîte pour que les lignes de la grille se dimensionnent
+   juste. will-change : chaque cellule porte le translateY du
+   contre-défilement, image par image. */
+.hd-wallcell{position:relative;will-change:transform}
+/* Pendant le dézoom, les pastilles flottantes de la réplique (déposé / rendu)
+   s'effacent : posées AUTOUR de la fenêtre, elles débordent largement de sa
+   boîte et, une fois le tout réduit, elles mordaient sur les panneaux voisins.
+   En important, et c'est nécessaire : leur entrée est une animation CSS à
+   remplissage persistant (oaIn ... both), qui gagnerait sur un style en ligne —
+   seule une déclaration importante passe au-dessus d'une animation dans la
+   cascade. */
+.hd-sticky.walling .oa-chip{opacity:0!important;transition:opacity .35s ease!important}
+/* Le halo bleu de la scène s'efface aussi : plus large que la fenêtre, il
+   débordait du trou une fois la réplique réduite et salissait la cellule du
+   dessous. Dans le mur, la réplique est une cellule comme les autres. */
+.hd-sticky.walling .hd-blob{opacity:0;transition:opacity .35s ease}
 /* Arrivée « bas vers le haut » (client 2026-08-01) : la réplique du logiciel
    MONTE depuis le bas jusqu'à sa place, au lieu d'apparaître en fondu sur
    place.
@@ -814,6 +937,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const fitScaleRef = useRef(1);
   const lastVRef = useRef(0);
   const applyRef = useRef<(v: number) => void>(() => {});
+  /** Géométrie MESURÉE de la grille du mur, en coordonnées locales de la
+   *  grille (indépendantes de ses transforms, qui ne sont que des
+   *  translations) : centre du trou, dimensions, et course de traversée.
+   *  Recalculée par fit() à chaque redimensionnement — les cellules ont des
+   *  hauteurs naturelles, rien ici ne peut être supposé. */
+  const wallGeomRef = useRef<{ holeCx: number; holeCy: number; gridW: number; gridH: number; travel: number } | null>(null);
   // Cursor click targets, measured at runtime in STAGE coordinates.
   const targetsRef = useRef<Record<string, { x: number; y: number }>>({
     // Cibles de l'ouverture. Codées en dur : elles visent la réplique du
@@ -994,6 +1123,56 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         }
       }
       targetsRef.current = next;
+      // ── Géométrie du mur ──────────────────────────────────────────────────
+      // 1. L'échelle des cellules : composées à WALL_SIDE_NAT px, affichées à
+      //    la largeur de colonne (WALL_APP_W × viewport), par transform: scale
+      //    — JAMAIS par zoom, qui déchirait le mur sous Safari (voir le pavé de
+      //    DZ_START). transform ne participant pas à la mise en page, la boîte
+      //    de chaque cellule reçoit sa taille VISUELLE (naturelle × échelle),
+      //    sans quoi les lignes de la grille se dimensionneraient sur les
+      //    hauteurs naturelles. offsetHeight ignore les transforms : relire la
+      //    hauteur naturelle reste juste à chaque passage, fit() est
+      //    idempotent.
+      // 2. Le relevé : centre du trou et dimensions, via les rects — grille et
+      //    trou partagent les mêmes transforms d'ancêtres (des translations
+      //    seules), la différence de rects y est donc insensible.
+      // 3. L'origine de transformation de la grille est posée SUR LE TROU :
+      //    l'entrée en scale du dézoom converge alors autour de la réplique,
+      //    qui ne bouge pas d'un pixel pendant que le mur se resserre.
+      // 4. La course de traversée : ce qu'il reste de grille sous le trou,
+      //    moins la demi-fenêtre qui est déjà visible à l'arrivée du dézoom.
+      const grid = stickyRef.current?.querySelector<HTMLElement>('[data-hd="wall-grid"]');
+      const hole = grid?.querySelector<HTMLElement>('[data-hd="wall-hole"]');
+      if (grid && hole) {
+        const cellW = WALL_APP_W * window.innerWidth;
+        const k = cellW / WALL_SIDE_NAT;
+        for (const cell of grid.querySelectorAll<HTMLElement>(".hd-wallcell")) {
+          cell.style.width = `${cellW}px`;
+          const inner = cell.firstElementChild as HTMLElement | null;
+          if (!inner) {
+            // Le trou : la fenêtre applicative aux proportions près.
+            cell.style.height = `${(cellW * APP_H) / APP_W}px`;
+            continue;
+          }
+          inner.style.width = `${WALL_SIDE_NAT}px`;
+          inner.style.height = "auto";
+          inner.style.transform = `scale(${k})`;
+          inner.style.transformOrigin = "top left";
+          cell.style.height = `${inner.offsetHeight * k}px`;
+        }
+        const gr = grid.getBoundingClientRect();
+        const hr = hole.getBoundingClientRect();
+        const holeCx = hr.left + hr.width / 2 - gr.left;
+        const holeCy = hr.top + hr.height / 2 - gr.top;
+        grid.style.transformOrigin = `${holeCx}px ${holeCy}px`;
+        wallGeomRef.current = {
+          holeCx,
+          holeCy,
+          gridW: gr.width,
+          gridH: gr.height,
+          travel: Math.max(0, gr.height - holeCy - window.innerHeight / 2),
+        };
+      }
       applyRef.current(lastVRef.current);
     };
     const ro = new ResizeObserver(fit);
@@ -1032,6 +1211,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       caps: [...caps.querySelectorAll<HTMLElement>(".hd-cap")],
       cuefill: hint.querySelector<HTMLElement>('[data-hd="cuefill"]'),
       invite: stickyRef.current?.querySelector<HTMLElement>('[data-hd="invite"]') ?? null,
+      // La grille du mur vit dans le STICKY, pas dans la scène : elle ne doit
+      // pas hériter de la mise à l'échelle de .hd-stage, le moteur lui écrit
+      // sa propre géométrie en repère écran.
+      wallGrid: stickyRef.current?.querySelector<HTMLElement>('[data-hd="wall-grid"]') ?? null,
+      wallCells: [...(stickyRef.current?.querySelectorAll<HTMLElement>(".hd-wallcell") ?? [])],
+      wallHole: stickyRef.current?.querySelector<HTMLElement>('[data-hd="wall-hole"]') ?? null,
     };
     // Every click moment (progress time + target key) — drives the cursor
     // dip, the ripple pulse and the vibration feedback.
@@ -1165,7 +1350,119 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         const appTopScreen = boxR.top + boxR.height / 2 + (APP_TOP - H / 2) * S;
         dyRest = ((boxR.top + 8 - appTopScreen) / S) * rest;
       }
-      stage.style.transform = `translate(-50%, -50%) scale(${S}) translate(${dx}px, ${dy + dyRest}px)`;
+      // ── LE DÉZOOM VERS LE MUR (2026-08-08, voir le pavé de DZ_START) ──────
+      // Pendant le dézoom, `v` est plafonné à V_INTRO : S, dx et dyRest sont
+      // donc CONSTANTS, et le dézoom n'a qu'à interpoler par-dessus. Trois
+      // gestes, tous portés par la même progression :
+      //   · l'échelle glisse de sa valeur de repos vers celle du mur — la
+      //     cible est exprimée en largeur de fenêtre applicative à l'écran,
+      //     donc stable quelle que soit la taille du viewport ;
+      //   · dyRest s'efface : posée basse au repos, la réplique remonte se
+      //     CENTRER, position de cellule du mur ;
+      //   · sur les derniers 30 vh, toute la rangée dérive vers le haut — la
+      //     dérive est exprimée en pixels ÉCRAN puis reconvertie dans le
+      //     repère de la scène (division par l'échelle), sans quoi elle
+      //     rétrécirait avec la réplique.
+      // `lance` coupe tout : démo lancée, remap() possède la course entière.
+      const dz = lance ? 0 : ease(seg(vRaw, DZ_START, DZ_END));
+      let S2 = S;
+      let dyR = dyRest;
+      /** Descente de la colonne CENTRALE (et donc de la réplique vivante, qui
+       *  en est une cellule) pendant le contre-défilement, en pixels écran. */
+      let driftPx = 0;
+      /** Remontée des colonnes LATÉRALES, en pixels écran (valeur négative). */
+      let sidePx = 0;
+      if (dz > 0) {
+        const SWall = (WALL_APP_W * window.innerWidth) / APP_W;
+        S2 = S + (SWall - S) * dz;
+        dyR = dyRest * (1 - dz);
+        // ── Le contre-défilement (voir le pavé de TRAV_START) ───────────────
+        // q² : dérivée nulle au départ (aucune couture avec le dézoom en
+        // cours), pleine vitesse à l'arrivée (le défilement de page prend un
+        // relais vivant à la libération). Les courses sont MESURÉES : celle
+        // des latérales part de la hauteur de grille sous le trou (fit), la
+        // centrale descend d'un peu plus de la moitié — bornée pour que la
+        // réplique reste dans le cadre jusqu'à la libération.
+        const q = seg(vRaw, TRAV_START, 1);
+        const trav = q * q;
+        const vhNow = window.innerHeight;
+        const sideRun = (wallGeomRef.current?.travel ?? 0.3 * vhNow) + 0.15 * vhNow;
+        const midRun = Math.min(0.6 * sideRun, 0.3 * vhNow);
+        driftPx = trav * midRun;
+        sidePx = -trav * sideRun;
+      }
+      // Les pastilles flottantes s'effacent dès que le dézoom s'engage (voir la
+      // règle .walling) ; classList.toggle est sans coût quand rien ne change.
+      stickyRef.current?.classList.toggle("walling", dz > 0.1);
+      stage.style.transform = `translate(-50%, -50%) scale(${S2}) translate(${dx}px, ${dy + dyR + driftPx / S2}px)`;
+
+      // ── La grille du mur ──────────────────────────────────────────────────
+      // Pilotée dans le repère ÉCRAN, ancrée au centre du sticky (et non du
+      // viewport : après la libération de l'épinglage le sticky remonte avec la
+      // page, et le mur doit remonter avec lui, d'un bloc). Le principe tient
+      // en une phrase : le TROU de la grille est amené exactement sous la
+      // réplique vivante — même centre, même taille — et c'est donc la grille
+      // qui vient au logiciel, jamais l'inverse.
+      if (el.wallGrid) {
+        if (dz <= 0.001) {
+          el.wallGrid.style.opacity = "0";
+        } else {
+          const g = wallGeomRef.current;
+          const stickyR = stickyRef.current?.getBoundingClientRect();
+          const ancX = stickyR ? stickyR.left + stickyR.width / 2 : window.innerWidth / 2;
+          const ancY = stickyR ? stickyR.top + stickyR.height / 2 : window.innerHeight / 2;
+          const cxScene = boxR.left + boxR.width / 2;
+          const cyScene = boxR.top + boxR.height / 2;
+          if (g) {
+            // ── Le contre-défilement, colonne par colonne, ÉCRIT D'ABORD ───
+            // Les cellules sont en ordre de lecture : la colonne d'une cellule
+            // est son index modulo 3. La centrale (et le trou avec elle)
+            // descend de driftPx — la même valeur que la scène, donc la
+            // réplique et sa colonne bougent d'un seul tenant — pendant que
+            // les latérales remontent de sidePx. Le cadre de la grille, lui,
+            // reste fixe.
+            el.wallCells.forEach((cell, i) => {
+              cell.style.transform = `translateY(${i % 3 === 1 ? driftPx : sidePx}px)`;
+            });
+            // Cible du cadre : la position DE REPOS de la fenêtre applicative
+            // (sans le contre-défilement — la cellule-trou le porte déjà).
+            const tx = cxScene - ancX - (g.holeCx - g.gridW / 2);
+            const ty = cyScene + (2 + dy + dyR) * S2 - ancY - (g.holeCy - g.gridH / 2);
+            // La CONVERGENCE est un simple scale : l'origine de transformation
+            // est posée sur le TROU (voir fit), donc la réplique ne bouge pas
+            // d'un pixel pendant que les huit voisines se resserrent vers
+            // elle. ADOUCI le 2026-08-08 au soir (« rends l'animation plus
+            // smooth ») : 1,05 au lieu de 1,07, et le fondu étalé sur presque
+            // tout le dézoom (0,05 → 0,85) au lieu d'un allumage pressé.
+            const sIn = 1 + 0.05 * (1 - dz);
+            el.wallGrid.style.opacity = String(seg(dz, 0.05, 0.85));
+            el.wallGrid.style.transform =
+              `translate(-50%,-50%) translate(${tx}px, ${ty}px) scale(${sIn})`;
+            // ── VERROUILLAGE PAR RÉTROACTION, dans la même image ───────────
+            // La chaîne analytique ci-dessus accumule les à-peu-près de toute
+            // la pile de transforms (un décalage constant de 6 à 14 px selon
+            // la fenêtre a été mesuré, dont l'origine variait avec la hauteur
+            // des cellules chargée tardivement — polices, logos). Plutôt que
+            // de courir après chaque terme : on écrit, on MESURE l'écart réel
+            // entre le trou et la réplique — les deux rects reflètent déjà les
+            // écritures de cette image — et on retranche l'écart d'un second
+            // jet. Exact par construction, quel que soit le navigateur, et
+            // auto-réparant si une cellule change de hauteur après coup. Coût :
+            // deux lectures et une écriture de plus par image, pendant le seul
+            // dézoom.
+            const ar = el.appscene?.getBoundingClientRect();
+            const hr = el.wallHole?.getBoundingClientRect();
+            if (ar && hr) {
+              const dxFix = ar.left + ar.width / 2 - (hr.left + hr.width / 2);
+              const dyFix = ar.top + ar.height / 2 - (hr.top + hr.height / 2);
+              if (Math.abs(dxFix) > 0.5 || Math.abs(dyFix) > 0.5) {
+                el.wallGrid.style.transform =
+                  `translate(-50%,-50%) translate(${tx + dxFix}px, ${ty + dyFix}px) scale(${sIn})`;
+              }
+            }
+          }
+        }
+      }
 
       // ── Notification d'invitation ────────────────────────────────────────
       // Elle est ancrée au coin HAUT-DROIT de la réplique, dans le repère de la
@@ -1179,8 +1476,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       if (el.invite) {
         const cx = boxR.left + boxR.width / 2;
         const cy = boxR.top + boxR.height / 2;
-        const ax = cx + (APP_LEFT + APP_W - 520 + dx) * S;
-        const ay = cy + (APP_TOP - 320 + dy + dyRest) * S;
+        // S2/dyR et non S/dyRest : l'ancre suit la position RÉELLE à l'écran,
+        // dézoom compris, pour que la carte ne dérive pas pendant son fondu.
+        const ax = cx + (APP_LEFT + APP_W - 520 + dx) * S2;
+        const ay = cy + (APP_TOP - 320 + dy + dyR) * S2;
         // Hauteur lue UNE fois, pas à chaque image.
         if (!inviteH) inviteH = el.invite.offsetHeight;
         // L'ancre est en translate(-100%,-100%) : `top` est donc le BAS de la
@@ -1212,7 +1511,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         // montée et où on la voit entière, l'endroit désigné par le client sur sa
         // capture. Une marge de 0,02 avant, pour qu'un défilement rapide ne puisse
         // pas enjamber le seuil sans l'armer.
-        const montre = !lance && vRaw > V_HOLD - 0.02 && sceneVisible;
+        // BORNE HAUTE RÉTABLIE avec le mur (2026-08-08), pour une autre raison
+        // que celle qui l'avait fait retirer : la fenêtre de l'invitation est
+        // désormais le BATTEMENT (11 vh), et passé DZ_START la réplique
+        // rétrécit vers le mur — une carte d'invitation collée à une fenêtre en
+        // plein dézoom se lirait comme un débris. Elle s'éteint donc au seuil,
+        // et se rallume si l'on remonte : la fenêtre est symétrique.
+        const montre = !lance && vRaw > V_HOLD - 0.02 && vRaw < DZ_START + 0.02 && sceneVisible;
         // L'opacité n'est écrite ici QUE pour éteindre hors zone. Une fois armée,
         // c'est l'effet de blocage qui la possède : il l'allume franchement, puis
         // l'éteint quand il rend la main. Sans ce partage, le moteur écrasait à
@@ -1513,12 +1818,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
           ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
           fois le bouton passé (choix client 2026-08-03). */}
-      {/* 180vh quand la démo n'est pas lancée (215 avant le 2026-08-06) : la
-          course d'épinglage vaut 80 vh. L'intro en consomme 69, exactement
-          comme avant, et il ne reste que ~11 vh de battement pour voir la
-          notification s'allumer. Le palier de 46 vh a été retiré (client :
-          « enlève le léger blocage du scroll ») — voir V_HOLD. */}
-      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[180vh]"}`}>
+      {/* 360vh quand la démo n'est pas lancée (180 avant le 2026-08-08) : la
+          course d'épinglage vaut 260 vh. L'intro en consomme 69, exactement
+          comme avant, puis ~11 vh de battement pour la notification, puis
+          70 vh de DÉZOOM vers la grille et 110 vh de TRAVERSÉE du mur avant
+          la libération — voir le pavé de DZ_START, les quatre fractions se
+          règlent avec cette hauteur. */}
+      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[360vh]"}`}>
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}
@@ -2131,6 +2437,41 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               </svg>
             </div>
           </div>
+          </div>
+
+          {/* ── LA GRILLE DU MUR (dézoom, 2026-08-08) ──
+              Rendue en PERMANENCE, comme la notification : visibilité et
+              géométrie sont écrites par le moteur image par image, jamais par
+              un rendu React. Elle vit dans le sticky et non dans la scène —
+              la scène porte l'échelle de la réplique, la grille reçoit la
+              sienne. La cellule marquée wall-hole est le TROU : vide, aux
+              proportions exactes de la fenêtre applicative, c'est la réplique
+              VIVANTE qui vient s'y loger — le mur n'a donc jamais deux
+              exemplaires animés du même écran côte à côte. Les exemplaires
+              INTERACTIFS des panneaux restent ceux des cartes de StackingCards
+              plus bas ; ceux-ci sont le mur. */}
+          {/* GRILLE 3 × 3 ALIGNÉE depuis le 2026-08-08 au soir (client, capture
+              monday à l'appui : « trois colonnes avec trois lignes, suis
+              exactement l'organisation ») : neuf cellules en ordre de lecture,
+              hauts de cartes alignés par ligne, aucun décalage — la version à
+              cinq colonnes étagées a été jugée « le bazar absolu ». Le TROU est
+              la cellule centrale, ligne 2 colonne 2, là où la réplique vivante
+              atterrit. Aucun design n'est le voisin de son double, en ligne
+              comme en colonne.
+              Toutes les cellules sont en `still` : l'entrée au scroll ne peut
+              pas fonctionner dans une scène épinglée (cellules restées
+              invisibles chez le client), et neuf instances mesurantes
+              coûteraient neuf lectures de mise en page par image. */}
+          <div data-hd="wall-grid" aria-hidden className="hd-wallgrid hidden md:grid">
+            <div className="hd-wallcell"><AppTablePanel variant="bilan" still /></div>
+            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
+            <div className="hd-wallcell"><OraHomeMockup still /></div>
+            <div className="hd-wallcell"><OraHomeMockup still /></div>
+            <div data-hd="wall-hole" className="hd-wallcell" />
+            <div className="hd-wallcell"><AppTablePanel variant="bilan" still /></div>
+            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
+            <div className="hd-wallcell"><OraHomeMockup still /></div>
+            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
           </div>
 
           {/* Step captions */}

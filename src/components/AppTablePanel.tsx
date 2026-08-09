@@ -187,11 +187,16 @@ const PIECES = [
 export default function AppTablePanel({
   variant = "bilan",
   tone = "light",
+  still = false,
 }: {
   variant?: "bilan" | "surmesure";
   tone?: "light" | "dark";
+  /** Rendu directement dans l'état final, sans entrée au scroll : pour les
+   *  copies du MUR du hero, qui vivent dans une scène épinglée où ce mécanisme
+   *  ne peut pas fonctionner (voir useEnterOnScroll). */
+  still?: boolean;
 }) {
-  const { ref, hidden, armed } = useEnterOnScroll<HTMLDivElement>();
+  const { ref, hidden, armed } = useEnterOnScroll<HTMLDivElement>(still);
   const c = CONTENUS[variant];
   const t = TONS[tone];
   const Action = c.action.icon;

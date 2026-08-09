@@ -18,10 +18,21 @@ import { useEffect, useRef, useState } from "react";
  *     the element still has no size — that degenerate state is exactly what
  *     used to trigger the entrance far too early.
  */
-export function useEnterOnScroll<T extends HTMLElement>() {
+/**
+ * `still` — désactive l'entrée : l'élément est rendu directement dans son état
+ * final, sans écouteur ni mesure. Ajouté le 2026-08-08 pour le MUR du hero :
+ * ses cellules vivent dans une scène épinglée et se déplacent par transform de
+ * leur conteneur, un monde où « entrer dans le viewport au scroll » n'a plus le
+ * sens que ce hook suppose — des cellules restaient à opacité zéro. Et chaque
+ * instance paie une lecture de mise en page par image de défilement quand elle
+ * est proche de l'écran : dix-neuf copies dans le mur, dix-neuf lectures. Le
+ * paramètre coupe les deux problèmes à la racine.
+ */
+export function useEnterOnScroll<T extends HTMLElement>(still = false) {
   const ref = useRef<T>(null);
   const [armed] = useState(
     () =>
+      !still &&
       typeof window !== "undefined" &&
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
