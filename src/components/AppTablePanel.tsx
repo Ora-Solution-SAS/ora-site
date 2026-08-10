@@ -209,8 +209,14 @@ export default function AppTablePanel({
      de la carte, qui débordait à son tour du viewport — sur mobile la colonne
      Montant était coupée et le titre de la carte avec elle. `truncate` ne peut
      rien tant que le parent n'a pas le droit de rétrécir. */
+  /* Colonnes ÉLARGIES sous md (78→84 et 88→104) avec la montée de corps du
+     plan responsive 2026-08-09 : à 13 px, « 662 250,20 € » mesure ~88 px là où
+     l'ancienne colonne de 88 px n'en laissait que 67 utiles — mesuré au rendu,
+     98 px le faisait encore replier sur deux lignes. 104 px est la largeur que
+     la colonne a déjà sur desktop ; le libellé, seule colonne élastique, garde
+     `truncate`. */
   const cols = c.rows[0].value
-    ? "grid-cols-[minmax(0,1fr)_78px_88px] md:grid-cols-[minmax(0,1fr)_92px_98px_104px]"
+    ? "grid-cols-[minmax(0,1fr)_84px_104px] md:grid-cols-[minmax(0,1fr)_92px_98px_104px]"
     : "grid-cols-[minmax(0,1fr)_88px] md:grid-cols-[minmax(0,1fr)_92px_98px]";
 
   return (
@@ -287,8 +293,13 @@ export default function AppTablePanel({
             {c.rows.map((r) => (
               <div key={r.label} className={`grid ${cols} items-stretch border-b last:border-b-0 ${t.divide}`}>
                 {/* Filet vertical en tête de ligne, comme chez monday. */}
+                {/* Corps MONTÉS D'UN CRAN sous md (plan responsive 2026-08-09) :
+                    le panneau se rend à pleine largeur sur téléphone, sans mise
+                    à l'échelle, et 11,5/10,5 px s'y lisent au prix d'un zoom.
+                    13/12 px sous md, les valeurs d'origine à partir de md — le
+                    MUR du hero (md-only) et le rendu desktop ne bougent pas. */}
                 <div className={`flex min-w-0 items-center border-l-[3px] py-[9px] pl-2 pr-2 ${t.edge}`}>
-                  <span className={`truncate font-inter text-[11.5px] font-medium ${t.label}`}>{r.label}</span>
+                  <span className={`truncate font-inter text-[13px] font-medium md:text-[11.5px] ${t.label}`}>{r.label}</span>
                 </div>
                 <div className={`hidden min-w-0 items-center border-l px-2 md:flex ${t.divide}`}>
                   <span className={`truncate font-inter text-[10.5px] ${t.detail}`}>{r.detail}</span>
@@ -296,11 +307,11 @@ export default function AppTablePanel({
                 {/* La cellule de statut : aplat PLEIN et bord à bord, texte
                     blanc centré. C'est elle qui colore le panneau. */}
                 <div className={`flex items-center justify-center ${r.statutCls}`}>
-                  <span className="font-inter text-[10.5px] font-semibold text-white">{r.statut}</span>
+                  <span className="font-inter text-[12px] font-semibold text-white md:text-[10.5px]">{r.statut}</span>
                 </div>
                 {r.value && (
-                  <div className={`flex items-center justify-end border-l px-2.5 ${t.divide}`}>
-                    <span className={`font-inter text-[11.5px] font-medium tabular-nums ${t.value}`}>{r.value}</span>
+                  <div className={`flex items-center justify-end border-l px-1.5 md:px-2.5 ${t.divide}`}>
+                    <span className={`whitespace-nowrap font-inter text-[13px] font-medium tabular-nums md:text-[11.5px] ${t.value}`}>{r.value}</span>
                   </div>
                 )}
               </div>
@@ -308,8 +319,12 @@ export default function AppTablePanel({
           </div>
         </div>
 
-        {/* ── Le groupe fantôme ── */}
-        <div className="mt-3.5">
+        {/* ── Le groupe fantôme ──
+            MASQUÉ sous md (plan responsive 2026-08-09) : ses trois lignes
+            squelettes donnent la profondeur monday sur grand écran, mais à la
+            largeur d'un téléphone elles n'apportent rien à lire et allongent
+            la carte pour du gris. */}
+        <div className="mt-3.5 hidden md:block">
           <div className={`font-inter text-[12.5px] font-semibold ${t.ghostGroup}`}>{c.ghostLabel}</div>
           <div className={`mt-1.5 overflow-hidden rounded-[7px] ring-1 ${t.frame}`}>
             {c.ghostRows.map((label) => (

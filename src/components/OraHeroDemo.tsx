@@ -1803,7 +1803,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           lisible qu'à l'échelle 1 et il n'en tient alors que 28 % de la
           largeur. D'où une branche tactile distincte, comme le fait déjà
           OraExperienceCarousel. */}
-      <div className="md:hidden">
+      {/* `overflow-x-clip` : ceinture de sécurité du P0 responsive — aucun
+          décor du hero mobile ne doit pouvoir élargir la page (le cercle de
+          420 px l'a fait ; voir OraHeroMobile). `clip` et non `hidden` : pas
+          de nouveau contexte de défilement, juste la coupe. */}
+      <div className="md:hidden overflow-x-clip">
         <OraHeroMobile openBooking={openBooking} />
       </div>
 

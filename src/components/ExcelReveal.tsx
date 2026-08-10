@@ -1,5 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, type ReactNode } from "react";
 import { useLang } from "@/lib/i18n";
+import { useEnterOnScroll } from "@/lib/useEnterOnScroll";
 
 /* ── Bending-Spoons letter-by-letter scroll-reveal ───────────────────
  *  Pure-black section, phrases stacked as normal flowing text, page scrolls
@@ -96,6 +97,44 @@ const RISE_EM = 0.12; // unread letters sit slightly low and rise into place
 type Unit = { el: HTMLElement; yInSec: number; colShift: number; lastB: number; lastO: number };
 
 type Phrase = { text: string };
+
+/** ── Une phrase de la VARIANTE MOBILE (P1 du plan responsive, 2026-08-09) ──
+ * Sous 768 px, la révélation lettre à lettre est une grammaire desktop : elle
+ * se dose à la molette, pas au pouce, et son coût par image n'a pas sa place
+ * au scroll tactile. Ici chaque phrase joue une entrée SIMPLE et une seule
+ * (translation + fondu via useEnterOnScroll, le mécanisme déjà utilisé par
+ * toutes les maquettes du site) — pas de frontière de netteté, pas de rAF.
+ * `big` : la signature « Découvrez Ora. », un cran au-dessus, comme sur
+ * desktop où la conclusion a son propre corps. */
+function MobilePhrase({ big = false, children }: { big?: boolean; children: ReactNode }) {
+  const { ref, hidden, armed } = useEnterOnScroll<HTMLParagraphElement>();
+  return (
+    <p
+      ref={ref}
+      className="font-instrument font-normal text-white text-left"
+      style={{
+        // Corps demandé par le plan : clamp(1.6rem, 7vw, 2.2rem) — assez grand
+        // pour lire sans zoom, jamais plus de deux mots coupés par ligne.
+        fontSize: big ? "clamp(1.9rem, 8.4vw, 2.7rem)" : "clamp(1.6rem, 7vw, 2.2rem)",
+        lineHeight: 1.18,
+        letterSpacing: "-0.028em",
+        // Même lissage que le bloc desktop : sur fond noir, le rendu subpixel
+        // épaissit visiblement Instrument Sans.
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "grayscale",
+        textWrap: "balance",
+        opacity: hidden ? 0 : 1,
+        transform: hidden ? "translate3d(0,26px,0)" : "translate3d(0,0,0)",
+        transition: armed
+          ? "transform 900ms cubic-bezier(0.22,1,0.36,1), opacity 620ms cubic-bezier(0.22,1,0.36,1)"
+          : undefined,
+        willChange: armed ? "transform, opacity" : undefined,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
 
 export default function ExcelReveal() {
   const { t } = useLang();
@@ -310,6 +349,7 @@ export default function ExcelReveal() {
   );
 
   return (
+    <>
     <section
       ref={sectionRef}
       id="excel-reveal"
@@ -395,5 +435,29 @@ export default function ExcelReveal() {
         </p>
       </div>
     </section>
+
+    {/* ── VARIANTE MOBILE (P1 du plan responsive, 2026-08-09) ──────────────
+        Le manifeste n'existait pas sous 768 px : la page sautait du hero aux
+        cas d'usage sans transition ni message, alors que ces phrases sont le
+        cœur du discours. FRÈRE `md:hidden` du bloc desktop, pas une refonte :
+        fond noir conservé (porté par le conteneur `data-hero-bg` d'App.tsx,
+        noir en permanence sur mobile), et une SÉLECTION de trois phrases —
+        le constat (0), la promesse de bout en bout (3), la différenciation
+        face à l'IA générative (4) — plus la signature. Les trois sont lues
+        dans le MÊME tableau `phrases` que le desktop : une retouche de copy
+        là-haut se propage ici toute seule. La révélation lettre à lettre,
+        trop coûteuse au scroll tactile, est remplacée par l'entrée simple de
+        MobilePhrase. */}
+    <section id="excel-reveal-mobile" data-nav-dark className="md:hidden px-6 pt-20 pb-24">
+      <div className="flex flex-col gap-10">
+        <MobilePhrase>{phrases[0].text}</MobilePhrase>
+        <MobilePhrase>{phrases[3].text}</MobilePhrase>
+        <MobilePhrase>{phrases[4].text}</MobilePhrase>
+        <MobilePhrase big>
+          {t({ fr: "Découvrez", en: "Meet" })} <span className="text-brand-gradient">Ora.</span>
+        </MobilePhrase>
+      </div>
+    </section>
+    </>
   );
 }

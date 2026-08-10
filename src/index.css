@@ -89,6 +89,43 @@
    }
  }
 
+ /* ── Hero mobile : le flux dépôt → livrable (P2 du plan responsive,
+    2026-08-09). Les deux pastilles-fichiers posées sur la réplique
+    (OraHeroMobile) s'enchaînent en fondu, en CSS pur : l'état A
+    (balance_2025.xlsx déposé) et l'état B (Reporting généré) se partagent un
+    cycle de 7 s en opposition de phase — deux images-clés, pas de moteur de
+    scroll. Le desktop vend le geste par sa démo scrollée ; ceci en est la
+    trace au format téléphone. */
+ @keyframes ora-flow-a {
+   0%, 40% { opacity: 1; }
+   50%, 90% { opacity: 0; }
+   100% { opacity: 1; }
+ }
+
+ @keyframes ora-flow-b {
+   0%, 40% { opacity: 0; }
+   50%, 90% { opacity: 1; }
+   100% { opacity: 0; }
+ }
+
+ .ora-flow-a {
+   animation: ora-flow-a 7s ease-in-out infinite;
+ }
+
+ .ora-flow-b {
+   animation: ora-flow-b 7s ease-in-out infinite;
+ }
+
+ /* Préférence « réduire les animations » : plus de cycle, l'état A reste seul
+    visible (l'état B porte `opacity-0` comme base) — c'est le fichier déposé,
+    celui que la liste sous la réplique raconte déjà en statique. */
+ @media (prefers-reduced-motion: reduce) {
+   .ora-flow-a,
+   .ora-flow-b {
+     animation: none;
+   }
+ }
+
  .animate-fade-in {
    animation: fade-in 0.6s ease-out forwards;
  }

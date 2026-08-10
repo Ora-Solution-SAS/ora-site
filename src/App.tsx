@@ -1069,7 +1069,13 @@ const App = () => {
           Le coussin doit croître d'au moins autant que FOCUS, soit +12vh ; 50vh
           rétablit en plus la marge de sécurité d'origine. Si FOCUS rebouge,
           rebouger cette valeur du même écart. */}
-      <div data-hero-bg className="relative bg-black pt-[50vh]">
+      {/* `md:pt-[50vh]` et non plus `pt-[50vh]` : ce coussin appartient à la
+          chorégraphie desktop ci-dessus (ordre fond-noir-puis-phrases, couplé à
+          FOCUS). Sous 768 px la révélation n'existe pas — ExcelReveal y rend sa
+          variante statique (P1 du plan responsive, 2026-08-09) qui porte son
+          propre espacement ; les 50vh n'étaient qu'une bande noire vide entre le
+          hero et la suite. */}
+      <div data-hero-bg className="relative bg-black md:pt-[50vh]">
         <ExcelReveal />
       </div>
 
