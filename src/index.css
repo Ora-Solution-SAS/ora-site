@@ -90,8 +90,12 @@
  }
 
  /* ── Hero mobile : le flux dépôt → livrable (P2 du plan responsive,
-    2026-08-09). Les deux pastilles-fichiers posées sur la réplique
-    (OraHeroMobile) s'enchaînent en fondu, en CSS pur : l'état A
+    2026-08-09).
+    ⚠ EN SOMMEIL depuis le 2026-08-10 : son seul porteur, OraHeroMobile, est
+    débranché — le client veut la scène d'ordinateur sur téléphone aussi (voir
+    OraHeroDemo). Les deux règles restent ici, elles reviendraient avec lui.
+    Les deux pastilles-fichiers posées sur la réplique s'enchaînent en fondu,
+    en CSS pur : l'état A
     (balance_2025.xlsx déposé) et l'état B (Reporting généré) se partagent un
     cycle de 7 s en opposition de phase — deux images-clés, pas de moteur de
     scroll. Le desktop vend le geste par sa démo scrollée ; ceci en est la
