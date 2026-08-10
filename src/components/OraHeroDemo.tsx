@@ -3,7 +3,6 @@ import { motion, useScroll, useTransform, type MotionValue } from "framer-motion
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraAppScene from "./OraAppScene";
-import OraHeroMobile from "./OraHeroMobile";
 import AppTablePanel from "./AppTablePanel";
 import OraHomeMockup from "./OraHomeMockup";
 
@@ -144,7 +143,13 @@ const TRAV_START = 0.498;
  *  fond perdu — les colonnes tranchées de l'essai précédent participaient au
  *  « bazar » relevé par le client. */
 const WALL_APP_W = 0.30;
-/** Gouttières de la grille, colonnes et lignes, en pixels ÉCRAN. */
+/** Gouttières de la grille, colonnes et lignes, en pixels ÉCRAN. PLAFOND et
+ *  non valeur fixe depuis le passage du mur sur mobile (client 2026-08-10) :
+ *  trois colonnes à WALL_APP_W font déjà 90 % de l'écran, deux gouttières de
+ *  28 px poussaient donc la grille à 104 % sur un téléphone — elle débordait.
+ *  La gouttière suit la largeur (`2vw`) et se borne à 28 px sur grand écran,
+ *  où elle retrouve exactement sa valeur d'origine (2 vw ≥ 28 px dès 1400 px,
+ *  et la grille est de toute façon plus étroite que l'écran à ces largeurs). */
 const WALL_GAP = 28;
 /** Largeur NATURELLE des cellules (les panneaux s'y composent avant le zoom
  *  qui les amène à la largeur de cellule). Le TROU de la réplique suit le même
@@ -206,7 +211,7 @@ const HD_CSS = `
 .hd-wallgrid{position:absolute;left:50%;top:50%;z-index:9;opacity:0;
   pointer-events:none;will-change:transform,opacity;
   display:grid;grid-template-columns:repeat(3,auto);align-items:start;
-  gap:${WALL_GAP}px}
+  gap:clamp(8px,2vw,${WALL_GAP}px)}
 /* Largeur et hauteur des cellules écrites par fit() : transform ne participe
    pas à la mise en page, la hauteur visuelle (naturelle x échelle) doit donc
    être posée sur la boîte pour que les lignes de la grille se dimensionnent
@@ -1794,26 +1799,20 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
-      {/* ── Phones (< 768px) : hero RECOMPOSÉ ─────────────────────────────
-          La scène scrollée ci-dessous est une scène de 1040×640 contenant une
-          réplique de 1180×720. Tenir l'une ou l'autre dans une colonne de
-          327 px donne une échelle de ~0,29, donc des typographies de 7 à
-          13,5 px rendues entre 2 et 4 px : plus rien n'est lisible. Recadrer
-          au lieu de réduire ne sauve rien non plus, la réplique ne reste
-          lisible qu'à l'échelle 1 et il n'en tient alors que 28 % de la
-          largeur. D'où une branche tactile distincte, comme le fait déjà
-          OraExperienceCarousel. */}
-      <div className="md:hidden">
-        <OraHeroMobile openBooking={openBooking} />
-      </div>
+      {/* ⚠ LA BRANCHE TACTILE (OraHeroMobile) EST DÉBRANCHÉE depuis le
+          2026-08-10. Elle recomposait le hero à la largeur du téléphone
+          plutôt que de réduire la scène, au motif — toujours exact — qu'une
+          scène de 1040×640 tenue dans 327 px rend ses corps de 7 à 13,5 px
+          entre 2 et 4 px. Le client a tranché dans l'autre sens : il veut la
+          MÊME VISION que sur ordinateur, dézoom et mur compris. La scène
+          ci-dessous s'affiche donc à toutes les largeurs.
+          Le composant reste dans le dépôt, intact : y revenir tient à
+          remettre son import et cette enveloppe `md:hidden overflow-x-clip`.
+          Son import est retiré et non commenté, `noUnusedLocals` étant actif. */}
 
       {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
           (v2: shortened — the flow starts directly in Excel). Heavy-scroll
-          zones still stretch the key moments.
-          `hidden md:block` : sur mobile la scène n'est pas seulement masquée,
-          elle ne pèse plus rien dans la mise en page, donc les 500 vh de
-          scrub (≈ 4 264 px de scroll pour une animation invisible) et le
-          curseur de souris simulé disparaissent avec elle. */}
+          zones still stretch the key moments. */}
       {/* Sans lancement, 170 vh au lieu de 800 : la course sert uniquement à jouer
           l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
           ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
@@ -1824,7 +1823,22 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           70 vh de DÉZOOM vers la grille et 110 vh de TRAVERSÉE du mur avant
           la libération — voir le pavé de DZ_START, les quatre fractions se
           règlent avec cette hauteur. */}
-      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[360vh]"}`}>
+      {/* ── LA SCÈNE TOURNE AUSSI SUR TÉLÉPHONE (client 2026-08-10) ────────
+          Elle était `hidden md:block`, remplacée sous 768 px par la
+          recomposition statique OraHeroMobile. Consigne du client : « je veux
+          que ce soit exactement comme l'ordinateur », en désignant le dézoom
+          et son mur — la même vision, à la taille de l'écran, plutôt qu'une
+          autre mise en scène.
+          Rien à adapter dans le moteur : la scène se met déjà à l'échelle de
+          sa boîte (fit(), min(largeur/1040, hauteur/640)) et le mur à celle
+          de l'écran. Le prix, assumé et visible dès la première capture : à
+          390 px la réplique du logiciel tombe à 0,375, donc ses corps de 7 à
+          13,5 px se rendent entre 3 et 5 px. C'était précisément l'argument
+          qui avait fait naître OraHeroMobile ; la composition l'emporte
+          désormais sur la lisibilité de la réplique. Le composant reste dans
+          le dépôt : y revenir tient à remettre son import et sa branche
+          `md:hidden` ici. */}
+      <div ref={wrapRef} className={`relative ${demoOn ? "h-[800vh]" : "h-[360vh]"}`}>
         {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
             quinzaine de pixels de plus, sans toucher l'indicateur de défilement
             qui reste ancré à 10 px du bas. */}
@@ -2462,7 +2476,15 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               pas fonctionner dans une scène épinglée (cellules restées
               invisibles chez le client), et neuf instances mesurantes
               coûteraient neuf lectures de mise en page par image. */}
-          <div data-hd="wall-grid" aria-hidden className="hd-wallgrid hidden md:grid">
+          {/* RENDUE À TOUTES LES LARGEURS depuis le 2026-08-10 (client : « il
+              faut voir tous les encadrés à côté et que ça fasse trois colonnes
+              et trois lignes », y compris sur téléphone). Le mur n'a jamais eu
+              besoin d'un point de rupture : sa cellule vaut WALL_APP_W × la
+              largeur de l'écran, donc la grille occupe la même fraction
+              d'écran partout, et les panneaux se composent à WALL_SIDE_NAT
+              puis sont mis à l'échelle. Seule la gouttière a dû devenir
+              proportionnelle (voir WALL_GAP). */}
+          <div data-hd="wall-grid" aria-hidden className="hd-wallgrid grid">
             <div className="hd-wallcell"><AppTablePanel variant="bilan" still /></div>
             <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
             <div className="hd-wallcell"><OraHomeMockup still /></div>
@@ -2533,10 +2555,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       {/* CTA — after the demo releases. The CONTAINER is a plain always-black
           div (never animated: an opacity-0 entrance here used to let the
           section's white bg flash through). Only the button itself animates.
-          `hidden md:flex` : sur mobile OraHeroMobile porte déjà son propre
-          bouton de réservation, et ce fond noir ne servait qu'à enchaîner sur
-          ExcelReveal, elle-même absente sous 768 px. */}
-      <div ref={ctaRef} className="relative z-10 bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
+          RENDU À TOUTES LES LARGEURS depuis le 2026-08-10 : il était
+          `hidden md:flex` parce qu'OraHeroMobile portait son propre bouton de
+          réservation. Cette branche a disparu, et ce bloc redevient ce qu'il
+          est sur ordinateur : la clôture de la démo et la bascule au noir qui
+          enchaîne sur le manifeste (c'est son bouton que guette l'effet de
+          peinture du fond, voir plus haut). */}
+      <div ref={ctaRef} className="relative z-10 bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 flex justify-center">
         <motion.button
           onClick={openBooking}
           initial={{ opacity: 0, y: 28 }}

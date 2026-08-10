@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, Scale, TrendingUp, X } from "lucide-react";
@@ -1178,6 +1178,109 @@ function DossierPanels() {
   );
 }
 
+/**
+ * MiniVisual — compose le bloc visuel d'une carte à sa largeur de DESSIN puis
+ * le réduit à la largeur réelle de la carte. Sur téléphone uniquement ; sur
+ * grand écran il rend ses enfants tels quels, l'arbre est inchangé.
+ *
+ * ── POURQUOI ────────────────────────────────────────────────────────────────
+ * Depuis le 2026-08-10 la grille garde son agencement d'ordinateur à toutes
+ * les largeurs (deux encadrés, puis trois, puis un). Une carte de tiers fait
+ * donc ~110 px sur un téléphone. Les maquettes, elles, ne sont pas fluides :
+ * nuages d'étiquettes posés en pourcentages, panneaux à corps fixes, scènes
+ * composées à leur taille écran. Dans 110 px elles ne rétrécissaient pas,
+ * elles se CHEVAUCHAIENT et débordaient de la carte (constaté en capture :
+ * « Holding / SASU / SARL » empilés hors cadre).
+ *
+ * Réduire plutôt que reflouer, c'est exactement ce que fait déjà le MUR du
+ * hero avec ses cellules (composées à WALL_SIDE_NAT, puis `transform:
+ * scale()`), et pour la même raison. Le titre de la carte, lui, n'est PAS
+ * réduit : il reste dans le repère de la carte, à une taille lisible. Une
+ * carte de la grille est donc un titre lisible au-dessus d'une vignette
+ * fidèle, pas une carte d'ordinateur photographiée de loin.
+ *
+ * `transform` et jamais `zoom` : le zoom déchire les sous-arbres à
+ * positionnement absolu sous WebKit, leçon payée sur le mur du hero. Comme
+ * transform ne participe pas à la mise en page, la boîte extérieure reçoit la
+ * hauteur VISUELLE (naturelle × échelle), sans quoi la carte réserverait la
+ * hauteur pleine.
+ *
+ * RepelChips reste juste : sa géométrie de curseur passe par
+ * getBoundingClientRect, donc dans le même repère que le pointeur, transform
+ * compris.
+ */
+function MiniVisual({ natural, children }: { natural: number; children: ReactNode }) {
+  const [mobile, setMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const apply = () => setMobile(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ k: number; h: number } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!mobile) return;
+    const outer = outerRef.current, inner = innerRef.current;
+    if (!outer || !inner) return;
+    const compute = () => {
+      const avail = outer.clientWidth;
+      if (!avail) return;
+      const k = avail / natural;
+      // offsetHeight ignore les transforms : la hauteur naturelle reste juste
+      // à chaque passage, le calcul est donc idempotent.
+      setBox({ k, h: inner.offsetHeight * k });
+    };
+    let raf = 0;
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; compute(); });
+    };
+    compute();
+    const ro = new ResizeObserver(schedule);
+    ro.observe(outer);
+    ro.observe(inner);
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [mobile, natural]);
+
+  if (!mobile) return <>{children}</>;
+
+  return (
+    <div ref={outerRef} className="relative w-full overflow-hidden" style={{ height: box?.h }}>
+      <div
+        ref={innerRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: natural,
+          transformOrigin: "top left",
+          // Avant la première mesure (une image, useLayoutEffect passant avant
+          // la peinture) on pose déjà une échelle plausible plutôt que 0 :
+          // une cellule à zéro clignoterait au montage.
+          transform: `scale(${box?.k ?? 0.25})`,
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Largeur de DESSIN du bloc visuel selon le gabarit de la carte, c'est-à-dire
+ *  la largeur qu'il occupe sur un écran d'ordinateur — c'est à cette largeur
+ *  que les maquettes ont été composées et validées. */
+const VISUAL_NAT: Record<"third" | "wide" | "full", number> = { third: 380, wide: 620, full: 780 };
+
 function Mockup({ kind }: { kind: MockupKind }) {
   switch (kind) {
     case "home": return <OraHomeMockup plain />;
@@ -1649,7 +1752,20 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
         </h2>
       </motion.div>
 
-      <div ref={gridRef} className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-[86rem] mx-auto">
+      {/* ── TROIS COLONNES À TOUTES LES LARGEURS (client 2026-08-10) ────────
+          La grille était `grid md:grid-cols-3` : une seule colonne sous
+          768 px, donc les six cartes empilées l'une sous l'autre. Consigne :
+          « je veux qu'on ait exactement la même vision que sur l'ordinateur,
+          c'est-à-dire deux encadrés au début à côté, puis trois encadrés, puis
+          un, puis un ». C'est exactement ce que produisent les gabarits
+          existants dans une grille à trois colonnes — `wide` (2 col) + `third`
+          en première rangée, trois `third` en deuxième, `full` (3 col) en
+          troisième — il suffisait donc de ne plus attendre `md`.
+          Les INTERNES des cartes, eux, sont recalés pour la largeur d'un
+          téléphone (gouttière, marges, titres, hauteurs mini) : une carte de
+          tiers y fait ~110 px, où les 28 px de marge et les 1,3 rem de titre
+          du dessin d'origine ne laissaient plus rien à lire. */}
+      <div ref={gridRef} className="grid grid-cols-3 gap-1.5 md:gap-5 max-w-[86rem] mx-auto">
         {cases.map((c0, i) => {
           const isFull = c0.span === "full";
           // La carte à onglets se rend comme n'importe quelle autre : on lui
@@ -1679,7 +1795,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
               //   · scale, liseré et ombre partagent la MÊME durée et la même
               //     courbe : un seul mouvement, pas trois.
               className={`group relative ${
-                c.span === "wide" ? "md:col-span-2" : isFull ? "md:col-span-3" : ""
+                c.span === "wide" ? "col-span-2" : isFull ? "col-span-3" : ""
               }`}
               initial="hidden"
               whileInView="visible"
@@ -1690,17 +1806,22 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
               }}
             >
             <div
-              className={`relative h-full overflow-hidden rounded-[14px] ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] p-7 md:p-8 ${
+              className={`relative h-full overflow-hidden rounded-[7px] md:rounded-[14px] ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] p-2.5 md:p-8 ${
                 // Une SEULE classe de hauteur mini par carte : deux
                 // `md:min-h-[…]` sur le même élément se départageraient par
                 // l'ordre de la feuille de style, pas par celui du className.
+                // Les hauteurs mini du téléphone gardent le RAPPORT de celles
+                // du grand écran (560/480 et 620/480), pour que la rangée de
+                // trois reste plus haute que celle de deux comme sur
+                // ordinateur — c'est ce rapport qui fait la silhouette de la
+                // grille, pas les valeurs absolues.
                 isFull
                   ? ""
                   : c.span === "wide"
-                    ? "flex flex-col md:min-h-[560px]"
+                    ? "flex flex-col min-h-[210px] md:min-h-[560px]"
                     : c.tall
-                      ? "flex flex-col md:min-h-[620px]"
-                      : "flex flex-col md:min-h-[480px]"
+                      ? "flex flex-col min-h-[232px] md:min-h-[620px]"
+                      : "flex flex-col min-h-[180px] md:min-h-[480px]"
               }`}
               style={{ background: c.bg ?? "#ffffff" }}
             >
@@ -1988,17 +2109,28 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                 type="button"
                 onClick={() => setDetail(c)}
                 aria-label={t({ fr: "En savoir plus", en: "Learn more" })}
-                className="absolute top-6 right-6 md:top-7 md:right-7 z-10 inline-flex items-center justify-center w-9 h-9 rounded-[9px] bg-white/70 text-[#0a2540]/55 ring-1 ring-[#0a2540]/[0.1] shadow-[0_1px_3px_-1px_rgba(10,37,64,0.12)] transition-all duration-200 group-hover:bg-white group-hover:text-[#3b82f6] group-hover:ring-[#3b82f6]/30 hover:!bg-white hover:!text-[#2563eb] hover:ring-[#3b82f6]/50 hover:scale-[1.06] active:scale-[0.97]"
+                // Sur téléphone la carte de tiers fait ~110 px : le bouton de
+                // 36 px calé à 24 px du bord en occupait le quart. Réduit à
+                // 22 px calé à 8 px, il reste le même objet, à l'échelle de
+                // la carte. Sa zone tactile est inférieure aux 44 px de la
+                // grille de recette, et c'est assumé : la carte ENTIÈRE ouvre
+                // le même panneau au toucher, ce bouton n'est qu'un repère
+                // visuel doublant une cible déjà large.
+                className="absolute top-2 right-2 md:top-7 md:right-7 z-10 inline-flex items-center justify-center w-[22px] h-[22px] md:w-9 md:h-9 rounded-[6px] md:rounded-[9px] bg-white/70 text-[#0a2540]/55 ring-1 ring-[#0a2540]/[0.1] shadow-[0_1px_3px_-1px_rgba(10,37,64,0.12)] transition-all duration-200 group-hover:bg-white group-hover:text-[#3b82f6] group-hover:ring-[#3b82f6]/30 hover:!bg-white hover:!text-[#2563eb] hover:ring-[#3b82f6]/50 hover:scale-[1.06] active:scale-[0.97]"
               >
-                <Maximize2 className="w-[15px] h-[15px]" />
+                <Maximize2 className="w-[11px] h-[11px] md:w-[15px] md:h-[15px]" />
               </button>
 
               {isFull ? (
                 /* Rangée entière : titre à gauche, visuel aux deux tiers
-                   droits qui saigne vers les bords bas et droit. */
-                <div className="relative grid md:grid-cols-[1fr_1.8fr] gap-6 md:gap-10 items-center">
+                   droits qui saigne vers les bords bas et droit.
+                   Ce partage vaut à TOUTES les largeurs depuis le 2026-08-10 :
+                   c'est lui qui fait le « puis un » du client, une bande où le
+                   texte tient le tiers gauche et la maquette déborde à droite.
+                   Empilé, ce n'était plus la même rangée. */
+                <div className="relative grid grid-cols-[1fr_1.8fr] gap-2.5 md:gap-10 items-center">
                   <h3
-                    className="font-inter font-normal text-[1.5rem] md:text-[1.85rem] tracking-[-0.025em] leading-[1.15] pr-14 md:pr-0"
+                    className="font-inter font-normal text-[0.82rem] md:text-[1.85rem] tracking-[-0.025em] leading-[1.15] pr-6 md:pr-0"
                     style={{ color: c.ink ?? INK }}
                   >
                     {c.title}
@@ -2016,6 +2148,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                       courbe que la carte, sinon la compensation se ferait avec
                       un temps de retard et le visuel respirerait. */}
                   <div className="relative w-full md:max-w-[780px] md:ml-auto md:-mr-4 md:-mb-4 transition-transform duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-[6px] group-hover:scale-[0.98814]">
+                    <MiniVisual natural={VISUAL_NAT.full}>
                     {c.mockup ? (
                       <Mockup kind={c.mockup} />
                     ) : !c.video ? (
@@ -2059,12 +2192,21 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                         className="w-full aspect-[780/435] object-cover block rounded-[10px] ring-1 ring-[#0a2540]/[0.08] shadow-[0_16px_40px_-20px_rgba(10,37,64,0.35)]"
                       />
                     )}
+                    </MiniVisual>
                   </div>
                 </div>
               ) : (
                 <>
+                  {/* Titre à 0,72 rem sous md (11,5 px) : une carte de tiers
+                      fait ~118 px de large sur un téléphone, où 1,3 rem ne
+                      posait plus qu'un mot par ligne. Le `pr` doit dégager le
+                      bouton d'agrandissement (22 px calés à 8 px du bord, soit
+                      30 px) : à 28 px de réserve, « Prévisionnel » — le plus
+                      long mot insécable de la grille — tient dans les 70 px
+                      restants. Les deux valeurs vont ensemble, toucher à l'une
+                      demande de revérifier ce mot-là. */}
                   <h3
-                    className={`relative font-inter font-normal text-[1.3rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] pr-14 ${c.titleClass ?? ""}`}
+                    className={`relative font-inter font-normal text-[0.72rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.2] md:leading-[1.15] pr-7 md:pr-14 ${c.titleClass ?? ""}`}
                     style={{ color: c.ink ?? INK }}
                   >
                     {c.title}
@@ -2095,7 +2237,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                       // contenu coïncident. Les cartes de gabarit normal
                       // gardent `pt` seul : leur visuel déborde par le bas,
                       // une marge basse l'en empêcherait.
-                      c.tall ? "py-7 md:py-8 my-auto" : "pt-7 md:pt-8 mt-auto"
+                      c.tall ? "py-2.5 md:py-8 my-auto" : "pt-2.5 md:pt-8 mt-auto"
                     } ${
                       /* PAS de `transform-gpu` ici. La carte parente en a un,
                          justifié : il évite qu'elle soit re-rastérisée au
@@ -2130,7 +2272,12 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                         les trois retombaient à des hauteurs différentes, de
                         +4 à +32 px, mesuré. Une boîte de hauteur identique où
                         tout est centré, et les trois s'alignent. */}
-                    <div className={c.tall ? "flex h-[280px] md:h-[380px] w-full items-center justify-center" : "contents"}>
+                    {/* Le cadre de centrage garde sa hauteur de DESSIN (380 px)
+                        à toutes les largeurs : sur téléphone il vit à
+                        l'intérieur de MiniVisual, dans le repère naturel, et
+                        c'est l'échelle qui le ramène à la taille de la carte. */}
+                    <MiniVisual natural={c.span === "wide" ? VISUAL_NAT.wide : VISUAL_NAT.third}>
+                    <div className={c.tall ? "flex h-[380px] w-full items-center justify-center" : "contents"}>
                     {c.chips ? (
                       /* Le nuage occupe la zone du visuel. Hauteur fixée : les
                          étiquettes sont en position absolue, sans elle le
@@ -2188,6 +2335,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                       />
                     ) : null}
                     </div>
+                    </MiniVisual>
                   </div>
                 </>
               )}

@@ -93,10 +93,16 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
   return (
     <div className="relative px-5 pt-24 pb-16">
-      {/* Soft brand glow behind the phone card, clipped by the parent section. */}
+      {/* Soft brand glow behind the phone card. BORNÉ AU VIEWPORT : à 420 px
+          fixes, centré par -translate-x-1/2, le cercle dépassait des deux côtés
+          sous 420 px de large et élargissait la page de 15 px — TOUT le site
+          glissait alors latéralement (P0 du plan responsive, 2026-08-09).
+          `min(420px,100vw)` le garde rond ET contenu ; l'`overflow-x-clip`
+          posé sur l'enveloppe mobile dans OraHeroDemo est la ceinture de
+          sécurité pour tout futur débord. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[46%] -z-10 h-[420px] w-[420px] -translate-x-1/2 rounded-full opacity-70 dark:opacity-40"
+        className="pointer-events-none absolute left-1/2 top-[46%] -z-10 h-[min(420px,100vw)] w-[min(420px,100vw)] -translate-x-1/2 rounded-full opacity-70 dark:opacity-40"
         style={{ background: "radial-gradient(circle at 40% 35%, #ffffff, #eef2fb 62%, transparent 74%)" }}
       />
 
@@ -158,11 +164,13 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </ul>
       </motion.div>
 
-      {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ── */}
-      <motion.div
-        {...rise(0.08)}
-        className="mt-10 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
-      >
+      {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ──
+          Enveloppe `relative` SANS overflow : la pastille de flux ci-dessous
+          déborde du bord bas de la carte, comme les pilules d'activité des
+          maquettes desktop — c'est un objet posé dessus, pas une partie
+          d'elle. Le rognage des coins reste sur la carte intérieure. */}
+      <motion.div {...rise(0.08)} className="relative mt-10">
+        <div className="overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10">
         {/* Barre de fenêtre */}
         <div className="flex items-center gap-2 border-b border-[#ececef] bg-[#f7f7f8] px-3.5 py-2.5">
           <span className="flex gap-1.5">
@@ -268,11 +276,56 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
             ))}
           </div>
         </div>
+        </div>
+
+        {/* ── LA TRACE DE L'AUTOMATISATION (P2 du plan responsive, 2026-08-09).
+            La version desktop vend le geste — dépôt → livrable — par sa démo
+            scrollée ; le hero mobile n'en montrait aucune. Ici, les deux
+            pastilles-fichiers s'enchaînent en fondu (CSS pur, deux images-clés
+            en opposition de phase, voir index.css) posées sur la réplique :
+            balance_2025.xlsx déposé devient Reporting généré, en boucle.
+            `aria-hidden` : décorative — la même histoire est racontée en
+            statique et au complet par la liste « Vous déposez / Ora vous
+            rend » juste en dessous. L'état B porte `opacity-0` en base : si
+            l'animation est coupée (prefers-reduced-motion), seul l'état A
+            reste visible. */}
+        <div aria-hidden className="pointer-events-none absolute -bottom-5 left-5 z-10 max-w-[calc(100%-2.5rem)]">
+          <div className="relative rounded-full bg-white py-1.5 pl-1.5 pr-5 ring-1 ring-black/[0.05] shadow-[0_18px_44px_-12px_rgba(15,23,42,0.35)]">
+            <div className="ora-flow-a flex items-center gap-2.5">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#e9f7ee] text-[#177245]">
+                <FileText className="h-4 w-4" strokeWidth={2.2} />
+              </span>
+              <span className="min-w-0">
+                <b className="block truncate font-inter text-[12.5px] font-bold leading-tight text-[#111827]">
+                  balance_2025.xlsx
+                </b>
+                <span className="block truncate font-inter text-[10.5px] leading-tight text-[#8b909b]">
+                  {t({ fr: "Déposé dans Ora", en: "Dropped into Ora" })}
+                </span>
+              </span>
+            </div>
+            <div className="ora-flow-b absolute inset-0 flex items-center gap-2.5 py-1.5 pl-1.5 pr-5 opacity-0">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#e8f0ff] text-[#2f6ff0]">
+                <BarChart3 className="h-4 w-4" strokeWidth={2.2} />
+              </span>
+              <span className="min-w-0">
+                <b className="block truncate font-inter text-[12.5px] font-bold leading-tight text-[#111827]">
+                  {t({ fr: "Reporting généré", en: "Report generated" })}
+                </b>
+                <span className="block truncate font-inter text-[10.5px] leading-tight text-[#8b909b]">
+                  {t({ fr: "Mis en forme, prêt à envoyer", en: "Formatted, ready to send" })}
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── L'histoire entrée → sortie, en liste plutôt qu'en pastilles
              flottantes (elles se chevauchaient et devenaient illisibles). ── */}
-      <motion.div {...rise(0.14)} className="mt-9">
+      {/* mt-12 et non mt-9 : la pastille de flux déborde de ~20 px sous la
+          réplique, l'étiquette « Vous déposez » a besoin de cet air en plus. */}
+      <motion.div {...rise(0.14)} className="mt-12">
         <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
           {t({ fr: "Vous déposez", en: "You drop in" })}
         </p>
