@@ -2,10 +2,83 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logos/icon-color.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ora - Le logiciel d'optimisation des processus répétitifs en cabinet comptable</title>
-    <meta name="description" content="Le logiciel indispensable pour fluidifier le conseil en cabinet comptable : bilan imagé, SIG, évaluation, prévisionnel — en un clic, sur mesure, 100 % déterministe." />
+
+    <!-- ══ TITRE ET DESCRIPTION ═════════════════════════════════════════════
+         Élargis le 2026-08-15, après audit. L'ancienne paire disait
+         « en cabinet comptable » dans le titre ET dans la description, avec
+         « bilan imagé » et « SIG » dedans : c'est ce que Google affiche, et une
+         direction financière qui lit un vocabulaire de cabinet dans le titre
+         classe le produit en outil de niche avant même d'avoir cliqué. Le
+         cabinet reste nommé, il n'est simplement plus le seul.
+         Le tiret cadratin de l'ancienne description est parti : CLAUDE.md
+         l'interdit dans le texte visible, et un extrait Google en est. -->
+    <title>Ora, l'automatisation du travail répétitif sur Excel | Cabinets et directions financières</title>
+    <meta
+      name="description"
+      content="Ora enchaîne le travail répétitif qui va de la donnée brute au document final : extraction, retraitement, mise en forme du livrable. Traitement local, résultat reproductible, journal d'audit."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://ora-solution.com/" />
+
+    <link rel="icon" type="image/png" href="/logos/icon-color.png" />
+    <link rel="apple-touch-icon" href="/logos/icon-color.png" />
+    <!-- Une seule valeur : le site est en clair quel que soit le réglage du
+         visiteur, une barre d'adresse sombre sur un site clair jurerait. -->
+    <meta name="theme-color" content="#fcfbf7" />
+
+    <!-- ══ PARTAGE SOCIAL ═══════════════════════════════════════════════════
+         Il n'y en avait AUCUN avant le 2026-08-15 : chaque partage LinkedIn de
+         ce site B2B s'affichait sans image, sans titre propre et sans résumé.
+         Pour un produit démarché sur LinkedIn, c'était la perte la moins chère
+         à réparer du site.
+         `og:image` pointe sur /og-cover.png, une carte 1200 x 630 rendue aux
+         couleurs et à la typographie du site. À REFAIRE si le titre change :
+         elle porte la même phrase que la section à onglets, et deux promesses
+         différentes entre l'aperçu et la page se voient. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ora" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:url" content="https://ora-solution.com/" />
+    <meta property="og:title" content="Vos fichiers entrent, vos livrables sortent." />
+    <meta
+      property="og:description"
+      content="Ora enchaîne le travail répétitif qui va de la donnée brute au document final. Traitement local, résultat reproductible, journal d'audit."
+    />
+    <meta property="og:image" content="https://ora-solution.com/og-cover.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Ora : vos fichiers entrent, vos livrables sortent." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Vos fichiers entrent, vos livrables sortent." />
+    <meta
+      name="twitter:description"
+      content="Ora enchaîne le travail répétitif qui va de la donnée brute au document final. Traitement local, résultat reproductible, journal d'audit."
+    />
+    <meta name="twitter:image" content="https://ora-solution.com/og-cover.png" />
+
+    <!-- Données structurées. Rien d'invérifiable ici : la raison sociale et la
+         forme juridique sont celles du pied de page, et aucune note, aucun avis
+         et aucun prix n'est déclaré tant qu'il n'y en a pas de réel. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Ora",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "macOS",
+        "url": "https://ora-solution.com/",
+        "inLanguage": ["fr", "en"],
+        "publisher": {
+          "@type": "Organization",
+          "name": "Ora Solution SAS",
+          "url": "https://ora-solution.com/",
+          "logo": "https://ora-solution.com/logos/logo-color-dark.png"
+        }
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Figtree : la fonte de marque de monday.com, ajoutée le 2026-08-08 sur
@@ -14,13 +87,19 @@
          cartes d'« Automatisez de bout en bout » — la face d'affichage du site
          reste Instrument Sans. Trois graisses seulement, celles employées. -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Poppins:wght@300;400;500;600;700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet" />
+  <!-- ══ THÈME VERROUILLÉ EN CLAIR (client 2026-08-18) ═══════════════════════
+       « Enlève la possibilité de passer le site en nuit jour. » Le site ne
+       bascule plus : ni bouton dans la barre, ni détection de
+       `prefers-color-scheme`, ni relecture de localStorage. La classe est posée
+       une fois pour toutes, ici, avant React — c'est ce qui évitait déjà
+       l'éclair de mauvais thème, et cela reste vrai avec une seule valeur.
+       ⚠ Les classes `dark:` restent partout dans le JSX : elles ne coûtent rien
+       tant que `.dark` n'est jamais posée, et les retirer toucherait des
+       centaines de lignes pour zéro effet visible. Pour rétablir la bascule,
+       c'est ici, dans le `theme` d'App.tsx et dans le bouton de Navigation.tsx.
+       La clé localStorage 'ora-theme-v2' n'est plus ni lue ni écrite. -->
   <script>
-    (function () {
-      var stored = localStorage.getItem('ora-theme-v2');
-      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var theme = stored === 'dark' || stored === 'light' ? stored : (prefersDark ? 'dark' : 'light');
-      document.documentElement.classList.add(theme);
-    })();
+    document.documentElement.classList.add('light');
   </script>
   </head>
   <body>

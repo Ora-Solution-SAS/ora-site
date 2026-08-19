@@ -26,34 +26,44 @@ import { useLang } from "@/lib/i18n";
  */
 
 const W = 1180, H = 720;
-
-/** Liste « Reprendre » — fichiers de la capture client. Ramenée de quatre à
- *  DEUX entrées le 2026-08-07 : l'accès rapide passe à deux rangs, et la scène
- *  garde sa hauteur de 720 px. Ce sont les deux premières de la capture. */
-const FILES: { name: string; meta: string; kind: "xlsx" | "txt"; state: "run" | "todo" }[] = [
-  { name: "01_grand_livre_client_a_nettoyer", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "run" },
-  { name: "demo_petit_5k_2024_N_studio (2)", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "todo" },
-];
+/** Proportions RÉELLEMENT peintes par la fenêtre (.oa-win remplit la scène).
+ *  Exporté parce que le mur du dézoom d'OraHeroDemo doit tailler le trou de la
+ *  réplique à ces proportions-là : il le taillait sur la boîte hôte (730 x 512,
+ *  APP_W x APP_H), plus haute que la fenêtre, ce qui laissait 39 px de vide
+ *  sous elle et la faisait paraître plus petite que ses voisines du mur. */
+export const OA_ASPECT = H / W;
 
 /** ACCÈS RAPIDE — les MODULES RÉELS du logiciel, relevés un par un sur la
- *  capture de l'application fournie le 2026-08-07 (« intègre deux ou trois
- *  features issues du screen : prévisionnel, bilan développé, changement de
- *  structure »).
+ *  capture de l'application. Rien d'inventé : libellés, sous-titres, couleurs
+ *  d'icône et ORDRE viennent de l'écran d'accueil réel.
  *
- *  La scène n'en montrait que trois, dont deux qui ne sont pas des modules
- *  métier (« Tous les Atlas », « Ora Engineering ») : elle donnait donc à voir
- *  un logiciel sans fonctions. Ces six-là sont les six premières vignettes de
- *  l'écran d'accueil réel, libellés et sous-titres compris. Rien d'inventé.
+ *  PASSÉ DE SIX À DOUZE le 2026-08-12, sur une nouvelle capture (client :
+ *  « recopie pour la réplication du logiciel le second screen »). Douze tuiles
+ *  remplissent exactement les quatre rangs que laisse la fenêtre de 720 px une
+ *  fois posés l'en-tête, la salutation et les deux cartes bleues, comme sur la
+ *  capture. La liste « Reprendre » qui suivait est partie avec : elle n'est
+ *  plus à l'écran dans l'application, la grille occupe sa place.
  *
  *  ⚠ Ce tableau alimente AUSSI le hero de la page d'accueil, qui monte la même
  *  scène. C'est voulu : les deux endroits montrent le même logiciel. */
-const QUICK: { title: string; sub: { fr: string; en: string }; tone: string; icon: "bank" | "swap" | "scale" | "pie" | "gauge" | "plus" }[] = [
+const QUICK: {
+  title: string;
+  sub: { fr: string; en: string };
+  tone: string;
+  icon: "bank" | "swap" | "scale" | "pie" | "gauge" | "plus" | "arb" | "farm" | "penDoc" | "mission" | "bulb" | "globe";
+}[] = [
   { title: "Prévisionnel immobilier", sub: { fr: "Dossier banque en 5 min", en: "Bank file in 5 min" }, tone: "emerald", icon: "bank" },
   { title: "Changement de structure", sub: { fr: "Comparatif avant / après", en: "Before / after comparison" }, tone: "amber", icon: "swap" },
   { title: "Évaluation d'entreprise", sub: { fr: "Cinq approches combinées", en: "Five combined approaches" }, tone: "rose", icon: "scale" },
-  { title: "Bilan développé", sub: { fr: "Le bilan en un coup d'œil", en: "The balance sheet, detailed" }, tone: "violet", icon: "pie" },
+  { title: "Bilan développé et SIG", sub: { fr: "Le bilan et la formation du résultat", en: "The balance sheet and how profit forms" }, tone: "violet", icon: "pie" },
   { title: "Suivi budgétaire", sub: { fr: "Réalisé contre budget", en: "Actual versus budget" }, tone: "blue", icon: "gauge" },
+  { title: "Arbitrages de fin d'année", sub: { fr: "Prime, dividendes, ou le bon équilibre", en: "Bonus, dividends, or the right balance" }, tone: "violet", icon: "arb" },
+  { title: "Prévisionnel agricole", sub: { fr: "Le plan d'exploitation, prêt pour la banque", en: "The farm plan, ready for the bank" }, tone: "emerald", icon: "farm" },
+  { title: "Courriers et attestations", sub: { fr: "CA et revenus lus dans le FEC", en: "Revenue and income read from the FEC" }, tone: "blue", icon: "penDoc" },
+  { title: "Lettre de mission", sub: { fr: "Le contrat chiffré depuis les vôtres", en: "The priced engagement letter, from yours" }, tone: "amber", icon: "mission" },
+  { title: "Revue d'opportunités", sub: { fr: "Aides et dispositifs 2026, chiffrés", en: "2026 schemes and grants, quantified" }, tone: "amber", icon: "bulb" },
   { title: "Nouveau projet", sub: { fr: "Deal PE, audit, M&A...", en: "PE deal, audit, M&A..." }, tone: "blue", icon: "plus" },
+  { title: "Tous les Atlas", sub: { fr: "Liste de vos projets", en: "All your projects" }, tone: "violet", icon: "globe" },
 ];
 
 const OA_CSS = `
@@ -106,19 +116,30 @@ const OA_CSS = `
 .oa-hello{font-size:29px;font-weight:700;letter-spacing:-.02em;color:#111827}
 .oa-date{margin-top:5px;font-size:12.5px;color:#8b909b}
 
-/* Grande carte bleue */
-.oa-open{margin-top:20px;display:flex;align-items:center;gap:16px;border-radius:14px;padding:19px 20px;
+/* DEUX cartes bleues côte à côte (capture du 2026-08-12) : « Ouvrir un
+   fichier » et « Assistant ». Auparavant une seule carte pleine largeur.
+   ⚠ Changer cette rangée déplace la carte « Ouvrir un fichier », dont la
+   géométrie est recopiée en dur dans OraHeroDemo (constante OPEN_CARD) pour y
+   poser le repère de clic du curseur. Toute retouche ici impose de remesurer
+   la carte .oa-open et de reporter les quatre valeurs là-bas.
+   (Pas de backticks dans ce bloc : il vit dans un template literal.) */
+.oa-openrow{margin-top:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.oa-open{display:flex;align-items:center;gap:14px;border-radius:14px;padding:17px 18px;
   background:linear-gradient(100deg,#2f6ff0,#3f7bf5 55%,#5b8cf8);
   box-shadow:0 16px 34px -16px rgba(47,111,240,.75)}
-.oa-open .ic{width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.22);color:#fff;
+/* La seconde carte penche vers l'indigo du lanceur d'assistant, pour que les
+   deux se distinguent au premier coup d'œil sans sortir du bleu. */
+.oa-open.assist{background:linear-gradient(100deg,#2b62e8,#3a6ff2 55%,#4f7df6)}
+.oa-open .ic{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.22);color:#fff;
   display:grid;place-items:center;flex-shrink:0}
-.oa-open b{display:block;font-size:17px;font-weight:700;color:#fff}
-.oa-open span{display:block;margin-top:3px;font-size:12.5px;color:rgba(255,255,255,.86)}
+.oa-open .tx{min-width:0}
+.oa-open b{display:block;font-size:16px;font-weight:700;color:#fff}
+.oa-open span{display:block;margin-top:3px;font-size:12px;line-height:1.35;color:rgba(255,255,255,.86)}
 .oa-open .arw{margin-left:auto;color:#fff;flex-shrink:0}
 
-.oa-sec{margin-top:22px;font-size:9.5px;font-weight:700;letter-spacing:.11em;color:#a0a4ad}
+.oa-sec{margin-top:20px;font-size:9.5px;font-weight:700;letter-spacing:.11em;color:#a0a4ad}
 /* ACCÈS RAPIDE — tuiles colorées (enrichissement monday) */
-.oa-quick{margin-top:11px;display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.oa-quick{margin-top:11px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .oa-qcard{display:flex;align-items:center;gap:12px;border:1px solid #eceef1;border-radius:13px;
   padding:14px 15px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .oa-qcard .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex-shrink:0}
@@ -135,21 +156,31 @@ const OA_CSS = `
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .oa-qcard .arw{margin-left:auto;color:#c3c6cd;flex-shrink:0}
 
-/* REPRENDRE */
-.oa-list{margin-top:11px;border:1px solid #eceef1;border-radius:13px;background:#fff;overflow:hidden}
-.oa-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid #f4f5f7}
-.oa-row:first-child{border-top:0}
-.oa-row .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex-shrink:0}
-.oa-row .ic.x{background:#e9f7ee;color:#177245}
-.oa-row .ic.t{background:#f1f2f4;color:#6b7280}
-.oa-row b{display:block;font-size:13px;font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;
-  text-overflow:ellipsis}
-.oa-row span{display:block;margin-top:2px;font-size:10.5px;color:#9aa0aa}
-.oa-tag{margin-left:auto;flex-shrink:0;display:inline-flex;align-items:center;gap:6px;height:24px;
-  padding:0 10px;border-radius:999px;font-size:10.5px;font-weight:600}
-.oa-tag.run{background:#eaf1ff;color:#2f6ff0}
-.oa-tag.todo{background:#f3f4f6;color:#7b8190}
-.oa-tag i{width:6px;height:6px;border-radius:50%;background:currentColor;display:block}
+/* La section REPRENDRE et ses styles (.oa-list, .oa-row, .oa-tag) sont partis
+   le 2026-08-12 avec la nouvelle capture : la grille ACCÈS RAPIDE passe à
+   douze tuiles et occupe toute la hauteur restante, exactement comme dans
+   l'application. Ils sont récupérables dans l'historique git. */
+
+/* ══ Le lanceur « Assistant » ══════════════════════════════════════════════
+   Client 2026-08-11 : « un petit encadré en bas de la réplication avec écrit
+   assistant », capture à l'appui — un carré à grand rayon, indigo plein, une
+   étincelle blanche pleine.
+   LA COULEUR suit le bouton « Réserver un appel » de la barre de
+   navigation (« j'aime beaucoup la couleur du bouton Réserver un appel »).
+   Elle n'est pas reprise du bleu #3b82f6 du reste de l'interface, et c'est
+   volontaire : dans l'application ce lanceur est l'action vivante, il doit se
+   détacher du chrome.
+   IL VIT DANS .oa-win, pas à côté : c'est un élément de l'interface répliquée,
+   pas une pastille flottante. Donc il est rogné par l'overflow de la fenêtre,
+   il rétrécit avec elle pendant le dézoom du hero, et il n'a pas besoin de la
+   règle qui éteint .oa-chip quand le mur se referme. */
+.oa-assist{position:absolute;z-index:6;right:22px;bottom:20px;
+  display:inline-flex;align-items:center;gap:11px;
+  padding:9px 16px 9px 9px;border-radius:16px;background:#3b82f6;
+  box-shadow:0 2px 6px rgba(49,49,150,.20),0 16px 34px -14px rgba(49,49,150,.55)}
+.oa-assist .ic{width:34px;height:34px;border-radius:11px;flex-shrink:0;
+  display:grid;place-items:center;background:rgba(255,255,255,.16);color:#fff}
+.oa-assist b{font-size:14px;font-weight:600;color:#fff;white-space:nowrap;letter-spacing:-.01em}
 
 /* ══ Pastilles flottantes : l'histoire ENTRÉE → SORTIE ══ */
 /* Deux couches distinctes, et pas une seule : .oa-chip ne porte que la position
@@ -302,7 +333,28 @@ const IcoPie = ({ s = 18 }: { s?: number }) => (
 const IcoGauge = ({ s = 18 }: { s?: number }) => (
   <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="m15 9-4 4" /></svg>
 );
-const QUICK_ICON = { bank: IcoBank, swap: IcoSwap, scale: IcoScale, pie: IcoPie, gauge: IcoGauge, plus: IcoPlus } as const;
+/* Les six modules ajoutés le 2026-08-12 avec la nouvelle capture. Mêmes cotes
+   et même graisse de trait que les cinq ci-dessus, pour que la grille reste
+   homogène. */
+const IcoArb = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="7" cy="8" r="3.4" /><circle cx="17" cy="16" r="3.4" /><path d="M13.4 8H20l-2-2M10.6 16H4l2 2" /></svg>
+);
+const IcoFarm = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="6.5" cy="17" r="3.5" /><circle cx="18" cy="17.5" r="2.5" /><path d="M3 17V8h5l2.5 5H15" /><path d="M10 8h5v5" /></svg>
+);
+const IcoPenDoc = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12V8l-5-5H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4" /><path d="M14 3v5h5" /><path d="m20.5 14.5-5 5L13 20l.5-2.5 5-5z" /></svg>
+);
+const IcoMission = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M19 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" /><path d="M9 8h8M9 12h8M9 16h4" /></svg>
+);
+const IcoBulb = ({ s = 18 }: { s?: number }) => (
+  <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9c.5.4.8 1 .8 1.6h5.4c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3z" /></svg>
+);
+const QUICK_ICON = {
+  bank: IcoBank, swap: IcoSwap, scale: IcoScale, pie: IcoPie, gauge: IcoGauge, plus: IcoPlus,
+  arb: IcoArb, farm: IcoFarm, penDoc: IcoPenDoc, mission: IcoMission, bulb: IcoBulb, globe: IcoGlobe,
+} as const;
 
 type SceneProps = {
   playing?: boolean;
@@ -459,17 +511,30 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
                 </div>
 
                 <div className="oa-scroll">
-                  <div className="oa-hello">{t({ fr: "Heureux de vous revoir", en: "Good to see you again" })}</div>
-                  <div className="oa-date">{t({ fr: "Mercredi 29 juillet", en: "Wednesday, July 29" })}</div>
+                  {/* Salutation et date relevées sur la capture du 2026-08-12. */}
+                  <div className="oa-hello">{t({ fr: "Ravi de vous accueillir, Test", en: "Glad to have you, Test" })}</div>
+                  <div className="oa-date">{t({ fr: "Mercredi 12 août", en: "Wednesday, August 12" })}</div>
 
-                  {/* Grande carte bleue */}
-                  <div className="oa-open">
-                    <span className="ic"><IcoDoc s={22} /></span>
-                    <div>
-                      <b>{t({ fr: "Ouvrir un fichier", en: "Open a file" })}</b>
-                      <span>{t({ fr: "Excel ou CSV → lancez vos automatisations en un clic", en: "Excel or CSV → run your automations in one click" })}</span>
+                  {/* DEUX cartes bleues, comme l'application. La PREMIÈRE reste
+                      la cible du curseur du hero : ne pas inverser l'ordre sans
+                      remesurer OPEN_CARD dans OraHeroDemo. */}
+                  <div className="oa-openrow">
+                    <div className="oa-open">
+                      <span className="ic"><IcoDoc s={21} /></span>
+                      <div className="tx">
+                        <b>{t({ fr: "Ouvrir un fichier", en: "Open a file" })}</b>
+                        <span>{t({ fr: "Excel ou CSV → lancez vos automatisations en un clic", en: "Excel or CSV → run your automations in one click" })}</span>
+                      </div>
+                      <span className="arw"><IcoArrow s={21} /></span>
                     </div>
-                    <span className="arw"><IcoArrow s={22} /></span>
+                    <div className="oa-open assist">
+                      <span className="ic"><IcoSparkle s={21} /></span>
+                      <div className="tx">
+                        <b>{t({ fr: "Assistant", en: "Assistant" })}</b>
+                        <span>{t({ fr: "Votre journée, vos priorités, et l'analyse d'un document", en: "Your day, your priorities, and a document reviewed" })}</span>
+                      </div>
+                      <span className="arw"><IcoArrow s={21} /></span>
+                    </div>
                   </div>
 
                   {/* ACCÈS RAPIDE */}
@@ -490,25 +555,26 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
                     })}
                   </div>
 
-                  {/* REPRENDRE */}
-                  <div className="oa-sec">{t({ fr: "REPRENDRE", en: "RESUME" })}</div>
-                  <div className="oa-list">
-                    {FILES.map((f) => (
-                      <div className="oa-row" key={f.name}>
-                        <span className={`ic ${f.kind === "xlsx" ? "x" : "t"}`}><IcoDoc s={15} /></span>
-                        <div style={{ minWidth: 0 }}>
-                          <b>{f.name}</b>
-                          <span>{f.meta}</span>
-                        </div>
-                        <span className={`oa-tag ${f.state}`}>
-                          <i />
-                          {f.state === "run" ? t({ fr: "En cours", en: "Running" }) : t({ fr: "À faire", en: "To do" })}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  {/* La section REPRENDRE est partie le 2026-08-12 : la grille
+                      ACCÈS RAPIDE passe à douze tuiles et prend toute la
+                      hauteur restante, comme dans l'application. */}
                 </div>
               </div>
+            </div>
+
+            {/* Lanceur « Assistant », posé en bas à droite de la fenêtre comme
+                dans l'application. Étincelle PLEINE (et non le tracé de
+                IcoSparkle réutilisé ailleurs) : la capture fournie montre un
+                glyphe plein, qui tient mieux à cette taille. */}
+            <div className="oa-assist" aria-hidden>
+              <span className="ic">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2.6l1.95 5.63L19.4 10l-5.45 1.77L12 17.4l-1.95-5.63L4.6 10l5.45-1.77z" />
+                  <path d="M18.7 14.2l.78 2.22 2.12.78-2.12.78-.78 2.22-.78-2.22-2.12-.78 2.12-.78z" />
+                  <circle cx="5.4" cy="17.6" r="1.5" />
+                </svg>
+              </span>
+              <b>{t({ fr: "Assistant", en: "Assistant" })}</b>
             </div>
           </div>
 

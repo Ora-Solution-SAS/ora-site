@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense,useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, Scale, TrendingUp, X } from "lucide-react";
+import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, RefreshCw, Scale, TrendingUp, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
@@ -13,9 +13,18 @@ import OrganisationMockup from "./OrganisationMockup";
 import OraHomeMockup from "./OraHomeMockup";
 import OraAppScene from "./OraAppScene";
 import ValuationCard from "./ValuationCard";
-import ParticleOrbGL from "./ParticleOrbGL";
-import GradientRibbonGL from "./GradientRibbonGL";
 import RepelChips, { type Chip } from "./RepelChips";
+
+/* ⚠ CHARGÉS À LA DEMANDE, ET C'EST LE POSTE LE PLUS LOURD DU SITE (audit du
+   2026-08-15). Ces deux composants tirent three.js, soit 488 ko minifiés, et
+   ils étaient importés en dur : three partait donc dans le chunk d'entrée, à
+   chaque visite, alors qu'AUCUN de ces décors n'est au-dessus de la ligne de
+   flottaison — ils vivent dans des cartes qu'il faut défiler pour atteindre.
+   Le repli est `null` : ce sont des DÉCORS. Rien à annoncer, rien à réserver,
+   la carte est complète sans eux et se contente de les recevoir quand ils
+   arrivent. */
+const ParticleOrbGL = lazy(() => import("./ParticleOrbGL"));
+const GradientRibbonGL = lazy(() => import("./GradientRibbonGL"));
 
 /**
  * UseCasesBento — clone de la grille bento de stripe.com, recolorée dans la
@@ -43,7 +52,10 @@ import RepelChips, { type Chip } from "./RepelChips";
 
 type MockupKind =
   | "home" | "reporting" | "pointage" | "formatage" | "previsionnel"
-  | "prevision" | "evaluation" | "dossier" | "valuationCard" | "crm" | "organisation";
+  | "prevision" | "evaluation" | "dossier" | "valuationCard" | "crm" | "organisation"
+  | "replay";
+
+
 
 type BentoCase = {
   title: string;
@@ -151,7 +163,7 @@ type BentoTab = {
 const INK = "#0a2540";
 
 /* Voiles pervenche — la famille est échantillonnée sur la carte GPT-Live. */
-const WASH = {
+const WASH: Record<string, string> = {
   /** Halo discret bas-gauche, pour les cartes presque blanches. */
   soft:
     "radial-gradient(76% 52% at 10% 106%, rgba(170,178,248,0.4) 0%, rgba(255,255,255,0) 66%)",
@@ -186,7 +198,7 @@ const WASH = {
 // « Évaluation financière » juste en dessous d'elle — blanc, puis bleu qui
 // s'épaissit — sauf qu'ici la colonne va du clair au soutenu au lieu de
 // l'inverse, ce qui referme la colonne par sa teinte la plus dense.
-const FULL_PERI_BG =
+const FULL_PERI_BG: string =
   "linear-gradient(180deg, #ffffff 0%, #fcfdff 15%, #e7effd 33%, #bfd1f7 61%, #8e9cef 100%)";
 
 /* ── LE BLEU VIF DE LA CARTE-OBJET : ESSAYÉ SUR LA CARTE DU HAUT, PUIS RETIRÉ
@@ -217,88 +229,35 @@ const FULL_PERI_BG =
  *  #2f6ff0. Si ce fond revient un jour, l'encre blanche revient avec lui : les
  *  deux réglages ne se séparent pas. */
 
-/** Grain quasi invisible, posé PAR-DESSUS le fond de la carte « Extraction ».
- *  Un dégradé aussi peu contrasté que celui demandé se rend en 8 bits par
- *  canal : deux teintes voisines tombent sur la même valeur et laissent une
- *  frontière nette, les fameuses bandes. Trois centièmes de bruit suffisent à
- *  faire basculer les pixels de part et d'autre de l'arrondi et la frontière se
- *  dissout. C'est le tramage des dégradés d'affiche, et c'est ce qui manque à
- *  un `linear-gradient` nu. */
-const GRAIN =
-  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E\")";
-
-/* ── LE CIEL DE LA DEUXIÈME RANGÉE : LE BLEU AU CENTRE ────────────────────
- *  Trois cartes côte à côte — Bilan développé, Structure, Évaluation financière —
- *  et une seule règle de couleur, pour qu'elles forment UNE bande plutôt que
- *  trois vignettes.
+/* ── LA DEUXIÈME RANGÉE ET SON GRAIN SONT PARTIS AVEC ELLE ──────────────
+ *  Il y avait ici GRAIN, un bruit à trois centièmes d'opacité posé par-dessus
+ *  les nappes, et le pavé qui expliquait le réglage de couleur de la rangée
+ *  « Bilan développé / Structure / Évaluation financière » (halos radiaux à
+ *  mi-hauteur plutôt qu'une rampe partant d'un bord, opacités divisées par
+ *  deux, blanc dominant). La rangée n'existe plus, et GRAIN ne servait qu'à
+ *  ses nappes.
  *
- *  Client 2026-08-07, troisième réglage : « je ne veux pas que ce soit le haut
- *  de la carte qui soit bleu, mais plus le centre, et de manière légère. Qu'il
- *  y ait vraiment du blanc principalement dans ces encadrés. »
- *
- *  Les trois cartes de la rangée perdent donc leur rampe verticale — une rampe
- *  part forcément d'un bord — au profit de HALOS RADIAUX posés à mi-hauteur.
- *  Plus aucun `linear-gradient` : le haut et le pied retombent tous deux sur
- *  le blanc de la carte, et la couleur ne vit qu'au milieu, là où le regard
- *  passe du titre au visuel.
- *
- *  Opacités divisées par deux par rapport au réglage précédent. Chaque carte
- *  garde sa teinte propre — Évaluation le bleu de Prévisionnel qui la surmonte,
- *  Structure ses quatre couleurs, Bilan développé le plus pâle des trois.
+ *  Ce que le grain réglait, si le besoin revient : un dégradé peu contrasté se
+ *  rend en 8 bits par canal, deux teintes voisines tombent sur la même valeur
+ *  et laissent une frontière nette — les bandes. Le bruit fait basculer les
+ *  pixels de part et d'autre de l'arrondi et la frontière se dissout. Un
+ *  exemplaire vivant, à l'identique, se trouve en tête de ShowcaseCards.tsx.
  */
 
-/** Évaluation financière : une seule nappe, la plus large de la rangée, pour
- *  entourer l'objet flottant sans jamais passer pour un motif derrière lui.
- *
- *  ⚠ TROIS FOIS REMPLACÉE PAR LA PERVENCHE DE « PRÉVISIONNEL », TROIS FOIS
- *  REMISE. Le compte au 2026-08-07 : nappe repeinte aux teintes de la voisine,
- *  carte entièrement remplie du dégradé, puis carte remplie une seconde fois sur
- *  présentation d'une capture de la rampe. Verdict à chaque reprise, le dernier
- *  mot pour mot : « il y avait moins de bleu en background de l'encadré et
- *  c'était mieux ».
- *
- *  LA LEÇON, et elle vaut pour toute la rangée : cette carte porte un OBJET
- *  FLOTTANT, et un objet flottant a besoin de vide autour de lui. Le bleu qu'on
- *  croit ajouter au fond, on le retire à l'objet — il cesse de flotter et
- *  devient un rectangle posé sur un dégradé. C'est pour ça que la carte reste
- *  blanche alors que « Prévisionnel » et « Formatage », qui ne montrent que des
- *  maquettes rognées par les bords, supportent la rampe pleine.
- *
- *  Autrement dit, la demande à laquelle il faut céder n'est pas « mets la
- *  couleur de Prévisionnel ici » mais « mets-la sur le DESIGN de l'encadré ».
- *  Deux relectures l'avaient déjà dit ; la troisième la confirme. */
-const SKY_EVALUATION = [
-  GRAIN,
-  "radial-gradient(100% 50% at 50% 50%, rgba(147,184,248,0.24) 0%, rgba(184,210,248,0.11) 52%, rgba(255,255,255,0) 86%)",
-].join(", ");
+/* ── CINQ CONSTANTES PARTIES AVEC LEURS CARTES (2026-08-13) ──────────────
+ * Le retrait de « Bilan développé », « Évaluation financière » et
+ * « Conseillez la bonne structure » (voir le pavé au bas de `cases`) laissait
+ * sans emploi SKY_BILAN, SKY_EVALUATION, SKY_EXTRACTION, BILAN_CHIPS et
+ * STRUCTURE_CHIPS, que `noUnusedLocals` refuse. Elles sont supprimées ici, et
+ * ce n'est pas une perte : ShowcaseCards.tsx en détenait déjà une copie — il
+ * en est maintenant le seul propriétaire, et l'avertissement de synchronisation
+ * qu'il porte en tête n'a plus d'objet.
+ * Les longs pavés qui documentaient le réglage de ces nappes (trois
+ * allers-retours sur le bleu de « Évaluation financière », la disparition du
+ * vert de « Structure », le semis resserré des étiquettes) restent lisibles
+ * dans l'historique git de ce fichier et dans le CHANGELOG.
+ */
 
-/** Structure : les quatre teintes données au code hexadécimal près (pervenche
- *  #8FB0EA, bleu ciel #A8D0F1, bleu glacier #B8D8F6, turquoise menthe
- *  #7ED7CB), centrées, élargies et un cran plus denses au même titre que sa
- *  voisine. Le vert reste le plus discret des quatre. */
-/* ⚠ TROIS CHANGEMENTS LE 2026-08-07, tous demandés d'un coup : « que les ombres
- *  bleues dans Structure soient moins prononcées, que le vert ne soit pas
- *  présent, et que le haut de la carte soit plus blanc ».
- *
- *  1. LE VERT DISPARAÎT. La nappe #7ED7CB est supprimée, pas diluée : « pas
- *     présent » ne se négocie pas à l'opacité. C'était l'une des quatre teintes
- *     données au code hexadécimal près par le client ; la consigne récente prime
- *     sur l'ancienne, et il ne reste donc que trois nappes.
- *  2. LES BLEUS BAISSENT D'ENVIRON 40 % (0,32 → 0,19, 0,30 → 0,18, 0,34 → 0,20).
- *  3. LE HAUT SE DÉGAGE, et c'est fait DEUX FOIS plutôt qu'une : les centres des
- *     trois nappes descendent de 8 à 10 points, ET un voile blanc franc coiffe
- *     le premier tiers. Descendre les nappes seules laissait leur bord haut
- *     mordre sur le titre ; le voile coupe net.
- *     ⚠ Il est placé JUSTE APRÈS le grain et donc AU-DESSUS des trois nappes :
- *     dans `background`, la première couche est celle du dessus. Le mettre en
- *     fin de liste l'aurait enterré sous le bleu qu'il doit justement masquer. */
-const SKY_EXTRACTION = [
-  GRAIN,
-  "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.66) 16%, rgba(255,255,255,0.24) 32%, rgba(255,255,255,0) 46%)",
-  "radial-gradient(56% 30% at 16% 56%, rgba(143,176,234,0.19) 0%, rgba(143,176,234,0) 78%)",
-  "radial-gradient(72% 36% at 64% 64%, rgba(168,208,241,0.18) 0%, rgba(168,208,241,0) 80%)",
-  "radial-gradient(122% 62% at 46% 60%, rgba(170,204,244,0.2) 0%, rgba(190,218,248,0.1) 54%, rgba(255,255,255,0) 88%)",
-].join(", ");
 
 /** ── L'OMBRE AU CENTRE, ET LÉGÈRE ────────────────────────────────────────
  *  Client 2026-08-07, dernier réglage : « je veux qu'elle soit au centre des
@@ -337,26 +296,6 @@ const RING_BLUE = {
   bot: "29,78,216",
 } as const;
 
-/** Les quatre teintes du FOND de « Bilan développé » (à ne pas confondre avec
- *  l'anneau ci-dessus, qui est le décor posé par-dessus). Elles ne servent plus
- *  qu'à cette carte : les ombres du haut sont passées à `RING_BLUE`. */
-const BILAN_BLUE = {
-  /** #bed6fa — le plus clair, celui des bords de nappe. */
-  pale: "190,214,250",
-  /** #b2cef9 — le médian. */
-  soft: "178,206,249",
-  /** #89b2f7 — le cœur, le seul qui porte vraiment la couleur. */
-  core: "137,178,247",
-  /** #b0cdf9 — la reprise en fondu du cœur. */
-  mid: "176,205,249",
-} as const;
-
-const SKY_BILAN = [
-  GRAIN,
-  `radial-gradient(62% 32% at 22% 44%, rgba(${BILAN_BLUE.pale},0.3) 0%, rgba(${BILAN_BLUE.pale},0) 76%)`,
-  `radial-gradient(58% 30% at 80% 58%, rgba(${BILAN_BLUE.soft},0.26) 0%, rgba(${BILAN_BLUE.soft},0) 76%)`,
-  `radial-gradient(122% 62% at 50% 50%, rgba(${BILAN_BLUE.core},0.36) 0%, rgba(${BILAN_BLUE.mid},0.18) 54%, rgba(255,255,255,0) 88%)`,
-].join(", ");
 
 /** Formatage, la carte pleine largeur du pied : le halo bas-gauche de la
  *  famille, REPEINT EN BLEU (client 2026-08-06 : « pour le background, au lieu
@@ -435,11 +374,15 @@ const FORMATAGE_BLUE = {
   pale: "147,184,248",
 } as const;
 
-const SKY_FORMATAGE = [
-  GRAIN,
-  `radial-gradient(52% 46% at 50% 118%, rgba(${FORMATAGE_BLUE.core},0.3) 0%, rgba(${FORMATAGE_BLUE.pale},0.14) 48%, rgba(255,255,255,0) 76%)`,
-  `linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 56%, rgba(${FORMATAGE_BLUE.pale},0.1) 82%, rgba(${FORMATAGE_BLUE.pale},0.17) 100%)`,
-].join(", ");
+/* SKY_FORMATAGE, le décor de la carte pleine largeur, est parti avec elle le
+   2026-08-12 (voir la note à sa place dans le tableau des cartes). Sa palette
+   FORMATAGE_BLUE reste juste au-dessus : elle sert encore ailleurs, et c'est
+   elle qu'il faudra reprendre pour reconstruire ce décor le cas échéant.
+     const SKY_FORMATAGE = [
+       GRAIN,
+       radial-gradient(52% 46% at 50% 118%, core 0.30 → pale 0.14 → transparent),
+       linear-gradient(180deg, transparent 56% → pale 0.10 → pale 0.17),
+     ].join(", ");                                        */
 
 /** Les deux OMBRES MOBILES de la carte pleine largeur. Elles restent — le
  *  client les avait demandées — mais deviennent INVISIBLES en tant que formes :
@@ -469,59 +412,7 @@ const DRIFT_A =
 const DRIFT_B =
   `radial-gradient(closest-side, rgba(${FORMATAGE_BLUE.pale},0.14) 0%, rgba(${FORMATAGE_BLUE.pale},0.05) 48%, transparent 84%)`;
 
-/** Les soldes intermédiaires de gestion, semés dans la carte « Bilan développé ».
- *  Les abscisses ont été décalées de +2,5 points le 2026-08-07 : mesuré, le
- *  nuage penchait de 11 px à gauche du centre de la carte, là où l'objet de
- *  « Évaluation financière » tombait pile — d'où l'impression d'incohérence
- *  d'une carte à l'autre. Les ordonnées ont suivi (+2,3 points) : le nuage
- *  tombait 10 px au-dessus du centre du cadre, là où les deux autres visuels
- *  s'y posaient pile.
- *  (client 2026-08-07 : « un vocabulaire de ce que l'on attend dans un bilan
- *  imagé, style EBE, les SIG, flux »), plus une PHRASE DE LECTURE en neuvième
- *  étiquette. Vocabulaire du plan comptable, rien d'inventé.
- *
- *  La phrase est un conseil de GESTION tiré des SIG (« alléger le BFR »), pas
- *  un conseil d'investissement : le module éclaire, l'expert-comptable
- *  conseille — le logiciel ne doit jamais paraître promettre plus qu'il ne
- *  montre. */
-const BILAN_CHIPS = (t: (m: { fr: string; en: string }) => string): Chip[] => [
-  { label: t({ fr: "Marge brute", en: "Gross margin" }), x: 6.5, y: 4.3 },
-  { label: t({ fr: "EBE", en: "EBITDA" }), x: 68.5, y: 6.3, tone: "blue" },
-  { label: t({ fr: "Valeur ajoutée", en: "Value added" }), x: 30.5, y: 20.3 },
-  { label: t({ fr: "BFR", en: "Working capital" }), x: 72.5, y: 28.3, tone: "teal" },
-  { label: t({ fr: "CAF", en: "Cash flow" }), x: 8.5, y: 40.3, tone: "teal" },
-  { label: t({ fr: "Résultat d'exploitation", en: "Operating profit" }), x: 42.5, y: 42.3 },
-  { label: t({ fr: "Flux de trésorerie", en: "Cash flows" }), x: 12.5, y: 62.3, tone: "blue" },
-  { label: t({ fr: "Trésorerie nette", en: "Net cash" }), x: 58.5, y: 64.3 },
-  { label: t({ fr: "✦ Conseil : alléger le BFR", en: "✦ Tip: lighten the working capital" }), x: 18.5, y: 86.3, tone: "advice" },
-];
 
-/** Les formes juridiques, semées dans la carte « Structure » (client
- *  2026-08-07). Abscisses décalées de +4,3 points pour recentrer le nuage,
- *  qui penchait de 19 px à gauche (même mesure que pour « Bilan développé »).
- *  Ordonnées reculées de 4,5 points le 2026-08-07 : l'étiquette « Optimisation
- *  rémunération dirigeant » a allongé le nuage vers le bas et l'avait fait
- *  descendre 17 px sous ses deux voisines.
- *  Côté FR, les formes du droit français ; côté EN, les formes
- *  internationales équivalentes — pas une traduction mot à mot, ce sont deux
- *  listes qui parlent chacune à leur lecteur. */
-const STRUCTURE_CHIPS = (t: (m: { fr: string; en: string }) => string): Chip[] => [
-  { label: t({ fr: "Holding", en: "Holding" }), x: 10.3, y: -1.5, tone: "blue" },
-  { label: t({ fr: "SAS", en: "Inc." }), x: 70.3, y: 5.5 },
-  { label: t({ fr: "SARL", en: "Ltd" }), x: 28.3, y: 19.5 },
-  // TONS TEAL RETIRÉS de « SCI » et « SA » le 2026-08-07 (« que le vert ne soit
-  // pas présent »). Ces deux pastilles étaient le vert le PLUS visible de la
-  // carte — un aplat #e6f5f2 et une encre #0f766e — bien avant le voile de fond.
-  // Elles repassent au ton NEUTRE et non au bleu : la même demande veut aussi
-  // moins de bleu, en repeindre deux de plus aurait pris d'une main ce qu'on
-  // rend de l'autre. Le nuage garde donc son rythme teinté / neutre.
-  { label: t({ fr: "SCI", en: "Property SPV" }), x: 66.3, y: 33.5 },
-  { label: t({ fr: "SASU", en: "LLC" }), x: 14.3, y: 45.5 },
-  { label: t({ fr: "Micro-entreprise", en: "Sole trader" }), x: 34.3, y: 63.5, tone: "blue" },
-  { label: t({ fr: "SA", en: "PLC" }), x: 78.3, y: 67.5 },
-  { label: t({ fr: "Optimisation rémunération dirigeant", en: "Director pay optimisation" }), x: 8.3, y: 79.5, tone: "blue" },
-  { label: t({ fr: "✦ Comparatif avant / après", en: "✦ Before / after comparison" }), x: 24.3, y: 91.5, tone: "advice" },
-];
 
 /** Jumelle TRANSPARENTE du dégradé de ValuationCard : mêmes arrêts, mêmes
  *  positions, alphas divisés par sept. Toute retouche de l'un doit être
@@ -600,11 +491,6 @@ const WAVE_PATH =
   // bord bas, le même parcouru en sens inverse, 50 unités plus bas
   " L1200,130 C1100,190 1000,70 900,130 C800,190 700,70 600,130" +
   " C500,190 400,70 300,130 C200,190 100,70 0,130 Z";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 26 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-};
 
 /** Générateur pseudo-aléatoire DÉTERMINISTE (mulberry32) : le semis de
  *  particules est identique à chaque rendu — pas de scintillement quand React
@@ -906,6 +792,36 @@ function AnimatedOrb({ className, seed = 11, tilt }: { className?: string; seed?
 /* Fondu croisé décalé (A part allumé, B éteint), dérive douce, rotation de
  * planète. */
 const SPECKLE_CSS = `
+/* ══ LE REBOND DE LA BULLE ══════════════════════════════════════════════════
+   Client 2026-08-13 : « une animation où la bulle de l'encadré Plus de valeur
+   pour vos clients rebondit quand on passe le curseur dessus ».
+   Une transition ne peut pas rebondir : elle va d'un point à l'autre. Il faut
+   des IMAGES CLÉS, donc une animation, déclenchée par le survol de la carte
+   (.group:hover) et non par celui de la bulle — la bulle est en
+   pointer-events:none derrière le texte, et c'est toute la carte qui réagit.
+   Le tracé : détente vers le haut, retombée avec dépassement sous la ligne de
+   repos, puis deux rebonds de plus en plus courts. Les écrasements (scaleX
+   au-dessus de 1, scaleY en dessous) ne jouent qu'aux contacts : c'est ce qui
+   fait lire une bulle qui touche le sol, et non un carré qui monte et
+   descend.
+   Une animation, et non une transition : au retrait du curseur l'animation
+   est retirée, la bulle reprend sa place sans rejouer le tracé à l'envers.
+   (Pas de backticks dans ce bloc : il vit dans un template literal.) */
+@keyframes ucbBubbleBounce {
+  0%   { transform: translateY(0)     scale(1, 1); }
+  18%  { transform: translateY(-26px) scale(0.96, 1.05); }
+  34%  { transform: translateY(0)     scale(1.06, 0.94); }
+  48%  { transform: translateY(-13px) scale(0.98, 1.03); }
+  62%  { transform: translateY(0)     scale(1.04, 0.96); }
+  76%  { transform: translateY(-5px)  scale(0.99, 1.01); }
+  88%  { transform: translateY(0)     scale(1.02, 0.98); }
+  100% { transform: translateY(0)     scale(1, 1); }
+}
+.ucb-bubble { transform-origin: 50% 100%; }
+.group:hover .ucb-bubble { animation: ucbBubbleBounce 1150ms cubic-bezier(.28,.84,.42,1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .ucb-bubble { animation: none; }
+}
 @keyframes ucbTwA { 0%, 100% { opacity: 0.95; } 50% { opacity: 0.12; } }
 @keyframes ucbTwB { 0%, 100% { opacity: 0.12; } 50% { opacity: 0.95; } }
 @keyframes ucbDrift {
@@ -1087,6 +1003,79 @@ function PrevisionPanels() {
   );
 }
 
+/** ── DEUX EXÉCUTIONS, UNE SEULE EMPREINTE ────────────────────────────────
+ *  La scène de « Les mêmes chiffres, à chaque exécution » (client 2026-08-15,
+ *  en remplacement de « Prévisionnel », qui faisait doublon avec l'onglet du
+ *  même nom trois écrans plus haut). Même famille visuelle que PrevisionPanels
+ *  et DossierPanels : deux panneaux blancs empilés, `zoom: 0.7` et largeur
+ *  bornée à 70 % (voir le pavé de PrevisionPanels : sous `zoom`, un
+ *  `width: 100%` se résout contre la largeur du parent DIVISÉE par le
+ *  facteur, et le bloc se rendrait à sa taille d'origine).
+ *
+ *  ⚠ AUCUN MONTANT, ET C'EST DÉLIBÉRÉ. Le propos est « même fichier, même
+ *  résultat » ; l'illustrer avec un total en euros reviendrait à inventer le
+ *  chiffre d'un dossier client, que rien sur ce site ne peut étayer. Ce qui
+ *  est montré à la place est l'EMPREINTE des deux exécutions, identique à
+ *  trois mois d'écart. Elle dit exactement la même chose, elle ne prétend rien
+ *  sur personne, et elle amène le mot qui compte pour un expert-comptable :
+ *  une sortie qu'on peut signer. */
+function ReplayPanels() {
+  const runs = [
+    { date: "3 mars, 09:14", by: "Camille M." },
+    { date: "12 juin, 17:02", by: "Camille M." },
+  ];
+  return (
+    <div className="relative mx-auto w-[70%] space-y-3 md:space-y-3.5" style={{ zoom: 0.7 }}>
+      <div className="rounded-[12px] bg-white p-[18px] md:p-5 ring-1 ring-[#0a2540]/[0.05] shadow-[0_12px_32px_-18px_rgba(10,37,64,0.4)]">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[#e7effd]">
+            <RefreshCw className="h-5 w-5 text-[#3b82f6]" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-inter font-medium text-[14.5px] leading-tight text-[#0a2540]">Bilan développé</div>
+            <div className="font-inter text-[12.5px] text-[#6b85a3]">Nexio 2025, deux exécutions</div>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {runs.map((r) => (
+            <div
+              key={r.date}
+              className="flex items-center justify-between gap-3 rounded-[9px] bg-[#f6f9fe] px-3 py-2.5 ring-1 ring-[#0a2540]/[0.04]"
+            >
+              <span className="font-inter text-[12.5px] text-[#0a2540]">{r.date}</span>
+              {/* L'empreinte en chasse fixe : un chiffre qui se compare d'un
+                  coup d'œil d'une ligne à l'autre, ce qui est tout le propos. */}
+              <span className="font-mono text-[12px] tracking-tight text-[#6b85a3]">a7f3·9c21</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 ring-1 ring-emerald-500/20">
+          <Check className="h-[13px] w-[13px] text-emerald-600" strokeWidth={2.6} />
+          <span className="font-inter font-medium text-[12px] text-emerald-700">Résultat identique</span>
+        </div>
+      </div>
+
+      <div className="rounded-[12px] bg-white p-[18px] md:p-5 ring-1 ring-[#0a2540]/[0.05] shadow-[0_12px_32px_-18px_rgba(10,37,64,0.4)]">
+        <div className="font-inter font-medium text-[13.5px] text-[#0a2540]">Journal d'exécution</div>
+        <div className="mt-3 space-y-2.5">
+          {[
+            "Camille M. lance l'automatisation",
+            "Contrôles passés, écarts documentés",
+            "Classeur produit, prêt à signer",
+          ].map((l) => (
+            <div key={l} className="flex items-start gap-2.5">
+              <span className="mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#3b82f6]" />
+              <span className="font-inter text-[12.5px] leading-snug text-[#6b85a3]">{l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** « Votre dossier est prêt » — la SORTIE du module Évaluation d'entreprise,
  *  répliquée depuis la capture de l'application fournie le 2026-08-07 :
  *  l'en-tête à coche verte, les trois pièces du dossier (classeur, PDF,
@@ -1191,6 +1180,7 @@ function Mockup({ kind }: { kind: MockupKind }) {
     case "valuationCard": return <ValuationCard />;
     case "crm": return <CrmMockup />;
     case "organisation": return <OrganisationMockup />;
+    case "replay": return <ReplayPanels />;
   }
 }
 
@@ -1200,6 +1190,9 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
   // Onglet actif de la carte pleine largeur. Un seul entier : une seule carte
   // en porte, inutile d'en faire une table.
   const [tab, setTab] = useState(0);
+  // Lightbox VIDÉO de la carte pastel (voir le pavé de la carte, après la
+  // grille). Distincte du panneau de présentation : ici le clic promet LA
+  // DÉMO, pas une fiche — l'overlay n'a donc que la vidéo et sa fermeture.
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Chrome ne suspend pas une vidéo muette hors écran : lecture uniquement
@@ -1321,8 +1314,17 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
       // tombent tous deux sur rgb(194,·,·) au-dessus du blanc) : ce qui change
       // est la SATURATION, pas la masse. Places et rayons restent au chiffre
       // près, comme à chaque passage sur cette carte.
-      wash:
-        `radial-gradient(48% 28% at 76% 36%, rgba(${RING_BLUE.top},0.3) 0%, rgba(${RING_BLUE.top},0.15) 46%, rgba(255,255,255,0) 74%), radial-gradient(70% 92% at -6% 100%, rgba(${RING_BLUE.bot},0.27) 0%, rgba(${RING_BLUE.bot},0.14) 36%, rgba(255,255,255,0) 76%), radial-gradient(58% 40% at 84% 110%, rgba(${RING_BLUE.bot},0.11) 0%, rgba(255,255,255,0) 64%)`,
+      // ⚠ PLUS DE NAPPE (client 2026-08-15 : « pour ces deux encadrés il faut que
+      // le background soit blanc »). Les trois voiles bleus — l'ellipse haute à
+      // hauteur de barre de fenêtre, le halo montant du bas-gauche et la pointe
+      // bas-droite — ont été réglés cinq fois entre le 2026-08-06 et le
+      // 2026-08-07 (« l'ombre bleue ne doit pas couper le texte », « mets moins
+      // d'ombre bleu », puis le passage au bleu de l'anneau de particules). Ils
+      // sont retirés d'un bloc, pas atténués : la demande porte sur le FOND, pas
+      // sur la dose. Leurs valeurs exactes restent dans l'historique git de ce
+      // fichier, et RING_BLUE sert encore aux ombres de maquette.
+      // La carte tient désormais par son liseré, son ombre et la fenêtre du
+      // logiciel qu'elle porte.
       // Corps et largeur propres à cette carte, mais GRAISSE COMMUNE : la
       // phrase est repassée en 400 comme tous les autres titres de la grille
       // (client 2026-08-07, « la même police que les autres titres »), après
@@ -1336,11 +1338,26 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
       // (client 2026-08-06) ; les deux cartes ont été ÉCHANGÉES, aucun cas
       // d'usage n'est perdu, « Reporting mensuel » occupe désormais le
       // créneau libéré plus bas dans la grille.
-      title: t({ fr: "Prévisionnel", en: "Forecasting" }),
-      poster: "/posters/ora_previsionnel.jpg",
-      // Composition compteur + graphique à barres (PrevisionPanels), la copie
-      // minimaliste de la tuile de facturation Stripe fournie en capture.
-      mockup: "prevision",
+      // ⚠ « PRÉVISIONNEL » A CÉDÉ LA PLACE le 2026-08-15 (client : « au lieu
+      // de Prévisionnel à cet endroit, j'aimerais trouver autre chose à
+      // dire »). La raison est un doublon : « Prévisionnel » est le PREMIER
+      // onglet d'AutomationTabs, trois écrans plus haut, avec son titre, sa
+      // phrase et son visuel. Le lecteur le croisait deux fois.
+      // Ce qui le remplace est le seul argument que la page ne portait nulle
+      // part : le DÉTERMINISME. Même fichier, même résultat, daté et signable.
+      // C'est aussi ce qui sépare Ora d'un assistant conversationnel, et c'est
+      // le sujet sur lequel un expert-comptable déçu par les LLM attend d'être
+      // rassuré. Le titre suit la formule maison (la tâche, ce qu'elle
+      // devient) sans chiffrer un gain que rien n'étaye.
+      // Sa maquette (PrevisionPanels) et son poster restent dans le fichier :
+      // remettre la carte, ce sont cinq lignes ici.
+      title: t({
+        fr: "Les mêmes chiffres, à chaque exécution",
+        en: "The same figures, every single run",
+      }),
+      // Deux exécutions à trois mois d'écart, une seule empreinte, et le
+      // journal qui les date (ReplayPanels).
+      mockup: "replay",
       // LES DEUX PANNEAUX REMONTENT (client 2026-08-07 : « fais en sorte que
       // les deux encadrés soient un peu plus haut dans l'encadré »). Le débord
       // bas de la famille (-mb-9) ne servait à rien ici : mesuré, la maquette
@@ -1351,11 +1368,16 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
       // 230 px de vide entre le titre et la maquette absorbent le mouvement.
       mockupClass: "-mx-3 md:-mx-5 mb-2 md:mb-2",
       span: "third",
-      // Dégradé BLEU dominant qui garde un léger violet en pied (client :
-      // « garde un léger violet pour celui de droite »).
-      bg: FULL_PERI_BG,
-      // Nuages blancs sur le dégradé, comme la carte GPT-Live de référence.
-      wash: WASH.puffs,
+      // ⚠ APLAT ET NUAGES RETIRÉS (client 2026-08-15, même demande que sa
+      // voisine : « il faut que le background soit blanc »). Elle portait le
+      // dégradé pervenche pleine carte plus les nuages blancs de la carte
+      // GPT-Live de référence. Les deux cartes de la rangée sont donc blanches
+      // et se lisent comme une paire, ce qu'elles n'étaient pas : l'une était
+      // blanche à voiles, l'autre un aplat soutenu.
+      // Conséquence à ne pas oublier : `ink` n'a jamais été posé ici, et c'est
+      // heureux — le marine de la grille redevient lisible de lui-même dès que
+      // le fond n'est plus teinté. FULL_PERI_BG et WASH.puffs servent encore
+      // ailleurs, rien n'est à supprimer.
       // Les « ombres bleu clair » : la maquette est détourée par une ombre
       // bleue, qui vit sur l'aplat teinté là où une ombre neutre s'éteindrait.
       // L'AUTRE « ombre bleue » des deux cartes du haut, passée elle aussi au
@@ -1369,243 +1391,52 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
       mockGlow:
         `drop-shadow(0 18px 30px rgba(${RING_BLUE.top},0.34)) drop-shadow(0 4px 10px rgba(${RING_BLUE.bot},0.18))`,
       detailDesc: t({
-        fr: "Le business plan se construit à partir de votre historique : hypothèses posées noir sur blanc, trajectoire sur plusieurs années, prête à présenter en rendez-vous.",
-        en: "The business plan is built from your history: assumptions written out, a multi-year trajectory, ready to present in a meeting.",
+        fr: "Une automatisation Ora suit des règles, pas des probabilités : relancée trois mois plus tard sur le même fichier, elle rend exactement le même résultat, daté et justifié ligne à ligne.",
+        en: "An Ora automation follows rules, not probabilities: run again three months later on the same file, it returns exactly the same result, dated and justified line by line.",
       }),
       detailChecks: [
-        t({ fr: "Le business plan se construit à partir de votre historique, hypothèses à l'appui", en: "The business plan is built from your history, assumptions made explicit" }),
-        t({ fr: "Une trajectoire claire sur plusieurs années, prête à présenter", en: "A clear multi-year trajectory, ready to present" }),
+        t({ fr: "Même fichier, même résultat, d'une exécution à l'autre", en: "Same file, same result, from one run to the next" }),
+        t({ fr: "Chaque chiffre remonte à sa source, du livrable à la donnée brute", en: "Every figure traces back to its source, from deliverable to raw data" }),
+        t({ fr: "Un journal daté par exécution, à joindre au dossier", en: "A dated log for every run, ready to file with the engagement" }),
         LOCAL,
       ],
     },
-    {
-      // « Réconciliation » devient « Bilan développé » (client 2026-08-06), le
-      // module du logiciel qui donne un bilan à voir au lieu de le lire.
-      title: t({ fr: "Bilan développé", en: "Detailed balance sheet" }),
-      span: "third",
-      tall: true,
-      // Bleu plus PÂLE que ses deux voisines, mais étalé plus bas : c'est la
-      // carte la plus légère de la rangée, et la plus bleue en surface.
-      bg: "#ffffff",
-      wash: SKY_BILAN,
-      // ANNEAU WEBGL : le portage du shader Stripe, en bleu (client
-      // 2026-08-06). CONSERVÉ tel quel — « je ne veux surtout pas que tu
-      // enlèves le design de fond ». Seul le clip s'en va.
-      // ANNEAU DE PARTICULES et nuage d'étiquettes, REMIS le 2026-08-07 après
-      // un aller-retour : la carte-objet à la Stripe les avait remplacés une
-      // heure durant, avant que le client ne tranche — « remets le design de
-      // background qui était dans Bilan développé, il était super », et l'objet
-      // part sur « Évaluation financière », à qui il était destiné.
-      art: "gl",
-      // DESCENDU de 42 à 52 % le 2026-08-07. L'alignement se mesurait sur les
-      // étiquettes, centrées à 326 px comme celles des cartes voisines — mais
-      // l'anneau, lui, était centré à 260, et c'est LUI qui donne la masse
-      // visible. Le design paraissait donc plus haut alors que les chiffres
-      // disaient l'inverse. À 52 %, anneau et étiquettes se superposent.
-      artClass: "left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2",
-      chips: BILAN_CHIPS(t),
-      // Copie tirée du module tel qu'il se nomme dans le logiciel (« Bilan
-      // imagé — le bilan en un coup d'œil », relevé sur la capture de l'app) :
-      // ce que fait un bilan développé, sans promesse de performance.
-      // Copie alignée sur les nouvelles étiquettes : les SIG et la lecture.
-      detailDesc: t({
-        fr: "Le bilan de votre client se regarde au lieu de se dérouler : marge, EBE, CAF, BFR et flux posés en grandes masses, avec la lecture qui va avec.",
-        en: "Your client's balance sheet is looked at rather than scrolled: margin, EBITDA, cash flow and working capital laid out as big blocks, with the reading to go with them.",
-      }),
-      detailChecks: [
-        t({ fr: "Les SIG en un coup d'œil : marge, valeur ajoutée, EBE, CAF", en: "Key indicators at a glance: margin, value added, EBITDA, cash flow" }),
-        t({ fr: "BFR et flux de trésorerie mis en regard du bilan", en: "Working capital and cash flows set against the balance sheet" }),
-        LOCAL,
-      ],
-    },
-    {
-      // Position au CENTRE de la rangée depuis le 2026-08-07 (« échange
-      // d'emplacement Évaluation financière et Structure ») — l'historique
-      // des échanges précédents vit dans le journal de bord des 06-07/08.
-      title: t({ fr: "Évaluation financière", en: "Business valuation" }),
-      // LA CARTE-OBJET à la Stripe (ValuationCard) : c'est CETTE carte que le
-      // design visait, pas « Bilan développé » où il avait d'abord atterri
-      // (client 2026-08-07). Un seul objet flottant au centre, beaucoup de
-      // vide autour, la grosse ombre bleue centrale pour le poser.
-      mockup: "valuationCard",
-      // Le halo qui respire à contre-temps de la carte-objet (voir le bloc
-      // ucbAura* dans SPECKLE_CSS).
-      art: "aura",
-      artClass: "inset-0",
-      // Les panneaux compacts du dossier restent servis dans le PANNEAU : le
-      // détail chiffré y a sa place, la carte non.
-      detailMockup: "dossier",
-      span: "third",
-      tall: true,
-      // CARTE BLANCHE, et c'est un choix qui a résisté à trois tentatives de
-      // remplissage — voir le pavé de SKY_EVALUATION. Le dernier retour du
-      // client, 2026-08-07 : « remets le background qu'il y avait avant, il y
-      // avait moins de bleu en background de l'encadré et c'était mieux ». La
-      // rampe pervenche reste donc réservée à ses deux voisines, « Prévisionnel »
-      // et « Formatage », qui n'ont pas d'objet flottant à faire respirer.
-      bg: "#ffffff",
-      wash: SKY_EVALUATION,
-      detailDesc: t({
-        fr: "La valorisation est posée sur des multiples et des comparables explicites : vous ressortez avec une fourchette argumentée, chiffre par chiffre, prête à défendre face au client.",
-        en: "Valuation rests on explicit multiples and comparables: you come out with a reasoned range, figure by figure, ready to defend with your client.",
-      }),
-      detailChecks: [
-        t({ fr: "La valorisation posée sur des multiples et des comparables explicites", en: "Valuation grounded in explicit multiples and comparables" }),
-        t({ fr: "Une fourchette argumentée, prête à défendre face au client", en: "A reasoned range, ready to defend with your client" }),
-        LOCAL,
-      ],
-    },
-    {
-      // ⚠ CHANGEMENT DE SUJET, 2026-08-07. La carte s'appelait « Extraction »
-      // (PDF → tableau Excel), renommée « Structure » le 06/08 sans que son
-      // contenu bouge. En lui demandant des étiquettes « holding, SCI, SARL,
-      // SASU, SAS, micro », le client la fait basculer sur un AUTRE module du
-      // logiciel : « Changement de structure — comparatif avant / après »,
-      // relevé sur la capture de l'app. Le clip d'extraction et sa copie s'en
-      // vont donc avec l'ancien sujet ; les garder ferait promettre à la carte
-      // une démo qui ne parle pas d'elle. Le cas d'usage « Extraction » n'est
-      // plus présenté nulle part sur la page.
-      // TITRE EXPLICITÉ le 2026-08-07 : « Structure, dit comme ça on ne comprend
-      // pas ». Le mot seul nommait un module du logiciel, pas un service. La
-      // formule suit celle de la grande carte — ce que le cabinet FAIT, pas ce
-      // que l'outil contient : on chiffre chaque forme juridique pour pouvoir la
-      // conseiller. Le verbe à l'impératif s'adresse à l'expert-comptable, et
-      // « chiffres à l'appui » dit la simulation sans promettre un résultat.
-      title: t({
-        fr: "Conseillez la bonne structure, chiffres à l'appui",
-        en: "Advise the right legal structure, with the figures to back it",
-      }),
-      span: "third",
-      tall: true,
-      bg: "#ffffff",
-      wash: SKY_EXTRACTION,
-      // GALAXIE À TROIS BRAS : le décor de « Bilan développé », mais en courbes au
-      // lieu d'un anneau (« plusieurs petites qui forment comme une galaxie »).
-      // Même composant, même shader, variante `galaxy`.
-      art: "galaxy",
-      artClass: "left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2",
-      chips: STRUCTURE_CHIPS(t),
-      // Copie tirée du module tel qu'il se nomme dans le logiciel
-      // (« Changement de structure — Comparatif avant / après ») : ce que fait
-      // le module, sans promesse chiffrée.
-      detailDesc: t({
-        fr: "Holding, SCI, SARL, SASU, SAS, micro-entreprise : la structure envisagée est posée à côté de l'actuelle, et le comparatif avant / après se lit poste par poste.",
-        en: "Holding, property SPV, Ltd, LLC, Inc., sole trader: the structure under consideration is set beside the current one, and the before / after comparison reads line by line.",
-      }),
-      detailChecks: [
-        t({ fr: "Le comparatif avant / après, forme juridique par forme juridique", en: "The before / after comparison, one legal form at a time" }),
-        t({ fr: "La structure envisagée posée à côté de l'actuelle", en: "The structure under consideration set beside the current one" }),
-        LOCAL,
-      ],
-    },
-    {
-      // Pleine largeur, le clone de « Intégrez les paiements directement dans
-      // votre plateforme » : titre à gauche, visuel aux deux tiers droits.
-      // Les hachures diagonales pervenche sont TOMBÉES le 2026-08-06 (« enlève
-      // les designs de trait en diagonale »), et le halo passe au bleu.
-      title: t({ fr: "Formatage pour logiciel métier", en: "Formatting for your software" }),
-      video: "/final-fec.mp4",
-      poster: "/posters/final-fec.jpg",
-      mockup: "formatage",
-      span: "full",
-      // RETOUR AU BLANC ET AU HALO le 2026-08-07, après une demi-journée de
-      // rampe pervenche pleine : « ça ne va pas niveau des couleurs, il faut que
-      // le bleu soit moins intense et sur une partie plus restreinte ». Le
-      // pourquoi est écrit au-dessus de SKY_FORMATAGE : sur la carte la plus
-      // large de la page, une rampe verticale devient un aplat.
-      bg: "#ffffff",
-      wash: SKY_FORMATAGE,
-      // Les deux ombres mobiles RESTENT : le client les avait demandées, et
-      // elles gardent leur rôle sur un fond teinté — ce sont des variations de
-      // lumière, pas des taches de couleur.
-      art: "drift",
-      artClass: "inset-0",
-      detailDesc: t({
-        fr: "Vos fichiers sortent au format attendu par votre logiciel métier : colonnes, séparateurs et libellés alignés sur sa maquette d'import, prêts à charger.",
-        en: "Your files come out in the format your software expects: columns, separators and labels aligned with its import template, ready to load.",
-      }),
-      detailChecks: [
-        t({ fr: "Vos fichiers sont mis au format attendu par votre logiciel, prêts à importer", en: "Your files are converted to the format your software expects, ready to import" }),
-        t({ fr: "Colonnes, séparateurs et libellés alignés sur la maquette d'import", en: "Columns, separators and labels aligned with the import template" }),
-        LOCAL,
-      ],
-      // ⚠ TROIS ONGLETS SANS VISUEL, et c'est délibéré (client 2026-08-07 :
-      // « dans automatisation FEC ne mets rien dans l'encadré, ni dans
-      // reporting mensuel »). Ils gardent leur titre et leur fiche ; la zone
-      // du visuel reste vide en attendant un vrai design. Les clips existent
-      // pourtant dans public/ — les remettre est une ligne chacun.
-      //
-      // ⚠ « Réconciliation » N'EST PAS dans la liste, et c'est délibéré
-      // (client 2026-08-07 : « pour les automatisations qui n'ont pas de
-      // design encore, ne mets rien »). Le seul clip disponible pour elle,
-      // /ora_reconciliation.mp4, est documenté dans UseCases.tsx comme un
-      // bouche-trou : c'est une démo de POINTAGE repeinte, pas une démo de
-      // réconciliation. L'afficher sous ce nom ferait passer une automatisation
-      // pour une autre. Le jour où le vrai clip existe, cinq lignes suffisent.
-      //
-      // Les automatisations que la grille avait perdues le 2026-08-06
-      // (« supprime les encadrés en dessous de Formatage ») reviennent ici,
-      // non plus en cartes mais en ONGLETS de celle-ci : la page ne s'allonge
-      // pas d'un pouce et les cas d'usage sont de nouveau montrés. Maquettes,
-      // clips et copie sont ceux d'origine, rien n'a été réécrit.
-      tabs: [
-        {
-          title: t({ fr: "Formatage pour logiciel métier", en: "Formatting for your software" }),
-          mockup: "formatage",
-          video: "/final-fec.mp4",
-          poster: "/posters/final-fec.jpg",
-          detailDesc: t({
-            fr: "Vos fichiers sortent au format attendu par votre logiciel métier : colonnes, séparateurs et libellés alignés sur sa maquette d'import, prêts à charger.",
-            en: "Your files come out in the format your software expects: columns, separators and labels aligned with its import template, ready to load.",
-          }),
-          detailChecks: [
-            t({ fr: "Vos fichiers sont mis au format attendu par votre logiciel, prêts à importer", en: "Your files are converted to the format your software expects, ready to import" }),
-            t({ fr: "Colonnes, séparateurs et libellés alignés sur la maquette d'import", en: "Columns, separators and labels aligned with the import template" }),
-            LOCAL,
-          ],
-        },
-        {
-          title: t({ fr: "Pointage des comptes", en: "Account matching" }),
-          mockup: "pointage",
-          video: "/ora_pointage_v4.mp4",
-          poster: "/posters/ora_pointage_v4.jpg",
-          detailDesc: t({
-            fr: "Expertise comptable et révision : vos comptes sont pointés automatiquement, et la révision démarre sur des soldes déjà justifiés.",
-            en: "Accounting and review: your accounts are matched automatically, and review starts from balances that are already justified.",
-          }),
-          detailChecks: [
-            t({ fr: "Vos comptes sont pointés automatiquement, les écarts ressortent immédiatement", en: "Your accounts are matched automatically, discrepancies stand out immediately" }),
-            t({ fr: "La révision démarre sur des soldes justifiés, sans pointage manuel", en: "Review starts from justified balances, no manual ticking" }),
-            LOCAL,
-          ],
-        },
-        {
-          title: t({ fr: "Automatisation FEC", en: "FEC automation" }),
-          detailDesc: t({
-            fr: "Déposez le FEC légal de vos clients : Ora produit en un clic le classeur d'audit que vous composez, contrôles et mise en forme compris.",
-            en: "Drop in your clients' legal FEC file: Ora produces the audit workbook you compose in one click, checks and formatting included.",
-          }),
-          detailChecks: [
-            t({ fr: "Importez le FEC de vos clients, contrôlez son intégrité en quelques secondes", en: "Import your clients' FEC file and check its integrity in seconds" }),
-            t({ fr: "Écritures atypiques repérées et documentées automatiquement", en: "Unusual entries flagged and documented automatically" }),
-            t({ fr: "Le FEC légal (.txt) traité sans limite de lignes", en: "The legal FEC file (.txt) processed with no row limit" }),
-            LOCAL,
-          ],
-        },
-        {
-          title: t({ fr: "Reporting mensuel", en: "Monthly reporting" }),
-          detailDesc: t({
-            fr: "Équipes finance et contrôle de gestion : le classeur est retraité, mis en forme et prêt à partager en un clic, le même livrable chaque mois.",
-            en: "Finance and controlling teams: the workbook is cleaned, formatted and share-ready in one click, the same deliverable every month.",
-          }),
-          detailChecks: [
-            t({ fr: "Le classeur est retraité, mis en forme et prêt à partager en un clic", en: "Your workbook is cleaned, formatted and share-ready in one click" }),
-            t({ fr: "Envoi par mail automatique, le même livrable chaque mois", en: "Sent by email automatically, the same deliverable every month" }),
-            LOCAL,
-          ],
-        },
-      ],
-    },
+    // ── TROIS CARTES RETIRÉES : « BILAN DÉVELOPPÉ », « ÉVALUATION
+    //    FINANCIÈRE » ET « CONSEILLEZ LA BONNE STRUCTURE » ─────────────────
+    // Client 2026-08-13 : « enlève bilan développé, évaluation financière et
+    // conseillez la bonne structure chiffres à l'appui, puisqu'elles ne
+    // servent plus à rien ». Elles faisaient doublon : les trois modules ont
+    // chacun leur onglet, leur texte et leur visuel dans AutomationTabs, plus
+    // haut dans la page, et ce sont MÊME LES DESIGNS DE CES CARTES qui y ont
+    // été repris (anneau de particules, galaxie, carte-objet de valorisation).
+    // Le lecteur les croisait donc deux fois, à quelques écrans d'intervalle.
+    //
+    // ⚠ CE QUI RESTE VIVANT MALGRÉ LE RETRAIT : ShowcaseCards.tsx détenait une
+    // COPIE des constantes de ces trois cartes (nappes, semis d'étiquettes,
+    // invocations ParticleOrbGL, coque) parce que la grille devait rester
+    // intacte. La grille ne les porte plus : ShowcaseCards en est désormais le
+    // SEUL propriétaire, et il n'y a plus rien à reporter d'un fichier à
+    // l'autre. Les constantes locales qui ne servaient qu'à elles (SKY_BILAN,
+    // SKY_EVALUATION, SKY_EXTRACTION, BILAN_CHIPS, STRUCTURE_CHIPS, la
+    // maquette `valuationCard`, les décors `gl`, `galaxy` et `aura`) restent
+    // en place, comme le veut l'usage de ce fichier : remettre une carte, ce
+    // sont cinq lignes à réécrire ici, pas un visuel à reconstruire.
+    //
+    // La grille tient donc sur UNE rangée : la grande carte (2 colonnes) et
+    // « Prévisionnel » (1 colonne). Aucune case vide.
+    // ── LA CARTE « FORMATAGE POUR LOGICIEL MÉTIER » A ÉTÉ RETIRÉE ───────
+    // Client 2026-08-12 : « l'encadré avec actuellement formatage pour
+    // logiciel métier, supprime-le et mets à la place l'encadré du dessous ».
+    // C'était la carte PLEINE LARGEUR de fin de grille ; la carte pastel
+    // « Plus de valeur pour votre client », qui la suivait immédiatement,
+    // remonte donc d'elle-même à cette place. Rien d'autre à déplacer.
+    //
+    // Sont partis avec elle : sa maquette `formatage`, son clip
+    // /final-fec.mp4, et surtout ses QUATRE ONGLETS (Formatage, Pointage des
+    // comptes, Automatisation FEC, Reporting mensuel), déjà masqués depuis le
+    // 2026-08-11. Ces automatisations vivent maintenant dans la section à
+    // onglets AutomationTabs, plus haut dans la page.
+    // Tout est récupérable dans l'historique git.
     // ── FIN DE LA GRILLE ────────────────────────────────────────────────
     // Client 2026-08-06 : « supprime les encadrés en dessous de Formatage
     // pour logiciel métier ». Sont tombées, dans l'ordre : Reporting mensuel
@@ -1623,32 +1454,16 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
   ];
 
   return (
-    <div className="relative mb-40 md:mb-56">
+    <div className="relative mb-24 md:mb-32">
       <style>{SPECKLE_CSS}</style>
-      {/* Header de section. */}
-      <motion.div
-        className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-80px" }}
-        variants={fadeUp}
-      >
-        <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
-          {t({ fr: "Cas d'usage", en: "Use cases" })}
-        </span>
-        {/* INTER sur le titre de section aussi (client 2026-08-06 : « applique
-            cette police à absolument toute cette partie du site ») — même
-            exception à la règle Poppins de CLAUDE.md que les titres de cartes,
-            circonscrite à cette section. Graisse, chasse et encre calées sur
-            le grand titre du panneau Stripe. */}
-        {/* font-normal (client 2026-08-06, deuxième affinage : « affine la
-            police, que ce soit plus fin ») — le grand corps porte la
-            présence, la graisse 400 suffit. */}
-        <h2 className="font-inter font-normal text-3xl md:text-[2.75rem] tracking-[-0.025em] leading-[1.1] text-[#0a2540] dark:text-white mt-4">
-          {t({ fr: "Concrètement, ce qu'Ora peut automatiser", en: "Concretely, what Ora can automate" })}
-        </h2>
-      </motion.div>
-
+      {/* ── LE TITRE DE SECTION A ÉTÉ RETIRÉ ──────────────────────────────
+          Client 2026-08-14 : « enlève la phrase Concrètement ce qu'Ora peut
+          automatiser ». La grille passe désormais DIRECTEMENT sous « Automatisez
+          de bout en bout », qui la coiffe déjà : deux titres à la suite disaient
+          la même chose, l'un annonçant ce que l'autre venait d'annoncer. Sont
+          partis avec lui le sur-titre « Cas d'usage » et la marge basse de
+          l'en-tête. La grille remonte donc d'autant, ce qui est l'autre moitié
+          de la demande (« remonte, mets moins d'espace »). */}
       <div ref={gridRef} className="grid md:grid-cols-3 gap-4 md:gap-5 max-w-[86rem] mx-auto">
         {cases.map((c0, i) => {
           const isFull = c0.span === "full";
@@ -1678,7 +1493,22 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
               //     démarre — c'était l'accroc perçu ;
               //   · scale, liseré et ombre partagent la MÊME durée et la même
               //     courbe : un seul mouvement, pas trois.
-              className={`group relative ${
+              // `flex flex-col` UNIQUEMENT quand la carte porte des onglets, et
+              // c'est un correctif, pas un style (client 2026-08-11 : « un
+              // léger trait bleu assez court en haut de cet encadré »).
+              // Le bandeau d'onglets est un frère de la carte interne, laquelle
+              // porte `h-full`. Sur une case de grille en hauteur automatique,
+              // ce `height:100%` est cyclique : la piste se dimensionnait sur la
+              // seule carte (543 px mesurés) et le bandeau débordait DESSOUS,
+              // là où la carte pastel suivante venait le recouvrir entièrement.
+              // Les quatre onglets étaient donc invisibles, et il ne dépassait
+              // que le liseré bleu de l'onglet actif — le fameux « trait ».
+              // En passant la case en conteneur flex, le `h-full` devient
+              // indéfini, les deux enfants s'empilent en flux normal et la piste
+              // se dimensionne sur leur somme. Réservé aux cartes à onglets :
+              // ailleurs, retirer l'étirement ferait des cartes de hauteurs
+              // inégales sur une même rangée.
+              className={`group relative ${c0.tabs ? "flex flex-col" : ""} ${
                 c.span === "wide" ? "md:col-span-2" : isFull ? "md:col-span-3" : ""
               }`}
               initial="hidden"
@@ -1730,11 +1560,13 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                 // (« un peu moins de ronds ou bulles ») : le tiers des
                 // particules est parti, la couronne reste dessinée mais
                 // respire au lieu de mousser.
-                <ParticleOrbGL
-                  size={760}
-                  count={7200}
-                  className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
-                />
+                <Suspense fallback={null}>
+                  <ParticleOrbGL
+                    size={760}
+                    count={7200}
+                    className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
+                  />
+                </Suspense>
               )}
               {c.art === "drift" && (
                 // Deux nappes qui dérivent, l'une haute et l'autre basse.
@@ -1918,35 +1750,39 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                 // une paire de virgules ; à trois, comme plusieurs courbes qui
                 // s'enroulent. Densité au même niveau que l'anneau voisin pour
                 // que les deux cartes aient le même grain.
-                <ParticleOrbGL
-                  variant="galaxy"
-                  arms={3}
-                  // AGRANDIE et DISPERSÉE le 2026-08-07 : le disque déborde
-                  // maintenant de la carte, et son halo est deux fois plus
-                  // fourni — c'est lui qui donne l'étalement.
-                  size={980}
-                  count={12000}
-                  radius={0.42}
-                  // 5,4 → 6,4 le 2026-08-08 au soir (« un peu plus en forme de
-                  // galaxie ») : l'exposant raréfie les particules que le bruit
-                  // du shader envoie loin de leur bras. Avec le halo et la
-                  // dispersion du semis resserrés en face (ParticleOrbGL), les
-                  // trois courbes se dessinent au lieu de moutonner.
-                  scatterPower={6.4}
-                  pointSize={3.4}
-                  // Le facteur porte sur les trois horloges à la fois, houle
-                  // du bruit comprise — c'est elle, et non la rotation, qui
-                  // donnait l'agitation désordonnée. Passé de 0,2 à 0,15 le
-                  // 2026-08-07 : « un tout petit peu plus lent, pas beaucoup
-                  // plus », après un premier réglage jugé assez bon.
-                  motion={0.15}
-                  className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
-                />
+                <Suspense fallback={null}>
+                  <ParticleOrbGL
+                    variant="galaxy"
+                    arms={3}
+                    // AGRANDIE et DISPERSÉE le 2026-08-07 : le disque déborde
+                    // maintenant de la carte, et son halo est deux fois plus
+                    // fourni — c'est lui qui donne l'étalement.
+                    size={980}
+                    count={12000}
+                    radius={0.42}
+                    // 5,4 → 6,4 le 2026-08-08 au soir (« un peu plus en forme de
+                    // galaxie ») : l'exposant raréfie les particules que le bruit
+                    // du shader envoie loin de leur bras. Avec le halo et la
+                    // dispersion du semis resserrés en face (ParticleOrbGL), les
+                    // trois courbes se dessinent au lieu de moutonner.
+                    scatterPower={6.4}
+                    pointSize={3.4}
+                    // Le facteur porte sur les trois horloges à la fois, houle
+                    // du bruit comprise — c'est elle, et non la rotation, qui
+                    // donnait l'agitation désordonnée. Passé de 0,2 à 0,15 le
+                    // 2026-08-07 : « un tout petit peu plus lent, pas beaucoup
+                    // plus », après un premier réglage jugé assez bon.
+                    motion={0.15}
+                    className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
+                  />
+                </Suspense>
               )}
               {c.art === "ribbon" && (
-                <GradientRibbonGL
-                  className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
-                />
+                <Suspense fallback={null}>
+                  <GradientRibbonGL
+                    className={`pointer-events-none absolute hidden md:block ${c.artClass ?? ""}`}
+                  />
+                </Suspense>
               )}
               {c.art === "aurora" && (
                 <AnimatedAurora
@@ -2200,9 +2036,14 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                 `aria-pressed` plutôt qu'un rôle d'onglet : ces boutons
                 changent le contenu d'une carte voisine, ils ne coiffent pas
                 un panneau au sens ARIA. */}
-            {c0.tabs && (
+            {/* TEMPORAIREMENT MASQUÉ (client 2026-08-11, « enlève cela pour
+                l'instant », juste après leur remise en état — voir le
+                correctif `flex flex-col` sur l'enveloppe de la carte, laissé
+                en place puisqu'il reste vrai tant que c0.tabs existe).
+                Repasser `false` à `true` pour les rétablir. */}
+            {false && c0.tabs && (
               <div className="mt-4 flex flex-wrap justify-center gap-2 md:mt-5 md:gap-2.5">
-                {c0.tabs.map((tb, ti) => {
+                {c0.tabs!.map((tb, ti) => {
                   const on = ti === Math.min(tab, c0.tabs!.length - 1);
                   return (
                     <button
@@ -2231,6 +2072,23 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
         })}
       </div>
 
+      {/* ── LA CARTE PASTEL « PLUS DE VALEUR POUR VOTRE CLIENT » A ÉTÉ
+             RETIRÉE ─────────────────────────────────────────────────────────
+          Client 2026-08-14 : « supprime l'encadré Plus de valeur pour votre
+          client, qui n'a aucun sens niveau cohérence visuelle ». Le reproche
+          est juste : la carte était une réplique fidèle d'une capture fournie
+          (pastel cyan-lavande-pêche, sphère de verre irisée, pilule
+          vert-pétrole), mais elle ne partageait AUCUN code avec le reste de la
+          page — ni la palette bleu-teal de la marque, ni le blanc des cartes,
+          ni leur typographie. Posée en pied d'une grille qui, depuis le
+          retrait de trois cartes le même jour, tient sur une seule rangée
+          blanche, elle ne se lisait plus comme une conclusion mais comme un
+          corps étranger.
+          Sont partis avec elle, faute de quoi rien ne les appelait plus :
+          l'état `demoOpen`, et l'overlay DemoClipOverlay qui jouait
+          /ora-1.mp4 (le compilateur refuse une fonction morte). Tout est
+          récupérable dans l'historique git, d'un seul bloc. */}
+
       {detail && (
         <CaseDetailOverlay
           item={detail}
@@ -2241,6 +2099,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
     </div>
   );
 }
+
 
 // ── Panneau de présentation — le grand encadré modal de stripe.com ──────────
 // Fond bleuté par-dessus la page, grande feuille blanche arrondie : titre et
@@ -2426,3 +2285,13 @@ function CaseDetailOverlay({
     document.body
   );
 }
+
+/* ⚠ NI L'UN NI L'AUTRE N'EST MONTÉ depuis le 2026-08-15, où les deux cartes de
+   la rangée sont passées en blanc. Ils sont conservés, et exportés pour que
+   `noUnusedLocals` ne les fasse pas tomber : ce sont des valeurs réglées à l'œil
+   sur des captures, en cinq passes pour les nappes et trois pour le dégradé
+   pervenche. Les réécrire coûterait ces huit passes ; les garder ne coûte rien,
+   ils ne sont référencés nulle part dans le rendu.
+   Remettre une carte teintée, c'est reposer `bg: FULL_PERI_BG` ou
+   `wash: WASH.puffs` sur son entrée. */
+export const BENTO_LEGACY_FILLS = { WASH, FULL_PERI_BG };

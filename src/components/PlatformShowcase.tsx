@@ -1,0 +1,222 @@
+import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { useLang } from "@/lib/i18n";
+import DownloadShowcase from "./DownloadShowcase";
+
+/**
+ * PlatformShowcase — l'encadré « plateforme » posé juste AVANT
+ * « Concrètement, ce qu'Ora peut automatiser » (client 2026-08-11).
+ *
+ * LA RÉFÉRENCE est une capture fournie par le client (carte Euria) : un grand
+ * cadre à coins très arrondis, une pastille blanche portant l'icône du produit
+ * et son nom, un titre large en graisse normale, un bouton plein, et un PANNEAU
+ * d'application. Le cadre contient DownloadShowcase, le panneau de la page de
+ * téléchargement, RÉUTILISÉ et non recopié : c'est un composant autonome
+ * dimensionné en `cqw`, il garde donc ses proportions exactes une fois réduit.
+ *
+ * ⚠ ILS ÉTAIENT DEUX. L'encadré « Assistant », en dégradé bleu, se tenait à
+ * droite de celui-ci. Le 2026-08-14 le client a décidé de faire porter
+ * l'assistant par Atlas (« mon but est de faire passer notre super assistant
+ * comme le dénommé Atlas ») et de retirer celui-ci : tant qu'un « Assistant »
+ * anonyme subsistait ici, le nom Atlas ne pouvait pas prendre. Son panneau, son
+ * orbe et son dégradé vivent maintenant dans AssistantPanel.tsx, monté par
+ * AtlasShowcase. L'encadré restant passe donc en PLEINE LARGEUR, discours à
+ * gauche et panneau à droite : empilé, son panneau de 440 px aurait flotté au
+ * milieu de 1376 px de blanc.
+ *
+ * ⚠ Cette section a REMPLACÉ la section « Accompagnement » (SupportShowcase),
+ * créée plus tôt le même jour : elle montrait déjà DownloadShowcase, et le
+ * client a tranché pour éviter le doublon. SupportShowcase.tsx reste dans le
+ * dépôt, non monté, avec son discours sur les rendez-vous week-ends compris.
+ */
+
+interface PlatformShowcaseProps {
+  onNavigate: (page: "telechargement" | "demo") => void;
+}
+
+const fadeUp = {
+  initial: { opacity: 0, y: 26 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: "-70px" },
+} as const;
+
+/* LE BLEU DE LA RÉFÉRENCE (client 2026-08-11 : « la couleur a bien plus de
+   nuances de bleu, je veux qu'elle soit exactement la même »). Relevé à l'œil
+   sur la capture Euria, en TROIS calques et non un seul dégradé linéaire :
+   c'est ce qui produit les « nuances » demandées.
+     · le linéaire porte la montée générale, blanc bleuté en haut vers le bleu
+       franc en bas ;
+     · le premier radial pose le foyer saturé du coin bas gauche, le point le
+       plus dense de la référence ;
+     · le second réchauffe le coin bas droit, plus clair que le gauche.
+   Un seul linéaire donnait la bande plate que le client a refusée.
+   Si vous avez les hex exacts de la capture, ce sont les trois seules valeurs
+   à remplacer. */
+/* ⚠ LE CADRE BLEU DE LA RÉFÉRENCE A DÉMÉNAGÉ. Il portait l'encadré
+   « Assistant », parti dans la section Atlas le 2026-08-14 (le client veut que
+   l'assistant s'appelle Atlas et nulle part autre chose). Son dégradé, ses
+   trois calques et la note qui explique comment ils ont été relevés vivent
+   désormais dans AssistantPanel.tsx, sous le nom ASSISTANT_SHELL_LIGHT. Rien
+   n'en est recopié ici : il ne reste qu'un seul encadré, et il est blanc. */
+
+function Shell({
+  name,
+  title,
+  note,
+  cta,
+  onCta,
+  children,
+}: {
+  name: string;
+  title: string;
+  note?: string;
+  cta: string;
+  onCta: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      {...fadeUp}
+      transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+      className="relative overflow-hidden rounded-[26px] p-7 md:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-14"
+    >
+      {/* Encadré BLANC (client 2026-08-11). En mode sombre il ne peut pas
+          rester blanc : il prend l'encre de section la plus claire de la
+          charte, pour continuer de se détacher du noir. */}
+      <div aria-hidden className="absolute inset-0 bg-white dark:bg-[#111827]" />
+      <div
+        aria-hidden
+        className="absolute inset-0 rounded-[26px] ring-1 ring-inset ring-[#0a2540]/[0.10] dark:ring-white/10"
+      />
+
+      <div className="relative">
+        {/* Pastille + nom du produit, comme la référence. */}
+        <div className="flex items-center gap-3.5">
+          <span className="grid h-12 w-12 place-items-center rounded-[14px] bg-white shadow-[0_2px_8px_-2px_rgba(10,37,64,0.18)] dark:bg-white/10">
+            <img src="/logos/icon-color.png" alt="" aria-hidden className="h-6 w-auto select-none" draggable={false} />
+          </span>
+          <span className="font-instrument font-normal text-[1.55rem] md:text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white">
+            {name}
+          </span>
+        </div>
+
+        <h3 className="mt-6 max-w-[18ch] font-instrument font-normal text-[1.65rem] md:text-[2rem] leading-[1.12] tracking-[-0.025em] text-[#111827] dark:text-white">
+          {title}
+        </h3>
+
+        {/* Bouton à petit rayon, comme la référence : c'est ce qui le distingue
+            des pilules employées partout ailleurs sur le site.
+            IL EST SEUL depuis le 2026-08-15 (client : « uniquement le bouton
+            essayer dans le navigateur »). La rangée à deux chemins posée le
+            matin même — bouton de téléchargement plus lien d'essai — est
+            retombée à un seul appel : plus d'arbitrage à faire pour le
+            visiteur, donc plus besoin de départager un bouton et un lien. */}
+        <button
+          type="button"
+          onClick={onCta}
+          className="group mt-7 inline-flex items-center gap-2.5 rounded-[7px] bg-[#3b82f6] px-5 py-3 font-inter font-semibold text-[14.5px] text-white transition-colors duration-150 hover:bg-[#2563eb]"
+        >
+          {cta}
+          <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+        </button>
+
+        {note && (
+          <p className="mt-4 max-w-[34ch] font-inter text-[13.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+            {note}
+          </p>
+        )}
+      </div>
+
+      {/* LE PANNEAU PASSE À DROITE, et ce n'est pas un caprice de mise en
+          page : l'encadré était la moitié d'une paire, il est désormais SEUL
+          et pleine largeur (l'assistant est parti dans Atlas). Empilé, son
+          panneau de 440 px aurait flotté au milieu d'un cadre de 1376 de large
+          avec un demi-écran de blanc de chaque côté. Côte à côte, le discours
+          tient la colonne gauche et la preuve la droite. */}
+      <div className="relative mt-10 lg:mt-0">{children}</div>
+    </motion.div>
+  );
+}
+
+export default function PlatformShowcase({ onNavigate }: PlatformShowcaseProps) {
+  const { t } = useLang();
+
+  return (
+    <section id="plateforme" data-nav-shy className="relative px-6 md:px-12 py-20 md:py-28 bg-white dark:bg-black">
+      {/* LARGEUR ALIGNÉE SUR LA SECTION DU DESSUS (client 2026-08-14 : « il
+          faudrait qu'il soit un peu plus large pour avoir plus de cohérence
+          visuelle avec la partie au-dessus »). AutomationTabs pose son cadre à
+          86rem sous le même rembourrage de section : à 86rem ici, les bords
+          gauche et droit des deux blocs tombent au même pixel, et l'œil lit une
+          colonne continue au lieu de deux blocs de largeurs voisines mais
+          différentes — le pire des deux mondes.
+          Ce 68rem venait du 2026-08-11 (« les encadrés sont plus longs et moins
+          larges ») et répondait à un autre problème, celui de cadres trop
+          trapus : il est réglé depuis, le panneau de gauche étant plafonné à
+          400 px, ce qui donne sa hauteur à la paire quelle que soit sa largeur.
+          Une seule valeur à changer si le résultat paraît trop large. */}
+      <div className="mx-auto max-w-[86rem]">
+        {/* ── Téléchargement et prise en main ─────────────────────────────────
+            Titre COURT : il ne porte que le téléchargement. La prise en main,
+            l'autre message demandé par le client, passe dans la note sous le
+            bouton. En mettant les deux dans le titre il tombait sur quatre
+            lignes et allongeait le cadre de 80 px. */}
+        <Shell
+          name={t({ fr: "Ora", en: "Ora" })}
+          title={t({
+            fr: "Ora se télécharge en un clic.",
+            en: "Ora downloads in one click.",
+          })}
+          /* ⚠ « macOS aujourd'hui, Windows en cours » ET NON « Mac et Windows »
+             (audit du 2026-08-15). La FAQ de la même page dit, elle,
+             « disponible sur macOS aujourd'hui, avec Windows en cours de
+             déploiement » : deux sections de la même page se contredisaient à
+             quatre écrans d'écart, et c'est la version optimiste qui était en
+             haut. Sur un achat qui passe par une DSI, une disponibilité annoncée
+             puis démentie coûte plus que l'absence de Windows. */
+          note={t({
+            fr: "macOS aujourd'hui, Windows en cours de déploiement. On vous accompagne ensuite à la prise en main, rendez-vous ouverts week-ends compris.",
+            en: "macOS today, Windows rolling out. We then walk you through your first runs, with slots open on weekends too.",
+          })}
+          /* ── UN SEUL CHEMIN : L'ESSAI EN LIGNE ─────────────────────────────
+             Client 2026-08-15, sixième passe : « enlève le télécharger
+             l'application et fais en sorte de mettre uniquement le bouton
+             essayer dans le navigateur ». Le lien secondaire posé le matin même
+             devient donc LE bouton, et le téléchargement disparaît d'ici.
+             La page /telechargement/ora-app n'est pas supprimée pour autant :
+             elle reste servie et joignable par lien direct, elle n'est
+             simplement plus annoncée sur l'accueil. `onNavigate` garde
+             « telechargement » dans son type pour cette raison. */
+          cta={t({ fr: "Essayer dans le navigateur", en: "Try it in your browser" })}
+          onCta={() => onNavigate("demo")}
+        >
+          {/* UN SEUL panneau, celui que le client a nommé (« celui avec bilan
+              développé, qui reprenait la balance ») : c'est DownloadShowcase,
+              la demande adressée au logiciel. Les deux côte à côte tombaient à
+              246 px de large sur grand écran et 130 px sur téléphone, où plus
+              rien ne se lisait. Pour remonter le second, réimporter
+              DeliverablesShowcase depuis ./DeliverablesShowcase.
+              PLAFONNÉ à 440 px : le panneau est carré, donc chaque pixel de
+              largeur en plus est un pixel de hauteur en plus. À pleine largeur
+              il portait le cadre à 959 px de haut pour 532 de large, bien
+              au-delà des proportions de la référence.
+              Relevé de 400 à 440 le 2026-08-14 avec l'élargissement du bloc :
+              le cadre ayant gagné 145 px de large, le panneau y flottait dans
+              un blanc trop grand. Les 40 px se paient en hauteur sur les DEUX
+              cadres, qui sont étirés à la même mesure. */}
+          <div className="mx-auto w-full max-w-[440px]">
+            <DownloadShowcase />
+          </div>
+        </Shell>
+
+      </div>
+    </section>
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Le panneau de l'assistant
+   Transposition du panneau de la référence. Cotes en `cqw` comme les deux
+   autres panneaux du site (1cqw = 1 % de la largeur du panneau) : il se réduit
+   exactement comme eux, sans point de rupture à régler.
+   ────────────────────────────────────────────────────────────────────────── */

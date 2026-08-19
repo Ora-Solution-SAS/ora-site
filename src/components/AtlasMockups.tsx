@@ -235,9 +235,15 @@ export function MockupHome() {
         {/* Hero */}
         <div className="flex justify-between items-start gap-4">
           <div>
-            <h1 className="text-[28px] font-bold text-[#0f172a]">
+            {/* ⚠ PAS UN h1. C'était un, et c'est un piège : ces maquettes sont
+                du décor de logiciel, et un h1 y annonce « Bon après-midi,
+                Raphaël » comme titre de la page d'accueil du site. Elles sont
+                aujourd'hui derrière un `false &&` dans AtlasShowcase, donc
+                inertes ; le jour où on rallume ce bloc, le rang de titre
+                repartirait avec. Un div porte la même typographie. */}
+            <div className="text-[28px] font-bold text-[#0f172a]">
               Bon après-midi, Raphaël
-            </h1>
+            </div>
             <p className="text-[12.5px] text-[#475569] mt-1.5">
               Samedi 23 mai · Espace personnel
             </p>
@@ -484,9 +490,11 @@ export function MockupManager() {
               <Users className="w-[22px] h-[22px]" strokeWidth={2.25} />
             </div>
             <div>
-              <h1 className="text-[26px] font-bold text-[#0f172a] leading-tight">
+              {/* Même raison que « Bon après-midi » plus haut : du décor ne
+                  porte pas de rang de titre. */}
+              <div className="text-[26px] font-bold text-[#0f172a] leading-tight">
                 Vue manager
-              </h1>
+              </div>
               <p className="text-[12.5px] text-[#475569] mt-1 max-w-md">
                 Pilotez vos équipes et visualisez les projets que vos membres partagent avec vous.
               </p>

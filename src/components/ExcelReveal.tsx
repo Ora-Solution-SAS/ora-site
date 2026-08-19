@@ -200,6 +200,10 @@ export default function ExcelReveal() {
         };
       });
       lastSecTop = Number.NaN; // force a repaint on the next frame
+      // La géométrie vient de changer sous les mots : la réécriture qui suit
+      // doit être SÈCHE, sinon chacun animerait depuis la valeur qu'il avait
+      // dans l'ancienne mise en page. La classe est remise juste après.
+      section.classList.remove("xr-live");
     };
 
     /* One getBoundingClientRect per frame (the section), then pure math per
@@ -239,6 +243,13 @@ export default function ExcelReveal() {
           s.opacity = oQ >= 0.999 ? "" : String(oQ);
           s.transform = e < 0.005 ? "" : `translateY(${(e * RISE_EM).toFixed(3)}em)`;
         }
+        // Le fondu n'est armé qu'APRÈS la toute première écriture (voir
+        // `.xr-live` dans src/index.css). Avant elle les mots sont encore nus,
+        // donc nets : armé tout de suite, le navigateur aurait animé ce net
+        // vers le flou et la section se serait affichée en clair avant de se
+        // brouiller sous les yeux. Une classe sur la SECTION suffit, il n'y a
+        // rien à suivre mot par mot.
+        section.classList.add("xr-live");
       }
       if (active) raf = requestAnimationFrame(frame);
     };
@@ -302,7 +313,7 @@ export default function ExcelReveal() {
     <span
       key={key}
       ref={collect}
-      className={`inline-block whitespace-nowrap${blue ? " text-brand-gradient" : ""}`}
+      className={`xr-word inline-block whitespace-nowrap${blue ? " text-brand-gradient" : ""}`}
       style={wordStyle}
     >
       {w}

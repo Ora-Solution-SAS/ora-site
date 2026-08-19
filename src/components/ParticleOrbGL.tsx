@@ -658,7 +658,21 @@ export default function ParticleOrbGL({
       survol = false;
       wantStrength = 0;
     };
-    const target = host.parentElement ?? host;
+    // LA CIBLE D'ÉCOUTE : le premier ancêtre qui reçoit VRAIMENT le curseur.
+    // Le parent direct suffisait tant que le décor était posé à plat dans la
+    // carte (grille bento). Dans ShowcaseCards il est enveloppé d'un calque de
+    // masque en `pointer-events:none` — un élément qui n'est jamais cible de
+    // pointeur ne reçoit donc AUCUN `pointermove`, et le resserrement au
+    // curseur était muet dans toute la section à onglets (client 2026-08-13 :
+    // « remets l'animation où les particules de l'anneau se resserrent »).
+    // On remonte tant que la couche est transparente au pointeur : dans la
+    // grille la boucle s'arrête au premier tour, le comportement d'origine est
+    // donc inchangé.
+    let cible: HTMLElement | null = host.parentElement;
+    while (cible && getComputedStyle(cible).pointerEvents === "none") {
+      cible = cible.parentElement;
+    }
+    const target = cible ?? host;
     target.addEventListener("pointermove", onMove);
     target.addEventListener("pointerleave", onLeave);
 

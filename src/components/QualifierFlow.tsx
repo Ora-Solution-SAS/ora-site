@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  Check,
   Search,
   TrendingUp,
   Building2,
@@ -179,6 +180,25 @@ export default function QualifierFlow({ onComplete }: Props) {
   const [answers, setAnswers] = useState<Partial<QualifierAnswers>>({});
   const [direction, setDirection] = useState<1 | -1>(1);
 
+  /* Voir le pavé au rendu du titre : le focus doit suivre l'étape, sinon il
+     retombe sur le corps du document à chaque réponse. La première étape est
+     EXCLUE — à l'ouverture, c'est la modale qui place le focus sur son premier
+     élément, et le lui reprendre ferait sauter deux fois le lecteur.
+
+     ⚠ RÉFÉRENCE DE RAPPEL, ET PAS UN useEffect SUR `step`, et c'est un
+     correctif : l'AnimatePresence est en `mode="wait"`, donc au changement
+     d'étape l'ancien bloc SORT (260 ms) avant que le nouveau ne soit monté. Un
+     effet déclenché sur `step` s'exécute bien avant, alors que la référence
+     pointe encore le nœud sortant ou rien du tout — mesuré : le focus restait
+     sur `document.body`. Une référence de rappel est appelée au MONTAGE du
+     nouveau titre, c'est-à-dire au seul instant où il existe. */
+  const focusHeading = useCallback(
+    (el: HTMLHeadingElement | null) => {
+      if (el && step > 0) el.focus();
+    },
+    [step],
+  );
+
   const currentStep = STEPS[step];
   const isLast = step === STEPS.length - 1;
 
@@ -220,7 +240,7 @@ export default function QualifierFlow({ onComplete }: Props) {
               key={i}
               className={`h-1 rounded-full transition-all duration-300 ${
                 i === step
-                  ? "w-6 bg-[#2563eb]"
+                  ? "w-6 bg-[#3b82f6]"
                   : i < step
                     ? "w-1.5 bg-blue-500/50 dark:bg-blue-400/50"
                     : "w-1.5 bg-gray-200 dark:bg-white/10"
@@ -241,15 +261,38 @@ export default function QualifierFlow({ onComplete }: Props) {
           exit={{ opacity: 0, x: direction * -24 }}
           transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
           className="flex-1 flex flex-col"
+          aria-live="polite"
         >
-          <p className="font-inter text-[11px] uppercase tracking-[0.16em] text-blue-500 dark:text-blue-400 font-semibold mb-2">
+          {/* Le repère d'étape passe en GRIS. En bleu, il rivalisait avec le
+              seul accent qui doit compter dans cette colonne, celui de la
+              réponse choisie et du bouton. */}
+          <p className="mb-2 font-inter text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#6b7688] dark:text-gray-500">
             {t({ fr: "Étape", en: "Step" })} {step + 1} / {STEPS.length}
           </p>
-          <h3 className="font-poppins font-semibold text-xl md:text-[1.6rem] tracking-[-0.02em] leading-[1.2] text-[#111827] dark:text-white mb-6">
+          {/* Instrument Sans, comme tous les grands titres du site depuis le
+              2026-08-12 : le Poppins semi-gras appartenait à une génération
+              précédente de la page et se voyait dès qu'on ouvrait la fenêtre
+              par-dessus une section refaite. */}
+          {/* ── LE FOCUS SUIT LA QUESTION (audit du 2026-08-15) ─────────────
+              Sélectionner une réponse démonte la `motion.div` qui porte
+              l'option focalisée : le focus retombait donc sur `document.body`,
+              et l'utilisateur au clavier devait re-tabuler DEPUIS LE HAUT DU
+              DOCUMENT à chacune des quatre étapes. Sur le seul chemin de
+              conversion du site, en silence.
+              Le titre reçoit `tabIndex={-1}` et le focus à chaque changement
+              d'étape : le lecteur d'écran annonce la nouvelle question, et la
+              tabulation suivante tombe sur la première option.
+              `aria-live="polite"` sur le conteneur double l'annonce pour les
+              lecteurs qui ne suivent pas le focus. */}
+          <h3
+            ref={focusHeading}
+            tabIndex={-1}
+            className="mb-6 font-instrument text-[1.35rem] font-normal leading-[1.16] tracking-[-0.025em] text-[#111827] outline-none dark:text-white md:text-[1.6rem]"
+          >
             {t(currentStep.question)}
           </h3>
 
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             {currentStep.options.map((opt) => {
               const Icon = opt.icon;
               const resolvedLabel = t(opt.label);
@@ -259,24 +302,41 @@ export default function QualifierFlow({ onComplete }: Props) {
                   key={opt.id}
                   type="button"
                   onClick={() => handleAnswer({ id: opt.id, label: resolvedLabel })}
-                  className={`group flex items-center gap-3.5 px-4 py-3.5 rounded-2xl border text-left transition-all duration-150 ${
+                  /* RAYON COURT ET LISERÉ D'UN PIXEL, à la place du rayon 16 px
+                     et du fond bleu pâle : c'est le gabarit des lignes de la
+                     maquette Prévisionnel et des panneaux de la page. Le survol
+                     ne soulève plus le bouton — un `-translate-y-px` sur cinq
+                     options empilées fait sautiller la colonne entière au
+                     passage de la souris. */
+                  className={`group flex items-center gap-3 rounded-[10px] px-3.5 py-3 text-left ring-1 transition-colors duration-150 ${
                     isSelected
-                      ? "border-blue-400 dark:border-blue-500/60 bg-blue-50/70 dark:bg-blue-500/[0.10]"
-                      : "border-gray-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] hover:border-blue-300 dark:hover:border-blue-500/40 hover:bg-blue-50/40 dark:hover:bg-blue-500/[0.05] hover:-translate-y-px"
+                      ? "bg-[#f4f7fd] ring-[#3b82f6]/45 dark:bg-blue-500/[0.10] dark:ring-blue-500/50"
+                      : "bg-white ring-[#0a2540]/[0.09] hover:bg-[#f8fafd] dark:bg-white/[0.02] dark:ring-white/[0.10] dark:hover:bg-white/[0.05]"
                   }`}
                 >
                   <div
-                    className={`flex items-center justify-center w-9 h-9 rounded-xl flex-shrink-0 transition-colors duration-150 ${
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[8px] ring-1 transition-colors duration-150 ${
                       isSelected
-                        ? "bg-[#2563eb] text-white"
-                        : "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20"
+                        ? "bg-white text-[#3b82f6] ring-[#3b82f6]/25 dark:bg-white/10 dark:ring-blue-500/30"
+                        : "bg-white text-gray-400 ring-[#0a2540]/[0.09] dark:bg-white/[0.04] dark:text-gray-400 dark:ring-white/10"
                     }`}
                   >
-                    <Icon className="w-4 h-4" />
+                    <Icon className="h-3.5 w-3.5" strokeWidth={1.9} />
                   </div>
-                  <span className="font-inter font-medium text-[14.5px] text-[#111827] dark:text-white">
+                  <span
+                    className={`font-inter text-[14px] ${
+                      isSelected
+                        ? "font-semibold text-[#111827] dark:text-white"
+                        : "font-medium text-[#42506b] dark:text-gray-300"
+                    }`}
+                  >
                     {resolvedLabel}
                   </span>
+                  {isSelected && (
+                    <span className="ml-auto grid h-4 w-4 shrink-0 place-items-center rounded-full bg-[#3b82f6]">
+                      <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
+                    </span>
+                  )}
                 </button>
               );
             })}

@@ -43,7 +43,16 @@ const Footer = ({
             {logo && (
               <div className="flex items-center gap-2">
                 {logo.onClick ? (
-                  <button onClick={logo.onClick} className="focus:outline-none">
+                  /* ⚠ `focus:outline-none` RETIRÉ (audit du 2026-08-15) : il
+                     était posé sans rien mettre à la place, et c'était le SEUL
+                     endroit du site où l'anneau du navigateur était supprimé.
+                     Un anneau de marque le remplace, visible seulement au
+                     clavier grâce à `focus-visible`. */
+                  <button
+                    onClick={logo.onClick}
+                    aria-label={logo.alt}
+                    className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
+                  >
                     <img src={logo.src} alt={logo.alt} className="h-8" />
                   </button>
                 ) : (

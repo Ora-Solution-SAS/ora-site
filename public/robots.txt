@@ -1,0 +1,13 @@
+# Ora — https://ora-solution.com
+# Les pages masquées côté application (elles répondent 404 par le routeur)
+# sont aussi refusées ici, pour qu'un robot n'aille pas les indexer via un
+# lien externe : voir HIDDEN_PAGES dans src/App.tsx.
+User-agent: *
+Allow: /
+Disallow: /espace-client
+Disallow: /telechargement/
+Disallow: /ora-experience
+Disallow: /pricing
+Disallow: /confidentialite
+
+Sitemap: https://ora-solution.com/sitemap.xml

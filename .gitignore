@@ -13,6 +13,20 @@ dist-ssr
 *.local
 temporary screenshots
 
+# ── RUSH DE MONTAGE, 848 Mo, JAMAIS VERSIONNÉ ──────────────────────────────
+# `ora_pdf_extract_v3.mp4` n'est référencé par aucun composant : c'est le rush
+# d'où sortent les extraits utilisés, pas un asset du site. Il est ignoré pour
+# deux raisons, et la première est bloquante :
+#   1. GitHub REFUSE tout fichier au-delà de 100 Mo. Le committer ferait
+#      échouer le push, et l'avoir committé une fois le laisserait dans
+#      l'historique même après suppression (il faudrait réécrire l'historique).
+#   2. À lui seul il fait peser `public/` un gigaoctet, que Vercel devrait
+#      téléverser à chaque déploiement pour un fichier que personne ne sert.
+# Le fichier reste SUR LE DISQUE, il n'est simplement pas suivi. Les vidéos
+# réellement servies (ORA_demo_Assistant_six_usages.mp4, demo-automatisation.mp4)
+# sont versionnées normalement.
+public/ora_pdf_extract_v3.mp4
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

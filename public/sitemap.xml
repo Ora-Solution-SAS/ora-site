@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap tenu À LA MAIN, et c'est un choix assumé : le routeur du site est un
+  simple état React (PAGE_TO_PATH dans src/App.tsx), il n'y a pas de génération
+  de routes à la compilation d'où l'extraire.
+  ⚠ À METTRE À JOUR quand une route est ajoutée à PAGE_TO_PATH ou retirée de
+  HIDDEN_PAGES. N'y figurent que les pages publiques : ni /espace-client, ni
+  /telechargement/ora-app (lien privé), ni les trois pages masquées.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://ora-solution.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://ora-solution.com/demo</loc><priority>0.9</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/for-business</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/solution-expertise-comptable</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/solution-audit</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/solution-fonds-investissement</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/solution-banque-affaires</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/solution-template</loc><priority>0.5</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://ora-solution.com/mentions-legales</loc><priority>0.2</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://ora-solution.com/politique-confidentialite</loc><priority>0.2</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://ora-solution.com/cgu</loc><priority>0.2</priority><changefreq>yearly</changefreq></url>
+</urlset>

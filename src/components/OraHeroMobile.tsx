@@ -93,10 +93,14 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
   return (
     <div className="relative px-5 pt-24 pb-16">
-      {/* Soft brand glow behind the phone card, clipped by the parent section. */}
+      {/* Soft brand glow behind the phone card.
+          ⚠ `max-w-full` : le commentaire d'origine la disait « clipped by the
+          parent section », ce qui était faux — mesuré à 375 px, ce disque de
+          420 px atteignait x = 398 et participait au débordement horizontal de
+          la page. Rien ne la rognait. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[46%] -z-10 h-[420px] w-[420px] -translate-x-1/2 rounded-full opacity-70 dark:opacity-40"
+        className="pointer-events-none absolute left-1/2 top-[46%] -z-10 h-[420px] w-[420px] max-w-full -translate-x-1/2 rounded-full opacity-70 dark:opacity-40"
         style={{ background: "radial-gradient(circle at 40% 35%, #ffffff, #eef2fb 62%, transparent 74%)" }}
       />
 
@@ -117,17 +121,29 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
         {/* Same face as the desktop hero (Instrument Sans, documented
             exception to the Poppins rule) so both read as one identity. */}
-        <h2 className="mt-3 font-instrument font-normal text-[clamp(2.05rem,9.4vw,2.9rem)] leading-[1.06] tracking-[-0.035em] text-[#111827] dark:text-white">
-          <span className="block">{t({ fr: "Moins de saisie.", en: "Less data entry." })}</span>
+        {/* `antialiased` : même amaigrissement que le hero desktop, et pour la
+            même raison — Instrument Sans n'a pas de graisse sous 400, le
+            lissage en niveaux de gris est le seul levier. Voir le pavé dans
+            OraHeroDemo.tsx. */}
+        {/* h1 : c'est le titre de la page sur téléphone, le hero desktop
+            étant masqué sous md. Voir le pavé d'OraHeroDemo. */}
+        <h1 className="antialiased mt-3 font-instrument font-normal text-[clamp(2.05rem,9.4vw,2.9rem)] leading-[1.06] tracking-[-0.035em] text-[#111827] dark:text-white">
+          {/* Seconde ligne en dégradé de marque (client 2026-08-11 : « repasse
+              cela en bleu »), au mot et au traitement près comme le hero
+              desktop, sinon mobile et desktop ne montrent plus le même
+              titre. */}
+          <span className="block">{t({ fr: "Plus de productivité,", en: "More productivity," })}</span>
           <span className="block text-brand-gradient">
-            {t({ fr: "Plus d'analyse et de conseil.", en: "More analysis and advisory." })}
+            {t({ fr: "plus d'analyse, plus de conseil.", en: "more analysis, more advisory." })}
           </span>
-        </h2>
+        </h1>
 
+        {/* Même phrase que le hero desktop, au mot près (voir le pavé
+            d'OraHeroDemo : elle nomme le LOGICIEL, client 2026-08-18). */}
         <p className="mt-3.5 font-instrument font-normal text-[16.5px] leading-[1.45] text-gray-500 dark:text-gray-400">
           {t({
-            fr: "On s'occupe de vos tâches répétitives, vous excellez dans votre métier.",
-            en: "We handle the repetitive tasks, so you excel at what you do.",
+            fr: "Le logiciel qui reprend le répétitif comptable, pour rediriger votre temps vers le conseil.",
+            en: "The software that takes over repetitive accounting work, redirecting your time to advisory.",
           })}
         </p>
 

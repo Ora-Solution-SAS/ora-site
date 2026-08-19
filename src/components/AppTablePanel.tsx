@@ -81,7 +81,20 @@ type Content = {
   pill: string;
 };
 
-const CONTENUS: Record<"bilan" | "surmesure", Content> = {
+/** Les variantes disponibles. Ajouter un panneau = ajouter une clé ici et son
+ *  contenu dans CONTENUS, rien d'autre : le rendu est entièrement piloté par la
+ *  donnée, et le mur du hero mesure ses cellules à l'exécution. */
+export type PanelVariant =
+  | "bilan"
+  | "surmesure"
+  | "previsionnel"
+  | "evaluation"
+  | "structure"
+  | "controles"
+  | "execution"
+  | "extraction";
+
+const CONTENUS: Record<PanelVariant, Content> = {
   bilan: {
     title: "Bilan développé et SIG",
     tabs: ["Synthèse", "Bilan", "SIG"],
@@ -122,6 +135,159 @@ const CONTENUS: Record<"bilan" | "surmesure", Content> = {
     ghostLabel: "Autres automatisations",
     ghostRows: ["Balance âgée 30/60/90", "Anonymiser des colonnes", "Tests sur le journal"],
     pill: "Rapprochement en cours",
+  },
+
+  /* ── QUATRE PANNEAUX AJOUTÉS LE 2026-08-15 ──────────────────────────────────
+     Client : « en gardant le même esprit de design et de couleur, peux-tu créer
+     des encadrés plus représentatifs de ce que l'on fait maintenant ».
+     Le mur du hero ne montrait que deux sujets, le bilan développé et une
+     automatisation sur mesure, répétés sept fois entre eux. Or la section à
+     onglets en annonce six : prévisionnel, bilan développé, changement de
+     structure, évaluation d'entreprise, contrôles et suivi, automatisations.
+     Les quatre manquants sont donc ici, dans le MÊME gabarit et les MÊMES
+     jetons de couleur : rien de nouveau n'est dessiné, ce sont les mêmes
+     colonnes, les mêmes aplats de statut et la même pilule de curseur.
+
+     ⚠ AUCUN MONTANT. Les quatre tiennent sur trois colonnes (pas de champ
+     `value`), là où `bilan` en a quatre. Ce n'est pas une contrainte de place :
+     les montants de `bilan` sont relevés sur une capture de l'application au
+     centime près, et je n'ai pas d'équivalent pour ces quatre sujets. Une
+     colonne de chiffres plausibles serait une colonne de chiffres inventés,
+     lisible en grand sur la page d'accueil. Les statuts, eux, disent l'état
+     d'un traitement, ce qui ne s'invente pas de la même façon.
+     ⚠ UN SEUL STATUT NON VERT PAR PANNEAU, comme sur `bilan` : tout vert ne
+     prouverait rien, et deux alertes feraient croire que l'outil se trompe. */
+
+  previsionnel: {
+    title: "Prévisionnel d'activité",
+    tabs: ["Hypothèses", "Trésorerie", "Comptes"],
+    action: { label: "Recalculer", icon: RotateCw },
+    pieces: false,
+    badge: "Dossier banque",
+    groupLabel: "Construit depuis votre historique",
+    headers: ["Pièce", "Base", "Statut"],
+    rows: [
+      { label: "Hypothèses d'activité", detail: "Historique 3 ans", statut: "Posées", statutCls: "bg-emerald-500" },
+      { label: "Plan de trésorerie", detail: "Mois par mois", statut: "Calculé", statutCls: "bg-emerald-500" },
+      { label: "Comptes prévisionnels", detail: "3 exercices", statut: "À valider", statutCls: "bg-amber-500" },
+    ],
+    ghostLabel: "Autres pièces du dossier",
+    ghostRows: ["Seuil de rentabilité", "Plan de financement", "Note de synthèse"],
+    pill: "Montage du dossier prévisionnel",
+  },
+
+  evaluation: {
+    title: "Évaluation d'entreprise",
+    tabs: ["Méthodes", "Synthèse", "Hypothèses"],
+    action: { label: "Lancer", icon: Play },
+    pieces: false,
+    badge: "Cinq approches",
+    groupLabel: "Les méthodes retenues",
+    headers: ["Méthode", "Base", "Statut"],
+    rows: [
+      { label: "Multiples de marché", detail: "Comparables", statut: "Calculée", statutCls: "bg-emerald-500" },
+      { label: "Flux de trésorerie actualisés", detail: "Plan à 5 ans", statut: "Calculée", statutCls: "bg-emerald-500" },
+      { label: "Actif net réévalué", detail: "Bilan 2026", statut: "À arbitrer", statutCls: "bg-blue-500" },
+    ],
+    ghostLabel: "Autres méthodes",
+    ghostRows: ["Rendement", "Goodwill", "Praticiens"],
+    pill: "Synthèse des cinq approches",
+  },
+
+  structure: {
+    title: "Changement de structure",
+    tabs: ["Avant", "Après", "Écarts"],
+    action: { label: "Recalculer", icon: RotateCw },
+    pieces: false,
+    badge: "Comparatif",
+    groupLabel: "SARL vers SAS",
+    headers: ["Poste", "Base", "Statut"],
+    rows: [
+      { label: "Rémunération du dirigeant", detail: "Avant / après", statut: "Chiffré", statutCls: "bg-emerald-500" },
+      { label: "Charges sociales", detail: "Deux régimes", statut: "Chiffré", statutCls: "bg-emerald-500" },
+      { label: "Fiscalité des dividendes", detail: "Deux scénarios", statut: "À arbitrer", statutCls: "bg-amber-500" },
+    ],
+    ghostLabel: "Autres scénarios",
+    ghostRows: ["Passage en holding", "Apport-cession", "Location-gérance"],
+    pill: "Comparatif avant / après",
+  },
+
+  controles: {
+    title: "Contrôles et suivi",
+    tabs: ["Contrôles", "Journal", "Paramètres"],
+    action: { label: "Lancer", icon: Play },
+    pieces: false,
+    badge: "Chaque période",
+    groupLabel: "Clôture de juin",
+    headers: ["Contrôle", "Base", "Statut"],
+    rows: [
+      { label: "Rapprochement de TVA", detail: "Déclarations / compta", statut: "Conforme", statutCls: "bg-emerald-500" },
+      { label: "Pointage des comptes", detail: "Lettrage", statut: "Conforme", statutCls: "bg-emerald-500" },
+      { label: "Suivi budgétaire", detail: "Réalisé / budget", statut: "2 écarts", statutCls: "bg-blue-500" },
+    ],
+    ghostLabel: "Autres contrôles",
+    ghostRows: ["Balance âgée 30/60/90", "Coût de revient", "Écritures atypiques"],
+    pill: "Contrôles de la période",
+  },
+
+  /* ── DEUX PANNEAUX AJOUTÉS LE 2026-08-18 ────────────────────────────────────
+     Client : « des encadrés plus représentatifs de ce que fait le logiciel
+     actuellement ». Les six panneaux existants montrent des ÉTATS (postes,
+     méthodes, contrôles, chacun avec son statut) — on y lit un tableau de
+     bord, pas un logiciel qui travaille. Ces deux-ci montrent le GESTE du
+     produit, celui de la promesse « vos fichiers entrent, vos livrables
+     sortent » : un fichier déposé, des étapes qui s'enchaînent, un livrable
+     qui sort. Même gabarit, mêmes jetons — c'est la donnée qui change.
+
+     ⚠ RIEN D'INVENTÉ AU-DELÀ DU PRÉCÉDENT ÉTABLI. Le nom de fichier
+     balance_2025.xlsx est celui de la pastille de dépôt du hero ; les étapes
+     de `execution` sont la chaîne que la section à onglets énonce
+     (extraction, retraitement, mise en forme du livrable) ; `extraction` est
+     le sujet de la démo enregistrée du produit (ora_pdf_extract). Les
+     comptages en colonne détail (« 14 pages ») suivent le précédent de
+     surmesure (« 1 200 lignes ») ; toujours aucun montant.
+     ⚠ LES HORODATAGES (« Terminé 09:01 ») sont le cœur de `execution` : c'est
+     eux qui font lire UNE EXÉCUTION plutôt qu'une liste. Ils tiennent dans la
+     cellule de statut de 98 px — vérifier si la police ou la casse change.
+     ⚠ UN SEUL STATUT NON VERT PAR PANNEAU, règle du pavé du 2026-08-15. */
+
+  execution: {
+    title: "Génération du livrable",
+    tabs: ["Exécution", "Journal", "Livrable"],
+    action: { label: "Suivre", icon: Play },
+    pieces: false,
+    badge: "En un clic",
+    groupLabel: "balance_2025.xlsx, déposée à 09:00",
+    headers: ["Étape", "Détail", "Statut"],
+    rows: [
+      { label: "Import de la balance", detail: "612 comptes lus", statut: "Terminé 09:01", statutCls: "bg-emerald-500" },
+      { label: "Calcul du bilan et des SIG", detail: "Grandes masses", statut: "Terminé 09:02", statutCls: "bg-emerald-500" },
+      { label: "Mise en forme du livrable", detail: "Excel + PDF", statut: "En cours", statutCls: "bg-blue-500" },
+    ],
+    ghostLabel: "À la suite",
+    ghostRows: ["Contrôle des totaux", "Dépôt dans le dossier", "Journal de l'exécution"],
+    pill: "Livrable en préparation",
+  },
+
+  extraction: {
+    title: "Extraction de relevés",
+    tabs: ["Relevés", "Écritures", "Contrôles"],
+    action: { label: "Lancer", icon: Play },
+    pieces: false,
+    badge: "PDF vers Excel",
+    groupLabel: "Relevés du trimestre",
+    headers: ["Relevé", "Pages", "Statut"],
+    // « À vérifier » et non un vert de plus : l'outil SIGNALE la page douteuse
+    // au lieu de deviner en silence — même argument que la ligne « À relire »
+    // du panneau bilan.
+    rows: [
+      { label: "Compte courant · janvier", detail: "14 pages", statut: "Extrait", statutCls: "bg-emerald-500" },
+      { label: "Compte courant · février", detail: "12 pages", statut: "Extrait", statutCls: "bg-emerald-500" },
+      { label: "Compte sur livret · T1", detail: "3 pages", statut: "À vérifier", statutCls: "bg-amber-500" },
+    ],
+    ghostLabel: "À la suite",
+    ghostRows: ["Affectation des comptes", "Contrôle des totaux", "Export en écritures"],
+    pill: "Extraction des relevés",
   },
 };
 
@@ -189,7 +355,7 @@ export default function AppTablePanel({
   tone = "light",
   still = false,
 }: {
-  variant?: "bilan" | "surmesure";
+  variant?: PanelVariant;
   tone?: "light" | "dark";
   /** Rendu directement dans l'état final, sans entrée au scroll : pour les
    *  copies du MUR du hero, qui vivent dans une scène épinglée où ce mécanisme
