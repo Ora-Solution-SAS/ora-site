@@ -35,11 +35,11 @@ const Footer = ({
   bottomLinks = [],
 }: FooterProps) => {
   return (
-    <footer className="py-16 px-6 md:px-12 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+    <footer className="py-8 px-5 md:py-16 md:px-12 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 gap-8 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:gap-8 lg:grid-cols-6">
           {/* Logo + tagline */}
-          <div className="col-span-2 mb-8 lg:mb-0">
+          <div className="col-span-2 mb-2 lg:mb-0">
             {logo && (
               <div className="flex items-center gap-2">
                 {logo.onClick ? (
@@ -53,15 +53,15 @@ const Footer = ({
                     aria-label={logo.alt}
                     className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                   >
-                    <img src={logo.src} alt={logo.alt} className="h-8" />
+                    <img src={logo.src} alt={logo.alt} className="h-6 md:h-8" />
                   </button>
                 ) : (
-                  <img src={logo.src} alt={logo.alt} className="h-8" />
+                  <img src={logo.src} alt={logo.alt} className="h-6 md:h-8" />
                 )}
               </div>
             )}
             {tagline && (
-              <p className="mt-4 text-sm text-gray-500 dark:text-gray-400 max-w-xs leading-relaxed">
+              <p className="mt-2 text-[11.5px] leading-snug text-gray-500 md:mt-4 md:text-sm md:leading-relaxed dark:text-gray-400 max-w-xs">
                 {tagline}
               </p>
             )}
@@ -70,23 +70,23 @@ const Footer = ({
           {/* Menu columns */}
           {menuItems.map((section, sectionIdx) => (
             <div key={sectionIdx}>
-              <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
+              <h3 className="mb-2 text-[10px] font-semibold text-gray-900 md:mb-4 md:text-sm dark:text-white uppercase tracking-wider">
                 {section.title}
               </h3>
-              <ul className="space-y-3">
+              <ul className="space-y-1.5 md:space-y-3">
                 {section.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
                     {link.onClick ? (
                       <button
                         onClick={link.onClick}
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                        className="text-left text-[11px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                       >
                         {link.text}
                       </button>
                     ) : (
                       <a
                         href={link.url ?? "#"}
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                        className="text-left text-[11px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                       >
                         {link.text}
                       </a>
@@ -99,9 +99,9 @@ const Footer = ({
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-10 border-t border-gray-200 dark:border-gray-800 pt-5">
+        <div className="mt-6 border-t border-gray-200 pt-4 md:mt-10 md:pt-5 dark:border-gray-800">
           {legal && (
-            <p className="mb-4 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+            <p className="mb-3 text-[9.5px] max-md:leading-snug leading-relaxed text-gray-400 md:mb-4 md:text-[11px] dark:text-gray-500">
               {legal}
             </p>
           )}

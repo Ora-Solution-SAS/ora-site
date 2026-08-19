@@ -92,7 +92,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
   ];
 
   return (
-    <div className="relative px-5 pt-24 pb-16">
+    <div className="relative px-5 pt-16 pb-8">
       {/* Soft brand glow behind the phone card.
           ⚠ `max-w-full` : le commentaire d'origine la disait « clipped by the
           parent section », ce qui était faux — mesuré à 375 px, ce disque de
@@ -152,7 +152,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           href="https://ora-solution.com/demo"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter font-semibold text-[16.5px] text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2f6fe0]"
+          className="mt-5 inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter font-semibold text-[15px] text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2f6fe0]"
         >
           {t({ fr: "Commencer", en: "Get started" })}
           <ArrowRight className="h-[18px] w-[18px]" />
@@ -160,7 +160,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
         {/* Stacked instead of the desktop's one-line « ✦ » list, which wrapped
             awkwardly at this width. */}
-        <ul className="mt-4 flex flex-col items-center gap-1.5 font-inter text-[13.5px] text-gray-400 dark:text-gray-500">
+        <ul className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 font-inter text-[11px] text-gray-400 dark:text-gray-500">
           {[
             t({ fr: "Testez Ora sur vos fichiers", en: "Try Ora on your own files" }),
             t({ fr: "Sans installation", en: "No install" }),
@@ -177,7 +177,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
       {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ── */}
       <motion.div
         {...rise(0.08)}
-        className="mt-10 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
+        className="mt-6 overflow-hidden rounded-[16px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
       >
         {/* Barre de fenêtre */}
         <div className="flex items-center gap-2 border-b border-[#ececef] bg-[#f7f7f8] px-3.5 py-2.5">
@@ -204,8 +204,8 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           </span>
         </div>
 
-        <div className="bg-[#fdfdfb] px-4 pb-5 pt-4">
-          <p className="font-poppins text-[21px] font-semibold leading-tight tracking-[-0.02em] text-[#111827]">
+        <div className="bg-[#fdfdfb] px-3 pb-3.5 pt-3">
+          <p className="font-poppins text-[16px] font-semibold leading-tight tracking-[-0.02em] text-[#111827]">
             {t({ fr: "Heureux de vous revoir", en: "Good to see you again" })}
           </p>
           <p className="mt-1 font-inter text-[12px] text-[#8b909b]">
@@ -214,17 +214,17 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
           {/* Grande carte bleue, pleine largeur : le geste central du produit. */}
           <div
-            className="mt-4 flex items-center gap-3 rounded-[14px] px-4 py-3.5"
+            className="mt-3 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5"
             style={{
               background: "linear-gradient(100deg,#2f6ff0,#3f7bf5 55%,#5b8cf8)",
               boxShadow: "0 16px 34px -16px rgba(47,111,240,.75)",
             }}
           >
-            <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[11px] bg-white/[0.22] text-white">
+            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-white/[0.22] text-white">
               <FileText className="h-[19px] w-[19px]" strokeWidth={2} />
             </span>
             <span className="min-w-0">
-              <b className="block font-inter text-[15.5px] font-bold text-white">
+              <b className="block font-inter text-[13px] font-bold text-white">
                 {t({ fr: "Ouvrir un fichier", en: "Open a file" })}
               </b>
               <span className="mt-0.5 block font-inter text-[12.5px] leading-snug text-white/[0.86]">
@@ -236,28 +236,28 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
             </span>
           </div>
 
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
+          <p className="mt-3.5 font-inter text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
             {t({ fr: "Accès rapide", en: "Quick access" })}
           </p>
-          <div className="mt-2.5 flex flex-col gap-2">
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
             {quick.map((q) => (
               <div
                 key={q.title}
-                className="flex items-center gap-3 rounded-[13px] border border-[#eceef1] bg-white px-3.5 py-3"
+                className="flex items-center gap-2 rounded-[11px] border border-[#eceef1] bg-white px-2.5 py-2"
               >
-                <span className={`grid h-[36px] w-[36px] shrink-0 place-items-center rounded-[10px] ${q.tint}`}>
+                <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[8px] ${q.tint}`}>
                   {q.icon}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <b className="block font-inter text-[13.5px] font-bold text-[#111827]">{q.title}</b>
-                  <span className="block font-inter text-[11.5px] text-[#8b909b]">{q.sub}</span>
+                  <b className="block truncate font-inter text-[11px] font-bold text-[#111827]">{q.title}</b>
+                  <span className="block truncate font-inter text-[9.5px] text-[#8b909b]">{q.sub}</span>
                 </span>
                 <ChevronRight className="h-4 w-4 shrink-0 text-[#c3c6cd]" strokeWidth={2.2} />
               </div>
             ))}
           </div>
 
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
+          <p className="mt-3.5 font-inter text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
             {t({ fr: "Reprendre", en: "Resume" })}
           </p>
           <div className="mt-2.5 overflow-hidden rounded-[13px] border border-[#eceef1] bg-white">
@@ -288,7 +288,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
       {/* ── L'histoire entrée → sortie, en liste plutôt qu'en pastilles
              flottantes (elles se chevauchaient et devenaient illisibles). ── */}
-      <motion.div {...rise(0.14)} className="mt-9">
+      <motion.div {...rise(0.14)} className="mt-6">
         <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
           {t({ fr: "Vous déposez", en: "You drop in" })}
         </p>
@@ -306,7 +306,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           </span>
         </div>
 
-        <div className="my-3 flex justify-center" aria-hidden>
+        <div className="my-2 flex justify-center" aria-hidden>
           <svg width="16" height="22" viewBox="0 0 16 22" fill="none" className="text-gray-300 dark:text-gray-600">
             <path d="M8 1v20m0 0 5-5m-5 5-5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -315,18 +315,18 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
           {t({ fr: "Ora vous rend", en: "Ora hands back" })}
         </p>
-        <div className="mt-2.5 flex flex-col gap-2">
+        <div className="mt-2 grid grid-cols-3 gap-1.5">
           {outputs.map((o) => (
             <div
               key={o.title}
-              className="flex items-center gap-3 rounded-[14px] bg-white px-3.5 py-3 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10"
+              className="flex flex-col gap-1.5 rounded-[12px] bg-white px-2.5 py-2.5 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10"
             >
-              <span className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] ${o.tint}`}>
+              <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[8px] ${o.tint}`}>
                 {o.icon}
               </span>
               <span className="min-w-0">
-                <b className="block font-inter text-[13.5px] font-bold text-[#111827] dark:text-white">{o.title}</b>
-                <span className="block font-inter text-[11.5px] text-gray-500 dark:text-gray-400">{o.sub}</span>
+                <b className="block font-inter text-[10.5px] font-bold leading-tight text-[#111827] dark:text-white">{o.title}</b>
+                <span className="mt-0.5 block font-inter text-[9px] leading-tight text-gray-500 dark:text-gray-400">{o.sub}</span>
               </span>
             </div>
           ))}
@@ -337,7 +337,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
       <motion.button
         {...rise(0.2)}
         onClick={openBooking}
-        className="mt-9 inline-flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
+        className="mt-6 inline-flex h-[48px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
       >
         {t({ fr: "Réserver un appel", en: "Book a call" })}
         <ArrowRight className="h-[18px] w-[18px]" />

@@ -156,6 +156,52 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
+## Mobile — LE TÉLÉPHONE PORTE LA MISE EN PAGE DU BUREAU (2026-08-19)
+
+Demande du client : « je veux la même disposition et layout que sur
+l'ordinateur, il faut juste donc réduire la taille de beaucoup d'encadré […]
+le site sera aussi plus petit […] en tout cas moins long ». Le site ne doit
+donc PAS avoir de maquette mobile alternative : mêmes sections, même ordre,
+mêmes grilles, en plus petit. L'accueil est passé de 17 163 px (20,3 écrans de
+390 px) à 10 439 px (12,4 écrans).
+
+**Les quatre règles, dans cet ordre :**
+
+1. **Une valeur mobile ne doit JAMAIS fuir au-dessus de `md`.** Toute classe
+   ajoutée pour le téléphone porte soit un `md:` équivalant à la valeur
+   d'origine, soit le préfixe `max-md:`. Le piège se referme sur les
+   utilitaires Tailwind qui posent DEUX propriétés : `text-xl`, `text-3xl`,
+   `text-sm` posent une taille **et** une hauteur de ligne. Les remplacer par
+   une taille arbitraire (`text-[1.05rem]`) supprime la hauteur de ligne dont
+   héritait le `md:` — c'est ce qui a rallongé `/cgu` de 78 px sur le bureau.
+2. **Les maquettes se mettent à l'échelle, elles ne se replient pas.**
+   `DesktopScale` (voir son en-tête) rend l'enfant à une largeur de bureau
+   imposée puis le réduit. À réserver aux visuels : à 0,3 d'échelle un corps de
+   14 px tombe à 4 px. Un bloc qui SE LIT garde ses classes, réduites à la main.
+   `ScaleToFit` reste pour l'autre cas : un enfant déjà figé en largeur.
+3. **Une colonne de moins de ~150 px ne porte pas un paragraphe.** Les grilles
+   du bureau sont conservées sur téléphone tant que chaque cellule tient au-
+   dessus de ce seuil ; en dessous, et seulement si la moitié porte du texte
+   courant, on empile.
+4. **Vérifier, pas supposer.** Avant de pousser : mesurer la hauteur de CHAQUE
+   route à 1440 × 900 avant et après (tolérance 1 px), et vérifier
+   `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
+
+**Paliers :** `xs` = 400 px a été ajouté (rien n'existait sous `sm` = 640, or
+320 → 430 px sépare un iPhone SE d'un 15 Pro Max). La carte `screens` est
+déclarée EN ENTIER dans `theme` et non dans `theme.extend` : sous `extend` un
+palier neuf est ajouté en fin de liste, ses règles sortent après celles de
+`md`, et à 800 px `xs:` écrasait `md:`. Ne pas remettre `screens` sous
+`extend`.
+
+**Le hero fait exception :** `OraHeroDemo` est `hidden md:block` et
+`OraHeroMobile` prend sa place. C'est délibéré et ça reste — la démo du bureau
+est une scène épinglée sur 300 à 800 vh, la porter telle quelle sur téléphone
+rallongerait la page de plusieurs écrans, soit exactement le contraire de la
+demande. Le hero mobile a été compacté, pas remplacé.
+
+---
+
 ## Platform Compatibility
 
 **Target:** macOS and Windows (both required)
