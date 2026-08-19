@@ -194,11 +194,29 @@ palier neuf est ajouté en fin de liste, ses règles sortent après celles de
 `md`, et à 800 px `xs:` écrasait `md:`. Ne pas remettre `screens` sous
 `extend`.
 
-**Le hero fait exception :** `OraHeroDemo` est `hidden md:block` et
-`OraHeroMobile` prend sa place. C'est délibéré et ça reste — la démo du bureau
-est une scène épinglée sur 300 à 800 vh, la porter telle quelle sur téléphone
-rallongerait la page de plusieurs écrans, soit exactement le contraire de la
-demande. Le hero mobile a été compacté, pas remplacé.
+**Le hero monte la MÊME réplique du logiciel que le bureau.** `OraHeroDemo`
+reste `hidden md:block` et `OraHeroMobile` prend sa place — la démo du bureau
+est une scène épinglée sur 300 à 800 vh, la porter telle quelle rallongerait la
+page de plusieurs écrans. Mais la fenêtre du logiciel qu'on y voit est
+`OraAppScene`, le composant du bureau, à son état de repos : même barre
+latérale, même grille de douze modules, mêmes pastilles flottantes.
+
+- ⚠ **Ne pas recomposer cette réplique à la largeur du téléphone.** Une version
+  recomposée a tenu cette place jusqu'au 2026-08-19, avec un bon argument (la
+  scène fait 1180 × 720 avec des corps de 7 à 13,5 px ; à l'échelle du
+  téléphone ils tombent à 2-4 px). Le client l'a renvoyée : « la réplication
+  layout du software n'est pas exactement la même que celle qu'on a sur la
+  version ordinateur du site ». **La fidélité prime sur la lisibilité du texte
+  de la maquette.** C'est une décision, pas un oubli.
+- **La largeur à donner est celle de la SCÈNE, pas de la composition.** Les
+  pastilles sont ancrées aux bords de la scène et débordent des deux côtés ;
+  mesurée, la composition entière fait ~1,33 fois la scène. Donner toute la
+  largeur à la scène pousse les pastilles hors de l'écran et rend la page
+  glissante latéralement.
+- **La scène n'est montée que sous 768 px** (`onPhone` dans `OraHeroMobile`).
+  Son conteneur est `md:hidden`, donc sur ordinateur elle serait dans le DOM
+  sans jamais être peinte, avec son écouteur `pointermove` qui mesure cinq
+  pastilles à chaque mouvement de souris.
 
 ---
 

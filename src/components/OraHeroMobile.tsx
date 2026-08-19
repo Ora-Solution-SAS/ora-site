@@ -1,36 +1,36 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  ArrowRight, BarChart3, Bell, Check, ChevronRight, FileText, Globe, Plus, Sparkles,
-} from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import OraAppScene from "./OraAppScene";
 
 /**
- * OraHeroMobile — the hero for phones (< 768px), rendered instead of the
- * scroll-driven <OraHeroDemo> scene.
+ * OraHeroMobile — le hero des téléphones (< 768 px), monté à la place de
+ * <OraHeroDemo>, la scène pilotée au défilement.
  *
- * Why a separate component rather than scaling the desktop scene down: the
- * desktop scene is a fixed 1040x640 stage holding a 1180x720 replica of the
- * app. Fitting either into a 327px-wide phone column gives a scale of ~0.29,
- * which renders the app's 7-13.5px type at 2-4px. Cropping instead of scaling
- * does not save it: the replica's type only stays legible at scale ~1, and at
- * that scale a 327px window shows 28% of the interface width, i.e. a fragment
- * with no meaning.
+ * ── CE QU'IL PARTAGE AVEC LE BUREAU, ET C'EST L'ESSENTIEL ─────────────────
+ * La réplique du logiciel est `OraAppScene`, LE MÊME COMPOSANT que monte le
+ * hero du bureau : même fenêtre, même barre latérale, même grille de douze
+ * modules, mêmes pastilles flottantes. Seule l'échelle change.
  *
- * So the app is RECOMPOSED at phone width: same story, same copy, same
- * colours as OraAppScene, laid out full-width so every line is legible. Same
- * approach as OraExperienceCarousel, which already ships a distinct touch
- * branch instead of shrinking its desktop one.
+ * ⚠ CE FICHIER A LONGTEMPS SOUTENU L'INVERSE, et l'argument est consigné ici
+ * parce qu'il reviendra : la scène est composée à 1180 × 720 avec des corps de
+ * 7 à 13,5 px ; ramenée à la largeur d'un téléphone elle tombe vers 0,25
+ * d'échelle, donc 2 à 4 px à l'écran. Une réplique RECOMPOSÉE à la largeur du
+ * téléphone tenait cette place, pour que chaque ligne reste lisible. Le client
+ * l'a renvoyée le 2026-08-19 : « la réplication layout du software n'est pas
+ * exactement la même que celle qu'on a sur la version ordinateur du site ». La
+ * fidélité l'emporte donc sur la lisibilité du texte de la maquette, et c'est
+ * une décision, pas un oubli. Ne pas revenir à une recomposition sans le
+ * redemander.
  *
- * No simulated mouse cursor and no scroll scrub here: both are desktop
- * grammar. The story reads top to bottom, in one normal scroll.
+ * ── CE QUI RESTE PROPRE AU TÉLÉPHONE ──────────────────────────────────────
+ * Pas de curseur simulé ni de défilement piloté : ce sont des grammaires de
+ * bureau, et la scène épinglée du bureau court sur 300 à 800 vh, ce qui
+ * rallongerait la page de plusieurs écrans. Ici la scène est posée en flux
+ * normal, à son état de repos — exactement ce que montre le bureau avant que
+ * le visiteur ne commence à défiler.
  */
-
-/** Files of the « Reprendre » list, same set as OraAppScene. */
-const FILES: { name: string; meta: string; kind: "xlsx" | "txt"; state: "run" | "todo" }[] = [
-  { name: "01_grand_livre_client_a_nettoyer", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "run" },
-  { name: "demo_petit_5k_2024_N_studio (2)", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "todo" },
-  { name: "FEC_demo_2024_398k_lignes (2)", meta: "XLSX · 20 juil.", kind: "xlsx", state: "todo" },
-];
 
 /**
  * Arrivée au MONTAGE, pas au `whileInView`. Deux raisons : c'est le hero, donc
@@ -47,49 +47,27 @@ const rise = (delay: number) => ({
 export default function OraHeroMobile({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
 
-  /** Quick-access tiles: stacked full width instead of a 3-column grid. */
-  const quick = [
-    {
-      icon: <Plus className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#e8f0ff] text-[#2f6ff0]",
-      title: t({ fr: "Nouveau projet", en: "New project" }),
-      sub: "Deal PE, audit, M&A...",
-    },
-    {
-      icon: <Globe className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#f0ecfe] text-[#7c53e8]",
-      title: t({ fr: "Tous les Atlas", en: "All Atlas" }),
-      sub: t({ fr: "Liste de vos projets", en: "Your projects" }),
-    },
-    {
-      icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#fef3e2] text-[#d97a06]",
-      title: "Ora Engineering",
-      sub: t({ fr: "Automatisation sur-mesure", en: "Custom automation" }),
-    },
-  ];
-
-  /** What Ora gives back, told as a list instead of chips floating over the UI. */
-  const outputs = [
-    {
-      icon: <BarChart3 className="h-[17px] w-[17px]" strokeWidth={2.2} />,
-      tint: "bg-[#e8f0ff] text-[#2f6ff0]",
-      title: t({ fr: "Reporting généré", en: "Report generated" }),
-      sub: t({ fr: "Mis en forme, prêt à envoyer", en: "Formatted, ready to send" }),
-    },
-    {
-      icon: <Check className="h-[17px] w-[17px]" strokeWidth={2.6} />,
-      tint: "bg-[#f0ecfe] text-[#7c53e8]",
-      title: t({ fr: "398 000 lignes contrôlées", en: "398,000 rows checked" }),
-      sub: t({ fr: "Écritures atypiques repérées", en: "Unusual entries flagged" }),
-    },
-    {
-      icon: <FileText className="h-[17px] w-[17px]" strokeWidth={2.2} />,
-      tint: "bg-[#fef3e2] text-[#d97a06]",
-      title: t({ fr: "Synthèse PDF", en: "PDF summary" }),
-      sub: t({ fr: "Livrable final, en un clic", en: "Final deliverable, one click" }),
-    },
-  ];
+  /* ⚠ LA SCÈNE N'EST MONTÉE QUE SUR TÉLÉPHONE, et ce n'est pas une
+     optimisation de confort. Ce composant vit dans un conteneur `md:hidden` :
+     sur ordinateur il reste donc DANS LE DOM, simplement jamais peint. Sans
+     cette porte, `OraAppScene` y ajouterait une quatrième instance — la page
+     en monte déjà trois ailleurs — avec sa grille de douze modules et surtout
+     son écouteur `pointermove`, qui mesure cinq pastilles à chaque mouvement
+     de souris pour une scène invisible. La mise en page du bureau, elle, ne
+     bougeait pas : `display: none` ne prend aucune place. */
+  const [onPhone, setOnPhone] = useState(
+    () => typeof window === "undefined" || window.innerWidth < 768,
+  );
+  useEffect(() => {
+    const read = () => setOnPhone(window.innerWidth < 768);
+    read();
+    window.addEventListener("resize", read);
+    window.addEventListener("orientationchange", read);
+    return () => {
+      window.removeEventListener("resize", read);
+      window.removeEventListener("orientationchange", read);
+    };
+  }, []);
 
   return (
     <div className="relative px-5 pt-16 pb-8">
@@ -174,162 +152,41 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </ul>
       </motion.div>
 
-      {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ── */}
-      <motion.div
-        {...rise(0.08)}
-        className="mt-6 overflow-hidden rounded-[16px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
-      >
-        {/* Barre de fenêtre */}
-        <div className="flex items-center gap-2 border-b border-[#ececef] bg-[#f7f7f8] px-3.5 py-2.5">
-          <span className="flex gap-1.5">
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#ff5f57]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#febc2e]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#28c840]" />
-          </span>
-          <span className="flex-1 text-center font-inter text-[12px] font-semibold text-[#3f4652]">Ora</span>
-          <span className="w-[38px]" />
-        </div>
+      {/* ── LA RÉPLIQUE DU LOGICIEL, CELLE DU BUREAU ────────────────────────
+             Client 2026-08-19 : « la réplication layout du software n'est pas
+             exactement la même que celle qu'on a sur la version ordinateur ».
+             C'est donc `OraAppScene`, LE MÊME COMPOSANT que monte le hero du
+             bureau, et non plus une recomposition maison. Même fenêtre, même
+             barre latérale, même grille de douze modules, mêmes pastilles
+             flottantes qui racontent l'entrée d'un fichier et la sortie des
+             livrables. Ce qui change entre les deux tailles d'écran est
+             l'ÉCHELLE, et rien d'autre.
 
-        {/* En-tête applicatif */}
-        <div className="flex items-center gap-2 border-b border-[#f0f0f2] px-4 py-3">
-          <img src="/logos/logo-color-dark.png" alt="Ora" className="h-[19px] w-auto" draggable={false} />
-          <span className="ml-auto flex items-center gap-1.5 rounded-full border border-[#e6e7ea] px-2.5 py-1 font-inter text-[11.5px] font-semibold text-[#4b5160]">
-            <Bell className="h-[13px] w-[13px]" strokeWidth={2.2} />
-            <span className="inline-grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#2f6ff0] px-1 font-inter text-[10px] font-bold text-white">
-              1
-            </span>
-          </span>
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#2f6ff0] font-inter text-[12.5px] font-bold text-white">
-            T
-          </span>
-        </div>
+             ⚠ LA LARGEUR DONNÉE ICI EST CELLE DE LA SCÈNE, PAS CELLE DE LA
+             COMPOSITION. Les pastilles sont ancrées aux BORDS de la scène et
+             débordent des deux côtés (`right:calc(100% - 34px)` d'un côté,
+             `left:calc(100% - 18px)` de l'autre, voir OA_CSS). Mesurée sur le
+             bureau, la composition entière fait environ 1,33 fois la scène :
+             1310 px de large pour une scène de 983, et c'est ce rapport qui la
+             fait tenir dans la fenêtre. Donner ici toute la largeur à la scène
+             ferait sortir les pastilles de l'écran et rendrait la page
+             glissante latéralement. D'où le plafond, calé pour que scène ET
+             pastilles tiennent dans le viewport.
 
-        <div className="bg-[#fdfdfb] px-3 pb-3.5 pt-3">
-          <p className="font-poppins text-[16px] font-semibold leading-tight tracking-[-0.02em] text-[#111827]">
-            {t({ fr: "Heureux de vous revoir", en: "Good to see you again" })}
-          </p>
-          <p className="mt-1 font-inter text-[12px] text-[#8b909b]">
-            {t({ fr: "Mercredi 29 juillet", en: "Wednesday, July 29" })}
-          </p>
+             Les débords négatifs annulent le rembourrage de section : la
+             composition dispose de toute la largeur de l'écran, comme sur le
+             bureau où elle déborde du conteneur du titre.
 
-          {/* Grande carte bleue, pleine largeur : le geste central du produit. */}
-          <div
-            className="mt-3 flex items-center gap-2.5 rounded-[12px] px-3 py-2.5"
-            style={{
-              background: "linear-gradient(100deg,#2f6ff0,#3f7bf5 55%,#5b8cf8)",
-              boxShadow: "0 16px 34px -16px rgba(47,111,240,.75)",
-            }}
-          >
-            <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-white/[0.22] text-white">
-              <FileText className="h-[19px] w-[19px]" strokeWidth={2} />
-            </span>
-            <span className="min-w-0">
-              <b className="block font-inter text-[13px] font-bold text-white">
-                {t({ fr: "Ouvrir un fichier", en: "Open a file" })}
-              </b>
-              <span className="mt-0.5 block font-inter text-[12.5px] leading-snug text-white/[0.86]">
-                {t({
-                  fr: "Excel ou CSV, lancez vos automatisations en un clic",
-                  en: "Excel or CSV, run your automations in one click",
-                })}
-              </span>
-            </span>
-          </div>
-
-          <p className="mt-3.5 font-inter text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Accès rapide", en: "Quick access" })}
-          </p>
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            {quick.map((q) => (
-              <div
-                key={q.title}
-                className="flex items-center gap-2 rounded-[11px] border border-[#eceef1] bg-white px-2.5 py-2"
-              >
-                <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[8px] ${q.tint}`}>
-                  {q.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block truncate font-inter text-[11px] font-bold text-[#111827]">{q.title}</b>
-                  <span className="block truncate font-inter text-[9.5px] text-[#8b909b]">{q.sub}</span>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#c3c6cd]" strokeWidth={2.2} />
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-3.5 font-inter text-[9.5px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Reprendre", en: "Resume" })}
-          </p>
-          <div className="mt-2.5 overflow-hidden rounded-[13px] border border-[#eceef1] bg-white">
-            {FILES.map((f, i) => (
-              <div
-                key={f.name}
-                className={`flex items-center gap-3 px-3.5 py-2.5${i > 0 ? " border-t border-[#f4f5f7]" : ""}`}
-              >
-                <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-[#e9f7ee] text-[#177245]">
-                  <FileText className="h-[14px] w-[14px]" strokeWidth={2.2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block truncate font-inter text-[12.5px] font-semibold text-[#111827]">{f.name}</b>
-                  <span className="block font-inter text-[10.5px] text-[#9aa0aa]">{f.meta}</span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 font-inter text-[10.5px] font-semibold ${
-                    f.state === "run" ? "bg-[#eaf1ff] text-[#2f6ff0]" : "bg-[#f3f4f6] text-[#7b8190]"
-                  }`}
-                >
-                  {f.state === "run" ? t({ fr: "En cours", en: "Running" }) : t({ fr: "À faire", en: "To do" })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── L'histoire entrée → sortie, en liste plutôt qu'en pastilles
-             flottantes (elles se chevauchaient et devenaient illisibles). ── */}
-      <motion.div {...rise(0.14)} className="mt-6">
-        <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
-          {t({ fr: "Vous déposez", en: "You drop in" })}
-        </p>
-        <div className="mt-2.5 flex items-center gap-3 rounded-[14px] bg-white px-3.5 py-3 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10">
-          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f7ee] text-[#177245]">
-            <FileText className="h-[17px] w-[17px]" strokeWidth={2.2} />
-          </span>
-          <span className="min-w-0">
-            <b className="block font-inter text-[13.5px] font-bold text-[#111827] dark:text-white">
-              balance_2025.xlsx
-            </b>
-            <span className="block font-inter text-[11.5px] text-gray-500 dark:text-gray-400">
-              {t({ fr: "Déposé dans Ora", en: "Dropped into Ora" })}
-            </span>
-          </span>
-        </div>
-
-        <div className="my-2 flex justify-center" aria-hidden>
-          <svg width="16" height="22" viewBox="0 0 16 22" fill="none" className="text-gray-300 dark:text-gray-600">
-            <path d="M8 1v20m0 0 5-5m-5 5-5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
-          {t({ fr: "Ora vous rend", en: "Ora hands back" })}
-        </p>
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          {outputs.map((o) => (
-            <div
-              key={o.title}
-              className="flex flex-col gap-1.5 rounded-[12px] bg-white px-2.5 py-2.5 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10"
-            >
-              <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[8px] ${o.tint}`}>
-                {o.icon}
-              </span>
-              <span className="min-w-0">
-                <b className="block font-inter text-[10.5px] font-bold leading-tight text-[#111827] dark:text-white">{o.title}</b>
-                <span className="mt-0.5 block font-inter text-[9px] leading-tight text-gray-500 dark:text-gray-400">{o.sub}</span>
-              </span>
-            </div>
-          ))}
+             LE BLOC « Vous déposez / Ora vous rend » EST PARTI AVEC. C'était
+             la traduction en liste de ces mêmes pastilles, écrite quand la
+             scène n'était pas montée ici ; les deux à la suite disaient deux
+             fois la même chose, et le bureau ne montre que les pastilles. */}
+      <motion.div {...rise(0.08)} className="-mx-5 mt-6 overflow-x-clip">
+        <div
+          className="relative mx-auto"
+          style={{ width: "min(292px, 74vw)", aspectRatio: "1180 / 720" }}
+        >
+          {onPhone && <OraAppScene />}
         </div>
       </motion.div>
 
