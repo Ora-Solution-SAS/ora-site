@@ -107,6 +107,8 @@ export default function FAQ() {
                   onClick={() => setOpen(isOpen ? null : i)}
                   className="w-full flex items-center justify-between gap-4 text-left px-5 md:px-6 py-4 md:py-5"
                   aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${i}`}
+                  id={`faq-button-${i}`}
                 >
                   <span className="font-poppins font-semibold text-[15px] md:text-[16px] text-gray-900 dark:text-white">
                     {item.q}
@@ -115,7 +117,21 @@ export default function FAQ() {
                     className={`w-5 h-5 flex-shrink-0 text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                   />
                 </button>
+                {/* ⚠ `inert` SUR LE PANNEAU FERMÉ (audit du 2026-08-15). Le
+                    repli se fait par `grid-template-rows: 0fr` plus un
+                    `overflow-hidden` : visuellement le panneau disparaît, mais
+                    il reste dans l'arbre d'accessibilité. Un lecteur d'écran
+                    entendait donc les NEUF réponses à la suite, comme si tout
+                    l'accordéon était ouvert, ce qui rend la section illisible et
+                    vide la FAQ de sa fonction.
+                    `inert` plutôt que `hidden` : il retire le contenu de l'arbre
+                    et de la tabulation SANS toucher à l'affichage, donc
+                    l'animation d'ouverture est conservée telle quelle. */}
                 <div
+                  id={`faq-panel-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-button-${i}`}
+                  inert={!isOpen}
                   className="grid transition-all duration-300 ease-out"
                   style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
                 >

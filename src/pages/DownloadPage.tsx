@@ -19,7 +19,6 @@
  */
 
 import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
 import { useLang } from "../lib/i18n";
 import DownloadShowcase from "../components/DownloadShowcase";
 import DeliverablesShowcase from "../components/DeliverablesShowcase";
@@ -156,10 +155,9 @@ type Props = {
   theme: "light" | "dark";
   openBooking: () => void;
   onNavigate?: (page: "home") => void;
-  onToggleTheme?: () => void;
 };
 
-export default function DownloadPage({ theme, openBooking, onNavigate, onToggleTheme }: Props) {
+export default function DownloadPage({ theme, openBooking, onNavigate }: Props) {
   const { t, lang, setLang } = useLang();
   const [os] = useState<OS>(() => detectOS());
 
@@ -230,19 +228,9 @@ export default function DownloadPage({ theme, openBooking, onNavigate, onToggleT
         </button>
 
         <div className="flex items-center gap-2">
-          {/* Manual dark / light toggle — the system preference still applies as
-              the default and live-updates when no manual choice is made. */}
-          {onToggleTheme && (
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              aria-label={dk ? "Passer en mode clair" : "Passer en mode sombre"}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/[0.06] transition-colors"
-            >
-              {dk ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-          )}
-
+          {/* LA BASCULE JOUR/NUIT EST PARTIE (client 2026-08-18), ici comme dans
+              la barre du site : le thème est verrouillé en clair par le script
+              d'index.html, plus rien ne le fait changer. */}
           <div className="inline-flex items-center rounded-full border border-gray-200 dark:border-white/10 p-0.5 text-[12px] font-inter font-semibold">
             {(["fr", "en"] as const).map((l) => (
               <button

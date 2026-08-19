@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, CalendarClock, Download, Eye, EyeOff,
   FileSpreadsheet, FileText, LifeBuoy, Lock, LogOut, Mail, PauseCircle,
-  PlayCircle, Workflow,
+  PlayCircle, Users, Workflow,
 } from "lucide-react";
 import { useLang } from "../lib/i18n";
 
@@ -228,21 +228,46 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
 
           </form>
 
-          {/* Not a client yet → the site's #1 action */}
+          {/* Not a client yet → the site's #1 action.
+              Les deux portraits (client 2026-08-13 : « montrer qu'il y a un
+              humain derrière ») accompagnent l'appel découverte dès l'écran de
+              connexion — c'est celui que voient tous les visiteurs, connectés
+              ou non. Mêmes fichiers que le bandeau de l'espace, en petit. */}
           <div
             className="ec-rise mt-9 pt-7 border-t border-gray-200/80 dark:border-white/[0.08]"
             style={{ animationDelay: "510ms" }}
           >
-            <p className="font-inter text-[13.5px] text-gray-500 dark:text-gray-400">
-              {t({ fr: "Pas encore client ?", en: "Not a client yet?" })}{" "}
-              <button
-                type="button"
-                onClick={openBooking ?? (() => onNavigate("home"))}
-                className="font-semibold text-[#3b82f6] hover:underline"
-              >
-                {t({ fr: "Réservez un appel découverte", en: "Book a discovery call" })}
-              </button>
-            </p>
+            <div className="flex items-center gap-3">
+              <div className="flex -space-x-2 shrink-0">
+                <img
+                  src="/equipe/fondateur-1.png"
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="h-9 w-9 rounded-full object-cover ring-2 ring-[#fcfbf7] dark:ring-black select-none"
+                />
+                <img
+                  src="/equipe/fondateur-2.png"
+                  alt=""
+                  aria-hidden
+                  draggable={false}
+                  className="h-9 w-9 rounded-full object-cover ring-2 ring-[#fcfbf7] dark:ring-black select-none"
+                />
+              </div>
+              <p className="font-inter text-[13.5px] leading-snug text-gray-500 dark:text-gray-400">
+                {t({ fr: "Pas encore client ?", en: "Not a client yet?" })}{" "}
+                <button
+                  type="button"
+                  onClick={openBooking ?? (() => onNavigate("home"))}
+                  className="font-semibold text-[#3b82f6] hover:underline"
+                >
+                  {t({ fr: "Réservez un appel découverte", en: "Book a discovery call" })}
+                </button>
+                <span className="block text-[12.5px] text-gray-400 dark:text-gray-500">
+                  {t({ fr: "Pour vous ou votre équipe, week-ends compris.", en: "For you or your team, weekends included." })}
+                </span>
+              </p>
+            </div>
           </div>
 
           <button
@@ -478,6 +503,72 @@ function SpaceView({
               </div>
             );
           })}
+        </div>
+
+        {/* ── Rendez-vous : des humains, quand vous voulez ─────────────────
+            Client 2026-08-13 : « crée la possibilité pour nos clients de
+            prendre un rendez-vous quand ils veulent, pour eux ou pour leur
+            équipe », avec « deux ronds [les deux portraits fournis] pour
+            montrer qu'il y a un humain derrière ».
+            PHASE DESIGN assumée : les deux boutons ouvrent le MÊME Cal.com
+            (openBooking). Le jour où un créneau « équipe » distinct existe,
+            seul le onClick du second bouton change.
+            Les portraits vivent dans public/equipe/ (fournis le 2026-08-13,
+            réduits à 512 px). AUCUN nom ni rôle affiché : rien d'inventé, les
+            visages suffisent à dire l'humain. Le chevauchement est séparé par
+            un anneau couleur de carte, la grammaire habituelle des piles
+            d'avatars. */}
+        <div className="mt-6 relative overflow-hidden rounded-2xl border border-gray-200/80 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] p-6 md:p-7">
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(55% 150% at 0% 50%, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 45%, transparent 72%)" }}
+          />
+          <div className="relative flex flex-wrap items-center gap-5 md:gap-7">
+            <div className="flex -space-x-4 shrink-0">
+              <img
+                src="/equipe/fondateur-1.png"
+                alt={t({ fr: "Membre de l'équipe Ora", en: "Ora team member" })}
+                draggable={false}
+                className="h-16 w-16 md:h-[72px] md:w-[72px] rounded-full object-cover ring-4 ring-white dark:ring-black shadow-[0_6px_18px_-6px_rgba(15,23,42,0.35)] select-none"
+              />
+              <img
+                src="/equipe/fondateur-2.png"
+                alt={t({ fr: "Membre de l'équipe Ora", en: "Ora team member" })}
+                draggable={false}
+                className="h-16 w-16 md:h-[72px] md:w-[72px] rounded-full object-cover ring-4 ring-white dark:ring-black shadow-[0_6px_18px_-6px_rgba(15,23,42,0.35)] select-none"
+              />
+            </div>
+            <div className="min-w-[230px] flex-1">
+              <h2 className="font-poppins font-semibold text-[1.15rem] md:text-[1.25rem] tracking-[-0.01em] text-[#111827] dark:text-white">
+                {t({ fr: "Un rendez-vous quand vous voulez", en: "A meeting whenever you want" })}
+              </h2>
+              <p className="mt-1.5 max-w-[54ch] font-inter text-[13.5px] md:text-[14px] leading-relaxed text-gray-500 dark:text-gray-400">
+                {t({
+                  fr: "Vous parlez à ceux qui construisent Ora, pas à un support anonyme. Choisissez votre créneau, week-ends compris.",
+                  en: "You talk to the people building Ora, not an anonymous help desk. Pick your slot, weekends included.",
+                })}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={openBooking ?? (() => onNavigate("home"))}
+                className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] hover:bg-[#2563eb] px-5 py-2.5 font-inter font-semibold text-[13.5px] text-white shadow-[0_2px_10px_rgba(59,130,246,0.25)] transition-all duration-150 hover:-translate-y-px"
+              >
+                <CalendarClock className="w-4 h-4" />
+                {t({ fr: "Réserver pour moi", en: "Book for me" })}
+              </button>
+              <button
+                type="button"
+                onClick={openBooking ?? (() => onNavigate("home"))}
+                className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-white/15 px-5 py-2.5 font-inter font-semibold text-[13.5px] text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors"
+              >
+                <Users className="w-4 h-4" />
+                {t({ fr: "Pour mon équipe", en: "For my team" })}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* ── Main grid: automations + right column ──────────────── */}

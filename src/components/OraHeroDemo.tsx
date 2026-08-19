@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import OraAppScene from "./OraAppScene";
+import OraAppScene, { OA_ASPECT } from "./OraAppScene";
 import OraHeroMobile from "./OraHeroMobile";
 import AppTablePanel from "./AppTablePanel";
 import OraHomeMockup from "./OraHomeMockup";
@@ -44,32 +44,20 @@ const W = 1040, H = 640;
  *  (elle ouvre la démo, avant le passage de relais vers Excel + panneau). */
 const APP_LEFT = 155, APP_TOP = 66, APP_W = 730, APP_H = 512;
 
-/** Fin de l'INTRO, en temps de démo : le titre s'efface (0,02 à 0,07) puis son
- *  espace se replie et la réplique remonte en pleine vue (0,07 à 0,115). Tant
- *  que la démo n'est pas lancée, le temps est plafonné ici : l'intro se joue,
- *  puis plus rien ne bouge et l'on passe à la section noire. */
+/** Fin de l'INTRO, en TEMPS DE DÉMO (l'échelle remappée du récit, pas la
+ *  course d'épinglage). Hors démo, le temps de récit est FIGÉ à cette valeur :
+ *  la scène montre en permanence l'état « réplique en pleine vue ».
+ *
+ *  ⚠ L'INTRO N'EST PLUS SCROLLÉE (client 2026-08-13 : « on descend et c'est
+ *  nous qui allons vers la réplication, pas la réplication qui vient à
+ *  nous »). Le titre vit désormais HORS de la scène épinglée, en flux normal :
+ *  il sort par le haut en défilant, la réplique arrive à taille constante, et
+ *  l'épinglage ne commence qu'une fois la scène posée en haut d'écran. Les
+ *  segments 0→0,125 du récit (fondu du titre, repli, remontée) ne pilotent
+ *  plus rien de visible ; ils ne subsistent que dans l'échelle de remap()
+ *  pour ne pas décaler tous les jalons du récit qui suivent. V_HOLD, qui
+ *  portait la part d'intro de la course, est parti avec. */
 const V_INTRO = 0.125;
-
-/** Fraction de la course d'épinglage consacrée à l'intro, quand la démo n'est
- *  PAS lancée. Le reste est un court BATTEMENT : la réplique reste immobile,
- *  la notification est affichée, et le défilement suivant libère la scène.
- *
- *  HISTORIQUE, dans l'ordre : lenis.stop() (2026-08-03, retiré — « on dirait
- *  que le site bugue »), puis un palier de 46 vh à V_HOLD = 0,60 (la page
- *  défilait mais la scène patientait longuement). RAMENÉ à un battement de
- *  ~11 vh le 2026-08-06 (client : « enlève le léger blocage du scroll vers le
- *  bas quand l'utilisateur passe à l'endroit du logiciel ») : l'intro garde
- *  exactement sa longueur de 69 vh, et il ne reste après elle
- *  que le temps de VOIR la notification s'allumer avant que la scène ne se
- *  libère. La hauteur du cadenceur (`md:h-[280vh]`) et cette constante se
- *  règlent ENSEMBLE : intro = V_HOLD x (hauteur - 100 vh).
- *
- *  ⚠ RECALCULÉ le 2026-08-08 avec l'arrivée du MUR (voir DZ_START) : la course
- *  d'épinglage passe de 80 à 260 vh, donc la MÊME intro de 69 vh vaut
- *  désormais 69/260 = 0,2654. Si la hauteur du cadenceur change, cette
- *  constante et les deux bornes du dézoom se recalculent ensemble — toutes
- *  trois sont des fractions de la même course. */
-const V_HOLD = 0.2654;
 
 /* ── LE MUR DU DÉZOOM (client 2026-08-08, réplique de monday.com) ────────────
  * « Quand on arrive à l'endroit de la réplique, un dézoom avec d'autres
@@ -100,19 +88,25 @@ const V_HOLD = 0.2654;
  * écrite par fit() — c'est le prix de la fiabilité, et il est mesuré, pas
  * supposé.
  *
- * La chorégraphie, en fractions de la course d'épinglage de 260 vh :
- *   · 0 → V_HOLD (69 vh)         l'intro existante, au vh près ;
- *   · V_HOLD → DZ_START (11 vh)  le battement existant — la notification
- *                                d'invitation s'allume ici, et c'est AUSSI sa
- *                                fenêtre de clic : passé DZ_START elle
+ * La chorégraphie, en fractions de la course d'épinglage de 200 vh (le
+ * cadenceur fait 300 vh, moins l'écran épinglé). L'INTRO N'EN FAIT PLUS
+ * PARTIE (client 2026-08-13) : la course ne commence qu'une fois la scène
+ * posée en haut d'écran, le titre étant sorti par le haut en flux normal.
+ *   · 0 → DZ_START (20 vh)       le BATTEMENT : la réplique est posée, la
+ *                                notification d'invitation s'allume — c'est
+ *                                sa fenêtre de clic, passé DZ_START elle
  *                                s'éteint, le mur prend la place ;
- *   · DZ_START → DZ_END (70 vh)  le DÉZOOM : la réplique rétrécit vers son
+ *   · DZ_START → DZ_END (88 vh)  le DÉZOOM : la réplique rétrécit vers son
  *                                trou pendant que les colonnes convergent des
  *                                bords et que la grille se révèle ;
- *   · DZ_END → 1 (110 vh)        la TRAVERSÉE : tout le mur remonte, les
+ *   · DZ_END → 1 (92 vh)         la TRAVERSÉE : tout le mur remonte, les
  *                                lignes suivantes défilent dans le cadre,
  *                                puis l'épinglage se libère et le mur sort
  *                                naturellement avec la page.
+ * Les proportions relatives dézoom / traversée sont celles d'avant la
+ * refonte (70 / 110 vh sur 260) ; seule l'intro de 69 vh a disparu de la
+ * course. Si la hauteur du cadenceur change, ces trois fractions se
+ * recalculent ensemble.
  *
  * La géométrie de la grille n'est PAS codée en dur : les cellules ont des
  * hauteurs naturelles différentes (c'est la maçonnerie), donc la position du
@@ -122,8 +116,8 @@ const V_HOLD = 0.2654;
  * Le dézoom ne vit QUE dans le parcours sans démo : dès que la démo est lancée
  * (`lance`), le cadenceur passe à 800 vh, remap() reprend la main et tout ce
  * bloc est inerte — la grille reste à opacité zéro. */
-const DZ_START = 0.3077;
-const DZ_END = 0.6538;
+const DZ_START = 0.10;
+const DZ_END = 0.54;
 /* ── LE CONTRE-DÉFILEMENT (client 2026-08-08 au soir) ────────────────────────
  * « Quand l'utilisateur scroll vers le bas, la colonne du milieu descend et
  * celles de gauche et de droite remontent. » C'est le mouvement signature du
@@ -136,8 +130,10 @@ const DZ_END = 0.6538;
  * ouverte AVANT la fin du dézoom : les colonnes s'ébranlent pendant que le mur
  * finit de se poser, aucune rupture de vitesse nulle part. Et elle ne
  * décélère PAS à l'arrivée : à la libération de l'épinglage, le défilement de
- * page prend le relais d'un mouvement encore vivant, sans temps mort. */
-const TRAV_START = 0.498;
+ * page prend le relais d'un mouvement encore vivant, sans temps mort.
+ * (0,34 depuis la refonte du 2026-08-13 : même profondeur RELATIVE dans le
+ * dézoom qu'avant — il s'ouvrait à 55 % du segment DZ, il s'y ouvre encore.) */
+const TRAV_START = 0.34;
 /** Largeur d'une cellule du mur (et donc de la fenêtre applicative à
  *  l'arrivée du dézoom), en fraction du viewport. À 0,30 sur TROIS colonnes,
  *  la grille fait ~94 % de l'écran : pleine largeur à un liseré près, sans
@@ -150,7 +146,7 @@ const WALL_GAP = 28;
  *  qui les amène à la largeur de cellule). Le TROU de la réplique suit le même
  *  zoom : sa hauteur naturelle est 640 × APP_H / APP_W, si bien qu'à l'écran il
  *  fait exactement la taille de la fenêtre applicative réduite. */
-const WALL_SIDE_NAT = 640;
+const WALL_SIDE_NAT = APP_W;
 
 /** Position de repos du curseur, en bas à gauche de la fenêtre du logiciel :
  *  il est visible dès la première image et son trajet vers la carte « Ouvrir
@@ -165,7 +161,13 @@ const REST_CUR = { x: 330, y: 498 };
  *  diffus de 34 px, l'écart ne se voyait pas ; le liseré fin qui l'a remplacé
  *  doit épouser exactement le tracé de la carte, sinon il la coupe en haut et
  *  laisse un vide en bas. Mesuré en direct contre `.oa-open`. */
-const OPEN_CARD = { left: 328, top: 197, width: 538, height: 55 };
+/*  REMESURÉ le 2026-08-12 : la réplication est passée à DEUX cartes bleues
+ *  côte à côte (« Ouvrir un fichier » et « Assistant »), donc la première ne
+ *  fait plus toute la largeur. 538 → 265 de large, 55 → 58 de haut ; la
+ *  position, elle, n'a pas bougé. Sans ce recalage le liseré de clic couvrait
+ *  les deux cartes.
+ *  Relevé en direct contre .oa-open, ramené dans le repère de .hd-stage. */
+const OPEN_CARD = { left: 328, top: 197, width: 265, height: 58 };
 
 const HD_CSS = `
 /* ══ Hero scroll-demo — faithful Ora app + real Excel, scroll-driven ══ */
@@ -212,7 +214,46 @@ const HD_CSS = `
    être posée sur la boîte pour que les lignes de la grille se dimensionnent
    juste. will-change : chaque cellule porte le translateY du
    contre-défilement, image par image. */
-.hd-wallcell{position:relative;will-change:transform}
+.hd-wallcell{position:relative;will-change:transform;border-radius:14px}
+/* ── SURVOL DES CARTES DU MUR (client 2026-08-09) ──
+   « Quand on survole un des encadrés, il s'agrandit, légèrement entouré d'un
+   bleu très fin, pour comprendre que l'on a passé le curseur dessus. »
+   Trois points qui expliquent la forme de ces trois règles :
+   · La grille est pointer-events:none (ce sont des décors). Le survol ne
+     s'ouvre QUE sur la classe .hot, posée par le moteur une fois le
+     contre-défilement arrivé à son terme — survoler un mur encore en
+     mouvement n'aurait aucun sens, et la cible se déroberait sous le curseur.
+   · Le TROU est exclu : il est vide et posé PAR-DESSUS la réplique vivante,
+     lui rendre le pointeur intercepterait le survol du vrai logiciel.
+   · L'agrandissement passe par la propriété scale, PAS par transform : le
+     moteur écrit un transform translateY sur chaque cellule à chaque image,
+     une règle CSS de transform serait donc écrasée aussitôt. scale est une
+     propriété indépendante, elle se compose avec le transform en ligne au
+     lieu de le remplacer. Effet de bord assumé : le translateY se
+     trouve multiplié par l'échelle, ce qui décale la carte de trois ou
+     quatre pixels — ça se lit comme la légère élévation d'un survol, et non
+     comme un défaut.
+   La boîte de la cellule épouse déjà exactement celle de la carte (fit() lui
+   écrit la taille visuelle), le liseré tombe donc pile sur le tracé. */
+.hd-wallgrid.hot .hd-wallcell:not([data-hd="wall-hole"]){pointer-events:auto}
+/* La scène (.hd-stagebox, z-10) recouvre la grille (z-9) sur toute la hauteur
+   du bloc épinglé : sans cette règle elle avalait chaque survol avant qu'il
+   n'atteigne une cellule, et rien ne se passait. Elle ne contient AUCUN
+   élément interactif — la réplique du logiciel est un visuel, le bouton
+   d'invitation vit à part en z-40 — donc lui retirer le pointeur ne coûte
+   rien. Scopé à la phase où le mur est survolable, pour ne rien changer au
+   reste du parcours. */
+.hd-sticky.wallhot .hd-stagebox{pointer-events:none}
+.hd-wallcell{transition:scale .42s cubic-bezier(.16,1,.3,1)}
+/* Liseré bleu RETIRÉ (client 2026-08-09, deuxième passe : « enlève l'idée d'un
+   encadré bleu, fais plutôt en sorte que juste il s'agrandisse légèrement »).
+   L'ombre portée qui l'accompagnait part avec : la carte porte déjà la sienne,
+   la doubler au survol rajoutait le relief que le client ne veut pas. Il ne
+   reste que l'échelle. */
+.hd-wallgrid.hot .hd-wallcell:not([data-hd="wall-hole"]):hover{scale:1.03;z-index:4}
+@media (prefers-reduced-motion:reduce){
+  .hd-wallgrid.hot .hd-wallcell:not([data-hd="wall-hole"]):hover{scale:1}
+}
 /* Pendant le dézoom, les pastilles flottantes de la réplique (déposé / rendu)
    s'effacent : posées AUTOUR de la fenêtre, elles débordent largement de sa
    boîte et, une fois le tout réduit, elles mordaient sur les panneaux voisins.
@@ -246,6 +287,15 @@ const HD_CSS = `
 @media (prefers-reduced-motion:reduce){.hd-stagerise{animation:none}}
 .hd-stage{position:absolute;left:50%;top:50%;width:${W}px;height:${H}px;
   transform-origin:center center;
+  /* will-change AJOUTÉ (client 2026-08-10 : « le dézoom doit se faire comme
+     dans du beurre »). La scène reçoit un scale à CHAQUE image de la course
+     (intro, plongeons caméra, dézoom) ; sans couche composée, le navigateur
+     ré-enregistrait la peinture de toute la réplique à chaque changement —
+     c'est le gros du « ça accroche » ressenti au dézoom. Promue en couche,
+     l'échelle se joue au compositeur : la texture existante est étirée
+     pendant le geste et re-rastérisée au repos (netteté inchangée à l'arrêt,
+     vérifiée par capture). */
+  will-change:transform;
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   color:#111827;-webkit-font-smoothing:antialiased}
 .hd-blob{position:absolute;z-index:0;left:420px;top:70px;width:590px;height:590px;border-radius:50%;
@@ -924,6 +974,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   void theme;
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  /** Le CADENCEUR : l'élément dont la hauteur porte la course d'épinglage.
+   *  Depuis la sortie du titre (2026-08-13) ce n'est plus le wrapper entier —
+   *  le titre en flux normal en fait partie — mais un bloc dédié qui ne
+   *  contient QUE la scène épinglée : la progression 0→1 démarre ainsi
+   *  exactement à l'épinglage, quel que soit le nombre de lignes du titre. */
+  const rideRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const capsRef = useRef<HTMLDivElement>(null);
@@ -931,11 +987,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   const headlineRef = useRef<HTMLDivElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const inviteRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
   const lastClickRef = useRef(-1);
 
   const fitScaleRef = useRef(1);
   const lastVRef = useRef(0);
+  /** Largeur de boîte du dernier fit() COMPLET — le ResizeObserver ne rejoue
+   *  le chemin lourd que si elle change (voir le pavé dans fit()). */
+  const fitWRef = useRef(0);
   const applyRef = useRef<(v: number) => void>(() => {});
   /** Géométrie MESURÉE de la grille du mur, en coordonnées locales de la
    *  grille (indépendantes de ses transforms, qui ne sont que des
@@ -948,7 +1006,11 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     // Cibles de l'ouverture. Codées en dur : elles visent la réplique du
     // logiciel, qui a sa propre mise à l'échelle interne, donc la mesure
     // automatique par offsetParent y serait fausse.
-    openfile: { x: 597, y: 217 }, pickrow: { x: 520, y: 322 },
+    // `openfile` RECALÉ le 2026-08-12 avec OPEN_CARD : la carte bleue ayant
+    // perdu la moitié de sa largeur (voir le pavé d'OPEN_CARD), son centre
+    // passe de x 597 à 460, et de y 217 à 226. Sans ça le curseur cliquait à
+    // côté, sur la carte « Assistant » voisine.
+    openfile: { x: 460, y: 226 }, pickrow: { x: 520, y: 322 },
     oratab: { x: 600, y: 96 }, lancerfec: { x: 940, y: 300 }, loadc: { x: 856, y: 330 },
     tg1: { x: 850, y: 330 }, tg2: { x: 850, y: 360 }, tg3: { x: 850, y: 390 },
     run: { x: 940, y: 470 }, tab2: { x: 180, y: 590 }, tab3: { x: 300, y: 590 },
@@ -956,7 +1018,9 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   });
 
   // Scroll scrub: 0 → 1 across the tall wrapper.
-  const { scrollYProgress } = useScroll({ target: wrapRef, offset: ["start start", "end end"] });
+  // Cible = le CADENCEUR, pas le wrapper : 0 pile au moment où la scène
+  // s'épingle (pendant toute l'approche, la progression reste bloquée à 0).
+  const { scrollYProgress } = useScroll({ target: rideRef, offset: ["start start", "end end"] });
   // ── Démo scrollée sur OPT-IN (client 2026-08-03) ─────────────────────────
   // Par défaut le récit ne se joue PAS : la scène reste à son état de repos, le
   // curseur simulé n'apparaît pas, et la page défile normalement. Une pastille
@@ -966,7 +1030,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   // Passe à vrai la PREMIÈRE fois que la notification se montre. Sert à déclencher
   // le petit blocage de scroll, dans un effet React plutôt que dans le moteur :
   // le nettoyage de l'effet garantit alors que Lenis est toujours relancé.
-  const [invited, setInvited] = useState(false);
   const invitedRef = useRef(false);
   // Le moteur de scrub vit dans un effet à dépendances vides : il lit donc
   // l'état via une ref, sinon il resterait sur la valeur du premier rendu.
@@ -986,79 +1049,35 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   // machinerie qui n'existait que pour rattraper le blocage, et dont chaque
   // branche était une occasion de laisser le défilement à l'arrêt.
   //
-  // La lourdeur est désormais purement géométrique : V_HOLD réserve 46 vh de
-  // course d'épinglage après la fin de l'intro. La page continue de défiler,
-  // l'ascenseur avance, la scène patiente. C'est le comportement attendu d'une
-  // section épinglée, pas celui d'une page figée.
+  // La lourdeur est désormais purement géométrique : le battement (0 →
+  // DZ_START de la course d'épinglage) laisse le temps de voir la
+  // notification avant que le dézoom ne s'engage. La page continue de
+  // défiler, l'ascenseur avance, la scène patiente. C'est le comportement
+  // attendu d'une section épinglée, pas celui d'une page figée.
   //
   // Ne reste donc que l'allumage, franc et immédiat.
-  useEffect(() => {
-    if (!invited || demoOn) return;
-    const carte = inviteRef.current;
-    if (!carte) return;
-    carte.style.transition = "opacity 340ms ease";
-    carte.style.opacity = "1";
-  }, [invited, demoOn]);
+  //
+  // ── ET IL EST DEVENU IMPÉRATIF (2026-08-10, « le dézoom doit se faire comme
+  // dans du beurre ») ────────────────────────────────────────────────────────
+  // L'allumage vivait dans un useEffect déclenché par un setState posé depuis
+  // le moteur de scrub. Or ce composant porte l'arbre le plus lourd du site
+  // (réplique complète du logiciel, classeur Excel, douze cellules de mur) :
+  // ce re-rendu intégral, dont RIEN dans le JSX ne dépendait — l'état
+  // n'était lu par aucun rendu — coûtait 85 à 93 ms d'une seule image,
+  // mesurés PILE à l'armement de la notification (vRaw ≈ 0,27), soit juste
+  // avant le dézoom. C'était le vrai « ça accroche » du début de dézoom.
+  // Le moteur écrit désormais les deux propriétés lui-même, au même endroit
+  // où il posait le setState ; `invitedRef` reste le garde-fou une-seule-fois.
 
-  // ── Bascule du fond au noir ───────────────────────────────────────────────
-  // Client 2026-08-03 : « l'ensemble du background est blanc, et quand on arrive
-  // à un certain endroit, il devient noir ».
-  // Le défaut des versions précédentes : je ne peignais QUE le bloc de clôture.
-  // La section suivante restant noire en permanence, le blanc du bouton et son
-  // noir coexistaient à l'écran, séparés par une ligne franche. Ce n'était donc
-  // pas une transition mais une couture entre deux blocs.
-  // On pilote maintenant les DEUX ensemble, sur la même image et avec la même
-  // transition : l'écran entier est blanc, puis l'écran entier est noir.
-  // Déclencheur : le bouton « Réserver un appel » a quitté le haut de l'écran.
-  // DEUX états, aucune interpolation au scroll : une première version dégradait
-  // le blanc vers le noir sur toute la traversée et produisait une bande grise.
-  // Rien à faire quand la démo tourne, sa fin assombrit déjà la scène, ni en mode
-  // sombre, tout étant déjà noir.
-  useEffect(() => {
-    if (demoOn) return;
-    const cta = ctaRef.current;
-    if (!cta) return;
-    if (document.documentElement.classList.contains("dark")) return;
-    const bouton = cta.querySelector("button");
-    if (!bouton) return;
-    const suite = document.querySelector<HTMLElement>("[data-hero-bg]");
-    const cibles = [cta, suite].filter((e): e is HTMLElement => !!e);
-
-    for (const e of cibles) e.style.transition = "background-color 260ms linear";
-    let noir: boolean | null = null;
-    let raf = 0;
-    const peindre = () => {
-      raf = 0;
-      if (!window.innerHeight) return;
-      const veutNoir = bouton.getBoundingClientRect().bottom <= 0;
-      if (veutNoir === noir) return;
-      noir = veutNoir;
-      for (const e of cibles) {
-        e.style.backgroundColor = veutNoir ? "#000000" : "#ffffff";
-        // La barre de navigation est fixe : sans ce drapeau, elle restait claire
-        // au-dessus d'un fond devenu noir (client 2026-08-03). Le site a déjà ce
-        // mécanisme, Navigation.tsx cherche les éléments marqués data-nav-dark qui
-        // passent sous sa ligne médiane et bascule alors en habillage sombre. Je ne
-        // l'avais simplement pas branché sur cette bascule.
-        if (veutNoir) e.setAttribute("data-nav-dark", "");
-        else e.removeAttribute("data-nav-dark");
-      }
-    };
-    const onScroll = () => { if (!raf) raf = requestAnimationFrame(peindre); };
-    peindre();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      if (raf) cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      for (const e of cibles) {
-        e.style.backgroundColor = "";
-        e.style.transition = "";
-        e.removeAttribute("data-nav-dark");
-      }
-    };
-  }, [demoOn]);
+  // La « bascule du fond au noir » qui vivait ici (client 2026-08-03) est
+  // retirée avec ExcelReveal (client 2026-08-11 : « supprime la partie avec
+  // le texte / fond noir »). Elle ne peignait le blanc→noir de la bande CTA
+  // et de [data-hero-bg] que pour préparer un raccord SANS COUTURE avec la
+  // section ExcelReveal, alors intégralement noire, juste en dessous. Cette
+  // section n'existe plus : la garder aurait fait clignoter un bandeau noir
+  // au sommet du viewport juste avant la section « Concrètement, ce qu'Ora
+  // peut automatiser », qui est claire. La bande CTA est maintenant blanche
+  // en permanence (voir son className plus bas), donc rien à orchestrer.
 
 
   // ── La notification fuit légèrement le curseur ────────────────────────────
@@ -1111,9 +1130,28 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       }
       return { x, y };
     };
-    const fit = () => {
+    // `force` : le chargement des fontes change les métriques du texte (donc
+    // la hauteur du titre et les cibles du curseur) sans changer la largeur —
+    // ces appels-là doivent traverser le chemin lourd malgré la garde.
+    const fit = (force = false) => {
       const s = Math.min(box.clientWidth / W, box.clientHeight / H);
       fitScaleRef.current = s;
+      // ── Chemin COURT quand seule la hauteur a bougé ───────────────────────
+      // Posé le 2026-08-13 pour tuer le saccadé d'ouverture : le repli du
+      // titre (alors DANS la scène) redimensionnait la stagebox à chaque
+      // image et le ResizeObserver rejouait TOUT ce fit() — douze cellules du
+      // mur réécrites et remesurées, rects de la grille, chaînes offsetLeft
+      // des cibles. Le titre est depuis sorti de la scène (même jour), mais
+      // la garde RESTE : rien ici ne dépend de la hauteur de la boîte (les
+      // cibles vivent dans le repère fixe 1040×640, la géométrie du mur ne
+      // dépend que de la largeur du viewport), donc un redimensionnement
+      // vertical de fenêtre n'a toujours besoin que de l'échelle ci-dessus.
+      const wNow = box.clientWidth;
+      if (!force && fitWRef.current !== 0 && Math.abs(wNow - fitWRef.current) < 0.5) {
+        applyRef.current(lastVRef.current);
+        return;
+      }
+      fitWRef.current = wNow;
       const next: Record<string, { x: number; y: number }> = { ...targetsRef.current };
       for (const key of Object.keys(next)) {
         const el = stage.querySelector<HTMLElement>(`[data-cur="${key}"]`);
@@ -1150,8 +1188,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           cell.style.width = `${cellW}px`;
           const inner = cell.firstElementChild as HTMLElement | null;
           if (!inner) {
-            // Le trou : la fenêtre applicative aux proportions près.
-            cell.style.height = `${(cellW * APP_H) / APP_W}px`;
+            // Le TROU, taillé sur les proportions de ce qui est RÉELLEMENT
+            // peint (OA_ASPECT, la fenêtre) et non sur celles de sa boîte hôte
+            // APP_W x APP_H. La boîte est plus haute que la fenêtre : la scène
+            // s'y ajuste en largeur et laisse une bande vide sous elle. Le trou
+            // héritait de cette bande, la réplique flottait donc dans une
+            // cellule trop haute et paraissait plus petite que ses voisines.
+            cell.style.height = `${cellW * OA_ASPECT}px`;
             continue;
           }
           inner.style.width = `${WALL_SIDE_NAT}px`;
@@ -1165,20 +1208,33 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         const holeCx = hr.left + hr.width / 2 - gr.left;
         const holeCy = hr.top + hr.height / 2 - gr.top;
         grid.style.transformOrigin = `${holeCx}px ${holeCy}px`;
+        // La RANGÉE DE QUEUE ne compte pas dans la course (client 2026-08-09) :
+        // elle existe précisément pour déborder sous le pli et se faire
+        // dissoudre par le fondu du bas. Si sa hauteur entrait dans `travel`,
+        // les colonnes latérales remonteraient d'autant plus loin et elle
+        // sortirait par le haut : le bas du mur redeviendrait celui d'avant.
+        // On retranche donc la plus haute cellule de queue et sa gouttière —
+        // `travel` garde ainsi EXACTEMENT la valeur qu'il avait à neuf cellules.
+        const tails = [...grid.querySelectorAll<HTMLElement>(".hd-wallcell.tail")];
+        const tailBand = tails.length
+          ? Math.max(...tails.map((c) => parseFloat(c.style.height) || 0)) + WALL_GAP
+          : 0;
         wallGeomRef.current = {
           holeCx,
           holeCy,
           gridW: gr.width,
           gridH: gr.height,
-          travel: Math.max(0, gr.height - holeCy - window.innerHeight / 2),
+          travel: Math.max(0, gr.height - tailBand - holeCy - window.innerHeight / 2),
         };
       }
       applyRef.current(lastVRef.current);
     };
-    const ro = new ResizeObserver(fit);
+    // Enveloppe explicite : ResizeObserver passe ses entrées en premier
+    // argument, qui serait pris pour `force` et court-circuiterait la garde.
+    const ro = new ResizeObserver(() => fit());
     ro.observe(box);
-    fit();
-    (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready?.then(() => fit());
+    fit(true);
+    (document as { fonts?: { ready?: Promise<unknown> } }).fonts?.ready?.then(() => fit(true));
     return () => ro.disconnect();
   }, []);
 
@@ -1190,6 +1246,10 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     const el = {
       oratabFlash: q('[data-hd="oratab-flash"]'), panel: q('[data-hd="panel"]'),
       appscene: q('[data-hd="appscene"]'),
+      // La FENÊTRE peinte, à distinguer de sa boîte hôte : c'est elle que le
+      // verrouillage ci-dessous doit caler sur le trou, la boîte étant plus
+      // haute qu'elle (voir OA_ASPECT).
+      appwin: q('[data-hd="appscene"]')?.querySelector<HTMLElement>(".oa-win") ?? null,
       picker: q('[data-hd="picker"]'), pickveil: q('[data-hd="pickveil"]'),
       pickrow: q('[data-hd="pickrow"]'), openFlash: q('[data-hd="openflash"]'),
       fecFlash: q('[data-hd="fec-flash"]'),
@@ -1218,10 +1278,22 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       wallCells: [...(stickyRef.current?.querySelectorAll<HTMLElement>(".hd-wallcell") ?? [])],
       wallHole: stickyRef.current?.querySelector<HTMLElement>('[data-hd="wall-hole"]') ?? null,
     };
+    // Colonne de chaque cellule, relevée UNE FOIS sur son `data-col`. Le
+    // contre-défilement la déduisait de l'index (i % 3), ce qui n'est vrai que
+    // pour une grille remplie en ordre de lecture : la rangée de queue est
+    // placée explicitement en colonnes 1 et 3, et sa seconde cellule aurait été
+    // prise pour la colonne centrale — elle serait descendue au lieu de monter.
+    const wallCols = el.wallCells.map((c) => Number(c.dataset.col ?? 0));
     // Every click moment (progress time + target key) — drives the cursor
     // dip, the ripple pulse and the vibration feedback.
     /** Hauteur de la notification, mesurée une seule fois. */
     let inviteH = 0;
+    /** Correction du verrouillage trou↔réplique (voir le pavé « VERROUILLAGE
+     *  PAR RÉTROACTION » plus bas). PERSISTANTE d'une image à l'autre : le
+     *  résidu est mesuré en DÉBUT d'image sur une mise en page déjà propre,
+     *  puis intégré ici — au lieu de l'ancien cycle écrire→mesurer→réécrire
+     *  qui forçait une mise en page synchrone à chaque image du dézoom. */
+    const wallFix = { x: 0, y: 0, armed: false };
 
     const CLICKS: { t: number; k: string }[] = [
       // Ouverture : clic sur « Ouvrir un fichier », puis sélection du classeur
@@ -1241,15 +1313,14 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       const vRaw = vIn;
       lastVRef.current = vRaw;
       // Heavy-scroll remap: raw scroll (linear) → demo time (weighted zones).
-      // Démo NON lancée : le temps est étalé sur les V_HOLD premiers pour cent de
-      // la course, puis plafonné à V_INTRO. L'intro se joue sur la même distance
-      // qu'avant (0,86 x 80 vh = 69 vh), et il ne reste qu'un battement de
-      // ~11 vh, le temps de voir la notification s'allumer (le palier de 46 vh
-      // a été retiré le 2026-08-06, client : « enlève le léger blocage »).
-      // Le récit, lui, ne démarre jamais sans invitation.
-      const v = lance
-        ? remap(vRaw)
-        : V_INTRO * Math.min(1, Math.max(0, vRaw) / V_HOLD);
+      // Démo NON lancée : le temps de récit est FIGÉ à V_INTRO — l'état
+      // « réplique en pleine vue », constant. L'intro n'est plus scrollée
+      // (client 2026-08-13, « c'est nous qui allons vers la réplication ») :
+      // le titre défile en flux normal au-dessus du cadenceur, et la course
+      // d'épinglage ne porte plus que battement, dézoom et traversée, tous
+      // pilotés par vRaw plus bas. Le récit, lui, ne démarre jamais sans
+      // invitation.
+      const v = lance ? remap(vRaw) : V_INTRO;
       const T = targetsRef.current;
       // The stage slightly grows and the title-to-demo gap opens with scroll.
       // Intro boost (client 2026-07-28) : au repos, le classeur Excel est
@@ -1258,20 +1329,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // toute l'animation scrollée garde exactement ses tailles d'avant.
       // Layout d'ouverture façon monday.com (client 2026-07-28) : au repos le
       // logiciel est affiché quasi pleine largeur, posé BAS — on n'en voit que
-      // le haut. Séquence corrigée (client, même jour : « pas d'animation
-      // direct, pas de texte coupé ni de flou ») :
-      //   v 0-0.03   zone morte : on scrolle, rien ne bouge encore ;
-      //   v 0.03-0.09 le titre s'efface (opacité seule, aucune coupe) ;
-      //   v 0.09-0.15 le titre étant INVISIBLE, son espace se replie et
-      //               l'Excel remonte en pleine vue à la taille du récit ;
-      //   v 0.155+    les zooms / clics du récit démarrent.
-      // Les deux temps sont ADOUCIS (client 2026-07-28 : « il faut que ça soit
-      // plus smooth ») : `seg` est linéaire, donc le titre et la mise à
-      // l'échelle du classeur démarraient et s'arrêtaient net. `ease` leur
-      // donne un départ et une fin progressifs, sans changer les bornes — la
-      // remontée reste terminée avant le premier plongeon caméra (v=0.155).
-      const fadeT = ease(seg(v, 0.02, 0.07));
-      const collapseT = ease(seg(v, 0.07, 0.115));
+      // le haut.
+      // Les segments v 0-0,115 (fondu du titre, repli de son espace) ont
+      // DISPARU le 2026-08-13 avec la sortie du titre hors de la scène : hors
+      // démo v est figé à V_INTRO, et en démo ces jalons du récit passent
+      // sans rien piloter de visible. `grow` reste : hors démo il vaut une
+      // constante (léger surplus de lisibilité au repos), en démo il se
+      // résorbe au fil du récit comme avant.
       const grow = 1 + 0.04 * seg(v, 0, 0.30);
       // Passage de relais logiciel → Excel. Déclaré ici car la mise à
       // l'échelle de la scène (plus bas) en dépend : au repos la réplique du
@@ -1315,6 +1379,21 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // la fenêtre applicative (APP_W dans le repère de la scène), et on
       // revient à l'échelle du récit au fur et à mesure du passage de relais.
       const boxR = box.getBoundingClientRect();
+      // ── Résidu du verrouillage, lu en DÉBUT d'image ───────────────────────
+      // La mise en page reflète ici les écritures de l'image PRÉCÉDENTE, déjà
+      // digérées par le navigateur : ces deux lectures ne déclenchent donc
+      // aucun recalcul forcé, contrairement à l'ancienne mesure faite juste
+      // après les écritures. La correction converge en une image ou deux (le
+      // décalage qu'elle rattrape est quasi constant : hauteurs de cellules,
+      // polices), pendant que la grille est encore à peine visible.
+      if (wallFix.armed) {
+        const arP = (el.appwin ?? el.appscene)?.getBoundingClientRect();
+        const hrP = el.wallHole?.getBoundingClientRect();
+        if (arP && hrP) {
+          wallFix.x += arP.left + arP.width / 2 - (hrP.left + hrP.width / 2);
+          wallFix.y += arP.top + arP.height / 2 - (hrP.top + hrP.height / 2);
+        }
+      }
       const fitS = fitScaleRef.current || 1;
       const restTarget = (0.72 * box.clientWidth) / APP_W;
       // Jamais plus petit que le cadrage normal, et plafonné pour qu'un écran
@@ -1394,6 +1473,12 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       // Les pastilles flottantes s'effacent dès que le dézoom s'engage (voir la
       // règle .walling) ; classList.toggle est sans coût quand rien ne change.
       stickyRef.current?.classList.toggle("walling", dz > 0.1);
+      // Le survol des cartes ne s'ouvre qu'une fois le contre-défilement
+      // terminé : jusque-là le mur glisse encore et la cible se déroberait
+      // sous le curseur. Voir la règle .hd-wallgrid.hot.
+      const wallHot = !lance && vRaw > 0.985;
+      el.wallGrid?.classList.toggle("hot", wallHot);
+      stickyRef.current?.classList.toggle("wallhot", wallHot);
       stage.style.transform = `translate(-50%, -50%) scale(${S2}) translate(${dx}px, ${dy + dyR + driftPx / S2}px)`;
 
       // ── La grille du mur ──────────────────────────────────────────────────
@@ -1406,6 +1491,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
       if (el.wallGrid) {
         if (dz <= 0.001) {
           el.wallGrid.style.opacity = "0";
+          // Grille éteinte : la correction repart de zéro. Elle reconvergera
+          // en une ou deux images au prochain dézoom — pendant que la grille
+          // est encore quasi invisible — et on ne rejoue jamais une correction
+          // datant d'une géométrie d'avant (redimensionnement, polices).
+          wallFix.x = 0;
+          wallFix.y = 0;
+          wallFix.armed = false;
         } else {
           const g = wallGeomRef.current;
           const stickyR = stickyRef.current?.getBoundingClientRect();
@@ -1415,14 +1507,14 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           const cyScene = boxR.top + boxR.height / 2;
           if (g) {
             // ── Le contre-défilement, colonne par colonne, ÉCRIT D'ABORD ───
-            // Les cellules sont en ordre de lecture : la colonne d'une cellule
-            // est son index modulo 3. La centrale (et le trou avec elle)
-            // descend de driftPx — la même valeur que la scène, donc la
-            // réplique et sa colonne bougent d'un seul tenant — pendant que
-            // les latérales remontent de sidePx. Le cadre de la grille, lui,
-            // reste fixe.
+            // La colonne vient de `wallCols`, relevée sur les `data-col` au
+            // montage (et non de l'index, voir le commentaire là-bas). La
+            // centrale (et le trou avec elle) descend de driftPx — la même
+            // valeur que la scène, donc la réplique et sa colonne bougent d'un
+            // seul tenant — pendant que les latérales remontent de sidePx. Le
+            // cadre de la grille, lui, reste fixe.
             el.wallCells.forEach((cell, i) => {
-              cell.style.transform = `translateY(${i % 3 === 1 ? driftPx : sidePx}px)`;
+              cell.style.transform = `translateY(${wallCols[i] === 1 ? driftPx : sidePx}px)`;
             });
             // Cible du cadre : la position DE REPOS de la fenêtre applicative
             // (sans le contre-défilement — la cellule-trou le porte déjà).
@@ -1435,31 +1527,24 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             // smooth ») : 1,05 au lieu de 1,07, et le fondu étalé sur presque
             // tout le dézoom (0,05 → 0,85) au lieu d'un allumage pressé.
             const sIn = 1 + 0.05 * (1 - dz);
-            el.wallGrid.style.opacity = String(seg(dz, 0.05, 0.85));
-            el.wallGrid.style.transform =
-              `translate(-50%,-50%) translate(${tx}px, ${ty}px) scale(${sIn})`;
-            // ── VERROUILLAGE PAR RÉTROACTION, dans la même image ───────────
+            // ── VERROUILLAGE PAR RÉTROACTION, à cheval sur deux images ─────
             // La chaîne analytique ci-dessus accumule les à-peu-près de toute
             // la pile de transforms (un décalage constant de 6 à 14 px selon
             // la fenêtre a été mesuré, dont l'origine variait avec la hauteur
             // des cellules chargée tardivement — polices, logos). Plutôt que
-            // de courir après chaque terme : on écrit, on MESURE l'écart réel
-            // entre le trou et la réplique — les deux rects reflètent déjà les
-            // écritures de cette image — et on retranche l'écart d'un second
-            // jet. Exact par construction, quel que soit le navigateur, et
-            // auto-réparant si une cellule change de hauteur après coup. Coût :
-            // deux lectures et une écriture de plus par image, pendant le seul
-            // dézoom.
-            const ar = el.appscene?.getBoundingClientRect();
-            const hr = el.wallHole?.getBoundingClientRect();
-            if (ar && hr) {
-              const dxFix = ar.left + ar.width / 2 - (hr.left + hr.width / 2);
-              const dyFix = ar.top + ar.height / 2 - (hr.top + hr.height / 2);
-              if (Math.abs(dxFix) > 0.5 || Math.abs(dyFix) > 0.5) {
-                el.wallGrid.style.transform =
-                  `translate(-50%,-50%) translate(${tx + dxFix}px, ${ty + dyFix}px) scale(${sIn})`;
-              }
-            }
+            // de courir après chaque terme : on écrit AVEC la correction
+            // courante, et le résidu encore visible est mesuré au début de
+            // l'image SUIVANTE (voir wallFix, en tête d'apply) puis intégré.
+            // Même exactitude par construction — le résidu tend vers zéro —
+            // mais plus aucune lecture après écriture : l'ancienne version
+            // mesurait juste après avoir écrit, ce qui forçait le navigateur à
+            // refaire la mise en page à CHAQUE image du dézoom, en plein
+            // milieu du geste (retouché le 2026-08-10, « comme dans du
+            // beurre »).
+            el.wallGrid.style.opacity = String(seg(dz, 0.05, 0.85));
+            el.wallGrid.style.transform =
+              `translate(-50%,-50%) translate(${tx + wallFix.x}px, ${ty + wallFix.y}px) scale(${sIn})`;
+            wallFix.armed = true;
           }
         }
       }
@@ -1517,21 +1602,33 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         // rétrécit vers le mur — une carte d'invitation collée à une fenêtre en
         // plein dézoom se lirait comme un débris. Elle s'éteint donc au seuil,
         // et se rallume si l'on remonte : la fenêtre est symétrique.
-        const montre = !lance && vRaw > V_HOLD - 0.02 && vRaw < DZ_START + 0.02 && sceneVisible;
-        // L'opacité n'est écrite ici QUE pour éteindre hors zone. Une fois armée,
-        // c'est l'effet de blocage qui la possède : il l'allume franchement, puis
-        // l'éteint quand il rend la main. Sans ce partage, le moteur écrasait à
-        // chaque image la valeur posée par l'effet.
-        if (!montre) el.invite.style.opacity = "0";
-        el.invite.style.pointerEvents = montre ? "auto" : "none";
-        // Signalé UNE fois à React, pour armer le blocage de scroll. Un rendu
-        // par image serait hors de question, d'où le garde-fou par ref.
+        // Fenêtre d'invitation : de l'approche (vRaw reste à 0 tant que la
+        // scène n'est pas épinglée) jusqu'à l'entrée du dézoom. Plus de borne
+        // basse : l'intro scrollée qui la justifiait a disparu, la réplique
+        // est invitable dès qu'elle est en vue.
+        const montre = !lance && vRaw < DZ_START + 0.02 && sceneVisible;
+        // Le moteur possède l'opacité DANS LES DEUX SENS depuis le 2026-08-13.
+        // L'ancien schéma (« le moteur n'éteint que hors zone, l'allumage est
+        // armé une seule fois ») datait du temps où un effet React possédait
+        // l'allumage ; devenu impératif, il laissait un trou : ressortir de la
+        // fenêtre puis y REVENIR laissait la notification éteinte pour
+        // toujours. Étroite et en milieu de course, la fenêtre cachait ce
+        // trou ; couvrant désormais l'approche entière, elle l'exposait au
+        // premier aller-retour de molette.
+        // Le garde-fou une-seule-fois ne pose plus que la TRANSITION, avant la
+        // première écriture d'opacité pour que l'allumage initial fonde aussi.
         if (montre && !invitedRef.current) {
           invitedRef.current = true;
-          setInvited(true);
+          el.invite.style.transition = "opacity 340ms ease";
         }
+        el.invite.style.opacity = montre ? "1" : "0";
+        el.invite.style.pointerEvents = montre ? "auto" : "none";
       }
-      box.style.marginTop = `${14 + 26 * seg(v, 0, 0.30)}px`;
+      // Base ramenée de 14 à 2 px le 2026-08-13, même chasse au vide : hors
+      // démo `v` est figé, ce terme vaut donc une constante qui s'ajoutait au
+      // retrait du bloc épinglé. La part variable ne bouge pas, elle sert au
+      // récit.
+      box.style.marginTop = `${2 + 26 * seg(v, 0, 0.30)}px`;
       // End-of-demo hand-off: fade the whole scene to pure black over the last
       // stretch of scroll (the software stays visible, just darkened) so it
       // flows seamlessly into the always-black text-reveal section below.
@@ -1554,30 +1651,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         if (immersive) section.setAttribute("data-nav-dark", "");
         else section.removeAttribute("data-nav-dark");
       }
-      const headline = headlineRef.current;
-      if (headline) {
-        // The headline leaves FOR GOOD as soon as the story starts (camera
-        // dive on the Ora tab) — it must never ghost behind the enlarged
-        // windows later in the demo.
-        // Deux temps stricts pour éviter le rendu « bugué » (texte coupé +
-        // flou) : le titre disparaît d'abord EN OPACITÉ SEULE, puis — une
-        // fois invisible — son espace se replie et la stagebox (flex:1)
-        // regagne la hauteur, le ResizeObserver refit la scène.
-        headline.style.opacity = String(1 - fadeT);
-        headline.style.transform = `translateY(${-14 * fadeT}px)`;
-        // Le bouton « Commencer » vit dans ce bloc : une fois le titre
-        // évanoui, il ne doit plus capter de clics invisibles.
-        headline.style.pointerEvents = fadeT > 0.6 ? "none" : "";
-        if (collapseT === 0) {
-          headline.style.height = "";
-          headline.style.overflow = "";
-        } else {
-          // scrollHeight = hauteur naturelle du contenu, insensible au height
-          // déjà posé — pas besoin de mémoriser une mesure initiale.
-          headline.style.height = `${Math.round(headline.scrollHeight * (1 - collapseT))}px`;
-          headline.style.overflow = "hidden";
-        }
-      }
+      // LE TITRE N'EST PLUS PILOTÉ ICI (client 2026-08-13). Il vit en flux
+      // normal AU-DESSUS du cadenceur et sort par le haut en défilant — le
+      // moteur n'écrit plus ni son opacité, ni sa hauteur, ni son transform.
+      // C'était la double peine du saccadé d'ouverture : une écriture de
+      // hauteur par image (reflow), qui redimensionnait la stagebox, dont le
+      // ResizeObserver rejouait fit(). headlineRef ne sert plus qu'à
+      // l'animation d'entrée Framer du JSX.
 
       // 1 · OUVERTURE EN VUE DOUBLE (client 2026-07-28) : le classeur et le
       //     panneau Ora sont côte à côte DÈS LA PREMIÈRE IMAGE. On voit le
@@ -1786,8 +1866,46 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
     applyRef.current = apply;
     apply(reduced ? 1 : scrollYProgress.get());
     if (reduced) return;
-    const unsub = scrollYProgress.on("change", apply);
-    return () => unsub();
+
+    // ── « Comme dans du beurre » (client 2026-08-13) ─────────────────────────
+    // La valeur AFFICHÉE ne saute plus sur la valeur de scroll : elle la
+    // POURSUIT, image par image, avec un amorti exponentiel. Deux effets :
+    //   · chaque cran de molette, au lieu d'un pas sec de scale, devient une
+    //     rampe qui s'éteint sur ~un tiers de seconde — c'est précisément le
+    //     « beurre » demandé, par-dessus le lissage que Lenis applique déjà ;
+    //   · les événements de scroll ne pilotent plus apply() en direct : ils ne
+    //     font que déplacer la cible, et UNE seule application par image est
+    //     garantie par la boucle rAF, quel que soit le nombre d'événements.
+    // TAU = 110 ms : assez long pour fondre les crans, assez court pour que la
+    // scène ne paraisse pas traîner derrière le doigt. L'arrêt se décide en
+    // PIXELS de course (< 0,4 px d'écart → on colle à la cible et on coupe la
+    // boucle) : un epsilon sur la fraction dépendrait de la hauteur du
+    // cadenceur, qui varie de 360 à 800 vh selon que la démo est lancée.
+    const TAU = 110;
+    let target = scrollYProgress.get();
+    let shown = target;
+    let raf = 0;
+    let lastTs = 0;
+    const tick = (ts: number) => {
+      raf = 0;
+      const dt = lastTs ? Math.min(64, ts - lastTs) : 16.7;
+      lastTs = ts;
+      shown += (target - shown) * (1 - Math.exp(-dt / TAU));
+      const coursePx = (rideRef.current?.offsetHeight ?? 0) - window.innerHeight;
+      if (Math.abs(target - shown) * Math.max(1, coursePx) < 0.4) shown = target;
+      apply(shown);
+      if (shown !== target) raf = requestAnimationFrame(tick);
+      else lastTs = 0;
+    };
+    const chase = (v: number) => {
+      target = v;
+      if (!raf) { lastTs = 0; raf = requestAnimationFrame(tick); }
+    };
+    const unsub = scrollYProgress.on("change", chase);
+    return () => {
+      unsub();
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, [scrollYProgress, reduced]);
 
   return (
@@ -1807,48 +1925,28 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
         <OraHeroMobile openBooking={openBooking} />
       </div>
 
-      {/* Tall scrub wrapper: ~7 viewport heights of scroll drive the demo
-          (v2: shortened — the flow starts directly in Excel). Heavy-scroll
-          zones still stretch the key moments.
-          `hidden md:block` : sur mobile la scène n'est pas seulement masquée,
-          elle ne pèse plus rien dans la mise en page, donc les 500 vh de
-          scrub (≈ 4 264 px de scroll pour une animation invisible) et le
-          curseur de souris simulé disparaissent avec elle. */}
-      {/* Sans lancement, 170 vh au lieu de 800 : la course sert uniquement à jouer
-          l'INTRO (le titre s'efface, la réplique remonte en pleine vue). La scène
-          ne s'assombrit PAS ici, c'est le bloc de clôture qui bascule au noir une
-          fois le bouton passé (choix client 2026-08-03). */}
-      {/* 360vh quand la démo n'est pas lancée (180 avant le 2026-08-08) : la
-          course d'épinglage vaut 260 vh. L'intro en consomme 69, exactement
-          comme avant, puis ~11 vh de battement pour la notification, puis
-          70 vh de DÉZOOM vers la grille et 110 vh de TRAVERSÉE du mur avant
-          la libération — voir le pavé de DZ_START, les quatre fractions se
-          règlent avec cette hauteur. */}
-      <div ref={wrapRef} className={`relative hidden md:block ${demoOn ? "md:h-[800vh]" : "md:h-[360vh]"}`}>
-        {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
-            quinzaine de pixels de plus, sans toucher l'indicateur de défilement
-            qui reste ancré à 10 px du bas. */}
-        <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-24 md:pt-28 pb-10 md:pb-12">
-          {/* Soft overhead light — dark mode only */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 hidden dark:block"
-            style={{ background: "radial-gradient(56% 44% at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.055) 40%, transparent 70%)" }}
-          />
-
-          {/* Aurora veil — brand-light washes drifting with the scrub. */}
-          {/* Voile aurora retiré (client 2026-07-28 : « enlève les ombres
-              bleues du haut de la landing »). Le composant HeroAurora reste
-              défini plus bas, prêt à être remonté ici si on en reparle. */}
-
-          {/* Headline (fades out while the camera zoom is engaged).
-              DEUX COUCHES SÉPARÉES (correctif clignotement, client
-              2026-07-28) : l'enveloppe extérieure appartient au moteur de
-              scroll (apply() y écrit opacity/transform/height), la couche
-              intérieure porte l'animation d'arrivée. Auparavant les deux
-              s'écrivaient sur le MÊME élément : apply() l'affichait à 1 dès le
-              montage, puis Framer Motion repartait de 0 — d'où le
-              « apparaît puis disparaît » d'une demi-seconde. */}
+      {/* ── LE TITRE, EN FLUX NORMAL (client 2026-08-13) ─────────────────────
+          « On descend et c'est NOUS qui allons vers la réplication du
+          logiciel, pas la réplication qui vient à nous. Elle ne change pas de
+          taille. »
+          Le titre vivait DANS la scène épinglée : dès le premier cran, l'écran
+          se figeait pendant qu'apply() fondait le titre et repliait sa hauteur
+          — la réplique grossissait donc VERS le lecteur, et chaque image de
+          repli redimensionnait la scène. Sorti de l'épinglage, il défile
+          comme n'importe quel contenu ; la réplique approche à taille
+          constante ; l'épinglage ne commence qu'au contact du haut d'écran
+          (position:sticky nu, cadenceur dédié ci-dessous).
+          `hidden md:block` : sur mobile, OraHeroMobile porte sa propre
+          ouverture. */}
+      <div ref={wrapRef} className="relative hidden md:block">
+        {/* `pb-0` (client 2026-08-13 : « enlève l'espace entre la réplication
+            et la phrase Testez Ora sur vos fichiers »). Les 40 px de marge
+            basse s'ajoutaient aux 112 px de retrait du bloc épinglé : 185 px
+            de vide mesurés entre la ligne et le haut de la fenêtre. */}
+        <div className="px-6 md:px-12 pt-24 md:pt-28 pb-0">
+          {/* DEUX COUCHES : l'enveloppe extérieure n'appartient PLUS au moteur
+              de scroll (2026-08-13) — elle ne sert plus qu'à mesurer —, la
+              couche intérieure porte l'animation d'arrivée Framer. */}
           <div
             ref={headlineRef}
             className="hd-headline relative z-10 text-center max-w-[90rem] mx-auto"
@@ -1881,14 +1979,52 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
                 7,5 vw / 6,5 rem, calqué sur « Automatisez de bout en bout »,
                 rendait le titre trop massif ici. La FAMILLE est de toute façon
                 déjà la même des deux côtés (Instrument Sans normale). */}
-            <h2 className="font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-balance text-[#111827] dark:text-white mt-3 text-center">
-              <span className="block">{t({ fr: "Moins de saisie.", en: "Less data entry." })}</span>
-              <span className="block text-brand-gradient">{t({ fr: "Plus d'analyse et de conseil.", en: "More analysis and advisory." })}</span>
-            </h2>
+            {/* SECONDE LIGNE EN DÉGRADÉ DE MARQUE (client 2026-08-11 : « repasse
+                cela en bleu »). Revient sur le choix du 2026-08-09 (les deux
+                lignes en noir) : avec le nouveau titre en trois « plus »
+                (2026-08-11), la première ligne pose l'idée et la seconde,
+                colorée, porte la conséquence concrète — la couleur aide à
+                distinguer les deux temps de la phrase au lieu de les fondre. */}
+            {/* ⚠ `antialiased` N'EST PAS DÉCORATIF ICI, c'est le SEUL levier
+                d'amaigrissement disponible sur cette phrase (client
+                2026-08-14 : « fais en sorte que la police soit légèrement plus
+                fine »). Instrument Sans N'A PAS de graisse sous 400 : mesuré
+                en page, la phrase rendue en 200, 300, 350 et 400 fait
+                exactement la même largeur, 559,09 px — le navigateur retombe
+                sur la plus légère fonte disponible, et il ne sait pas
+                synthétiser plus fin (seulement plus gras). `font-light` serait
+                donc du code mort.
+                `-webkit-font-smoothing: antialiased` fait passer le rendu du
+                lissage sous-pixel au lissage en niveaux de gris, ce qui amincit
+                réellement les fûts. L'effet est WebKit et macOS, donc VISIBLE
+                CHEZ LE CLIENT qui navigue sous Safari, et sans effet sous
+                Windows — une vraie graisse plus fine demanderait de changer de
+                famille ou de charger la version variable d'Instrument Sans.
+                Posé aussi sur le hero mobile : les deux doivent porter le même
+                titre au traitement près. */}
+            {/* ⚠ h1 ET NON h2 (audit du 2026-08-15). La page d'accueil n'avait
+                AUCUN h1 : ni titre de document pour un lecteur d'écran, ni
+                signal de titre pour un moteur. Pire, les deux seuls h1 de la
+                page vivaient dans les fausses applications d'AtlasMockups et
+                disaient « Bonjour Marie ». Le titre du hero est le titre de la
+                page, il en porte donc le rang. Le hero mobile suit. */}
+            <h1 className="antialiased font-instrument font-normal text-[clamp(2.3rem,5.4vw,4.8rem)] tracking-[-0.035em] leading-[1.03] text-balance text-[#111827] dark:text-white mt-3 text-center">
+              <span className="block">{t({ fr: "Plus de productivité,", en: "More productivity," })}</span>
+              <span className="block text-brand-gradient">{t({ fr: "plus d'analyse, plus de conseil.", en: "more analysis, more advisory." })}</span>
+            </h1>
+            {/* LA PHRASE DIT « LOGICIEL » (client 2026-08-18 : « il faut qu'on
+                comprenne que c'est un logiciel… on comprend en une phrase ce
+                qu'on fait »). L'ancienne (« On s'occupe de vos tâches
+                répétitives, vous excellez dans votre métier ») décrivait un
+                bénéfice qu'une agence ou un cabinet externalisé pourrait
+                revendiquer mot pour mot — rien ne disait qu'un PRODUIT existe.
+                Le patron est celui des sites d'IA juridique : la catégorie,
+                le travail repris, où repart le temps. Modifier ici = modifier
+                OraHeroMobile, qui porte la même phrase au mot près. */}
             <p className="mt-3 mx-auto max-w-[36rem] font-instrument font-normal text-[clamp(1rem,1.6vw,1.35rem)] leading-normal text-gray-500 dark:text-gray-400 text-center">
               {t({
-                fr: "On s'occupe de vos tâches répétitives, vous excellez dans votre métier.",
-                en: "We handle the repetitive tasks, so you excel at what you do.",
+                fr: "Le logiciel qui reprend le répétitif comptable, pour rediriger votre temps vers le conseil.",
+                en: "The software that takes over repetitive accounting work, redirecting your time to advisory.",
               })}
             </p>
             <a
@@ -1910,13 +2046,51 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             </p>
           </motion.div>
           </div>
+        </div>
+
+        {/* ── LE CADENCEUR (client 2026-08-13) ─────────────────────────────
+            Il ne contient QUE la scène épinglée : la progression 0→1 du
+            moteur démarre pile à l'épinglage, quel que soit le nombre de
+            lignes du titre au-dessus. 300 vh hors démo, soit 200 vh de
+            course : ~20 vh de battement (la notification d'invitation),
+            ~88 vh de dézoom, le reste en traversée du mur — les fractions
+            DZ_START / DZ_END / TRAV_START se lisent sur CETTE course.
+            800 vh dès que la démo est lancée, comme avant. */}
+        {/* ⚠ LE `-mt-10` REMONTE LA RÉPLIQUE SANS TOUCHER À L'ÉPINGLAGE (client
+            2026-08-14 : « remonte un peu la réplication du logiciel, il faut
+            qu'il y ait moins d'espace entre la réplication et Testez Ora sur
+            vos fichiers »). Mesuré avant : 109 px entre le bas de la ligne de
+            réassurance et le haut de la scène, dont 88 de rembourrage haut de
+            la boîte collante.
+            CE REMBOURRAGE NE PEUT PAS BAISSER : c'est lui qui dégage la barre
+            de navigation (68 px mesurés) quand la scène est épinglée, il ne
+            reste que 20 px de garde. La marge négative agit ailleurs : elle
+            remonte LA PISTE, donc l'état AVANT épinglage, et laisse l'état
+            épinglé — `sticky top-0` plus les 88 px — au pixel près où il
+            était. L'écart tombe à ~69 px. */}
+        <div ref={rideRef} className={`relative md:-mt-10 ${demoOn ? "md:h-[800vh]" : "md:h-[300vh]"}`}>
+        {/* `pb` réduit (client 2026-07-30) : descend la bande des légendes d'une
+            quinzaine de pixels de plus, sans toucher l'indicateur de défilement
+            qui reste ancré à 10 px du bas. */}
+        {/* Retrait haut ramené de 112 à 88 px : c'est lui qui dégage la barre
+            de navigation (68 px de haut, mesurés) quand la scène est épinglée,
+            il ne peut donc pas descendre beaucoup plus bas — 88 laisse 20 px
+            de garde. Le reste du vide venait de la marge basse du titre,
+            passée à zéro juste au-dessus. */}
+        <div ref={stickyRef} className="hd-sticky sticky top-0 flex h-screen flex-col overflow-hidden px-6 md:px-12 pt-20 md:pt-[88px] pb-10 md:pb-12">
+          {/* Soft overhead light — dark mode only */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 hidden dark:block"
+            style={{ background: "radial-gradient(56% 44% at 50% -8%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.055) 40%, transparent 70%)" }}
+          />
 
           {/* Stage (auto-fitted 1040×640 scene) */}
-          {/* DEUX COUCHES SÉPARÉES, comme pour le titre plus haut : la boîte
-              extérieure appartient au moteur de scroll (il la mesure et écrit
-              son marginTop), la couche .hd-stagerise porte l'animation
-              d'arrivée « bas vers le haut ». Un transform posé directement sur
-              .hd-stagebox décalerait les mesures de cadrage. */}
+          {/* DEUX COUCHES SÉPARÉES : la boîte extérieure appartient au moteur
+              de scroll (il la mesure et écrit son marginTop), la couche
+              .hd-stagerise porte l'animation d'arrivée « bas vers le haut ».
+              Un transform posé directement sur .hd-stagebox décalerait les
+              mesures de cadrage. */}
           <div ref={boxRef} className="hd-stagebox relative z-10">
           <div className="hd-stagerise">
             <div ref={stageRef} className="hd-stage">
@@ -2462,16 +2636,74 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               pas fonctionner dans une scène épinglée (cellules restées
               invisibles chez le client), et neuf instances mesurantes
               coûteraient neuf lectures de mise en page par image. */}
+          {/* ── LA RANGÉE DE QUEUE (client 2026-08-09) ──
+              « On n'a qu'un encadré flouté, celui du milieu ; il faudrait la
+              même chose sur les côtés. » Mesuré avant d'y toucher : le fondu du
+              bas (.hd-bottomfade, 150 px) commençait EXACTEMENT là où les
+              colonnes latérales s'arrêtaient — bas de leur dernière carte à
+              529 px, haut du fondu à 530 px à la libération de l'épinglage —
+              pendant que la colonne centrale, elle, le traversait de 318 px.
+              Les côtés ne se dissolvaient donc pas : ils butaient net sur la
+              ligne du fondu. D'où ces deux cellules SUPPLÉMENTAIRES, placées
+              explicitement en colonnes 1 et 3 : leur haut tombe 27 px sous le
+              début du fondu, contre 19 px pour la carte du milieu — les trois
+              colonnes se dissolvent désormais au même endroit.
+              Deux maquettes CLAIRES, comme celle du milieu : une carte sombre
+              coupée par un fondu vers le blanc laisserait une barre franche.
+              LES DOUBLONS SONT PARTIS (client 2026-08-18 : « des encadrés plus
+              représentatifs de ce que fait le logiciel actuellement »). La
+              queue répétait bilan et prévisionnel, déjà présents deux rangées
+              plus haut dans les mêmes colonnes — c'était visible sur la
+              capture du client. Deux panneaux d'EXÉCUTION sont entrés au mur
+              (« Génération du livrable », « Extraction de relevés ») : fichier
+              déposé, étapes horodatées, livrable en sortie. Le premier prend
+              la TÊTE du mur (voir son commentaire) puisque la queue, à moitié
+              dissoute par le fondu, ne montre jamais un panneau en entier ;
+              la queue reçoit bilan et extraction. Les règles tiennent
+              toujours : aucun sujet n'a son double pour voisin en ligne ni en
+              colonne, et les deux cellules de queue sont claires, condition
+              du fondu ci-dessus.
+              ⚠ La rangée est EXCLUE du calcul de `travel` dans fit() : sans
+              cela la grille plus haute allongeait d'autant la course des
+              latérales, qui remontaient simplement plus loin — la queue serait
+              sortie par le haut et rien n'aurait changé en bas. */}
+          {/* ⚠ SEPT SUJETS AU LIEU DE TROIS (client 2026-08-15 : « des encadrés
+              plus représentatifs de ce que l'on fait maintenant »). Le mur
+              répétait sept fois deux panneaux, le bilan développé et une
+              automatisation sur mesure, alors que la section à onglets en
+              annonce six trois écrans plus bas. Les quatre manquants sont
+              maintenant là — prévisionnel, évaluation, changement de structure,
+              contrôles et suivi — dans le même gabarit et les mêmes couleurs
+              (voir le pavé de CONTENUS dans AppTablePanel.tsx).
+              LES TROIS RÈGLES DE PLACEMENT SONT INTACTES, et elles ne sont pas
+              esthétiques : aucun panneau n'a son double pour voisin en ligne ni
+              en colonne (deux jumeaux côte à côte se lisent comme un bogue de
+              rendu) ; la rangée de queue reste CLAIRE, parce que le fondu du bas
+              trancherait net sur un panneau noir ; et le trou garde sa place au
+              centre, c'est lui qui reçoit la réplique vivante. */}
           <div data-hd="wall-grid" aria-hidden className="hd-wallgrid hidden md:grid">
-            <div className="hd-wallcell"><AppTablePanel variant="bilan" still /></div>
-            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
-            <div className="hd-wallcell"><OraHomeMockup still /></div>
-            <div className="hd-wallcell"><OraHomeMockup still /></div>
-            <div data-hd="wall-hole" className="hd-wallcell" />
-            <div className="hd-wallcell"><AppTablePanel variant="bilan" still /></div>
-            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
-            <div className="hd-wallcell"><OraHomeMockup still /></div>
-            <div className="hd-wallcell"><AppTablePanel variant="surmesure" tone="dark" still /></div>
+            {/* « execution » EN TÊTE DE MUR et non en queue : la queue vit dans
+                le fondu du bas, un panneau n'y est jamais vu qu'à moitié
+                dissous. Or c'est LE panneau qui montre le logiciel en train de
+                travailler — il prend la première cellule lue au dézoom. Le
+                bilan descend en queue sans rien perdre : sa version complète
+                et interactive est la carte « Des chiffres exacts » de
+                StackingCards, trois écrans plus bas. */}
+            <div className="hd-wallcell" data-col="0"><AppTablePanel variant="execution" still /></div>
+            <div className="hd-wallcell" data-col="1"><AppTablePanel variant="surmesure" tone="dark" still /></div>
+            <div className="hd-wallcell" data-col="2"><OraHomeMockup still /></div>
+            <div className="hd-wallcell" data-col="0"><AppTablePanel variant="previsionnel" still /></div>
+            <div data-hd="wall-hole" className="hd-wallcell" data-col="1" />
+            <div className="hd-wallcell" data-col="2"><AppTablePanel variant="evaluation" tone="dark" still /></div>
+            <div className="hd-wallcell" data-col="0"><AppTablePanel variant="controles" tone="dark" still /></div>
+            <div className="hd-wallcell" data-col="1"><OraHomeMockup still /></div>
+            <div className="hd-wallcell" data-col="2"><AppTablePanel variant="structure" still /></div>
+            <div className="hd-wallcell tail" data-col="0" style={{ gridRow: 4, gridColumn: 1 }}>
+              <AppTablePanel variant="bilan" still />
+            </div>
+            <div className="hd-wallcell tail" data-col="2" style={{ gridRow: 4, gridColumn: 3 }}>
+              <AppTablePanel variant="extraction" still />
+            </div>
           </div>
 
           {/* Step captions */}
@@ -2528,15 +2760,21 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             <span className="track"><span className="fill" data-hd="cuefill" /></span>
           </div>
         </div>
+        </div>
       </div>
 
-      {/* CTA — after the demo releases. The CONTAINER is a plain always-black
-          div (never animated: an opacity-0 entrance here used to let the
-          section's white bg flash through). Only the button itself animates.
+      {/* CTA — after the demo releases. FOND CLAIR (client 2026-08-11) : ce
+          conteneur était un bandeau noir permanent, dont le seul rôle était
+          d'enchaîner sans couture sur ExcelReveal, alors elle-même toujours
+          noire, juste en dessous (historique dans App.tsx, au point d'où
+          ExcelReveal a été retiré). ExcelReveal a disparu, la section
+          suivante est claire (« Concrètement, ce qu'Ora peut automatiser ») :
+          le bandeau suit donc le fond de la SECTION HERO elle-même (blanc en
+          clair, noir en sombre), au lieu d'imposer sa propre couleur. Seul le
+          bouton anime son entrée.
           `hidden md:flex` : sur mobile OraHeroMobile porte déjà son propre
-          bouton de réservation, et ce fond noir ne servait qu'à enchaîner sur
-          ExcelReveal, elle-même absente sous 768 px. */}
-      <div ref={ctaRef} className="relative z-10 bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
+          bouton de réservation. */}
+      <div className="relative z-10 bg-white dark:bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
         <motion.button
           onClick={openBooking}
           initial={{ opacity: 0, y: 28 }}
@@ -2545,7 +2783,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           whileHover={{ y: -3, scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 400, damping: 24, mass: 0.6 }}
-          className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_18px_55px_rgba(59,130,246,0.6)] transition-[background-color,box-shadow] duration-300 ease-out"
+          className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_18px_55px_rgba(59,130,246,0.6)] transition-[background-color,box-shadow] duration-300 ease-out"
         >
           {t({ fr: "Réserver un appel", en: "Book a call" })}
           <ArrowRight className="w-5 h-5 transition-transform duration-300 ease-out group-hover:translate-x-1" />

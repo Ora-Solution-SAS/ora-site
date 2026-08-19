@@ -1,82 +1,36 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, CalendarCheck } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check } from "lucide-react";
 import { useLang } from "../lib/i18n";
 import type { QualifierAnswers } from "./QualifierFlow";
 
 /**
- * Result screen shown right after the qualifier, before Cal.com.
+ * L'écran posé entre le questionnaire et le calendrier.
  *
- * RÉÉCRIT le 2026-08-03, client : « un formulaire moins pompeux en heures
- * gagnées ». La version précédente en faisait trop, sur trois plans à la fois :
+ * ── LE CHIFFRE ANNUEL A ÉTÉ RETIRÉ (client 2026-08-15) ─────────────────────
+ * « La partie appel est un peu bullshit. » Le mot visait ce qu'il y avait au
+ * milieu de cet écran : un compteur qui montait jusqu'à « 1 440 h sur l'année »
+ * en corps 3 rem, obtenu en multipliant une tranche déclarée par 48 semaines.
  *
- *  1. Elle annonçait jusqu'à 1 920 h perdues par an en corps 4,25 rem, puis
- *     « soit l'équivalent de 11 mois de travail à temps plein ». Le lecteur d'un
- *     cabinet sait compter : un chiffre présenté comme un choc se lit comme un
- *     argument de vente, et l'effet se retourne.
- *  2. Elle promettait une réduction de 90 % (ORA_REDUCTION = 0.9). Ce chiffre ne
- *     reposait sur aucune mesure. Il est SUPPRIMÉ, pas adouci : une fourchette
- *     inventée resterait inventée.
- *  3. Son bouton disait « Voir ce qu'on vous offre » et menait au calendrier,
- *     l'étape cadeau étant désactivée. Il promettait donc ce que l'écran suivant
- *     ne tenait pas.
+ * Le raisonnement de la version précédente était que ce chiffre venait du
+ * visiteur, donc qu'il était honnête. Il l'était arithmétiquement, et il restait
+ * un calcul de vendeur : personne ne coche « 5 à 15 h » en pensant à un total
+ * annuel, et le lui renvoyer en grand, c'est lui faire dire quelque chose qu'il
+ * n'a pas dit. Un directeur financier lit ce compteur pour ce qu'il est, la
+ * mise en scène d'une réponse à choix multiples. Le retirer coûte un effet et
+ * fait gagner la seule chose qui compte ici, d'être cru.
  *
- * Ce qui reste est le seul chiffre réellement fondé : celui que le visiteur
- * vient de donner, annualisé. L'arithmétique est affichée à côté du résultat
- * pour qu'il puisse la refaire de tête, ce qui vaut mieux qu'un gros nombre à
- * prendre sur parole. La persuasion tient alors à sa propre réponse, pas à la
- * nôtre.
+ * CE QUI LE REMPLACE ne contient AUCUN nombre calculé par nous : les quatre
+ * réponses relues telles quelles, puis trois lignes sur ce que fait la
+ * demi-heure. La preuve passe du chiffre à la précision — le visiteur reconnaît
+ * ses propres mots, ce qui est le seul « nous avons compris » qui ne se fabrique
+ * pas. Les constantes qui servaient au calcul (WORK_WEEKS_PER_YEAR, les milieux
+ * de tranche, le compteur useCountUp) sont parties avec.
+ *
+ * MISE EN PAGE : la grammaire du reste du site, celle des panneaux et de la
+ * maquette Prévisionnel — des LIGNES séparées par des filets d'un pixel,
+ * libellé effacé à gauche, valeur en encre à droite. Plus de carte bleue à
+ * liseré arrondi, plus de pastille d'icône pleine.
  */
-
-/** 48 et non 52 : congés et jours fériés déduits. Volontairement bas. */
-const WORK_WEEKS_PER_YEAR = 48;
-
-/** Milieu de tranche, ancré sur le BAS de chaque fourchette : « 5 à 15h »
- *  devient 8 et non 10. On préfère sous-estimer, un chiffre gonflé se retourne
- *  contre nous dès que l'interlocuteur le vérifie.
- *  Indexé sur les identifiants, pas les libellés, pour rester indépendant de la
- *  langue affichée. */
-function hoursMidpointFromId(hoursId: string): number {
-  switch (hoursId) {
-    case "lt5":
-      return 3;
-    case "5to15":
-      return 8;
-    case "15to30":
-      return 18;
-    case "gt30":
-      return 32;
-    default:
-      return 8;
-  }
-}
-
-/** Compte de 0 à la cible. Conservé, mais plus lent et sur un nombre plus
- *  petit : il souligne le chiffre au lieu de le mettre en scène. */
-function useCountUp(target: number, duration = 1100, delay = 300): number {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    let cancelled = false;
-    const startTimer = window.setTimeout(() => {
-      const start = performance.now();
-      const tick = (now: number) => {
-        if (cancelled) return;
-        const t = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - t, 3);
-        setValue(Math.round(target * eased));
-        if (t < 1) raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
-    }, delay);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(startTimer);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [target, duration, delay]);
-  return value;
-}
 
 type Props = {
   answers: QualifierAnswers;
@@ -85,127 +39,116 @@ type Props = {
 };
 
 export default function QualifierResult({ answers, onContinue, onBack }: Props) {
-  const { t, lang } = useLang();
-  const locale = lang === "fr" ? "fr-FR" : "en-US";
+  const { t } = useLang();
 
-  const weeklyHours = hoursMidpointFromId(answers.hours.id);
-  const annualHours = weeklyHours * WORK_WEEKS_PER_YEAR;
-  const displayed = useCountUp(annualHours);
+  /* Les quatre réponses, relues dans l'ordre où elles ont été données. Les
+     libellés sont ceux des boutons, pas des reformulations : une reformulation,
+     même fidèle, rouvrirait la question de savoir si on a bien compris. */
+  const recap = [
+    { k: t({ fr: "Métier", en: "Field" }), v: answers.sector.label },
+    { k: t({ fr: "Ce qui coûte le plus", en: "Biggest cost" }), v: answers.pain.label },
+    { k: t({ fr: "Temps par semaine", en: "Time per week" }), v: answers.hours.label },
+    { k: t({ fr: "Format", en: "Format" }), v: answers.format.label },
+  ];
 
-  // La tâche que le visiteur vient de désigner, reprise telle quelle. C'est ce
-  // qui rend l'écran concret : on lui parle de SON sujet, pas d'un cas générique.
-  const tache = answers.pain.label.toLowerCase();
+  /* Ce que fait l'appel, en trois gestes VÉRIFIABLES le jour même. Aucun
+     pourcentage, aucune durée gagnée : la troisième ligne dit d'ailleurs que le
+     plan repart avec le visiteur même s'il ne signe pas, ce qui est la seule
+     façon de rendre les deux premières crédibles. */
+  const call = [
+    t({
+      fr: "On ouvre un de vos fichiers et on refait le trajet à la main, avec vous.",
+      en: "We open one of your files and walk through it by hand, with you.",
+    }),
+    t({
+      fr: "On vous dit ce qu'Ora reprend, et ce qu'il ne reprend pas.",
+      en: "We tell you what Ora takes over, and what it does not.",
+    }),
+    t({
+      fr: "Vous repartez avec le plan écrit, que vous alliez plus loin ou non.",
+      en: "You leave with the plan in writing, whether you go further or not.",
+    }),
+  ];
 
   return (
-    <div className="flex flex-col h-full min-h-[460px] px-6 md:px-8 py-7">
+    <div className="flex h-full min-h-[460px] flex-col px-6 py-7 md:px-8">
       {/* En-tête : retour + repère d'étape */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 text-gray-500 dark:text-gray-400 transition-all duration-150"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-gray-500 transition-all duration-150 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10"
           aria-label={t({ fr: "Retour", en: "Back" })}
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="font-inter text-[11px] uppercase tracking-[0.16em] text-blue-500 dark:text-blue-400 font-semibold">
+        <p className="font-inter text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#6b7688] dark:text-gray-500">
           {t({ fr: "Ce que vous nous avez dit", en: "What you told us" })}
         </p>
         <div className="w-8" />
       </div>
 
-      {/* Rappel de sa propre réponse, avant le chiffre. L'ordre compte : le
-          lecteur reconnaît d'abord sa phrase, donc il accepte le calcul. */}
-      <motion.p
+      {/* LE RÉCAPITULATIF, en lignes à filets. */}
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.05 }}
-        className="font-inter text-[15px] leading-relaxed text-gray-600 dark:text-gray-300"
+        transition={{ duration: 0.45, delay: 0.05 }}
       >
-        {t({
-          fr: `Environ ${weeklyHours} h par semaine sur ${tache}.`,
-          en: `Around ${weeklyHours} h a week on ${tache}.`,
-        })}
-      </motion.p>
-
-      {/* Le chiffre. Corps 3 rem et non 4,25, et bleu de marque plein plutôt que
-          le dégradé, qui virait au vert sur les nombres longs. */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.18, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-3 flex items-baseline gap-2.5 flex-wrap"
-      >
-        <span className="font-poppins font-semibold text-[2.75rem] md:text-[3rem] leading-none tracking-[-0.035em] text-[#2563eb] dark:text-blue-400">
-          {displayed.toLocaleString(locale)} h
-        </span>
-        <span className="font-inter text-[15px] text-gray-500 dark:text-gray-400">
-          {t({ fr: "sur l'année.", en: "over the year." })}
-        </span>
+        {recap.map((r) => (
+          <div
+            key={r.k}
+            className="flex items-baseline justify-between gap-6 border-t border-[#0a2540]/[0.08] py-2.5 first:border-t-0 dark:border-white/10"
+          >
+            <span className="shrink-0 font-inter text-[12.5px] text-[#6b7688] dark:text-gray-500">{r.k}</span>
+            <span className="text-right font-inter text-[13.5px] font-medium text-[#111827] dark:text-white">
+              {r.v}
+            </span>
+          </div>
+        ))}
       </motion.div>
 
-      {/* L'arithmétique en clair, juste sous le résultat : le lecteur peut la
-          refaire de tête. Un chiffre vérifiable convainc mieux qu'un chiffre
-          spectaculaire. */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.55 }}
-        className="mt-2 font-inter text-[12.5px] text-gray-400 dark:text-gray-500"
-      >
-        {t({
-          fr: `${weeklyHours} h x ${WORK_WEEKS_PER_YEAR} semaines travaillées, congés déduits.`,
-          en: `${weeklyHours} h x ${WORK_WEEKS_PER_YEAR} working weeks, leave excluded.`,
-        })}
-      </motion.p>
-
-      {/* Ce que fait l'appel. Aucune promesse chiffrée : c'est précisément la
-          ligne où la version précédente annonçait 90 % de gain. */}
+      {/* CE QUE FAIT L'APPEL. Le titre est une petite capitale espacée, comme
+          les intitulés de section des maquettes : il annonce un bloc, il ne
+          rivalise pas avec le récapitulatif au-dessus. */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.7 }}
-        className="mt-6 flex items-start gap-3 p-4 rounded-2xl border border-blue-100 bg-blue-50/60 dark:border-white/[0.08] dark:bg-blue-500/[0.06]"
+        transition={{ duration: 0.5, delay: 0.22 }}
+        className="mt-7"
       >
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#2563eb] text-white flex-shrink-0 mt-0.5">
-          <CalendarCheck className="w-4 h-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-inter font-semibold text-[14px] text-[#111827] dark:text-white">
-            {t({ fr: "En 30 minutes", en: "In 30 minutes" })}
-          </p>
-          <p className="font-inter text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-400 mt-1">
-            {t({
-              fr: "on regarde ces heures de près et on vous dit lesquelles Ora peut reprendre, sur vos propres fichiers. Franchement, y compris si la réponse est peu.",
-              en: "we look at those hours closely and tell you which ones Ora can take over, on your own files. Straight, including if the answer is not many.",
-            })}
-          </p>
-        </div>
+        <p className="font-inter text-[10.5px] font-semibold uppercase tracking-[0.16em] text-[#6b7688] dark:text-gray-500">
+          {t({ fr: "Ce qu'on fait en 30 minutes", en: "What we do in 30 minutes" })}
+        </p>
+        <ul className="mt-3">
+          {call.map((li) => (
+            <li
+              key={li}
+              className="flex items-start gap-2.5 border-t border-[#0a2540]/[0.08] py-2.5 first:border-t-0 dark:border-white/10"
+            >
+              <Check className="mt-[3px] h-3.5 w-3.5 shrink-0 text-[#3b82f6]" strokeWidth={2.6} />
+              <span className="font-inter text-[13px] leading-relaxed text-[#42506b] dark:text-gray-300">{li}</span>
+            </li>
+          ))}
+        </ul>
       </motion.div>
 
-      {/* Bouton. Le libellé dit désormais ce qui arrive vraiment ensuite : le
-          calendrier. « Voir ce qu'on vous offre » renvoyait à l'étape cadeau,
-          qui est désactivée. */}
+      {/* Bouton. Rayon court comme les boutons de section du site, et non la
+          pilule : c'est la même famille que « Télécharger l'application » et
+          « Essayer dans le navigateur ». */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.9 }}
+        transition={{ duration: 0.45, delay: 0.4 }}
         className="mt-auto pt-6"
       >
         <button
           type="button"
           onClick={onContinue}
-          className="group w-full inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-[#2563eb] shadow-[0_2px_12px_rgba(37,99,235,0.28)] hover:bg-[#1d4ed8] hover:shadow-[0_4px_24px_rgba(37,99,235,0.38)] hover:-translate-y-px transition-all duration-150"
+          className="group inline-flex w-full items-center justify-center gap-2.5 rounded-[8px] bg-[#3b82f6] px-6 py-3.5 font-inter text-[14.5px] font-semibold text-white transition-colors duration-150 hover:bg-[#2563eb]"
         >
           {t({ fr: "Choisir mon créneau", en: "Pick my slot" })}
-          <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
+          <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
         </button>
-        <p className="mt-2.5 text-center font-inter text-[11.5px] text-gray-400 dark:text-gray-500">
-          {t({
-            fr: "30 min, gratuit, sans engagement.",
-            en: "30 min, free, no commitment.",
-          })}
-        </p>
       </motion.div>
     </div>
   );

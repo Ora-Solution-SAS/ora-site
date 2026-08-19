@@ -1,34 +1,25 @@
-import { useEffect, useState, useRef, type ReactNode } from "react";
+import { Suspense, lazy, useEffect, useState, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import { Analytics } from "@vercel/analytics/react";
-import ForBusinessPage from "./pages/ForBusinessPage";
-import OraExperiencePage from "./pages/OraExperiencePage";
-import SolutionTemplatePage from "./pages/SolutionTemplatePage";
-import SolutionExpertiseComptablePage from "./pages/SolutionExpertiseComptablePage";
-import SolutionAuditPage from "./pages/SolutionAuditPage";
-import SolutionFondsInvestissementPage from "./pages/SolutionFondsInvestissementPage";
-import SolutionBanqueAffairesPage from "./pages/SolutionBanqueAffairesPage";
-import ConfidentialitePage from "./pages/ConfidentialitePage";
-import PricingPage from "./pages/PricingPage";
-import MentionsLegalesPage from "./pages/MentionsLegalesPage";
-import PolitiqueConfidentialitePage from "./pages/PolitiqueConfidentialitePage";
-import CGUPage from "./pages/CGUPage";
-import DownloadPage from "./pages/DownloadPage";
-import EspaceClientPage from "./pages/EspaceClientPage";
-import DemoPage from "./pages/DemoPage";
-import NotFoundPage from "./pages/NotFoundPage";
 import { animatedScrollToId } from "./lib/scrollTo";
 import OraLogoSpinner from "./components/OraLogoSpinner";
-import QualifierFlow, { type QualifierAnswers } from "./components/QualifierFlow";
-import QualifierResult from "./components/QualifierResult";
-import GiftReveal from "./components/GiftReveal";
-import StackingCards, { FileChipStrip } from "./components/StackingCards";
+// ⚠ QualifierFlow, QualifierResult et GiftReveal NE SONT PLUS MONTÉS depuis le
+// 2026-08-19 (client : « fais quelque chose de beaucoup plus straight to the
+// point, ne mets pas combien d'heures vous passez »). Les trois fichiers
+// restent dans le dépôt ; les remonter demanderait de rétablir leurs phases
+// dans BookingPhase, leurs branches de rendu et leurs entrées de BOOKING_STEPS.
+import SlotPicker, { type Slot } from "./components/SlotPicker";
+// StackingCards n'est plus monté du tout depuis le 2026-08-15 : les deux cartes
+// qui montaient l'une sur l'autre sont parties le 2026-08-14, et le bandeau de
+// formats (FileChipStrip) a suivi l'en-tête « Automatisez de bout en bout » le
+// lendemain. Il vit maintenant en pied de la section à onglets, qui l'importe
+// directement depuis StackingCards.tsx.
 import AtlasShowcase from "./components/AtlasShowcase";
 import IndustrySelector from "./components/IndustrySelector";
-import PrivacyShowcase from "./components/PrivacyShowcase";
 import ControlShowcase from "./components/ControlShowcase";
-import ExcelReveal from "./components/ExcelReveal";
+import PlatformShowcase from "./components/PlatformShowcase";
+import AutomationTabs from "./components/AutomationTabs";
 // import EnterpriseReady from "./components/EnterpriseReady"; // masqué pour l'instant
 // import FinanceUseCases from "./components/FinanceUseCases"; // masqué pour l'instant
 // import ProblemSection from "./components/ProblemSection"; // masqué pour l'instant
@@ -521,11 +512,37 @@ import OraHeroDemo from "./components/OraHeroDemo";
 // DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: the main
 // demo (ora-1.mp4) now lives in the hero. Component file kept for reference.
 // import DemoVideoCurtain from "./components/DemoVideoCurtain";
+/* ══ LES SEIZE PAGES SONT CHARGÉES À LA DEMANDE ══════════════════════════════
+   Elles étaient toutes importées en dur, donc toutes empaquetées dans le chunk
+   d'entrée : mesuré avant la bascule, 373 ko minifiés de pages qui ne
+   s'affichent JAMAIS sur l'accueil partaient quand même à chaque visite, sur un
+   site dont l'immense majorité du trafic ne verra que la racine.
+   `lazy` + `Suspense` suffisent ici, précisément parce que le routeur est un
+   état React et non react-router : une seule branche est montée à la fois, il
+   n'y a donc rien à précharger ni à coordonner.
+   ⚠ L'ACCUEIL N'EST PAS DANS CETTE LISTE. Il est rendu en ligne dans la branche
+   finale du conditionnel, sans import de page ; le découper n'aurait aucun sens,
+   c'est la page qu'on vient chercher. */
+const ForBusinessPage = lazy(() => import("./pages/ForBusinessPage"));
+const OraExperiencePage = lazy(() => import("./pages/OraExperiencePage"));
+const SolutionTemplatePage = lazy(() => import("./pages/SolutionTemplatePage"));
+const SolutionExpertiseComptablePage = lazy(() => import("./pages/SolutionExpertiseComptablePage"));
+const SolutionAuditPage = lazy(() => import("./pages/SolutionAuditPage"));
+const SolutionFondsInvestissementPage = lazy(() => import("./pages/SolutionFondsInvestissementPage"));
+const SolutionBanqueAffairesPage = lazy(() => import("./pages/SolutionBanqueAffairesPage"));
+const ConfidentialitePage = lazy(() => import("./pages/ConfidentialitePage"));
+const PricingPage = lazy(() => import("./pages/PricingPage"));
+const MentionsLegalesPage = lazy(() => import("./pages/MentionsLegalesPage"));
+const PolitiqueConfidentialitePage = lazy(() => import("./pages/PolitiqueConfidentialitePage"));
+const CGUPage = lazy(() => import("./pages/CGUPage"));
+const DownloadPage = lazy(() => import("./pages/DownloadPage"));
+const EspaceClientPage = lazy(() => import("./pages/EspaceClientPage"));
+const DemoPage = lazy(() => import("./pages/DemoPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
+
 import { useLang } from "./lib/i18n";
 import {
   Clock,
-  Shield,
-  CheckCircle2,
   X,
   Zap,
   ArrowRight,
@@ -537,6 +554,20 @@ import {
 // ← Replace with your Cal.com username/event-slug once your account is set up
 // Example: "raphael-gaugain/discovery-call"
 const CAL_LINK = "raphael-gaugain-cfjl0b/discovery-call";
+
+/** Les DEUX temps de la fenêtre de réservation, pour le rail de gauche.
+ *  Ils NOMMENT ce qui se passe, ils ne numérotent pas : « Étape 2 / 2 » ne dit
+ *  rien de plus que la position, alors que « Vos coordonnées » dit ce qui est
+ *  demandé à l'écran suivant.
+ *  ⚠ Il y en avait TROIS jusqu'au 2026-08-19 (« Votre contexte », « Ce qu'on
+ *  regarde », « Votre créneau ») : les deux premières nommaient le
+ *  questionnaire et son récapitulatif, qui ont sauté. Un rail de deux entrées
+ *  est à la limite de l'utile ; il est gardé parce qu'il annonce qu'un
+ *  formulaire attend après le clic sur l'heure, ce qui, sans lui, surprend. */
+const BOOKING_STEPS = [
+  { fr: "Votre créneau", en: "Your slot" },
+  { fr: "Vos coordonnées", en: "Your details" },
+];
 
 // Adresse affichée en alternative au calendrier. Passée à la boîte générique le
 // 2026-08-03 sur demande du client : c'est celle qu'il relève, et elle est déjà
@@ -657,6 +688,149 @@ const PAGE_TO_PATH: Record<Page, string> = {
   "not-found": "/not-found",
 };
 
+/* ══ TITRE ET DESCRIPTION PAR PAGE ═══════════════════════════════════════════
+   Ajoutés le 2026-08-15, après audit. Les quinze routes servaient jusque-là un
+   SEUL <title> et une seule description, ceux d'index.html : `document.title`
+   n'était écrit nulle part dans le code, et il n'y a pas de rendu serveur. Une
+   recherche sur « Ora mentions légales » et la page d'accueil renvoyaient donc
+   le même résultat, et le partage d'une page de solution montrait le titre de
+   l'accueil.
+   ⚠ CE N'EST PAS DU RÉFÉRENCEMENT COMPLET, et il faut le savoir : ces titres
+   sont écrits par React APRÈS le chargement. Google exécute le JavaScript et
+   les verra ; LinkedIn, Slack et iMessage ne l'exécutent pas et continueront de
+   lire les balises d'index.html pour toutes les pages. Les vignettes de partage
+   par page demandent un pré-rendu (vite-plugin-ssg ou l'équivalent), c'est un
+   chantier à part.
+   La description est écrite dans la balise existante d'index.html plutôt que
+   dans une nouvelle : deux balises `description` dans un même document, c'est
+   un document invalide et un moteur qui choisit tout seul. */
+const SITE = "https://ora-solution.com";
+
+const PAGE_META: Record<Page, { title: { fr: string; en: string }; desc: { fr: string; en: string } }> = {
+  "home": {
+    title: {
+      fr: "Ora, l'automatisation du travail répétitif sur Excel",
+      en: "Ora, automation for repetitive spreadsheet work",
+    },
+    desc: {
+      fr: "Ora enchaîne le travail répétitif qui va de la donnée brute au document final. Traitement local, résultat reproductible, journal d'audit.",
+      en: "Ora runs the repetitive chain from raw data to finished document. Local processing, reproducible results, audit trail.",
+    },
+  },
+  "for-business": {
+    title: { fr: "Ora pour les entreprises", en: "Ora for business" },
+    desc: {
+      fr: "Automatiser les traitements récurrents d'une direction financière, sur vos propres fichiers et sans les sortir de chez vous.",
+      en: "Automate a finance team's recurring work, on your own files, without them leaving your machines.",
+    },
+  },
+  "ora-experience": {
+    title: { fr: "L'expérience Ora", en: "The Ora experience" },
+    desc: {
+      fr: "Ce que change une chaîne de traitement automatisée, du dépôt du fichier au livrable prêt à envoyer.",
+      en: "What an automated chain changes, from dropping the file to a deliverable ready to send.",
+    },
+  },
+  "solution-template": {
+    title: { fr: "Solutions Ora par métier", en: "Ora solutions by field" },
+    desc: {
+      fr: "Les traitements qu'Ora reprend, métier par métier, avec les livrables qui en sortent.",
+      en: "The work Ora takes over, field by field, with the deliverables it produces.",
+    },
+  },
+  "solution-expertise-comptable": {
+    title: { fr: "Ora pour l'expertise comptable", en: "Ora for accounting firms" },
+    desc: {
+      fr: "Bilan développé, prévisionnel, contrôles de clôture : les travaux qui reviennent à chaque période, exécutés d'un clic.",
+      en: "Detailed balance sheets, forecasts, closing checks: the work that comes back every period, run in one click.",
+    },
+  },
+  "solution-audit": {
+    title: { fr: "Ora pour l'audit", en: "Ora for audit" },
+    desc: {
+      fr: "Contrôles sur le FEC, écritures atypiques documentées, journal d'audit par document. Le même résultat à chaque exécution.",
+      en: "Checks on the ledger, unusual entries documented, an audit trail per document. The same result on every run.",
+    },
+  },
+  "solution-fonds-investissement": {
+    title: { fr: "Ora pour les fonds d'investissement", en: "Ora for investment funds" },
+    desc: {
+      fr: "Dossiers de deal reliés à leurs sources, retraitements reproductibles et livrables montés sur vos propres modèles.",
+      en: "Deal files linked to their sources, reproducible rework, deliverables built on your own templates.",
+    },
+  },
+  "solution-banque-affaires": {
+    title: { fr: "Ora pour la banque d'affaires", en: "Ora for investment banking" },
+    desc: {
+      fr: "Évaluations, comparatifs et supports de comité montés depuis un même jeu de chiffres, traçable de bout en bout.",
+      en: "Valuations, comparisons and committee decks built from one set of figures, traceable end to end.",
+    },
+  },
+  "confidentialite": {
+    title: { fr: "Confidentialité et sécurité", en: "Privacy and security" },
+    desc: {
+      fr: "Où vivent vos fichiers, qui peut les lire, ce qui est journalisé. Traitement local par défaut.",
+      en: "Where your files live, who can read them, what is logged. Local processing by default.",
+    },
+  },
+  "pricing": {
+    title: { fr: "Tarifs", en: "Pricing" },
+    desc: {
+      fr: "Ce que coûte Ora, et ce que couvre l'accompagnement.",
+      en: "What Ora costs, and what the onboarding covers.",
+    },
+  },
+  "mentions-legales": {
+    title: { fr: "Mentions légales", en: "Legal notice" },
+    desc: {
+      fr: "Éditeur, hébergeur et informations légales du site Ora.",
+      en: "Publisher, host and legal information for the Ora website.",
+    },
+  },
+  "politique-confidentialite": {
+    title: { fr: "Politique de confidentialité", en: "Privacy policy" },
+    desc: {
+      fr: "Les données que nous collectons sur ce site, pourquoi, et combien de temps nous les gardons.",
+      en: "What data this site collects, why, and how long we keep it.",
+    },
+  },
+  "cgu": {
+    title: { fr: "Conditions générales d'utilisation", en: "Terms of use" },
+    desc: {
+      fr: "Les conditions d'utilisation du site et du logiciel Ora.",
+      en: "The terms of use for the Ora website and software.",
+    },
+  },
+  "espace-client": {
+    title: { fr: "Mon espace Ora", en: "My Ora space" },
+    desc: {
+      fr: "L'espace client Ora : vos automatisations, vos fichiers et votre suivi.",
+      en: "The Ora client space: your automations, your files and your tracking.",
+    },
+  },
+  "telechargement": {
+    title: { fr: "Télécharger Ora", en: "Download Ora" },
+    desc: {
+      fr: "Installer l'application Ora sur votre poste.",
+      en: "Install the Ora app on your machine.",
+    },
+  },
+  "demo": {
+    title: { fr: "Tester Ora sur vos fichiers", en: "Try Ora on your own files" },
+    desc: {
+      fr: "Choisissez une automatisation, déposez un fichier, regardez le résultat. Directement dans votre navigateur, sans installation.",
+      en: "Pick an automation, drop a file, watch the result. Straight in your browser, nothing to install.",
+    },
+  },
+  "not-found": {
+    title: { fr: "Page introuvable", en: "Page not found" },
+    desc: {
+      fr: "Cette page n'existe pas ou n'est plus en ligne.",
+      en: "This page does not exist, or is no longer online.",
+    },
+  },
+};
+
 const PATH_TO_PAGE: Record<string, Page> = Object.fromEntries(
   (Object.entries(PAGE_TO_PATH) as [Page, string][]).map(([p, path]) => [path, p])
 );
@@ -682,6 +856,18 @@ const App = () => {
     // distance en plus. Les sections épinglées (hero, mur des cas d'usage,
     // cartes empilées) se traversent d'autant plus vite sans toucher à leurs
     // chorégraphies.
+    /* ⚠ DÉFILEMENT NATIF SI LE VISITEUR LE DEMANDE (audit du 2026-08-15).
+       Lenis détourne la molette : c'est un mouvement imposé, et un mouvement
+       imposé est précisément ce que `prefers-reduced-motion` vise — c'est un
+       déclencheur vestibulaire classique, au même titre qu'un parallaxe.
+       Le reste du site le respectait partout SAUF ici, c'est-à-dire à
+       l'endroit qui touche chaque pixel de chaque page.
+       On ne l'installe donc pas du tout, plutôt que de l'installer et de
+       l'arrêter : `window.__lenis` reste indéfini, et les appelants
+       (animatedScrollToId, la restauration au retour arrière, le hero) ont
+       tous déjà leur repli en `window.scrollTo`. */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const lenis = new Lenis({
       lerp: 0.18,
       smoothWheel: true,
@@ -712,78 +898,164 @@ const App = () => {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [bookingReady, setBookingReady] = useState(false);
   const [bookingFading, setBookingFading] = useState(false);
-  // 4-phase booking funnel:
-  //  - "qualifier" : 3-question Preply-style mini-flow
-  //  - "result"    : quantified loss + "with Ora" comparison (the aha moment)
-  //  - "gift"      : reciprocity reveal — personalized before/after video +
-  //                  free audit + "already prepared" automation for their field
-  //  - "calendar"  : Cal.com embed with pre-filled notes
-  type BookingPhase = "qualifier" | "result" | "gift" | "calendar";
-  const [bookingPhase, setBookingPhase] = useState<BookingPhase>("qualifier");
-  const [qualifierAnswers, setQualifierAnswers] = useState<QualifierAnswers | null>(null);
+  // ── LE PARCOURS N'A PLUS QUE DEUX TEMPS (client 2026-08-19) ──────────────
+  //  - "slots"    : la grille de créneaux, quatre par jour, un jour sur deux
+  //  - "calendar" : l'embed Cal.com, ouvert SUR le jour choisi, qui confirme
+  // Il en avait quatre : "qualifier" (quatre questions), "result" (récap),
+  // "gift" (déjà court-circuitée depuis des semaines) puis "calendar". Les
+  // trois écrans supprimés demandaient six clics avant de montrer la moindre
+  // disponibilité, sur le seul chemin de conversion du site.
+  type BookingPhase = "slots" | "calendar";
+  const [bookingPhase, setBookingPhase] = useState<BookingPhase>("slots");
+  const [bookingSlot, setBookingSlot] = useState<Slot | null>(null);
+
+  /* ── LA MODALE EST UN VRAI DIALOGUE (audit du 2026-08-15) ─────────────────
+     Elle n'en avait AUCUN des comportements attendus, et c'est le seul chemin
+     de conversion du site : pas d'Escape, pas de piège de focus, pas de
+     restauration du focus, pas de verrou de défilement, et un bouton de
+     fermeture sans nom accessible. Un visiteur au clavier qui l'ouvrait devait
+     tabuler jusqu'au bout pour en sortir ; un lecteur d'écran n'était pas
+     informé qu'elle s'était ouverte et continuait de lire la page dessous.
+
+     `bookingOpenerRef` retient l'élément qui a ouvert la fenêtre. Il y a cinq
+     déclencheurs sur la page (nav, hero, Atlas, CTA final, pied de page) : sans
+     cette mémoire, la fermeture rendrait le focus au corps du document et le
+     lecteur repartirait du haut de la page, pas de l'endroit où il en était. */
+  const bookingRef = useRef<HTMLDivElement>(null);
+  const bookingOpenerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isBookingOpen) return;
+
+    // Verrou de défilement. Le décalage compense la disparition de la barre de
+    // défilement, sans quoi toute la page saute de ~15 px à l'ouverture.
+    const { overflow, paddingRight } = document.body.style;
+    const gap = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (gap > 0) document.body.style.paddingRight = `${gap}px`;
+
+    // Le focus entre dans la fenêtre, sur son premier élément atteignable.
+    const SEL =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), iframe, [tabindex]:not([tabindex="-1"])';
+    const focusables = () =>
+      Array.from(bookingRef.current?.querySelectorAll<HTMLElement>(SEL) ?? []).filter(
+        (el) => el.offsetParent !== null || el.tagName === "IFRAME",
+      );
+    const enter = window.setTimeout(() => focusables()[0]?.focus(), 60);
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setIsBookingOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // LE PIÈGE. Sans lui, la tabulation sort de la fenêtre et parcourt la
+      // page restée vivante derrière le voile, y compris l'iframe du
+      // calendrier, sans que rien ne le montre à l'écran.
+      const list = focusables();
+      if (!list.length) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (active === first || !bookingRef.current?.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+
+    return () => {
+      window.clearTimeout(enter);
+      document.removeEventListener("keydown", onKeyDown, true);
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
+      bookingOpenerRef.current?.focus?.();
+      bookingOpenerRef.current = null;
+    };
+  }, [isBookingOpen]);
 
   const openBooking = () => {
+    // L'élément actif AU MOMENT DU CLIC, avant que React ne rende la fenêtre.
+    bookingOpenerRef.current = document.activeElement as HTMLElement | null;
     setIsBookingOpen(true);
     // Reset funnel state so each opening starts fresh
-    setBookingPhase("qualifier");
-    setQualifierAnswers(null);
+    setBookingPhase("slots");
+    setBookingSlot(null);
     setBookingReady(false);
     setBookingFading(false);
   };
 
-  // Called when the user finishes the 3-question qualifier → show result screen.
-  const handleQualifierComplete = (answers: QualifierAnswers) => {
-    setQualifierAnswers(answers);
-    setBookingPhase("result");
-  };
-
-  // Result screen → calendar. The "gift" reveal step is temporarily skipped
-  // (not finished yet). To restore it, replace this body with
-  // `setBookingPhase("gift")` — the gift phase, its handlers, the GiftReveal
-  // render branch and the left-panel copy are all still in place below.
-  const handleResultContinue = () => {
+  /* Une heure cliquée dans la grille → l'embed Cal.com, ouvert sur ce jour-là.
+     L'écran de chargement est RACCOURCI de 900 ms à 350 ms : il séparait deux
+     écrans de lecture (récap puis calendrier) et laissait le temps de souffler,
+     alors qu'il s'intercale maintenant entre un clic et sa conséquence directe.
+     Une seconde et demie d'attente après un clic sur « 09:30 » se lit comme une
+     panne, pas comme une transition. */
+  const handlePickSlot = (slot: Slot) => {
+    setBookingSlot(slot);
     setBookingPhase("calendar");
     setBookingReady(false);
     setBookingFading(false);
     setTimeout(() => {
       setBookingFading(true);
-      setTimeout(() => setBookingReady(true), 500);
-    }, 900);
+      setTimeout(() => setBookingReady(true), 300);
+    }, 350);
   };
 
-  // Allow stepping back from the result screen to the last qualifier question.
-  const handleResultBack = () => {
-    setBookingPhase("qualifier");
+  // Retour à la grille depuis le calendrier. Il n'y a plus de flèche « précédent »
+  // dans la colonne de droite (elle appartenait au questionnaire) : c'est le
+  // créneau rappelé au-dessus de l'embed qui porte le retour.
+  const handleSlotBack = () => {
+    setBookingPhase("slots");
+    setBookingSlot(null);
   };
 
-  // Gift screen → transition to Cal.com with a brief loading screen.
-  const handleGiftContinue = () => {
-    setBookingPhase("calendar");
-    setBookingReady(false);
-    setBookingFading(false);
-    setTimeout(() => {
-      setBookingFading(true);
-      setTimeout(() => setBookingReady(true), 500);
-    }, 900);
-  };
-
-  // Step back from the gift screen to the result estimate.
-  const handleGiftBack = () => {
-    setBookingPhase("result");
-  };
-
-  // Build the Cal.com "Additional notes" string from the qualifier answers,
-  // so the team arrives at the call with full context.
-  const bookingNotes = qualifierAnswers
+  /* La note passée à Cal.com. Elle ne porte plus le contexte métier (il n'est
+     plus demandé) mais LE CRÉNEAU CHOISI ICI, et c'est le point important :
+     l'embed Cal ne peut être ouvert que sur un JOUR, pas sur une heure précise
+     (sa config accepte `date` et `month`, pas d'horaire). Écrire l'heure dans
+     les notes est ce qui permet de rattraper un visiteur qui, arrivé dans Cal,
+     cliquerait une autre heure que celle qu'il vient de choisir. */
+  const bookingNotes = bookingSlot
     ? lang === "fr"
-      ? `Format souhaité : ${qualifierAnswers.format.label}\nMétier : ${qualifierAnswers.sector.label}\nTâche prioritaire : ${qualifierAnswers.pain.label}\nVolume hebdo : ${qualifierAnswers.hours.label}`
-      : `Preferred format: ${qualifierAnswers.format.label}\nField: ${qualifierAnswers.sector.label}\nMain task: ${qualifierAnswers.pain.label}\nWeekly volume: ${qualifierAnswers.hours.label}`
+      ? `Créneau choisi sur le site : ${bookingSlot.dayLabel} à ${bookingSlot.time}`
+      : `Slot picked on the website: ${bookingSlot.dayLabel} at ${bookingSlot.time}`
     : "";
 
 
 
   const [page, setPage] = useState<Page>(() => getPageFromPath(window.location.pathname));
   const [notFoundKey, setNotFoundKey] = useState(0);
+
+  /* ── LE TITRE ET LA DESCRIPTION SUIVENT LA PAGE ─────────────────────────
+     Réécrits à chaque changement de page ET de langue. Le titre d'accueil est
+     suffixé du nom du produit, les autres le sont aussi : « Tarifs » seul, dans
+     un onglet ou un historique, n'apprend rien. La page d'accueil ne se suffixe
+     pas deux fois, son titre porte déjà « Ora ».
+     Le lien canonique suit la même route, sinon les quinze URL déclareraient
+     toutes la racine comme canonique et Google les fondrait en une. */
+  useEffect(() => {
+    const meta = PAGE_META[page];
+    const base = meta.title[lang];
+    document.title = page === "home" ? `${base} | Ora Solution` : `${base} | Ora`;
+
+    const setTag = (selector: string, attr: string, value: string) => {
+      let el = document.head.querySelector<HTMLMetaElement | HTMLLinkElement>(selector);
+      if (!el) {
+        el = document.createElement(selector.startsWith("link") ? "link" : "meta");
+        if (selector.startsWith("link")) (el as HTMLLinkElement).rel = "canonical";
+        else (el as HTMLMetaElement).name = "description";
+        document.head.appendChild(el);
+      }
+      el.setAttribute(attr, value);
+    };
+    setTag('meta[name="description"]', "content", meta.desc[lang]);
+    setTag('link[rel="canonical"]', "href", SITE + PAGE_TO_PATH[page]);
+  }, [page, lang]);
 
   // Handle browser back / forward
   useEffect(() => {
@@ -875,12 +1147,22 @@ const App = () => {
     return () => cancelAnimationFrame(raf);
   }, [page]);
 
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "light";
-    const stored = window.localStorage.getItem("ora-theme-v2");
-    if (stored === "dark" || stored === "light") return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+  /* THÈME VERROUILLÉ EN CLAIR (client 2026-08-18 : « enlève la possibilité de
+     passer le site en nuit jour »). Ce n'est plus un état : plus de bascule
+     dans la barre, plus de suivi de `prefers-color-scheme`, plus de lecture ni
+     d'écriture de la clé 'ora-theme-v2'. La classe `.light` est posée par le
+     script d'index.html, avant React, donc il n'y a rien à synchroniser ici.
+     ⚠ LE TYPE RESTE LARGE, à dessein. `theme` descend en prop dans une
+     quarantaine de composants qui testent `theme === "dark"` ; annoter la
+     constante `"light"` littéral ferait de chacun de ces tests une comparaison
+     que TypeScript juge impossible, et le build tomberait en cascade. On garde
+     l'union : le jour où la bascule revient, cette ligne redevient un useState
+     et rien d'autre ne bouge.
+     L'assertion `as` n'est pas cosmétique : sur un `const` initialisé par un
+     littéral, TypeScript rétrécit le type au littéral même quand l'union est
+     annotée, et les `theme === "dark"` de ce fichier deviennent alors des
+     erreurs « comparaison impossible ». L'assertion garde l'union. */
+  const theme = "light" as "light" | "dark";
 
   const benefitsRef = useRef<HTMLElement | null>(null);
   const [_benefitsPhase, setBenefitsPhase] = useState<"problem" | "solution">("problem");
@@ -888,26 +1170,11 @@ const App = () => {
 
 
 
-  // Handle light / dark theme
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    // localStorage is written only when the user manually toggles (see onToggleTheme)
-  }, [theme]);
-
-  // Follow system preference changes when no manual override is stored
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = (e: MediaQueryListEvent) => {
-      if (!window.localStorage.getItem("ora-theme-v2")) {
-        setTheme(e.matches ? "dark" : "light");
-      }
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, []);
-
+  /* Les deux effets de thème sont partis avec la bascule : l'un reposait
+     `.light`/`.dark` à chaque changement d'état, l'autre écoutait
+     `prefers-color-scheme` pour suivre le système en direct. Sans état à
+     suivre ni préférence à honorer, ils n'avaient plus qu'à retirer et
+     remettre la même classe. */
 
   // Benefits phase swap (problem -> solution) — rAF throttled
   const benefitsPhaseRef = useRef<"problem" | "solution">("problem");
@@ -969,16 +1236,17 @@ const App = () => {
       {page !== "telechargement" && (
         <Navigation
           theme={theme}
-          onToggleTheme={() => {
-            // Toggle provisoire — session uniquement, ne persiste pas en localStorage
-            setTheme(theme === "dark" ? "light" : "dark");
-          }}
           onBookCall={() => openBooking()}
           currentPage={page}
           onNavigate={navigateTo}
         />
       )}
 
+      {/* Le repli est VIDE, à dessein : les pages arrivent en quelques dizaines
+          de millisecondes sur une connexion normale, et un écran de chargement
+          qui clignote se remarque plus que l'attente qu'il masque. La barre de
+          navigation, elle, est déjà montée au-dessus. */}
+      <Suspense fallback={<div className="min-h-screen" />}>
       {page === "not-found" ? (
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
       ) : page === "for-business" ? (
@@ -1014,7 +1282,6 @@ const App = () => {
           theme={theme}
           openBooking={openBooking}
           onNavigate={navigateTo}
-          onToggleTheme={() => setTheme(theme === "dark" ? "light" : "dark")}
         />
       ) : (
       <>
@@ -1030,69 +1297,69 @@ const App = () => {
           noircissement de fin de démo est conservé tel quel. */}
       <OraHeroDemo theme={theme} openBooking={openBooking} />
 
-      {/* ── "Your time is your most valuable asset" scroll-reveal ──
-          ExcelReveal: pure-black Bending-Spoons progressive-blur reveal, normal
-          flow (no scroll-lock). `bg-black` on the wrapper keeps the seam from
-          the (darkened) demo above pure black — no white flash. */}
-      {/* `data-hero-bg` : OraHeroDemo pilote CE fond en même temps que celui de
-          son bloc de clôture (client 2026-08-03). Sans ça, le blanc du bouton
-          « Réserver un appel » et le noir de cette section coexistaient à l'écran,
-          séparés par une ligne franche : ce n'était pas une transition mais une
-          couture entre deux blocs de couleurs différentes. Les deux basculent
-          désormais ensemble, donc l'écran entier passe du blanc au noir. */}
-      {/* `pt-[50vh]` : les phrases sont descendues (client 2026-08-03 : « un peu
-          plus bas, pour qu'on voie l'animation d'arrivée de chaque lettre »).
-          Ce coussin remplit DEUX rôles, et c'est le second qui a motivé cette
-          valeur :
-            1. garantir l'ORDRE, fond noir avant les phrases. Le premier mot doit
-               rester sous la frontière de netteté d'ExcelReveal au moment de la
-               bascule, sinon il devient lisible sur du blanc. Cette contrainte est
-               couplée à la constante FOCUS : toute modification là-bas impose de
-               revérifier ici ;
-            2. SÉPARER les deux moments. À 22 vh, la bascule au noir et l'arrivée du
-               texte se produisaient presque ensemble : l'œil suivait le changement
-               de fond et le début de la révélation passait inaperçu. Avec 36 vh, le
-               noir s'installe d'abord, puis le texte monte depuis le bas de l'écran
-               et traverse la frontière lettre par lettre, sous les yeux du lecteur.
-          Cela réintroduit sciemment une partie de l'espace retiré plus tôt, mais
-          cet espace est NOIR et non blanc : il ne se lit plus comme un vide.
+      {/* ExcelReveal — le défilement de phrases sur fond noir (« Votre temps
+          est votre actif le plus précieux ») — RETIRÉ (client 2026-08-11 :
+          « supprime la partie avec le texte / fond noir qui s'affiche et
+          passe directement à Concrètement, ce qu'Ora peut automatiser »). Le
+          composant et son wrapper `data-hero-bg` sont partis avec ; la
+          bascule blanc→noir qu'OraHeroDemo pilotait sur ce wrapper (client
+          2026-08-03) est retirée avec, voir OraHeroDemo.tsx. Le composant
+          ExcelReveal.tsx reste dans le dépôt si on souhaite le remonter. */}
 
-          PORTÉ de 36 à 50vh le 2026-08-05 (client : « fais en sorte que
-          l'utilisateur voie le défilement de la phrase Votre temps est votre
-          actif le plus précieux »). C'est la dette du point 1 ci-dessus, que je
-          n'avais pas honorée : FOCUS est passé de 0,46 à 0,58 dans ExcelReveal
-          en deux temps, sans revérifier ici. Monter FOCUS descend la frontière
-          dans l'écran, donc un mot devient net PLUS TÔT dans le scroll — et la
-          première phrase franchissait la frontière alors que le fond n'avait pas
-          fini de basculer. Du blanc sur du blanc : elle n'était visible qu'une
-          fois déjà nette, sa révélation passait à la trappe.
-          Le coussin doit croître d'au moins autant que FOCUS, soit +12vh ; 50vh
-          rétablit en plus la marge de sécurité d'origine. Si FOCUS rebouge,
-          rebouger cette valeur du même écart. */}
-      <div data-hero-bg className="relative bg-black pt-[50vh]">
-        <ExcelReveal />
-      </div>
+      {/* ── AUTOMATISATIONS, onglets pilotés au défilement ─────────────
+          Réplique du bloc attio.com fourni en capture le 2026-08-12 : grand
+          titre à deux encres, cadre à filets, colonne d'onglets à gauche
+          portant les modules réels du logiciel. Le bloc s'épingle et les
+          onglets avancent au défilement (client 2026-08-12).
+          REMONTÉE ICI, au-dessus des deux encadrés plateforme + assistant
+          (client 2026-08-12) : elle vivait sous la grille bento.
+          ⚠ La zone de droite est VOLONTAIREMENT VIDE, le client la remplira
+          lui-même. Voir l'en-tête d'AutomationTabs.tsx. */}
+      <AutomationTabs theme={theme} openBooking={openBooking} />
 
-      {/* FEATURES — use-cases. Flows right after the black reveal (which ends
-          on « Découvrez Ora »); generous top padding gives « Concrètement, ce
-          qu'Ora peut automatiser » plenty of breathing room. */}
-      {/* FOND CLAIR À #f5f7fd, un blanc très légèrement bleuté fourni en capture
-          par le client le 2026-08-07 (« applique la couleur du screen pour le
-          background global du site pour cette partie »).
+      {/* ── « AUTOMATISEZ DE BOUT EN BOUT » A ÉTÉ RETIRÉE ────────────────
+          Client 2026-08-15 : « enlève cette partie-là », le titre géant en
+          trois lignes, les pastilles de formats, « Une seule chaîne, du
+          document brut au livrable final » et son bouton compris.
+          Le bloc disait ce que la section à onglets juste au-dessus dit déjà,
+          en plus long : elle s'ouvre sur « Vos fichiers entrent, vos livrables
+          sortent », elle montre les modules un par un, et ses pastilles de
+          formats sont désormais en pied de son propre cadre. Deux annonces
+          l'une derrière l'autre repoussaient la grille des cas d'usage d'un
+          écran entier sans rien lui ajouter.
+          Le conteneur `relative` part avec : il ne servait qu'à épingler les
+          cartes empilées, retirées le 2026-08-14. La grille suit donc
+          directement la section à onglets, et récupère dans son propre
+          rembourrage haut l'air que ce conteneur lui donnait. */}
 
-          ⚠ EXCEPTION ASSUMÉE À CLAUDE.md, qui réserve les fonds de section
-          clairs à #fcfbf7 et #ffffff. Elle est CIRCONSCRITE à cette section,
-          comme l'est déjà le noir permanent de la section des phrases juste
-          au-dessus. Ce qui la justifie : les six cartes de la grille sont
-          BLANCHES, et sur un fond blanc elles ne se détachaient que par leur
-          liseré. Un fond à peine teinté leur rend un bord sans qu'aucune n'ait
-          à s'assombrir.
-
-          Le blanc chaud de la charte (#fcfbf7) ne convenait pas ici : la
-          section est entièrement bleue, une base jaunie l'aurait fait virer au
-          sale. Les variantes sombres ne bougent pas — le noir de cette section
-          enchaîne sur celui de la révélation qui la précède. */}
-      <section id="features" className="relative pt-[22vh] md:pt-[26vh] pb-0 px-6 md:px-12 bg-[#f5f7fd] dark:bg-black md:dark:bg-background">
+      {/* FEATURES — use-cases. Suit directement le CTA « Réserver un appel »
+          de fin de hero, désormais clair (plus de bascule au noir).
+          Padding généreux : donne à « Concrètement, ce qu'Ora peut
+          automatiser » de l'air, comme avant. */}
+      {/* FOND BLANC (client 2026-08-11 : « repasse le background en blanc »).
+          Annule le #f5f7fd, un blanc très légèrement bleuté demandé le
+          2026-08-07 pour que les cartes blanches de la grille se détachent du
+          fond. On revient donc au #ffffff de la charte, qui n'était plus une
+          exception à CLAUDE.md : les cartes ne se distinguent désormais que par
+          leur liseré et leur ombre. Si elles paraissent trop fondues, épaissir
+          leur liseré plutôt que reteinter la section. */}
+      {/* ⚠ LE GRAND VIDE DU HAUT EST TOMBÉ (client 2026-08-15 : « remonte, mets
+          moins d'espace »). Il valait 22 à 26 vh, soit près d'un quart d'écran,
+          et il se justifiait tant que la section s'ouvrait sur son propre titre
+          (« Concrètement, ce qu'Ora peut automatiser ») : il fallait de l'air
+          au-dessus de ce titre. Le titre est parti le 2026-08-14, c'est
+          désormais « Automatisez de bout en bout » qui coiffe la grille depuis
+          le bloc du dessus — et deux blocs qui forment une seule idée ne se
+          séparent pas par un quart d'écran de blanc. */}
+      {/* ⚠ FOND `#fcfbf7` ET NON BLANC (audit du 2026-08-15). La charte prévoit
+          DEUX fonds clairs qui alternent d'une section à l'autre, et le blanc
+          cassé n'était employé nulle part : la page enchaînait sept sections
+          claires en blanc pur, sans le rythme que cette alternance existe
+          justement pour créer. Une section sur deux passe donc en blanc cassé,
+          en commençant ici. Les cartes blanches de la grille y gagnent en plus
+          un fond dont elles se détachent, ce qui était une demande du
+          2026-08-07 réglée à l'époque en teintant le fond en bleu. */}
+      <section id="features" className="relative pt-20 md:pt-28 pb-0 px-6 md:px-12 bg-[#fcfbf7] dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
@@ -1138,64 +1405,33 @@ const App = () => {
             the feature cards can rise up and cover it, one by one. */}
       </section>
 
+
       {/* ── PRÊT POUR L'ENTREPRISE — masqué pour l'instant. Réactiver :
           décommenter l'import en haut, ce bloc, et l'entrée "enterprise"
           dans SectionNav.
       <EnterpriseReady /> */}
 
-      {/* ── FEC STUDIO + STACKING FEATURE CARDS + ATLAS ──────────────────
-          One shared `relative` wrapper so every `sticky` element inside pins
-          against it: FEC Studio (ValuePropsFlip) pins first, then each feature
-          card rises up and fully covers the previous one, then a spacer keeps
-          the last card on screen a while, and finally AtlasShowcase (z-20)
-          rises up over the whole stack. */}
-      <div className="relative bg-white dark:bg-black pt-16 md:pt-24">
-        {/* ── Monday-style intro header above the stacking cards: giant
-            three-line headline left; file-format chips + the end-to-end
-            chain pitch + CTA right (reference: monday.com hero).
-            PINNED (sticky, z-0) so the FIRST card rises up and covers it
-            while the user scrolls — the monday effect. ────────────────── */}
-        <div className="px-4 md:px-6 lg:px-10 mb-16 md:mb-[26vh] md:sticky md:top-[calc(50vh-260px)] md:z-0">
-          <div className="w-full max-w-[1480px] mx-auto grid lg:grid-cols-[1.15fr_1fr] gap-12 lg:gap-16 items-center">
-            {/* Same display face as the ExcelReveal scroll phrases (Instrument
-                Sans, normal weight) — deliberately thin, not Poppins bold. */}
-            <h2 className="font-instrument font-normal text-[#111827] dark:text-white tracking-[-0.035em] leading-[0.98] text-[clamp(3.2rem,7.5vw,6.5rem)]">
-              <span className="block">{t({ fr: "Automatisez", en: "Automate," })}</span>
-              <span className="block">{t({ fr: "de bout", en: "start" })}</span>
-              <span className="block">{t({ fr: "en bout.", en: "to finish." })}</span>
-            </h2>
-            <div>
-              <FileChipStrip />
-              <p className="mt-8 font-inter font-bold text-lg md:text-xl leading-snug text-[#111827] dark:text-white max-w-xl">
-                {t({
-                  fr: "Une seule chaîne, du document brut au livrable final",
-                  en: "One chain, from raw document to final deliverable",
-                })}
-              </p>
-              <p className="mt-2 font-inter text-base md:text-lg leading-relaxed text-gray-600 dark:text-gray-300 max-w-xl">
-                {t({
-                  fr: "Ora extrait les données de vos PDF, les retraite dans Excel et met en forme votre livrable, prêt à envoyer. Un clic, la chaîne entière est exécutée.",
-                  en: "Ora extracts the data from your PDFs, reworks it in Excel and formats your deliverable, ready to send. One click runs the whole chain.",
-                })}
-              </p>
-              <button
-                onClick={openBooking}
-                className="group mt-8 inline-flex items-center gap-2.5 rounded-full bg-[#111827] hover:bg-black dark:bg-white dark:hover:bg-gray-100 px-8 py-4 font-inter font-semibold text-[15px] md:text-base text-white dark:text-[#111827] transition-all duration-150 hover:-translate-y-px active:translate-y-0"
-              >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
-                <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-[3px]" />
-              </button>
-            </div>
-          </div>
-        </div>
+      <AtlasShowcase openBooking={openBooking} />
 
-        {/* FEC Studio / "Vos tâches Excel automatisées" cards removed for now.
-            The stack starts directly with the three feature cards. */}
-        <StackingCards />
-        {/* Breathing room: the last card stays on screen before Atlas rises. */}
-        <div aria-hidden className="h-[40vh] md:h-[95vh]" />
-        <AtlasShowcase />
-      </div>
+      {/* La démo de l'assistant (ORA_demo_Assistant_six_usages) vivait ici,
+          entre Atlas et le téléchargement, le temps d'une passe. Client
+          2026-08-19 : « il faut que la vidéo soit juste en dessous de » la
+          rangée des cinq capacités — elle est donc DANS AtlasShowcase, entre
+          la scène d'ouverture et le carrousel, sur le noir continu. */}
+
+      {/* ── « ORA SE TÉLÉCHARGE EN UN CLIC » ─────────────────────────────
+          REMONTÉE ICI le 2026-08-15 (client : « mets juste en dessous la partie
+          Ora se télécharge en un clic »), collée au bloc d'orchestration qui
+          ferme AtlasShowcase et qui vient de repasser sur fond clair.
+          Elle a voyagé quatre fois : au-dessus de la grille, dessous, en pied
+          de page juste avant la FAQ, et ici. Cette place-ci a sa logique : les
+          deux blocs parlent de MISE EN PLACE, l'un chez vous (le système
+          d'orchestration), l'autre sur votre poste (le téléchargement), et ils
+          se lisent d'affilée. Les fonds s'alternent comme le veut CLAUDE.md,
+          `#fcfbf7` pour l'orchestration, blanc pur ici.
+          ⚠ Hors de toute autre section : elle porte son propre
+          `px-6 md:px-12`, imbriquée elle rentrerait deux fois. */}
+      <PlatformShowcase onNavigate={navigateTo} />
 
       {/* La section « Nos technologies » (moteur déterministe / RPA natif /
           modèles locaux) a été retirée : le sujet RPA sera traité plus tard,
@@ -1212,10 +1448,16 @@ const App = () => {
           TEMPORAIREMENT MASQUÉ (pas fini) — repasser `false` à `true`. */}
       {false && <IndustrySelector theme={theme} openBooking={openBooking} />}
 
-      {/* ── CONFIDENTIALITÉ ──────────────────────────────────────────── */}
-      {/* Scroll-driven animated stage (padlock locks, cloud arrives) +
-          3 trust cards. See PrivacyShowcase.tsx. */}
-      <PrivacyShowcase theme={theme} />
+      {/* ── « VOS DONNÉES VOUS APPARTIENNENT » A ÉTÉ RETIRÉE ─────────────
+          Client 2026-08-15 : « supprime la partie données vous appartiennent ».
+          C'était PrivacyShowcase : la scène animée au défilement (le cadenas
+          qui se ferme, le nuage qui arrive) et ses trois cartes de confiance.
+          ⚠ LE SUJET N'EST PAS PERDU, et c'est ce qui rend le retrait tenable :
+          « Contrôle total », juste en dessous, dit la même chose en six
+          colonnes de texte, et la mention du traitement local court déjà dans
+          les fiches des cartes et dans la FAQ. Les deux sections étaient
+          collées depuis le 2026-08-05 précisément parce qu'elles se
+          répétaient. PrivacyShowcase.tsx reste dans le dépôt, non monté. */}
 
       {/* ── CONTRÔLE TOTAL ───────────────────────────────────────────── */}
       {/* Réplique de la section monday.com du même nom, capture fournie : grand
@@ -1230,12 +1472,16 @@ const App = () => {
           deux doivent se lire comme une seule surface, sans couture. */}
       <ControlShowcase theme={theme} />
 
+      {/* La section « Accompagnement » (SupportShowcase) qui vivait ici a été
+          RETIRÉE le 2026-08-11 : le nouvel encadré « plateforme », monté plus
+          haut avant « Concrètement, ce qu'Ora peut automatiser », reprend le
+          même panneau, et le client a tranché contre le doublon.
+          SupportShowcase.tsx reste dans le dépôt, non monté ; il porte le
+          discours sur la prise en main et les rendez-vous week-ends compris,
+          à replacer si on veut le rétablir. */}
+
       {/* ── FAQ — preempts finance/procurement objections ────────────── */}
       <FAQ />
-
-      {/* La démo complète (ora-1.mp4, ex-ClosingDemo) vit désormais DANS la
-          section Atlas, sous le paragraphe « Le dossier complet, orchestré et
-          traçable » (client 2026-07-28) — voir AtlasShowcase.tsx. */}
 
       {/* ── CTA FINAL (Monday-style) ─────────────────────────────────── *
        *  Closing section : thin two-line headline (2nd line brand        *
@@ -1362,18 +1608,45 @@ const App = () => {
 
       {/* ── CTA FINAL (provisoire) — un seul bouton centré, collé à la phrase
           "Ora, c'est automatiser sans renoncer à vos données" du pont. ──── */}
-      <section className="relative px-6 md:px-12 pt-16 md:pt-8 pb-44 md:pb-56 flex justify-center bg-white dark:bg-black md:dark:bg-black">
-        <button
-          onClick={openBooking}
-          className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2f75e6] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
-        >
-          {t({ fr: "Réserver mon appel", en: "Get started" })}
-          <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
-        </button>
+      {/* ⚠ CE BLOC N'AVAIT AUCUN TEXTE (audit du 2026-08-15) : un bouton nu au
+          milieu d'une section vide, en dernier appel du site. Il était collé à
+          une « phrase du pont » qui a été retirée depuis, et personne ne l'a
+          remplacée. Deux encres comme partout ailleurs, et la promesse est
+          celle de la modale, mot pour mot — le lecteur qui clique doit retrouver
+          exactement ce qu'on vient de lui annoncer.
+          ⚠ LE LIBELLÉ ANGLAIS ÉTAIT « Get started », déjà porté par le bouton du
+          hero, qui mène AILLEURS (la démo en ligne). Deux boutons identiques en
+          anglais pour deux destinations, sur la même page. */}
+      {/* BLANC FRANC (client 2026-08-18 : « fais un background full white »).
+          Le blanc cassé #fcfbf7 tenait ici son tour d'alternance, mais c'est le
+          dernier appel du site : le bouton bleu y gagne le fond le plus neutre
+          possible, et la bande blanche le détache de la section qui précède. */}
+      <section className="relative px-6 md:px-12 pt-16 md:pt-8 pb-44 md:pb-56 bg-white dark:bg-black md:dark:bg-black">
+        <div className="mx-auto max-w-[46rem] text-center">
+          <h2 className="font-instrument font-normal text-[clamp(1.9rem,4vw,3rem)] leading-[1.12] tracking-[-0.03em]">
+            <span className="text-[#111827] dark:text-white">
+              {t({ fr: "Une demi-heure, sur vos propres fichiers.", en: "Half an hour, on your own files." })}
+            </span>{" "}
+            <span className="text-[#7a8496] dark:text-gray-500">
+              {t({
+                fr: "On regarde ce qui se répète chez vous, et on vous dit ce qu'Ora reprend.",
+                en: "We look at what repeats in your work, and tell you what Ora takes over.",
+              })}
+            </span>
+          </h2>
+          <button
+            onClick={openBooking}
+            className="group mt-9 inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
+          >
+            {t({ fr: "Réserver mon appel", en: "Book my call" })}
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
+          </button>
+        </div>
       </section>
 
       </>
       )}
+      </Suspense>
 
       {/* Booking modal — portal, visible on all pages */}
       {isBookingOpen && createPortal(
@@ -1381,111 +1654,127 @@ const App = () => {
           className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-xl px-4 max-md:py-6 max-md:overflow-y-auto"
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
-          <div className="relative w-full max-w-3xl">
+          {/* `role="dialog"` + `aria-modal` + `aria-labelledby` : sans eux, un
+              lecteur d'écran annonce un groupe anonyme et continue d'exposer la
+              page derrière. Le titre référencé est celui de la colonne de
+              gauche, qui change avec la phase — c'est donc lui qui nomme la
+              fenêtre à chaque étape, sans texte de plus à maintenir. */}
+          <div
+            ref={bookingRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-title"
+            className="relative w-full max-w-3xl"
+          >
             <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black md:dark:bg-black">
               {/* Close button */}
               <button
                 type="button"
                 onClick={() => setIsBookingOpen(false)}
+                aria-label={t({ fr: "Fermer", en: "Close" })}
                 className="absolute right-5 top-5 z-20 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden />
               </button>
 
               <div className="grid grid-cols-1 md:grid-cols-5">
-                {/* LEFT — Brand panel (copy adapts across all 3 phases) */}
-                {/* Dégradé BLEU et non plus bleu vers teal (client 2026-08-03 :
-                    « supprimer les couleurs verte sur le côté pour un beau bleu »).
-                    Le dégradé de marque va de #3b82f6 à #0d9488 : sur un panneau
-                    large et haut comme celui-ci, son tiers inférieur virait
-                    franchement au vert. Il reste légitime sur un trait ou un
-                    bouton, où la course est trop courte pour que le teal
-                    apparaisse, mais pas sur un aplat de cette taille.
-                    Trois bleus successifs plutôt qu'un aplat : le panneau garde
-                    du relief sans sortir de la teinte. */}
-                <div className="md:col-span-2 bg-gradient-to-br from-[#3b82f6] via-[#2563eb] to-[#1d4ed8] p-6 md:p-8 flex flex-col justify-between text-white overflow-hidden md:min-h-0 rounded-t-[26px] md:rounded-l-[26px] md:rounded-tr-none">
+                {/* ══ LA COLONNE DE GAUCHE, REFAITE LE 2026-08-15 ═══════════
+                    Client : « la partie appel est un peu bullshit et pas au
+                    niveau design de ce que l'on fait ». Deux choses sautent.
+
+                    1. L'APLAT BLEU. Un dégradé saturé sur deux cinquièmes de la
+                       fenêtre, avec du texte blanc dessus, c'est la grammaire
+                       des modales SaaS de 2019 ; ce n'est plus celle du site,
+                       qui tient partout sur du blanc cassé, des filets d'un
+                       pixel et UN accent bleu. La colonne prend donc le fond de
+                       section de la charte (#fcfbf7 en clair, #111827 en
+                       sombre) et un filet pour la séparer.
+                    2. LES TROIS LIGNES DE RÉASSURANCE (horloge « 30 min ·
+                       Gratuit », coche « Plan sur mesure », bouclier « Données
+                       privées »), en pastilles blanches translucides. Elles
+                       disaient trois généralités que n'importe quel éditeur
+                       pourrait écrire, et c'est exactement ce que « bullshit »
+                       désigne. À leur place : LE RAIL D'ÉTAPES, repris du rail
+                       de la section à onglets — même graisse, même repère bleu,
+                       même effacement des entrées inactives. Il fait un vrai
+                       travail, dire où l'on en est et ce qui reste, là où les
+                       pastilles n'en faisaient aucun.
+                    Le « 30 min, gratuit, sans engagement » n'est pas perdu : il
+                    passe en pied de colonne, en petit, une fois. */}
+                <div className="md:col-span-2 flex flex-col justify-between overflow-hidden rounded-t-[26px] border-b border-[#0a2540]/[0.08] bg-[#fcfbf7] p-6 dark:border-white/10 dark:bg-[#111827] md:min-h-0 md:rounded-l-[26px] md:rounded-tr-none md:border-b-0 md:border-r md:p-8">
                   <div>
-                    <img src="/logos/logo-white.png" alt="Ora" className="h-7 w-auto" />
-                    <h3 className="mt-5 text-xl md:text-2xl font-semibold leading-snug text-white">
-                      {bookingPhase === "qualifier"
-                        ? t({ fr: "Préparons votre appel.", en: "Let's prep your call." })
-                        : bookingPhase === "result"
-                          ? t({ fr: "Votre chiffre.", en: "Your figure." })
-                          : bookingPhase === "gift"
-                            ? t({ fr: "Un cadeau pour démarrer.", en: "A gift to get started." })
-                            : t({ fr: "Choisissez votre créneau", en: "Pick your time slot" })}
+                    <img src="/logos/logo-color-dark.png" alt="Ora" className="h-7 w-auto dark:hidden" />
+                    <img src="/logos/logo-color-light.png" alt="Ora" className="hidden h-7 w-auto dark:block" />
+
+                    {/* Titre en Instrument Sans, comme tous les grands titres du
+                        site depuis le 2026-08-12. Le Poppins semi-gras d'avant
+                        appartenait à une autre génération de la page. */}
+                    <h3 id="booking-title" className="mt-6 font-instrument text-[1.5rem] font-normal leading-[1.14] tracking-[-0.025em] text-[#111827] dark:text-white md:text-[1.7rem]">
+                      {bookingPhase === "slots"
+                        ? t({ fr: "Réservez un créneau.", en: "Book a slot." })
+                        : t({ fr: "Confirmez votre créneau.", en: "Confirm your slot." })}
                     </h3>
-                    <p className="mt-3 text-white/75 text-sm leading-relaxed">
-                      {bookingPhase === "qualifier"
+                    {/* ⚠ PAS DE PROMESSE ICI, et c'est délibéré (client
+                        2026-08-19 : « beaucoup plus straight to the point »).
+                        Les deux phrases d'avant vendaient l'appel une seconde
+                        fois — « on arrive avec un plan adapté à votre métier »
+                        — alors que le visiteur qui a ouvert cette fenêtre est
+                        déjà convaincu : il cherche une heure, pas un argument.
+                        Ne reste que ce qui l'aide à choisir, la durée. */}
+                    <p className="mt-3 font-inter text-[13.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+                      {bookingPhase === "slots"
                         ? t({
-                            // « 4 » et non « 3 » : le questionnaire en compte
-                            // quatre (canal, secteur, tâche, heures), et le
-                            // repère à droite affichait bien « étape 1 / 4 ».
-                            // Annoncer moins d'étapes qu'il n'y en a se paie à la
-                            // troisième, quand le lecteur se croyait au bout.
-                            fr: "4 questions rapides, et on arrive à l'appel avec un plan adapté à votre métier.",
-                            en: "4 quick questions, and we'll arrive at the call with a plan tailored to your field.",
+                            fr: "Choisissez une heure, c'est tout. 30 minutes en visio.",
+                            en: "Pick a time, that's it. 30 minutes over video.",
                           })
-                        : bookingPhase === "result"
-                          ? t({
-                              fr: "Votre propre chiffre, ramené à l'année. À vous de juger s'il vaut une demi-heure.",
-                              en: "Your own figure, brought to the year. Yours to judge whether it's worth half an hour.",
-                            })
-                          : bookingPhase === "gift"
-                            ? t({
-                                fr: "On vous apporte de la valeur avant même l'appel. Récupérez-la en réservant votre créneau.",
-                                en: "We bring you value before the call even happens. Claim it by booking your slot.",
-                              })
-                            : t({
-                                fr: "On a votre contexte. Choisissez le moment qui vous convient. On arrive avec un plan adapté à votre métier.",
-                                en: "We've got your context. Pick a time that works. We'll arrive with a plan tailored to your field.",
-                              })}
+                        : t({
+                            fr: "Dernière étape : votre nom et votre e-mail.",
+                            en: "Last step: your name and your email.",
+                          })}
                     </p>
                   </div>
 
-                  <div className="mt-6 space-y-3 hidden md:block">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
-                        <Clock className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm text-white/90">{t({ fr: "30 min · Gratuit · Sans engagement", en: "30 min · Free · No commitment" })}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
-                        <CheckCircle2 className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm text-white/90">{t({ fr: "Plan d'automatisation sur mesure", en: "Tailored automation plan" })}</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 flex-shrink-0">
-                        <Shield className="w-4 h-4 text-white" />
-                      </div>
-                      <span className="text-sm text-white/90">{t({ fr: "Vos données restent privées", en: "Your data stays private" })}</span>
-                    </div>
+                  {/* LE RAIL D'ÉTAPES. Trois entrées, jamais cliquables : c'est
+                      un repère, pas une navigation — revenir en arrière se fait
+                      par la flèche de la colonne de droite, qui, elle, sait
+                      quel état rétablir. Le filet vertical porte le repère bleu,
+                      exactement comme dans AutomationTabs. */}
+                  <div className="relative mt-8 hidden md:block">
+                    <span aria-hidden className="absolute inset-y-0 left-0 w-px bg-[#0a2540]/[0.10] dark:bg-white/10" />
+                    <ul className="space-y-4">
+                      {BOOKING_STEPS.map((st, i) => {
+                        const idx = bookingPhase === "slots" ? 0 : 1;
+                        const on = i === idx;
+                        const done = i < idx;
+                        return (
+                          <li key={st.en} className="relative pl-4">
+                            {on && (
+                              <span aria-hidden className="absolute left-0 top-0 h-full w-[2px] bg-[#3b82f6]" />
+                            )}
+                            <span
+                              className={`block font-inter text-[13.5px] leading-tight transition-colors duration-200 ${
+                                on
+                                  ? "font-semibold text-[#111827] dark:text-white"
+                                  : done
+                                    ? "font-medium text-[#8b95a7] dark:text-gray-400"
+                                    : "font-medium text-[#7a8496] dark:text-white/25"
+                              }`}
+                            >
+                              {t(st)}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <p className="mt-8 font-inter text-[11.5px] text-[#6b7688] dark:text-gray-500">
+                      {t({ fr: "30 min, gratuit, sans engagement.", en: "30 min, free, no commitment." })}
+                    </p>
                   </div>
                 </div>
 
-                {/* RIGHT — 3 phases: qualifier → result → calendar */}
+                {/* RIGHT — 2 phases: slots → calendar */}
                 <div className="md:col-span-3 relative">
-                  {bookingPhase === "qualifier" && (
-                    <QualifierFlow onComplete={handleQualifierComplete} />
-                  )}
-
-                  {bookingPhase === "result" && qualifierAnswers && (
-                    <QualifierResult
-                      answers={qualifierAnswers}
-                      onContinue={handleResultContinue}
-                      onBack={handleResultBack}
-                    />
-                  )}
-
-                  {bookingPhase === "gift" && qualifierAnswers && (
-                    <GiftReveal
-                      answers={qualifierAnswers}
-                      onContinue={handleGiftContinue}
-                      onBack={handleGiftBack}
-                    />
-                  )}
+                  {bookingPhase === "slots" && <SlotPicker onPick={handlePickSlot} />}
 
                   {bookingPhase === "calendar" && (
                     <>
@@ -1502,6 +1791,32 @@ const App = () => {
                       <div
                         className={`p-2 md:p-3 overflow-y-auto transition-opacity duration-500 max-h-[68vh] md:max-h-[80vh] ${bookingReady ? "opacity-100" : "opacity-0"}`}
                       >
+                        {/* LE CRÉNEAU CHOISI, RAPPELÉ ET REPRENABLE. Sans cette
+                            barre, le visiteur passe d'une grille où il vient de
+                            cliquer « 09:30 » à un calendrier Cal.com qui affiche
+                            son propre mois : rien ne lui confirme que son choix
+                            a été retenu, et rien ne lui permet d'en changer sans
+                            fermer la fenêtre. C'est aussi le seul retour arrière
+                            du parcours depuis que la flèche du questionnaire est
+                            partie. */}
+                        {bookingSlot && (
+                          <div className="mb-2 flex items-center justify-between gap-3 rounded-[10px] border border-[#0a2540]/[0.10] bg-[#fcfbf7] px-3.5 py-2.5 dark:border-white/10 dark:bg-white/[0.04]">
+                            <p className="font-inter text-[13px] leading-tight text-[#42506b] dark:text-gray-300">
+                              <span className="font-semibold text-[#111827] first-letter:uppercase dark:text-white">
+                                {bookingSlot.dayLabel}
+                              </span>{" "}
+                              {t({ fr: "à", en: "at" })} {bookingSlot.time}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleSlotBack}
+                              className="shrink-0 font-inter text-[13px] font-semibold text-[#3b82f6] transition-colors duration-150 hover:text-[#2563eb]"
+                            >
+                              {t({ fr: "Changer", en: "Change" })}
+                            </button>
+                          </div>
+                        )}
+
                         {CAL_LINK ? (
                           <Cal
                             calLink={CAL_LINK}
@@ -1510,8 +1825,16 @@ const App = () => {
                               layout: "month_view" as const,
                               theme: theme === "dark" ? "dark" : "light",
                               lang: lang,
-                              // Pre-fill the Cal.com "Additional notes" field with the
-                              // qualifier answers so the team has full context upfront.
+                              // ⚠ `date` + `month` OUVRENT CAL SUR LE JOUR CHOISI.
+                              // L'embed n'accepte pas d'horaire, seulement une
+                              // journée : l'heure exacte part dans `notes`
+                              // (voir bookingNotes). Sans ces deux clés, Cal
+                              // rouvrirait sur le mois courant et le clic que le
+                              // visiteur vient de faire dans la grille ne
+                              // servirait à rien.
+                              ...(bookingSlot
+                                ? { date: bookingSlot.iso, month: bookingSlot.iso.slice(0, 7) }
+                                : {}),
                               notes: bookingNotes,
                             }}
                           />

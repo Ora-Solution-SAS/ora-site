@@ -111,7 +111,13 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
       // blocs empilés mais comme UNE surface continue, d'où l'abandon de
       // l'alternance #fcfbf7 / #0f172a : une couture de couleur entre elles
       // annulerait le rapprochement demandé.
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-28 md:pb-40"
+      /* Fond DÉCLARÉ, et en blanc cassé : la section n'en portait aucun et
+         héritait donc du blanc du corps de page. Elle prend sa place dans
+         l'alternance de la charte (voir le pavé d'App.tsx sur #features).
+         Le pavé historique qui demandait qu'elle porte « le MÊME fond que
+         PrivacyShowcase » est caduc : cette section a été retirée le
+         2026-08-15, il n'y a plus de couture à effacer. */
+      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-28 md:pb-40 bg-[#fcfbf7] dark:bg-black"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       <div className="relative max-w-7xl mx-auto">
@@ -121,10 +127,18 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
             la section d'origine. `max-w-[10ch]` tient la casse quelle que soit
             la langue, sans quoi l'anglais (« Full control ») repasserait sur une
             seule ligne. */}
+        {/* GRAISSE FINE (client 2026-08-11 : « des titres bien plus fins »).
+            Instrument Sans en graisse normale, la face fine du site, au lieu de
+            Poppins semibold — même bascule que « Vos données vous
+            appartiennent » juste au-dessus, pour que les deux sections gardent
+            une seule voix. Le CORPS ne bouge pas : la demande de rapetisser ne
+            visait que l'autre titre.
+            L'approche se relâche de -0,04 à -0,03 em : le serrage d'origine
+            était calibré pour une semibold, il tasse une graisse normale. */}
         <motion.h2
           {...fadeUp}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="font-poppins font-semibold tracking-[-0.04em] leading-[0.95] text-[#111827] dark:text-white max-w-[10ch]"
+          className="font-instrument font-normal tracking-[-0.03em] leading-[0.95] text-[#111827] dark:text-white max-w-[10ch]"
           style={{ fontSize: "clamp(3.2rem, 8vw, 7rem)" }}
         >
           <span className="block">{t({ fr: "Contrôle", en: "Full" })}</span>
@@ -133,7 +147,10 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
 
         {/* Grille 3 × 2. `gap-y` bien plus grand que `gap-x` : chez monday ce
             sont les rangées qui respirent, les colonnes restent serrées. */}
-        <div className="mt-20 md:mt-28 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-14 md:gap-y-20">
+        {/* Remonté de 20/28 à 10/14 (client 2026-08-11 : « les encadrés juste
+            en dessous ») : le titre étant devenu fin, l'écart d'origine le
+            laissait flotter seul en haut de section. */}
+        <div className="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-14 md:gap-y-20">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (

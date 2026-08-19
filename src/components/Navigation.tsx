@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Sun, Moon, Briefcase, PieChart, TrendingUp, Building2 } from "lucide-react";
+import { ArrowRight, Briefcase, PieChart, TrendingUp, Building2 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
   NavigationMenu,
@@ -17,7 +17,6 @@ type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "
 
 type NavigationProps = {
   theme: "light" | "dark";
-  onToggleTheme: () => void;
   onBookCall?: () => void;
   currentPage: Page;
   onNavigate: (page: Page) => void;
@@ -89,7 +88,6 @@ function DropdownItem({
 
 const Navigation: React.FC<NavigationProps> = ({
   theme,
-  onToggleTheme,
   onBookCall,
   currentPage,
   onNavigate,
@@ -142,7 +140,12 @@ const Navigation: React.FC<NavigationProps> = ({
   const sectionLinks: { label: string; id: string }[] = [
     { label: t({ fr: "Fonctionnalités", en: "Features" }), id: "features" },
     { label: t({ fr: "Atlas", en: "Atlas" }), id: "atlas" },
-    { label: t({ fr: "Sécurité", en: "Security" }), id: "securite" },
+    /* ⚠ « controle » ET NON « securite ». L'ancre #securite vivait dans
+       PrivacyShowcase, section démontée le 2026-08-15 : le lien ne faisait donc
+       plus RIEN, et en silence — animatedScrollToId sort sans bruit quand
+       l'élément est absent, donc rien dans la console ne le signalait. La
+       section sécurité encore montée est ControlShowcase, id="controle". */
+    { label: t({ fr: "Sécurité", en: "Security" }), id: "controle" },
   ];
 
   const goToSection = (id: string) => {
@@ -323,29 +326,28 @@ const Navigation: React.FC<NavigationProps> = ({
             <span className={cn("transition-opacity", lang === "en" ? (overDark ? "text-white" : "text-gray-900 dark:text-white") : "opacity-60")}>EN</span>
           </button>
 
-          {/* Theme toggle */}
-          <button
-            onClick={onToggleTheme}
-            className={cn(
-              "w-9 h-9 rounded-full flex items-center justify-center transition-colors",
-              overDark
-                ? "text-white/70 hover:text-white hover:bg-white/10"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
-            )}
-            aria-label={t({ fr: "Basculer le thème", en: "Toggle theme" })}
-          >
-            {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-
+          {/* LA BASCULE JOUR/NUIT EST PARTIE (client 2026-08-18 : « enlève la
+              possibilité de passer le site en nuit jour »). Le site est
+              verrouillé en clair par le script d'index.html ; un bouton qui ne
+              changerait plus rien n'a pas sa place dans une barre persistante.
+              `theme` reste en prop : le logo s'en sert encore. */}
           {/* Espace client — secondary, desktop. Client login: routes to the
               404 placeholder until the real login page / app URL exists. */}
           {/* ── Les deux boutons de la barre monday, pris au mot (client
               2026-08-08 : « même police, même couleur, même design ») ──
-              · contour fin + encre INDIGO #6161FF, le « basic blue » de
+              ⚠ L'INDIGO EST PARTI (audit du 2026-08-15). Ces deux boutons
+                étaient en #6161FF, un indigo qui n'existe nulle part ailleurs
+                sur le site, et la barre de navigation est PERSISTANTE : cet
+                indigo était donc à l'écran en même temps que le bleu #3b82f6
+                du hero, en permanence, à quinze centimètres de lui. Deux bleus
+                voisins mais différents pour le même rôle, c'est le pire des
+                deux mondes — on ne lit pas une intention, on lit une erreur.
+                Ils prennent le bleu de marque et son survol.
+              · contour fin + encre bleue #3b82f6, reprise de
                 monday, sur le bouton secondaire — c'est bien LEUR couleur, pas
                 le bleu de marque Ora ; « même couleur » a été pris
                 littéralement, revenir à #3b82f6 tient en deux constantes ;
-              · plein #6161FF + flèche sur le principal, sans ombre ni
+              · plein #3b82f6 + flèche sur le principal, sans ombre ni
                 soulèvement — la barre monday n'en a pas ;
               · Figtree 500 à 15 px, gabarit px-6/py-2,5, coins pleins.
               Exception assumée à la règle « CTA en font-inter font-semibold »
@@ -356,7 +358,7 @@ const Navigation: React.FC<NavigationProps> = ({
               "hidden md:inline-flex items-center px-6 py-2.5 rounded-full border text-[15px] font-medium transition-colors duration-150",
               overDark
                 ? "border-white/45 text-white hover:bg-white/10"
-                : "border-[#6161FF] text-[#6161FF] hover:bg-[#6161FF]/[0.06] dark:border-[#8B8BFF] dark:text-[#8B8BFF] dark:hover:bg-[#8B8BFF]/10"
+                : "border-[#3b82f6] text-[#3b82f6] hover:bg-[#3b82f6]/[0.06] dark:border-[#7db9fb] dark:text-[#7db9fb] dark:hover:bg-[#7db9fb]/10"
             )}
           >
             {t({ fr: "Mon espace Ora", en: "My Ora space" })}
@@ -365,7 +367,7 @@ const Navigation: React.FC<NavigationProps> = ({
           {/* Réserver un appel — desktop */}
           <button
             onClick={onBookCall}
-            className="hidden md:inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[15px] font-medium text-white bg-[#6161FF] hover:bg-[#4E4EDB] transition-colors duration-150"
+            className="hidden md:inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
             <ArrowRight className="w-4 h-4" />
@@ -418,13 +420,13 @@ const Navigation: React.FC<NavigationProps> = ({
             <div className="mt-4 flex flex-col gap-2">
               <button
                 onClick={() => { setMobileOpen(false); onNavigate("espace-client"); }}
-                className="w-full py-3 rounded-full text-[15px] font-medium text-[#6161FF] border border-[#6161FF] hover:bg-[#6161FF]/[0.06] dark:text-[#8B8BFF] dark:border-[#8B8BFF] dark:hover:bg-[#8B8BFF]/10 transition-colors duration-150"
+                className="w-full py-3 rounded-full text-[15px] font-medium text-[#3b82f6] border border-[#3b82f6] hover:bg-[#3b82f6]/[0.06] dark:text-[#7db9fb] dark:border-[#7db9fb] dark:hover:bg-[#7db9fb]/10 transition-colors duration-150"
               >
                 {t({ fr: "Mon espace Ora", en: "My Ora space" })}
               </button>
               <button
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
-                className="w-full py-3 rounded-full text-[15px] font-medium text-white bg-[#6161FF] hover:bg-[#4E4EDB] transition-colors duration-150"
+                className="w-full py-3 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
               >
                 {t({ fr: "Réserver un appel", en: "Book a call" })}
               </button>

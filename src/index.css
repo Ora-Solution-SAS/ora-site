@@ -272,3 +272,33 @@
    clip-path: polygon(0 0, 0 0, 0 0, 0 0);
    animation: laser-border 1s linear forwards;
  }
+/* ── Fondu des mots de la section « phrases » (ExcelReveal) ─────────────────
+   Le défilement fixe la valeur VISÉE de chaque mot ; c'est cette règle qui la
+   dessine, sur une durée FIXE.
+
+   Pourquoi une durée et non la seule distance de défilement : la bande de
+   transition fait 27 px de scroll, alors qu'à vitesse de molette normale la
+   page avance de ~71 px par image. Sans transition, un mot ne traverse donc
+   pas son fondu, il saute par-dessus entre deux images — mesuré le 2026-08-10,
+   ZÉRO mot en cours de fondu sur toutes les images d'un défilement réel. Le
+   dégradé n'existait qu'en scrollant très lentement, d'où l'impression que la
+   section « bugue » à l'usage normal.
+
+   Volontairement court : le fondu doit suivre le geste, pas traîner derrière.
+
+   `.xr-live` est posée par le composant APRÈS la première écriture. Avant
+   elle, les mots sont encore nus donc nets, et armer la transition tout de
+   suite ferait animer ce net vers le flou : la section s'afficherait en clair
+   avant de se brouiller. */
+.xr-live .xr-word {
+  transition:
+    filter 170ms ease-out,
+    opacity 170ms ease-out,
+    transform 170ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xr-live .xr-word {
+    transition: none;
+  }
+}

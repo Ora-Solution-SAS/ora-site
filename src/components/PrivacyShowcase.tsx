@@ -111,12 +111,25 @@ export default function PrivacyShowcase({ theme }: PrivacyShowcaseProps) {
         <motion.div
           {...fadeUp}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center max-w-3xl mx-auto mb-12 md:mb-16"
+          className="text-center max-w-3xl mx-auto mb-7 md:mb-9"
         >
           <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 dark:text-blue-400">
             {t({ fr: "Confidentialité", en: "Privacy" })}
           </span>
-          <h2 className="font-poppins font-semibold text-3xl md:text-[3.1rem] tracking-[-0.03em] leading-[1.1] text-[#111827] dark:text-white mt-4">
+          {/* TITRE FIN ET PETIT (client 2026-08-11 : « des titres bien plus
+              fins », et pour celui-ci « beaucoup plus petits et beaucoup plus
+              fins »). Deux conséquences sur le code :
+              · La face passe de Poppins semibold à Instrument Sans en graisse
+                normale. C'est la face fine DÉJÀ en service sur le site (hero,
+                page de téléchargement, StackingCards) et l'exception documentée
+                à la règle Poppins. On n'utilise PAS font-light sur Poppins :
+                le guide de style l'interdit explicitement.
+              · Le chasse passe de 3,1 à 2 rem, et la marge sous le bloc de
+                12/16 à 7/9 — « les encadrés juste en dessous ». Le titre reste
+                au-dessus des titres de cartes (1,75 rem) : la hiérarchie tient
+                par la taille ET par le contraste de graisse, fine pour la
+                section, semibold pour les cartes. */}
+          <h2 className="font-instrument font-normal text-[1.55rem] md:text-[2rem] tracking-[-0.02em] leading-[1.15] text-[#111827] dark:text-white mt-3">
             {t({ fr: "Vos données vous appartiennent.", en: "Your data belongs to you." })}
           </h2>
         </motion.div>
