@@ -1314,17 +1314,27 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
       // tombent tous deux sur rgb(194,·,·) au-dessus du blanc) : ce qui change
       // est la SATURATION, pas la masse. Places et rayons restent au chiffre
       // près, comme à chaque passage sur cette carte.
-      // ⚠ PLUS DE NAPPE (client 2026-08-15 : « pour ces deux encadrés il faut que
-      // le background soit blanc »). Les trois voiles bleus — l'ellipse haute à
-      // hauteur de barre de fenêtre, le halo montant du bas-gauche et la pointe
-      // bas-droite — ont été réglés cinq fois entre le 2026-08-06 et le
-      // 2026-08-07 (« l'ombre bleue ne doit pas couper le texte », « mets moins
-      // d'ombre bleu », puis le passage au bleu de l'anneau de particules). Ils
-      // sont retirés d'un bloc, pas atténués : la demande porte sur le FOND, pas
-      // sur la dose. Leurs valeurs exactes restent dans l'historique git de ce
-      // fichier, et RING_BLUE sert encore aux ombres de maquette.
-      // La carte tient désormais par son liseré, son ombre et la fenêtre du
-      // logiciel qu'elle porte.
+      // ⚠ LA NAPPE EST REVENUE (client 2026-08-19 : « remets le bleu de
+      // background qu'il y avait avant »). Elle avait été retirée d'un bloc le
+      // 2026-08-15 (« pour ces deux encadrés il faut que le background soit
+      // blanc ») après avoir été réglée cinq fois entre le 06 et le 07 août.
+      // LES VALEURS CI-DESSOUS SONT REPRISES AU CHIFFRE PRÈS de la version
+      // d'avant le retrait (commit 2c3e9c4), pas réinventées : « qu'il y avait
+      // avant » est une demande de RESTAURATION, et cette carte a déjà coûté
+      // cinq allers-retours de réglage. Les rejouer de mémoire, c'est les
+      // recommencer.
+      // Les trois nappes, dans l'ordre où elles sont empilées :
+      //   · l'ellipse haute, à hauteur de la barre de la fenêtre — c'est elle
+      //     qu'on voit à travers le verre translucide, et elle passe À CÔTÉ du
+      //     titre, jamais dessous ;
+      //   · le grand halo montant du bas-gauche, éteint avant la mi-hauteur ;
+      //   · la pointe bas-droite, la plus discrète des trois.
+      // La carte reste BLANCHE (pas de `bg`) : ce sont ces voiles qui la
+      // colorent partiellement, ce que le client avait explicitement demandé le
+      // 2026-08-07 — « elle ne couvrait pas tout l'encadré mais seulement une
+      // petite partie du bas ».
+      wash:
+        `radial-gradient(48% 28% at 76% 36%, rgba(${RING_BLUE.top},0.3) 0%, rgba(${RING_BLUE.top},0.15) 46%, rgba(255,255,255,0) 74%), radial-gradient(70% 92% at -6% 100%, rgba(${RING_BLUE.bot},0.27) 0%, rgba(${RING_BLUE.bot},0.14) 36%, rgba(255,255,255,0) 76%), radial-gradient(58% 40% at 84% 110%, rgba(${RING_BLUE.bot},0.11) 0%, rgba(255,255,255,0) 64%)`,
       // Corps et largeur propres à cette carte, mais GRAISSE COMMUNE : la
       // phrase est repassée en 400 comme tous les autres titres de la grille
       // (client 2026-08-07, « la même police que les autres titres »), après
