@@ -177,9 +177,10 @@ function CardShell({
           2026-08-20 : « you make them way smaller than they are on the
           website »). La hauteur était `md:min-h-[620px]`, donc absente sous
           768 px — or ces trois cartes ne vivent que dans AutomationTabs, à
-          l'intérieur de `DesktopScale`, qui impose une LARGEUR de bureau mais
-          ne peut rien pour les media queries : elles sont évaluées contre la
-          FENÊTRE, pas contre le conteneur. Sur téléphone la carte perdait donc
+          l'intérieur de `SwipeDeck` (`DesktopScale` avant le 2026-08-20), qui
+          impose une LARGEUR de bureau mais ne peut rien pour les media
+          queries : elles sont évaluées contre la FENÊTRE, pas contre le
+          conteneur. Sur téléphone la carte perdait donc
           sa hauteur de design, `RepelChips` (h-full) s'effondrait avec elle, et
           le nuage d'étiquettes se repliait sur le titre — une languette de
           40 px au lieu de la carte. Sans préfixe, la hauteur vaut partout : le
