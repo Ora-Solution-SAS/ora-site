@@ -38,7 +38,7 @@ const LegalDocLayout: React.FC<Props> = ({
 
   return (
     <main
-      className="min-h-screen px-5 md:px-12 pt-24 md:pt-40 pb-12 md:pb-32"
+      className="min-h-screen px-5 md:px-12 pt-28 md:pt-40 pb-16 md:pb-32"
       style={{ backgroundColor: dk ? "#000000" : "#fcfbf7" }}
     >
       <div className="max-w-3xl mx-auto">
@@ -51,26 +51,26 @@ const LegalDocLayout: React.FC<Props> = ({
           {t({ fr: "Retour à l'accueil", en: "Back to home" })}
         </button>
 
-        <h1 className="font-poppins font-semibold text-[1.7rem] md:text-5xl tracking-[-0.03em] leading-[1.1] text-[#111827] dark:text-white">
+        <h1 className="font-poppins font-semibold text-[1.9rem] md:text-5xl tracking-[-0.03em] leading-[1.1] text-[#111827] dark:text-white">
           {title}
         </h1>
-        <p className="mt-3 md:mt-4 font-inter text-[12px] md:text-[14px] text-gray-400 dark:text-gray-500">
+        <p className="mt-3 md:mt-4 font-inter text-[13px] md:text-[14px] text-gray-400 dark:text-gray-500">
           {lastUpdated}
         </p>
 
         {intro && (
-          <div className="mt-5 md:mt-8 font-inter text-[13px] md:text-base max-md:leading-[1.6] leading-[1.75] text-gray-600 dark:text-gray-300 space-y-3 md:space-y-4">
+          <div className="mt-6 md:mt-8 font-inter text-[14.5px] md:text-base max-md:leading-[1.7] leading-[1.75] text-gray-600 dark:text-gray-300 space-y-4">
             {intro}
           </div>
         )}
 
-        <div className="mt-7 space-y-6 md:mt-12 md:space-y-10">
+        <div className="mt-9 space-y-8 md:mt-12 md:space-y-10">
           {sections.map((s) => (
             <section key={s.heading}>
-              <h2 className="font-poppins font-semibold text-xl max-md:text-[1.05rem] max-md:leading-snug md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white mb-2 md:mb-3">
+              <h2 className="font-poppins font-semibold text-xl max-md:text-[1.2rem] max-md:leading-snug md:text-[1.4rem] tracking-tight text-[#111827] dark:text-white mb-3">
                 {s.heading}
               </h2>
-              <div className="font-inter text-[13px] md:text-base max-md:leading-[1.6] leading-[1.75] text-gray-600 dark:text-gray-300 space-y-3 md:space-y-4">
+              <div className="font-inter text-[14.5px] md:text-base max-md:leading-[1.7] leading-[1.75] text-gray-600 dark:text-gray-300 space-y-4">
                 {s.body}
               </div>
             </section>

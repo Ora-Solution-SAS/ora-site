@@ -161,7 +161,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
               </h1>
 
               <p
-                className={`biz-stagger biz-d3 mt-4 md:mt-6 text-[clamp(0.88rem,1.7vw,1.1rem)] leading-[1.6] md:leading-[1.75] ${
+                className={`biz-stagger biz-d3 mt-5 md:mt-6 text-[clamp(0.95rem,1.7vw,1.1rem)] leading-[1.7] md:leading-[1.75] ${
                   dk ? "text-gray-400" : "text-gray-500"
                 }`}
               >
@@ -233,7 +233,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
 
       {/* ── Benefits ──────────────────────────────────────────────── */}
       <section
-        className="py-12 md:py-32 px-5 lg:px-10"
+        className="py-16 md:py-32 px-5 lg:px-10"
         style={{ background: dk ? "#020617" : "#ffffff" }}
       >
         <div className="max-w-7xl mx-auto">
@@ -256,13 +256,13 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:gap-6">
+          <div className="grid gap-4 sm:grid-cols-2 md:gap-6">
             {benefits.map((b, i) => {
               const Icon = b.icon;
               return (
                 <div
                   key={i}
-                  className={`biz-card p-4 rounded-[16px] border md:p-8 md:rounded-[24px] ${
+                  className={`biz-card p-6 rounded-[20px] border md:p-8 md:rounded-[24px] ${
                     dk
                       ? "bg-white/[0.025] border-white/[0.07]"
                       : "bg-gray-50/80 border-gray-100"
@@ -271,7 +271,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 >
                   <div className="flex flex-col items-start gap-2.5 md:flex-row md:gap-4">
                     <div
-                      className={`md:mt-0.5 w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      className={`md:mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         dk ? "bg-blue-500/10" : "bg-blue-50"
                       }`}
                     >
@@ -279,14 +279,14 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     </div>
                     <div>
                       <h3
-                        className={`text-[13px] md:text-[17px] font-semibold tracking-tight leading-snug ${
+                        className={`text-[15px] md:text-[17px] font-semibold tracking-tight leading-snug ${
                           dk ? "text-white" : "text-gray-900"
                         }`}
                       >
                         {b.title}
                       </h3>
                       <p
-                        className={`mt-1.5 md:mt-2 text-[11px] md:text-[15px] leading-snug md:leading-relaxed ${
+                        className={`mt-2 text-[13.5px] md:text-[15px] leading-relaxed ${
                           dk ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
@@ -308,7 +308,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
       >
         <div className="max-w-3xl mx-auto text-center">
           <div
-            className={`rounded-[20px] px-5 py-8 border md:rounded-[32px] md:px-10 md:py-16 ${
+            className={`rounded-[24px] px-6 py-12 border md:rounded-[32px] md:px-10 md:py-16 ${
               dk
                 ? "bg-white/[0.03] border-white/[0.07]"
                 : "bg-gray-50 border-gray-100"

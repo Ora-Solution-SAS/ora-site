@@ -156,14 +156,23 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
-## Mobile — LE TÉLÉPHONE PORTE LA MISE EN PAGE DU BUREAU (2026-08-19)
+## Mobile — UNE VRAIE MISE EN PAGE DE TÉLÉPHONE (2026-08-20)
 
-Demande du client : « je veux la même disposition et layout que sur
-l'ordinateur, il faut juste donc réduire la taille de beaucoup d'encadré […]
-le site sera aussi plus petit […] en tout cas moins long ». Le site ne doit
-donc PAS avoir de maquette mobile alternative : mêmes sections, même ordre,
-mêmes grilles, en plus petit. L'accueil est passé de 17 163 px (20,3 écrans de
-390 px) à 10 439 px (12,4 écrans).
+⚠ DEUX DEMANDES SUCCESSIVES, LA SECONDE ANNULE LA PREMIÈRE.
+Le 2026-08-19 : « je veux la même disposition et layout que sur l'ordinateur,
+il faut juste réduire la taille de beaucoup d'encadrés […] en tout cas moins
+long ». La passe livrée gardait donc les grilles du bureau sur téléphone
+(rail d'onglets en colonne de 6,75 rem, cartes en demi-colonnes, corps de 10
+à 12 px) et compactait tous les rembourrages.
+Le 2026-08-20, verdict sur cette passe : « it's absolutely not possible to
+have this version for our client, everything is compacted, there's no spaces
+between each part, we don't really understand what we are doing […] make a
+big work of layout for the mobile version, optimize all the spaces, optimize
+the card design ». La doctrine est donc inversée : SOUS `md`, LE SITE A UNE
+MISE EN PAGE DE TÉLÉPHONE. Mêmes sections, même ordre, mêmes contenus — mais
+les grilles multi-colonnes s'empilent, les cartes prennent toute la largeur,
+et le texte se lit (corps ≥ 13 px, titres de panneaux ≥ 1,2 rem). Ne PAS
+re-compacter à la prochaine demande de raccourcissement sans relire ce pavé.
 
 **Les quatre règles, dans cet ordre :**
 
@@ -174,18 +183,28 @@ mêmes grilles, en plus petit. L'accueil est passé de 17 163 px (20,3 écrans d
    `text-sm` posent une taille **et** une hauteur de ligne. Les remplacer par
    une taille arbitraire (`text-[1.05rem]`) supprime la hauteur de ligne dont
    héritait le `md:` — c'est ce qui a rallongé `/cgu` de 78 px sur le bureau.
-2. **Les maquettes se mettent à l'échelle, elles ne se replient pas.**
-   `DesktopScale` (voir son en-tête) rend l'enfant à une largeur de bureau
-   imposée puis le réduit. À réserver aux visuels : à 0,3 d'échelle un corps de
-   14 px tombe à 4 px. Un bloc qui SE LIT garde ses classes, réduites à la main.
-   `ScaleToFit` reste pour l'autre cas : un enfant déjà figé en largeur.
-3. **Une colonne de moins de ~150 px ne porte pas un paragraphe.** Les grilles
-   du bureau sont conservées sur téléphone tant que chaque cellule tient au-
-   dessus de ce seuil ; en dessous, et seulement si la moitié porte du texte
-   courant, on empile.
+   Contrôle chiffré : l'accueil à 1440 × 900 se mesure à 17 879 ± 5 px (le ± 5
+   est le bruit du harnais, mesuré sur trois lectures du même commit).
+2. **Sur téléphone, une grille de contenu s'empile.** `sm:grid-cols-2`,
+   `md:grid-cols-3` : la valeur nue est UNE colonne, cartes pleine largeur,
+   `gap-4` et `p-6` d'intérieur. Une grille ne survit sous `sm` que si ses
+   cellules sont des étiquettes courtes, jamais du texte courant (les six
+   capacités d'Atlas, à 62 px d'icône, sont la limite basse acceptée).
+3. **Les maquettes DÉCORATIVES se mettent à l'échelle, elles ne se replient
+   pas.** `DesktopScale` (voir son en-tête) rend l'enfant à une largeur de
+   bureau imposée puis le réduit — mais à PLEINE largeur de colonne
+   (échelle ≥ 0,45), jamais dans une demi-colonne. Un bloc qui SE LIT garde
+   ses classes, réduites à la main. `ScaleToFit` reste pour l'enfant déjà figé.
 4. **Vérifier, pas supposer.** Avant de pousser : mesurer la hauteur de CHAQUE
-   route à 1440 × 900 avant et après (tolérance 1 px), et vérifier
-   `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
+   route à 1440 × 900 avant et après (tolérance : le bruit ci-dessus), et
+   vérifier `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
+
+**La section à onglets sur téléphone** (AutomationTabs) : le rail vertical est
+`hidden lg:block` comme à l'origine ; sous `lg`, une bande de pastilles
+horizontale, COLLANTE sous la nav (`top-[68px]`, hauteur mesurée de la barre),
+suit l'onglet actif et s'auto-défile pour le garder visible. Les panneaux
+prennent toute la largeur, la scène rognée du panneau « Contrôles et suivi »
+reste `hidden md:block`.
 
 **Paliers :** `xs` = 400 px a été ajouté (rien n'existait sous `sm` = 640, or
 320 → 430 px sépare un iPhone SE d'un 15 Pro Max). La carte `screens` est

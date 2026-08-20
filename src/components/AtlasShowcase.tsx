@@ -793,7 +793,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
     <section
       data-nav-dark
       data-nav-shy
-      className="relative z-[20] pt-6 md:pt-14 pb-12 md:pb-32 px-5 md:px-12 overflow-hidden"
+      className="relative z-[20] pt-8 md:pt-14 pb-16 md:pb-32 px-5 md:px-12 overflow-hidden"
       style={{
         // ── NOIR PLEIN, PARTOUT (client 2026-08-15 : « mets en noir le fond de
         // toute cette partie-là »). Un dégradé radial bleu nuit ouvrait la
@@ -919,7 +919,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
             <h3 className="font-instrument text-[clamp(1.5rem,3.7vw,3.2rem)] font-normal leading-[1.07] tracking-[-0.03em] text-white">
               {t({ fr: "Ce qu'Atlas sait faire.", en: "What Atlas can do." })}
             </h3>
-            <p className="mt-3 font-inter text-[12.5px] leading-snug text-white/50 md:mt-5 md:text-[18px] md:leading-[1.55]">
+            <p className="mt-4 font-inter text-[14.5px] leading-relaxed text-white/50 md:mt-5 md:text-[18px] md:leading-[1.55]">
               {t({
                 fr: "Six demandes du quotidien, posées en français, traitées sur vos propres fichiers.",
                 en: "Six everyday requests, asked in plain words, answered on your own files.",
@@ -933,11 +933,11 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
               `gap-x-16` est large à dessein — c'est la gouttière de la
               référence, et c'est elle qui empêche de lire la grille en rangées
               horizontales au lieu de six entrées distinctes. */}
-          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 md:mt-16 md:gap-x-16 md:gap-y-12">
+          <div className="mt-8 grid grid-cols-2 gap-x-5 gap-y-8 md:mt-16 md:gap-x-16 md:gap-y-12">
             {USE_CASES.map((u, i) => {
               const Icon = u.icon;
               return (
-                <article key={u.tag.en} className="flex items-center gap-2.5 md:gap-7">
+                <article key={u.tag.en} className="flex items-center gap-3 md:gap-7">
                   {/* LA TUILE. Un dégradé de la charte, un voile de bruit, et
                       l'icône de l'usage au centre.
                       · Le dégradé est TOUJOURS pris dans la palette (bleu,
@@ -959,7 +959,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                       `aria-hidden` sur les deux calques : ils ne portent aucune
                       information que le titre à côté ne donne déjà. */}
                   <div
-                    className="relative aspect-square w-[54px] shrink-0 overflow-hidden rounded-[10px] sm:w-[132px] md:w-[150px] md:rounded-[14px] lg:w-[168px]"
+                    className="relative aspect-square w-[62px] shrink-0 overflow-hidden rounded-[12px] sm:w-[132px] md:w-[150px] md:rounded-[14px] lg:w-[168px]"
                     style={{ backgroundImage: TILE_ART[i % TILE_ART.length] }}
                   >
                     <span
@@ -978,10 +978,10 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                       refuse de descendre sous la largeur de son plus long mot
                       et pousse la tuile hors de la case sur les petits écrans. */}
                   <div className="min-w-0">
-                    <h4 className="font-inter text-[12px] font-medium leading-[1.25] tracking-[-0.01em] text-white md:text-[19px] md:leading-[1.3]">
+                    <h4 className="font-inter text-[13.5px] font-medium leading-[1.3] tracking-[-0.01em] text-white md:text-[19px]">
                       {t(u.line)}
                     </h4>
-                    <p className="mt-1 font-inter text-[10px] leading-tight text-white/40 md:mt-3 md:text-[13.5px]">
+                    <p className="mt-1.5 font-inter text-[11.5px] leading-tight text-white/40 md:mt-3 md:text-[13.5px]">
                       {t(u.tag)}
                     </p>
                   </div>
@@ -998,7 +998,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
           <button
             type="button"
             onClick={openBooking}
-            className="group mt-6 inline-flex items-center gap-2 rounded-[8px] bg-white px-4 py-2.5 font-inter text-[12.5px] font-semibold text-[#0b1020] transition-colors duration-150 hover:bg-white/85 md:mt-16 md:gap-2.5 md:px-5 md:py-3 md:text-[14.5px]"
+            className="group mt-9 inline-flex items-center gap-2.5 rounded-[8px] bg-white px-[18px] py-2.5 font-inter text-[13.5px] font-semibold text-[#0b1020] transition-colors duration-150 hover:bg-white/85 md:mt-16 md:px-5 md:py-3 md:text-[14.5px]"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
             <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />

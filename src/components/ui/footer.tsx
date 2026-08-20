@@ -35,11 +35,11 @@ const Footer = ({
   bottomLinks = [],
 }: FooterProps) => {
   return (
-    <footer className="py-8 px-5 md:py-16 md:px-12 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
+    <footer className="py-12 px-5 md:py-16 md:px-12 bg-white dark:bg-gray-950 border-t border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-5 md:gap-8 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-8 md:gap-8 lg:grid-cols-6">
           {/* Logo + tagline */}
-          <div className="col-span-2 mb-2 lg:mb-0">
+          <div className="col-span-2 mb-4 lg:mb-0">
             {logo && (
               <div className="flex items-center gap-2">
                 {logo.onClick ? (

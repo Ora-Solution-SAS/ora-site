@@ -117,7 +117,7 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
          Le pavé historique qui demandait qu'elle porte « le MÊME fond que
          PrivacyShowcase » est caduc : cette section a été retirée le
          2026-08-15, il n'y a plus de couture à effacer. */
-      className="relative px-5 md:px-12 pt-12 md:pt-32 pb-14 md:pb-40 bg-[#fcfbf7] dark:bg-black"
+      className="relative px-5 md:px-12 pt-16 md:pt-32 pb-20 md:pb-40 bg-[#fcfbf7] dark:bg-black"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       <div className="relative max-w-7xl mx-auto">
@@ -150,7 +150,7 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
         {/* Remonté de 20/28 à 10/14 (client 2026-08-11 : « les encadrés juste
             en dessous ») : le titre étant devenu fin, l'écart d'origine le
             laissait flotter seul en haut de section. */}
-        <div className="mt-6 md:mt-14 grid grid-cols-2 lg:grid-cols-3 gap-x-5 sm:gap-x-10 lg:gap-x-16 gap-y-7 md:gap-y-20">
+        <div className="mt-9 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-9 md:gap-y-20">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (
@@ -168,14 +168,14 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
                 className="max-w-[34ch]"
               >
                 <Icon
-                  className="w-[18px] h-[18px] md:w-[22px] md:h-[22px] text-blue-600 dark:text-blue-400"
+                  className="w-[20px] h-[20px] md:w-[22px] md:h-[22px] text-blue-600 dark:text-blue-400"
                   strokeWidth={1.75}
                   aria-hidden
                 />
-                <h3 className="font-poppins font-semibold text-[13px] md:text-[18px] max-md:leading-tight tracking-[-0.01em] text-[#111827] dark:text-white mt-2.5 md:mt-5">
+                <h3 className="font-poppins font-semibold text-[16px] md:text-[18px] tracking-[-0.01em] text-[#111827] dark:text-white mt-3.5 md:mt-5">
                   {it.title}
                 </h3>
-                <p className="font-inter mt-1.5 md:mt-3 text-[11.5px] md:text-[16px] max-md:leading-snug leading-relaxed text-gray-600 dark:text-gray-400">
+                <p className="font-inter mt-2 md:mt-3 text-[14.5px] md:text-[16px] leading-relaxed text-gray-600 dark:text-gray-400">
                   {it.body}
                 </p>
               </motion.div>

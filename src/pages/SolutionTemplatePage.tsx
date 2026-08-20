@@ -467,7 +467,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           1. HERO
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="relative overflow-hidden pt-20 pb-10 md:pt-36 md:pb-32 px-5 lg:px-10"
+        className="relative overflow-hidden pt-24 pb-14 md:pt-36 md:pb-32 px-5 lg:px-10"
         style={{ background: bg }}
       >
         {/* Halo arrière-plan */}
@@ -484,7 +484,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-20 items-center">
+          <div className="grid grid-cols-1 gap-9 lg:grid-cols-2 lg:gap-12 xl:gap-20 items-center">
 
             {/* ── Colonne gauche : copy ── */}
             <div className="max-w-[540px]">
@@ -507,7 +507,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
               <h1
                 className={[
                   "sol-stagger sol-d2",
-                  "font-poppins text-[clamp(1.6rem,4vw,3.4rem)] font-semibold leading-[1.1] tracking-[-0.03em]",
+                  "font-poppins text-[clamp(1.75rem,4vw,3.4rem)] font-semibold leading-[1.1] tracking-[-0.03em]",
                   textPrimary,
                 ].join(" ")}
               >
@@ -519,7 +519,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
               <p
                 className={[
                   "sol-stagger sol-d3",
-                  "font-inter mt-4 md:mt-6 text-[clamp(0.85rem,1.6vw,1.05rem)] leading-[1.6] md:leading-[1.8]",
+                  "font-inter mt-5 md:mt-6 text-[clamp(0.95rem,1.6vw,1.05rem)] leading-[1.7] md:leading-[1.8]",
                   textSecondary,
                 ].join(" ")}
               >
@@ -579,16 +579,16 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           2. SOLUTIONS METIER — grille de cartes
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-12 md:py-32 px-5 lg:px-10"
+        className="py-16 md:py-32 px-5 lg:px-10"
         style={{ background: bgContrast }}
       >
         <div className="max-w-7xl mx-auto">
 
           {/* Header section */}
-          <div className="text-center mb-7 md:mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-10 md:mb-16 max-w-2xl mx-auto">
             <h2
               className={[
-                "font-poppins text-[clamp(1.4rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.55rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
@@ -608,14 +608,14 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {solutions.map((sol, i) => {
               const Icon = sol.icon;
               return (
                 <div
                   key={i}
                   className={[
-                    "sol-card p-4 rounded-[14px] border transition-colors duration-200 md:p-7 md:rounded-[20px]",
+                    "sol-card p-6 rounded-[18px] border transition-colors duration-200 md:p-7 md:rounded-[20px]",
                     borderMuted, cardBg,
                     dk ? "hover:bg-white/[0.05]" : "hover:bg-gray-50/70",
                   ].join(" ")}
@@ -623,7 +623,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 >
                   <div
                     className={[
-                      "w-8 h-8 rounded-lg flex items-center justify-center mb-3 md:w-10 md:h-10 md:rounded-xl md:mb-5",
+                      "w-10 h-10 rounded-xl flex items-center justify-center mb-4 md:mb-5",
                       dk ? "bg-blue-500/10" : "bg-blue-50",
                     ].join(" ")}
                   >
@@ -631,13 +631,13 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                   </div>
                   <h3
                     className={[
-                      "font-poppins text-[13px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2",
+                      "font-poppins text-[15px] md:text-[16px] font-semibold tracking-tight leading-snug mb-2",
                       textPrimary,
                     ].join(" ")}
                   >
                     {sol.title}
                   </h3>
-                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[13.5px] md:text-[14px] leading-relaxed", textSecondary].join(" ")}>
                     {sol.desc}
                   </p>
                 </div>
@@ -651,12 +651,12 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           3. TESTIMONIALS
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-12 md:py-32 px-5 lg:px-10"
+        className="py-16 md:py-32 px-5 lg:px-10"
         style={{ background: bg }}
       >
         <div className="max-w-7xl mx-auto">
 
-          <div className="text-center mb-7 md:mb-16 max-w-xl mx-auto">
+          <div className="text-center mb-10 md:mb-16 max-w-xl mx-auto">
             <p
               className={[
                 "font-inter text-[11px] font-semibold uppercase tracking-[0.18em] mb-4",
@@ -667,7 +667,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
             </p>
             <h2
               className={[
-                "font-poppins text-[clamp(1.4rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.55rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
@@ -677,12 +677,12 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
+          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
             {testimonials.map((t, i) => (
               <div
                 key={i}
                 className={[
-                  "sol-testi flex flex-col gap-3 p-4 rounded-[14px] border md:gap-5 md:p-7 md:rounded-[20px]",
+                  "sol-testi flex flex-col gap-4 p-6 rounded-[18px] border md:gap-5 md:p-7 md:rounded-[20px]",
                   borderMuted, cardBg,
                 ].join(" ")}
                 data-delay={String(i * 100)}
@@ -694,7 +694,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 </div>
 
                 <blockquote
-                  className={["font-inter text-[11.5px] md:text-[15px] max-md:leading-snug leading-relaxed flex-1", textSecondary].join(" ")}
+                  className={["font-inter text-[14px] md:text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}
                 >
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>
@@ -728,13 +728,13 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           4. CTA
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-12 md:py-28 px-5 lg:px-10"
+        className="py-16 md:py-28 px-5 lg:px-10"
         style={{ background: bgContrast }}
       >
         <div className="max-w-3xl mx-auto text-center">
           <div
             className={[
-              "rounded-[20px] px-5 py-8 border md:rounded-[32px] md:px-10 md:py-16",
+              "rounded-[24px] px-6 py-12 border md:rounded-[32px] md:px-10 md:py-16",
               borderMuted,
               dk ? "bg-white/[0.03]" : "bg-gray-50/80",
             ].join(" ")}
@@ -743,7 +743,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
 
             <h2
               className={[
-                "font-poppins text-[clamp(1.3rem,3vw,2.5rem)] font-semibold tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.45rem,3vw,2.5rem)] font-semibold tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
