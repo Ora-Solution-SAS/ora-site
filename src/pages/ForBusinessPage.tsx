@@ -256,13 +256,13 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 md:gap-6">
+          <div className="grid grid-cols-2 gap-4 md:gap-6">
             {benefits.map((b, i) => {
               const Icon = b.icon;
               return (
                 <div
                   key={i}
-                  className={`biz-card p-6 rounded-[20px] border md:p-8 md:rounded-[24px] ${
+                  className={`biz-card p-4 rounded-[16px] border md:p-8 md:rounded-[24px] ${
                     dk
                       ? "bg-white/[0.025] border-white/[0.07]"
                       : "bg-gray-50/80 border-gray-100"
@@ -271,7 +271,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 >
                   <div className="flex flex-col items-start gap-2.5 md:flex-row md:gap-4">
                     <div
-                      className={`md:mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      className={`md:mt-0.5 w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0 md:w-10 md:h-10 md:rounded-xl ${
                         dk ? "bg-blue-500/10" : "bg-blue-50"
                       }`}
                     >
@@ -279,14 +279,14 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     </div>
                     <div>
                       <h3
-                        className={`text-[15px] md:text-[17px] font-semibold tracking-tight leading-snug ${
+                        className={`text-[13px] md:text-[17px] font-semibold tracking-tight leading-snug ${
                           dk ? "text-white" : "text-gray-900"
                         }`}
                       >
                         {b.title}
                       </h3>
                       <p
-                        className={`mt-2 text-[13.5px] md:text-[15px] leading-relaxed ${
+                        className={`mt-1.5 md:mt-2 text-[11px] md:text-[15px] leading-snug md:leading-relaxed ${
                           dk ? "text-gray-400" : "text-gray-500"
                         }`}
                       >

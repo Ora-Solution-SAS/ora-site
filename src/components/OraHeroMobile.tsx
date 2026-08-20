@@ -44,7 +44,7 @@ const rise = (delay: number) => ({
   transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
 });
 
-export default function OraHeroMobile({ openBooking }: { openBooking: () => void }) {
+export default function OraHeroMobile() {
   const { t } = useLang();
 
   /* ⚠ LA SCÈNE N'EST MONTÉE QUE SUR TÉLÉPHONE, et ce n'est pas une
@@ -130,7 +130,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           href="https://ora-solution.com/demo"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-5 inline-flex h-[46px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter font-semibold text-[15px] text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2f6fe0]"
+          className="mt-5 inline-flex h-[42px] items-center justify-center gap-2 rounded-full bg-[#3b82f6] px-6 font-inter font-semibold text-[14px] text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2f6fe0]"
         >
           {t({ fr: "Commencer", en: "Get started" })}
           <ArrowRight className="h-[18px] w-[18px]" />
@@ -190,15 +190,16 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </div>
       </motion.div>
 
-      {/* CTA de conversion : le but du site reste la prise de rendez-vous. */}
-      <motion.button
-        {...rise(0.2)}
-        onClick={openBooking}
-        className="mt-6 inline-flex h-[48px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
-      >
-        {t({ fr: "Réserver un appel", en: "Book a call" })}
-        <ArrowRight className="h-[18px] w-[18px]" />
-      </motion.button>
+      {/* ⚠ PAS DE SECOND BOUTON ICI (client 2026-08-20 : « why did you add the
+          Book a Call button? there is already a button for it »). Un pavé noir
+          pleine largeur « Réserver un appel » suivait la réplique du logiciel ;
+          il n'existe nulle part sur le bureau, dont le hero ne porte qu'un seul
+          appel — « Commencer » — et dont le « Réserver un appel » bleu vit plus
+          bas, après la démo, en `hidden md:flex`. Deux boutons pleine largeur
+          empilés sur un même écran de téléphone se disputaient le clic.
+          La prise de rendez-vous reste atteignable de partout : le bouton
+          « Réserver un appel » de la barre de navigation, et le CTA de fin de
+          page. Ne pas remettre un troisième chemin ici. */}
     </div>
   );
 }

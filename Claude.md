@@ -156,23 +156,28 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
-## Mobile — UNE VRAIE MISE EN PAGE DE TÉLÉPHONE (2026-08-20)
+## Mobile — LA COMPOSITION DU BUREAU, RÉDUITE, AVEC DE L'ESPACE (2026-08-20)
 
-⚠ DEUX DEMANDES SUCCESSIVES, LA SECONDE ANNULE LA PREMIÈRE.
-Le 2026-08-19 : « je veux la même disposition et layout que sur l'ordinateur,
-il faut juste réduire la taille de beaucoup d'encadrés […] en tout cas moins
-long ». La passe livrée gardait donc les grilles du bureau sur téléphone
-(rail d'onglets en colonne de 6,75 rem, cartes en demi-colonnes, corps de 10
-à 12 px) et compactait tous les rembourrages.
-Le 2026-08-20, verdict sur cette passe : « it's absolutely not possible to
-have this version for our client, everything is compacted, there's no spaces
-between each part, we don't really understand what we are doing […] make a
-big work of layout for the mobile version, optimize all the spaces, optimize
-the card design ». La doctrine est donc inversée : SOUS `md`, LE SITE A UNE
-MISE EN PAGE DE TÉLÉPHONE. Mêmes sections, même ordre, mêmes contenus — mais
-les grilles multi-colonnes s'empilent, les cartes prennent toute la largeur,
-et le texte se lit (corps ≥ 13 px, titres de panneaux ≥ 1,2 rem). Ne PAS
-re-compacter à la prochaine demande de raccourcissement sans relire ce pavé.
+⚠ TROIS ARBITRAGES SUCCESSIFS. Lire les trois avant de toucher au mobile.
+  1. 2026-08-19 : « je veux la même disposition et layout que sur l'ordinateur,
+     il faut juste réduire la taille de beaucoup d'encadrés ». Livré : grilles
+     du bureau tenues à largeur de téléphone, rembourrages compactés.
+  2. 2026-08-20 (matin) : « everything is compacted, there's no spaces between
+     each part, we don't really understand what we are doing ». Livré :
+     empilement sur une colonne, texte à 14 px, gros rembourrages.
+  3. 2026-08-20 (après-midi), sur cette version empilée : « the buttons are way
+     too big […] the size of the boxes is way too big, and they are not the
+     same as on the website version […] for budget tracking, cost price, VAT
+     and account matching, put them side by side, left to right, as they are on
+     the website on the computer version […] except for Atlas, which is done
+     right ».
+
+LA SYNTHÈSE, ET C'EST ELLE QUI FAIT LOI : **la COMPOSITION est celle du bureau
+(côte à côte, en grille), les TAILLES sont réduites, et il y a de l'ESPACE.**
+Le modèle explicitement validé est le bloc « What Atlas can do » : deux
+colonnes, tuiles de 62 px, corps de 11 à 13 px, gouttières larges. Aucun des
+deux extrêmes ne passe — ni le bureau écrasé sans air (1), ni la colonne unique
+en gros caractères (2).
 
 **Les quatre règles, dans cet ordre :**
 
@@ -185,16 +190,24 @@ re-compacter à la prochaine demande de raccourcissement sans relire ce pavé.
    héritait le `md:` — c'est ce qui a rallongé `/cgu` de 78 px sur le bureau.
    Contrôle chiffré : l'accueil à 1440 × 900 se mesure à 17 879 ± 5 px (le ± 5
    est le bruit du harnais, mesuré sur trois lectures du même commit).
-2. **Sur téléphone, une grille de contenu s'empile.** `sm:grid-cols-2`,
-   `md:grid-cols-3` : la valeur nue est UNE colonne, cartes pleine largeur,
-   `gap-4` et `p-6` d'intérieur. Une grille ne survit sous `sm` que si ses
-   cellules sont des étiquettes courtes, jamais du texte courant (les six
-   capacités d'Atlas, à 62 px d'icône, sont la limite basse acceptée).
-3. **Les maquettes DÉCORATIVES se mettent à l'échelle, elles ne se replient
-   pas.** `DesktopScale` (voir son en-tête) rend l'enfant à une largeur de
-   bureau imposée puis le réduit — mais à PLEINE largeur de colonne
-   (échelle ≥ 0,45), jamais dans une demi-colonne. Un bloc qui SE LIT garde
-   ses classes, réduites à la main. `ScaleToFit` reste pour l'enfant déjà figé.
+2. **Une grille de contenu GARDE ses colonnes sur téléphone.** `grid-cols-2`
+   sans préfixe, `gap-4`, `p-4` d'intérieur, corps de 11 à 12,5 px avec
+   `leading-snug`. On n'empile que si la cellule descend sous ~100 px utiles.
+   ⚠ Deux pièges mesurés à 320 px, tous deux dans des cartes `flex` icône +
+   texte : un enfant de flex garde `min-width: auto` et refuse de descendre
+   sous son mot le plus long (`min-w-0` sur le bloc de texte), et à deux
+   colonnes une pastille de 36 px ne laisse que 50 px au libellé (l'icône passe
+   au-dessus sous `xs`, plus `break-words` en filet).
+3. **Les maquettes se mettent à l'échelle, elles ne se replient pas.**
+   `DesktopScale` rend l'enfant à une largeur de bureau imposée puis le réduit ;
+   il vaut aussi en demi-colonne, c'est ainsi que les cartes du bureau tiennent
+   côte à côte sur un téléphone. ⚠ Il impose une LARGEUR, pas un contexte de
+   media query : les `md:` de l'enfant restent évalués contre la FENÊTRE. Toute
+   dimension structurelle de l'enfant doit donc être SANS préfixe — c'est ce qui
+   manquait à `min-h-[620px]` dans ShowcaseCards, dont les cartes s'effondraient
+   en languette sur téléphone. Et les hauteurs en pourcentage ne résolvent pas
+   sous transform : les nuages d'étiquettes prennent une enveloppe
+   `absolute inset-0`, jamais `h-full`.
 4. **Vérifier, pas supposer.** Avant de pousser : mesurer la hauteur de CHAQUE
    route à 1440 × 900 avant et après (tolérance : le bruit ci-dessus), et
    vérifier `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
@@ -202,9 +215,17 @@ re-compacter à la prochaine demande de raccourcissement sans relire ce pavé.
 **La section à onglets sur téléphone** (AutomationTabs) : le rail vertical est
 `hidden lg:block` comme à l'origine ; sous `lg`, une bande de pastilles
 horizontale, COLLANTE sous la nav (`top-[68px]`, hauteur mesurée de la barre),
-suit l'onglet actif et s'auto-défile pour le garder visible. Les panneaux
-prennent toute la largeur, la scène rognée du panneau « Contrôles et suivi »
-reste `hidden md:block`.
+suit l'onglet actif et s'auto-défile pour le garder visible. Les cinq panneaux
+gardent la composition à deux colonnes du bureau, dès 0 px : texte + saisie |
+carte structure, carte évaluation | questions, quatre modules | réplique du
+logiciel, exemples sur deux colonnes, carte bilan | son texte. C'est le
+point 3 de l'historique ci-dessus, demandé module par module.
+
+**Le hero mobile n'a QU'UN bouton**, « Commencer ». Le pavé noir « Réserver un
+appel » qui le suivait a été retiré (client, point 3 : « why did you add the
+Book a Call button? there is already a button for it ») : le bureau ne porte
+pas d'équivalent à cet endroit, et la prise de rendez-vous reste atteignable
+par la barre de navigation et par le CTA de fin de page.
 
 **Paliers :** `xs` = 400 px a été ajouté (rien n'existait sous `sm` = 640, or
 320 → 430 px sépare un iPhone SE d'un 15 Pro Max). La carte `screens` est

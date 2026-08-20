@@ -173,8 +173,20 @@ function CardShell({
 }) {
   return (
     <div className="group relative h-full">
+      {/* ⚠ `min-h` SANS PRÉFIXE, et c'est un correctif mesuré (client
+          2026-08-20 : « you make them way smaller than they are on the
+          website »). La hauteur était `md:min-h-[620px]`, donc absente sous
+          768 px — or ces trois cartes ne vivent que dans AutomationTabs, à
+          l'intérieur de `DesktopScale`, qui impose une LARGEUR de bureau mais
+          ne peut rien pour les media queries : elles sont évaluées contre la
+          FENÊTRE, pas contre le conteneur. Sur téléphone la carte perdait donc
+          sa hauteur de design, `RepelChips` (h-full) s'effondrait avec elle, et
+          le nuage d'étiquettes se repliait sur le titre — une languette de
+          40 px au lieu de la carte. Sans préfixe, la hauteur vaut partout : le
+          bureau ne bouge pas (md: s'appliquait déjà au-dessus de 768) et la
+          version réduite garde ses proportions. */}
       <div
-        className="relative flex h-full flex-col overflow-hidden rounded-[14px] p-7 ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] md:min-h-[620px] md:p-8"
+        className="relative flex h-full flex-col overflow-hidden rounded-[14px] p-7 ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] min-h-[620px] md:p-8"
         style={{ background: "#ffffff" }}
       >
         {/* BANDES BLANCHES EN HAUT ET EN BAS (client 2026-08-13). Le même
@@ -201,6 +213,20 @@ function CardShell({
         >
           {title}
         </h3>
+        {/* ⚠ LES NUAGES D'ÉTIQUETTES SONT EN `absolute inset-0`, PAS EN
+            `h-full` (correctif du 2026-08-20). Ce conteneur porte `items-center`
+            — ses enfants ne s'étirent donc pas — et sa propre hauteur vient de
+            `flex-1`. Sous `DesktopScale`, la chaîne de résolution des hauteurs
+            en POURCENTAGE se rompait : `height: 100%` retombait à 0, les neuf
+            étiquettes s'empilaient toutes à `top: 0` et la carte se lisait
+            comme une languette. Une ENVELOPPE `absolute inset-0` prend la boîte
+            du parent sans passer par un pourcentage, et le `h-full` du nuage
+            résout alors contre elle.
+            ⚠ L'enveloppe est nécessaire : passer `absolute inset-0` directement
+            en `className` à RepelChips ne marche pas, il pose déjà `relative`
+            sur sa racine et les deux règles de position se battent — `relative`
+            l'emporte, et le nuage retombe à zéro. Essayé, mesuré, et cela
+            cassait aussi le bureau. */}
         <div className="relative flex h-[280px] w-full flex-1 items-center justify-center md:h-[380px]">
           {children}
         </div>
@@ -229,7 +255,9 @@ export function BilanShowcaseCard() {
         </Suspense>
       }
     >
-      <RepelChips chips={BILAN_CHIPS(t)} className="h-full w-full" />
+      <div className="absolute inset-0">
+        <RepelChips chips={BILAN_CHIPS(t)} className="h-full w-full" />
+      </div>
     </CardShell>
   );
 }
@@ -261,7 +289,9 @@ export function StructureShowcaseCard() {
         </Suspense>
       }
     >
-      <RepelChips chips={STRUCTURE_CHIPS(t)} className="h-full w-full" />
+      <div className="absolute inset-0">
+        <RepelChips chips={STRUCTURE_CHIPS(t)} className="h-full w-full" />
+      </div>
     </CardShell>
   );
 }

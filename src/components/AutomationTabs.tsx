@@ -606,7 +606,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         deux cartes blanches ont besoin d'un fond pour s'en
                         détacher. */}
                     <div className={`border-t ${rule} ${zone} px-4 py-8 md:px-12 md:py-12`}>
-                    <div className="mx-auto grid w-full max-w-[880px] gap-4 md:grid-cols-2 md:gap-5">
+                    <div className="mx-auto grid w-full max-w-[880px] grid-cols-2 gap-3 md:gap-5">
                       <DesktopScale designWidth={400}>
                         <BilanShowcaseCard />
                       </DesktopScale>
@@ -630,24 +630,24 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           `group` est posé sur CETTE carte et pas sur la rangée :
                           survoler l'une ne doit pas allumer l'autre. */}
                       <div className="group relative">
-                      <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[14px] bg-white ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] p-6 md:p-8">
-                        <h3 className="relative font-inter text-[1.2rem] font-normal leading-[1.15] tracking-[-0.025em] text-[#0a2540] md:text-[1.5rem]">
+                      <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[14px] bg-white ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] p-3.5 md:p-8">
+                        <h3 className="relative font-inter text-[0.95rem] font-normal leading-[1.15] tracking-[-0.025em] text-[#0a2540] md:text-[1.5rem]">
                           {t({ fr: "Un bilan personnalisé", en: "A balance sheet of your own" })}
                         </h3>
-                        <p className="relative mt-3 font-inter text-[14.5px] leading-relaxed text-[#5b6577] md:mt-4 md:text-[15.5px]">
+                        <p className="relative mt-2 font-inter text-[10.5px] leading-snug text-[#5b6577] md:mt-4 md:text-[15.5px] md:leading-relaxed">
                           {t({
                             fr: "Le bilan de votre client se regarde au lieu de se dérouler : marge, EBE, CAF, BFR et flux posés en grandes masses, avec la lecture qui va avec.",
                             en: "Your client's balance sheet is looked at rather than scrolled: margin, EBITDA, cash flow and working capital laid out as big blocks, with the reading to go with them.",
                           })}
                         </p>
-                        <ul className="relative mt-5 space-y-2.5">
+                        <ul className="relative mt-3 space-y-2 md:mt-5 md:space-y-2.5">
                           {[
                             t({ fr: "Les SIG en un coup d'œil : marge, valeur ajoutée, EBE, CAF", en: "Key indicators at a glance: margin, value added, EBITDA, cash flow" }),
                             t({ fr: "BFR et flux de trésorerie mis en regard du bilan", en: "Working capital and cash flows set against the balance sheet" }),
                             t({ fr: "Traitement 100 % local, vos fichiers ne quittent pas votre poste", en: "100% local processing, your files never leave your machine" }),
                           ].map((li) => (
-                            <li key={li} className="flex gap-2.5 font-inter text-[14px] leading-snug text-[#42506b]">
-                              <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#3b82f6]" />
+                            <li key={li} className="flex gap-2 font-inter text-[10.5px] leading-snug text-[#42506b] md:gap-2.5 md:text-[14px]">
+                              <span aria-hidden className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-[#3b82f6] md:mt-[7px] md:h-1.5 md:w-1.5" />
                               {li}
                             </li>
                           ))}
@@ -669,7 +669,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      client, « l'encadré est bien trop petit pour répliquer ».
                      La colonne de droite est élargie (1,15 fr) et la carte
                      garde sa hauteur de grille (620 px). */
-                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid md:grid-cols-[1fr_1.15fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1fr_1.15fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -678,8 +678,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         droite fait 620 px, ce bloc en faisait 200 et restait
                         collé en haut. `justify-center` sur une colonne flex
                         le pose au milieu de la hauteur que la carte impose. */}
-                    <div className={`flex flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
-                      <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
+                    <div className={`flex flex-col justify-center p-4 md:p-10 border-r ${rule}`}>
+                      <p className="font-inter text-[12.5px] md:text-[16.5px] leading-snug">
                         <span className="font-semibold text-[#111827] dark:text-white">
                           {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}
                         </span>
@@ -695,8 +695,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           saisie vit dans le logiciel. `min-w-0` sur le
                           conteneur du texte, sinon la phrase en cours de
                           frappe pousse la pastille bleue hors du champ. */}
-                      <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
-                        <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
+                      <div aria-hidden className="mt-6 md:mt-16 flex items-center gap-2 rounded-full bg-white py-2 pl-3.5 pr-2 md:gap-3 md:py-2.5 md:pl-5 md:pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
+                        <span className="min-w-0 flex-1 truncate font-inter text-[10.5px] md:text-[13.5px] text-[#5b6577] dark:text-gray-300">
                           <Typewriter
                             phrases={[
                               t({
@@ -706,8 +706,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                             ]}
                           />
                         </span>
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
-                          <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white md:h-8 md:w-8">
+                          <ArrowRight className="h-3 w-3 md:h-4 md:w-4" strokeWidth={2.2} />
                         </span>
                       </div>
                     </div>
@@ -727,7 +727,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      financière » de la grille, copie conforme et ENTIÈRE —
                      coque blanche, nappe, rubans de soie, carte-objet — posée
                      sur la nappe grise (« je veux même tout l'encadré »). */
-                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid md:grid-cols-[1.15fr_1fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1.15fr_1fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -746,15 +746,15 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         2026-08-13). Ce sont des QUESTIONS, pas des résultats :
                         annoncer un chiffre qui s'écrit tout seul laisserait
                         croire à un calcul en direct. */}
-                    <div className={`flex flex-col justify-center border-t md:border-t-0 md:border-l ${rule} p-6 md:p-10`}>
-                      <p className="font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
+                    <div className={`flex flex-col justify-center border-l ${rule} p-4 md:p-10`}>
+                      <p className="font-inter text-[10px] md:text-[13px] font-semibold uppercase tracking-[0.12em] md:tracking-[0.14em] text-[#6b7688]">
                         {t({ fr: "Ce que la synthèse répond", en: "What the summary answers" })}
                       </p>
                       {/* min-h : la plus longue des quatre questions tient en
                           DEUX lignes à 350 px comme en colonne bureau — 4.6em
                           en réservait trois sur téléphone, soit une ligne de
                           vide sous la frappe (vu en capture le 2026-08-20). */}
-                      <p className="mt-5 min-h-[3.2em] font-instrument text-[1.25rem] font-normal leading-[1.35] tracking-[-0.02em] text-[#111827] md:min-h-[3.9em] md:text-[1.5rem] dark:text-white">
+                      <p className="mt-3 min-h-[4.4em] font-instrument text-[0.95rem] font-normal leading-[1.3] tracking-[-0.02em] text-[#111827] md:mt-5 md:min-h-[3.9em] md:text-[1.5rem] md:leading-[1.35] dark:text-white">
                         <Typewriter
                           phrases={[
                             t({ fr: "Combien vaut cette entreprise, et pourquoi ?", en: "What is this business worth, and why?" }),
@@ -764,7 +764,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           ]}
                         />
                       </p>
-                      <p className="mt-6 max-w-[38ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+                      <p className="mt-3 max-w-[38ch] font-inter text-[10.5px] leading-snug text-[#5b6577] md:mt-6 md:text-[14.5px] md:leading-relaxed dark:text-gray-400">
                         {t({
                           fr: "Chaque réponse est adossée à des multiples et des comparables explicites, pas à une moyenne opaque.",
                           en: "Every answer rests on explicit multiples and comparables, not an opaque average.",
@@ -799,14 +799,18 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      filet du panneau suivant. En dessous de md la fenêtre
                      disparaît, il n'y a pas la place de montrer un bout
                      d'application sur une colonne de téléphone. */
-                  <div className={`mt-8 md:mt-11 border-t ${rule} ${zone} grid overflow-hidden md:grid-cols-[1fr_1.08fr]`}>
-                    <ul className={`px-5 py-8 md:border-r ${rule} md:px-10 md:py-12`}>
+                  <div className={`mt-8 md:mt-11 border-t ${rule} ${zone} grid overflow-hidden grid-cols-[1.25fr_1fr] md:grid-cols-[1fr_1.08fr]`}>
+                    <ul className={`border-r px-4 py-6 ${rule} md:px-10 md:py-12`}>
                       {it.modules.map((m) => (
-                        <li key={m.title} className={`border-t ${rule} py-4 first:border-t-0 first:pt-0 last:pb-0 md:py-5`}>
-                          <p className="font-inter text-[15px] font-semibold text-[#111827] md:text-[15.5px] dark:text-white">
+                        <li key={m.title} className={`border-t ${rule} py-3 first:border-t-0 first:pt-0 last:pb-0 md:py-5`}>
+                          {/* `max-md:` sur l'interlignage : sans préfixe il
+                              fuyait au-dessus de md et raccourcissait les
+                              quatre titres de 4 px chacun — 16 px de moins sur
+                              la page du bureau, relevés à la mesure. */}
+                          <p className="font-inter text-[12.5px] font-semibold max-md:leading-tight text-[#111827] md:text-[15.5px] dark:text-white">
                             {m.title}
                           </p>
-                          <p className="mt-1 font-inter text-[14px] leading-relaxed md:mt-1.5 md:text-[14.5px]">
+                          <p className="mt-1 font-inter text-[11px] leading-snug md:mt-1.5 md:text-[14.5px] md:leading-relaxed">
                             <span className="text-[#42506b] dark:text-gray-300">{m.lead}</span>{" "}
                             <span className="text-[#8b95a7] dark:text-gray-500">{m.rest}</span>
                           </p>
@@ -814,8 +818,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       ))}
                     </ul>
 
-                    <div aria-hidden className="relative hidden overflow-hidden md:block">
-                      <div className="absolute left-2 top-4 h-[720px] w-[1180px] md:left-10 md:top-11">
+                    <div aria-hidden className="relative overflow-hidden">
+                      <div className="absolute left-3 top-5 h-[720px] w-[1180px] md:left-10 md:top-11">
                         {/* `chips="none"` : les pastilles flottantes de la
                             scène racontent l'entrée d'un fichier et la sortie
                             des livrables. C'est le propos de la GRANDE CARTE,
@@ -837,12 +841,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      en lien dans la phrase. Ce qui distingue l'onglet reste
                      ENTIER dans le rail (le ✦, le filet pointillé, la glose) :
                      c'est là qu'il avait été demandé, et il n'a pas bougé. */
-                  <div className="px-5 pb-10 md:px-12 md:pb-16 mt-8 md:mt-11">
-                    <ul className="grid gap-x-10 sm:grid-cols-2">
+                  <div className="px-5 pb-10 md:px-12 md:pb-16 mt-7 md:mt-11">
+                    <ul className="grid grid-cols-2 gap-x-5 sm:gap-x-10">
                       {it.examples.map((ex) => (
                         <li
                           key={ex}
-                          className={`border-t ${rule} py-2.5 font-inter text-[13.5px] leading-snug text-[#42506b] md:py-3 md:text-[14.5px] dark:text-gray-400`}
+                          className={`border-t ${rule} py-2.5 font-inter text-[11.5px] leading-snug text-[#42506b] md:py-3 md:text-[14.5px] dark:text-gray-400`}
                         >
                           {ex}
                         </li>
@@ -864,8 +868,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                          lignes, les pastilles une seule ; alignées par le bas,
                          elles s'assoient sur la même ligne de base que la
                          dernière ligne de texte. */
-                      <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
-                        <p className="max-w-[52ch] font-inter text-[13px] leading-relaxed text-[#5b6577] md:text-[14.5px] dark:text-gray-400">
+                      <div className="mt-6 flex items-end justify-between gap-4 sm:mt-7 sm:gap-10">
+                        <p className="max-w-[52ch] font-inter text-[11px] leading-snug text-[#5b6577] md:text-[14.5px] md:leading-relaxed dark:text-gray-400">
                           {t({
                             fr: "Votre traitement n'est pas dans la liste ? Décrivez-le à ",
                             en: "Your routine is not on the list? Describe it to ",

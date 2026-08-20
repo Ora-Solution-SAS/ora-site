@@ -78,7 +78,7 @@ function Shell({
     <motion.div
       {...fadeUp}
       transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      className="relative overflow-hidden rounded-[22px] p-6 md:rounded-[26px] md:p-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-center lg:gap-14"
+      className="relative overflow-hidden rounded-[18px] p-5 md:rounded-[26px] md:p-10 grid grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] items-center gap-5 lg:gap-14"
     >
       {/* Encadré BLANC (client 2026-08-11). En mode sombre il ne peut pas
           rester blanc : il prend l'encre de section la plus claire de la
@@ -92,15 +92,15 @@ function Shell({
       <div className="relative">
         {/* Pastille + nom du produit, comme la référence. */}
         <div className="flex items-center gap-3.5">
-          <span className="grid h-11 w-11 place-items-center rounded-[13px] bg-white shadow-[0_2px_8px_-2px_rgba(10,37,64,0.18)] md:h-12 md:w-12 md:rounded-[14px] dark:bg-white/10">
+          <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-white shadow-[0_2px_8px_-2px_rgba(10,37,64,0.18)] md:h-12 md:w-12 md:rounded-[14px] dark:bg-white/10">
             <img src="/logos/icon-color.png" alt="" aria-hidden className="h-6 w-auto select-none" draggable={false} />
           </span>
-          <span className="font-instrument font-normal text-[1.4rem] md:text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white">
+          <span className="font-instrument font-normal text-[1.15rem] md:text-[1.75rem] tracking-[-0.02em] text-[#111827] dark:text-white">
             {name}
           </span>
         </div>
 
-        <h3 className="mt-5 max-w-[18ch] font-instrument font-normal text-[1.45rem] md:mt-6 md:text-[2rem] leading-[1.12] tracking-[-0.025em] text-[#111827] dark:text-white">
+        <h3 className="mt-4 max-w-[18ch] font-instrument font-normal text-[1.2rem] md:mt-6 md:text-[2rem] leading-[1.12] tracking-[-0.025em] text-[#111827] dark:text-white">
           {title}
         </h3>
 
@@ -114,14 +114,14 @@ function Shell({
         <button
           type="button"
           onClick={onCta}
-          className="group mt-6 inline-flex items-center gap-2.5 rounded-[7px] bg-[#3b82f6] px-[18px] py-2.5 font-inter font-semibold text-[14px] text-white transition-colors duration-150 hover:bg-[#2563eb] md:mt-7 md:px-5 md:py-3 md:text-[14.5px]"
+          className="group mt-5 inline-flex items-center gap-2 rounded-[7px] bg-[#3b82f6] px-4 py-2 font-inter font-semibold text-[12.5px] text-white transition-colors duration-150 hover:bg-[#2563eb] md:mt-7 md:gap-2.5 md:px-5 md:py-3 md:text-[14.5px]"
         >
           {cta}
           <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
         </button>
 
         {note && (
-          <p className="mt-3.5 max-w-[34ch] font-inter text-[13px] leading-relaxed text-[#5b6577] md:mt-4 md:text-[13.5px] dark:text-gray-400">
+          <p className="mt-3 max-w-[34ch] font-inter text-[11px] leading-snug text-[#5b6577] md:mt-4 md:text-[13.5px] md:leading-relaxed dark:text-gray-400">
             {note}
           </p>
         )}
@@ -133,7 +133,7 @@ function Shell({
           panneau de 440 px aurait flotté au milieu d'un cadre de 1376 de large
           avec un demi-écran de blanc de chaque côté. Côte à côte, le discours
           tient la colonne gauche et la preuve la droite. */}
-      <div className="relative mt-8 lg:mt-0">{children}</div>
+      <div className="relative">{children}</div>
     </motion.div>
   );
 }

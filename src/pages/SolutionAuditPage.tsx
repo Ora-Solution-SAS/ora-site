@@ -556,14 +556,14 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
             {solutions.map((sol, i) => {
               const Icon = sol.icon;
               return (
                 <div
                   key={i}
                   className={[
-                    "au-card p-6 rounded-[18px] md:p-7 md:rounded-[20px] border transition-colors duration-200",
+                    "au-card p-4 rounded-[16px] md:p-7 md:rounded-[20px] border transition-colors duration-200",
                     borderMuted, cardBg,
                     dk ? "hover:bg-white/[0.05]" : "hover:bg-gray-50/70",
                   ].join(" ")}
@@ -571,7 +571,7 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
                 >
                   <div
                     className={[
-                      "w-10 h-10 rounded-xl flex items-center justify-center mb-4 md:mb-5",
+                      "w-9 h-9 rounded-[10px] flex items-center justify-center mb-3 md:w-10 md:h-10 md:rounded-xl md:mb-5",
                       dk ? "bg-blue-500/10" : "bg-blue-50",
                     ].join(" ")}
                   >
@@ -579,13 +579,13 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
                   </div>
                   <h3
                     className={[
-                      "font-poppins text-[15px] md:text-[16px] font-semibold tracking-tight leading-snug mb-2",
+                      "font-poppins text-[13px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2",
                       textPrimary,
                     ].join(" ")}
                   >
                     {sol.title}
                   </h3>
-                  <p className={["font-inter text-[13.5px] md:text-[14px] leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
                     {sol.desc}
                   </p>
                 </div>
@@ -601,7 +601,7 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
               dk ? "bg-white/[0.025]" : "bg-blue-50/40",
             ].join(" ")}
           >
-            <p className={["font-inter text-[14px] md:text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}>
+            <p className={["font-inter text-[11.5px] md:text-[15px] leading-snug md:leading-relaxed flex-1", textSecondary].join(" ")}>
               {t({
                 fr: "Ora se branche directement sur vos fichiers Excel existants. Aucune migration, aucune refonte de processus.",
                 en: "Ora plugs straight into your existing Excel files. No migration, no process overhaul.",
@@ -658,12 +658,12 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
           </div>
 
           {/* Points de conformité */}
-          <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="grid grid-cols-2 gap-4 sm:gap-5">
             {conformitePoints.map((pt, i) => (
               <div
                 key={i}
                 className={[
-                  "au-card flex gap-3 md:gap-5 p-6 rounded-[18px] md:p-7 md:rounded-[20px] border",
+                  "au-card flex flex-col gap-2 xs:flex-row xs:gap-3 md:gap-5 p-4 rounded-[16px] md:p-7 md:rounded-[20px] border",
                   borderMuted,
                   dk ? "bg-white/[0.025]" : "bg-white",
                 ].join(" ")}
@@ -672,22 +672,26 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
                 {/* Icône check */}
                 <div
                   className={[
-                    "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center md:mt-0.5",
+                    "flex-shrink-0 w-9 h-9 rounded-[10px] flex items-center justify-center md:mt-0.5 md:w-10 md:h-10 md:rounded-xl",
                     dk ? "bg-teal-500/10" : "bg-teal-50",
                   ].join(" ")}
                 >
                   <CheckCircle className="w-5 h-5 text-teal-500" />
                 </div>
-                <div>
+                {/* `min-w-0` : enfant de flex, donc `min-width: auto` par
+                    défaut — sans lui le bloc refuse de descendre sous la
+                    largeur de son mot le plus long et pousse la page hors de
+                    l'écran à 320 px. */}
+                <div className="min-w-0">
                   <h3
                     className={[
-                      "font-poppins text-[14px] md:text-[15px] font-semibold tracking-tight leading-snug mb-1.5",
+                      "font-poppins text-[12.5px] md:text-[15px] font-semibold tracking-tight leading-snug mb-1.5 break-words",
                       textPrimary,
                     ].join(" ")}
                   >
                     {pt.title}
                   </h3>
-                  <p className={["font-inter text-[13.5px] md:text-[14px] leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
                     {pt.desc}
                   </p>
                 </div>
@@ -728,12 +732,12 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
             </h2>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
             {testimonials.map((testi, i) => (
               <div
                 key={i}
                 className={[
-                  "au-testi flex flex-col gap-3 md:gap-5 p-6 rounded-[18px] md:p-7 md:rounded-[20px] border",
+                  "au-testi flex flex-col gap-3 md:gap-5 p-4 rounded-[16px] md:p-7 md:rounded-[20px] border",
                   borderMuted, cardBg,
                 ].join(" ")}
                 data-delay={String(i * 100)}
@@ -745,7 +749,7 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
                 </div>
 
                 <blockquote
-                  className={["font-inter text-[14px] md:text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}
+                  className={["font-inter text-[11.5px] md:text-[15px] leading-snug md:leading-relaxed flex-1", textSecondary].join(" ")}
                 >
                   &ldquo;{testi.quote}&rdquo;
                 </blockquote>
@@ -760,7 +764,7 @@ export default function SolutionAuditPage({ theme, openBooking }: Props) {
                   >
                     {testi.name.charAt(0)}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className={["font-inter text-[13px] font-semibold", textPrimary].join(" ")}>
                       {testi.name}
                     </p>
