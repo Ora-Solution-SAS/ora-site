@@ -2,6 +2,7 @@ import { Suspense, lazy } from "react";
 import RepelChips, { type Chip } from "./RepelChips";
 import ValuationCard from "./ValuationCard";
 import { useLang } from "@/lib/i18n";
+import { useIsPhone } from "@/lib/useIsPhone";
 
 /* ⚠ CHARGÉ À LA DEMANDE : voir le pavé jumeau dans UseCasesBento.tsx. three.js
    pèse 488 ko et ce décor n'est jamais au-dessus de la ligne de flottaison. */
@@ -208,8 +209,15 @@ function CardShell({
         >
           {art}
         </div>
+        {/* ⚠ `max-md:pr-32` : la pastille d'agrandissement du panneau vit HORS
+            de la boîte mise à l'échelle, elle garde donc ses 28 px réels
+            pendant que la carte est réduite à ~0,34. Ses 28 px couvrent alors
+            ~106 px de l'espace de la carte, quand `pr-14` n'en dégage que 56 :
+            le titre passait sous le bouton (vu en capture le 2026-08-21).
+            La réserve est posée en `max-md:` parce qu'au-dessus l'échelle vaut
+            1 et que `pr-14` suffit — le bureau ne bouge pas. */}
         <h3
-          className="relative pr-14 font-inter text-[1.3rem] font-normal leading-[1.15] tracking-[-0.025em] md:text-[1.5rem]"
+          className="relative pr-14 max-md:pr-32 font-inter text-[1.3rem] font-normal leading-[1.15] tracking-[-0.025em] md:text-[1.5rem]"
           style={{ color: INK }}
         >
           {title}
@@ -242,6 +250,7 @@ function CardShell({
  *  SIG. Anneau à 760 / 7200, centré à 52 % — les valeurs de la grille. */
 export function BilanShowcaseCard() {
   const { t } = useLang();
+  const phone = useIsPhone();
   return (
     <CardShell
       title={t({ fr: "Bilan développé", en: "Detailed balance sheet" })}
@@ -250,8 +259,19 @@ export function BilanShowcaseCard() {
         <Suspense fallback={null}>
           <ParticleOrbGL
             size={760}
-            count={7200}
-            className="pointer-events-none absolute left-1/2 top-[52%] hidden -translate-x-1/2 -translate-y-1/2 md:block"
+            /* ⚠ LE DÉCOR TOURNE MAINTENANT SUR TÉLÉPHONE (client 2026-08-21 :
+               « add the background animation behind the things so we have
+               little particles »). Il portait `hidden md:block` depuis
+               l'origine — la carte réduite se lisait donc comme un cadre vide
+               avec des étiquettes, ce qui explique pour partie le « c'est
+               catastrophique » de la veille.
+               LE SEMIS EST ALLÉGÉ, PAS LA TAILLE : à l'échelle du téléphone
+               l'anneau fait ~290 px à l'écran, et 7 200 points s'y empilent en
+               bouillie autant qu'ils coûtent. Un tiers suffit à dessiner la
+               même couronne. La taille reste 760 pour que la géométrie du
+               bureau soit conservée au pixel après mise à l'échelle. */
+            count={phone ? 2400 : 7200}
+            className="pointer-events-none absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2"
           />
         </Suspense>
       }
@@ -267,6 +287,7 @@ export function BilanShowcaseCard() {
  *  bras derrière les formes juridiques. 980 / 12000, centrée à 46 %. */
 export function StructureShowcaseCard() {
   const { t } = useLang();
+  const phone = useIsPhone();
   return (
     <CardShell
       title={t({
@@ -280,12 +301,18 @@ export function StructureShowcaseCard() {
             variant="galaxy"
             arms={3}
             size={980}
-            count={12000}
+            /* Voir le pavé de BilanShowcaseCard : le décor tourne désormais sur
+               téléphone, avec un semis allégé. La galaxie garde ses trois bras
+               et sa dispersion — c'est la DENSITÉ qui tombe, pas la forme. */
+            count={phone ? 3600 : 12000}
             radius={0.42}
             scatterPower={6.4}
-            pointSize={3.4}
+            /* Points un cheveu plus gros sous 768 : après mise à l'échelle
+               (~0,4), un point de 3,4 px tombe à 1,4 px et la galaxie se
+               dissout en voile gris. */
+            pointSize={phone ? 4.6 : 3.4}
             motion={0.15}
-            className="pointer-events-none absolute left-1/2 top-[46%] hidden -translate-x-1/2 -translate-y-1/2 md:block"
+            className="pointer-events-none absolute left-1/2 top-[46%] -translate-x-1/2 -translate-y-1/2"
           />
         </Suspense>
       }
@@ -311,7 +338,7 @@ export function ValuationShowcaseCard() {
           <style>{AC_CSS}</style>
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 hidden overflow-hidden md:block"
+            className="pointer-events-none absolute inset-0 overflow-hidden"
             style={{
               maskImage: "radial-gradient(88% 62% at 58% 44%, #000 0%, rgba(0,0,0,0.78) 52%, transparent 90%)",
               WebkitMaskImage: "radial-gradient(88% 62% at 58% 44%, #000 0%, rgba(0,0,0,0.78) 52%, transparent 90%)",

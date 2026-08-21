@@ -108,7 +108,12 @@ function ScaledBox({
       const avail = outer.clientWidth;
       const natH = inner.offsetHeight;
       if (!avail || !natH) return;
-      const scale = avail / designWidth;
+      /* PLAFONNÉ À 1 : le composant FAIT ENTRER, il n'agrandit jamais. Sans le
+         plafond, une colonne plus large que `designWidth` — une tablette à
+         760 px sur une maquette composée pour 400 — grossissait la maquette au
+         lieu de la laisser à sa taille, et le flou de rééchantillonnage se
+         voyait sur les filets d'un pixel. */
+      const scale = Math.min(1, avail / designWidth);
       setBox((b) =>
         b.scale === scale && b.height === natH * scale ? b : { scale, height: natH * scale },
       );

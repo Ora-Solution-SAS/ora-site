@@ -10,7 +10,7 @@ import Typewriter from "./Typewriter";
 import PrevisionnelStudio from "./PrevisionnelStudio";
 import { FileChipStrip } from "./StackingCards";
 import { ZoomButton, ZoomOverlay } from "./PanelZoom";
-import SwipeDeck from "./SwipeDeck";
+import DesktopScale from "./DesktopScale";
 
 /**
  * AutomationTabs — la section « à la attio » (client 2026-08-12, captures
@@ -118,10 +118,10 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
      vers la pastille active a besoin d'atteindre ses enfants. */
   const stripRef = useRef<HTMLDivElement>(null);
   /* Au-dessus de lg, la scène du panneau « Contrôles et suivi » est rognée par
-     le bord de sa demi-colonne ; en dessous, elle vit dans une bande qu'on fait
-     glisser. Les deux cadres sont incompatibles, et il ne doit exister qu'UNE
-     instance d'OraAppScene — d'où cette lecture, plutôt qu'un couple de blocs
-     masqués en CSS. Même seuil que SwipeDeck (1024). */
+     le bord de sa demi-colonne ; en dessous, elle est montrée ENTIÈRE, mise à
+     l'échelle de la colonne. Les deux cadres sont incompatibles, et il ne doit
+     exister qu'UNE instance d'OraAppScene — d'où cette lecture, plutôt qu'un
+     couple de blocs masqués en CSS. Même seuil que `DesktopScale` (1024). */
   const [wide, setWide] = useState(
     () => typeof window !== "undefined" && window.innerWidth >= 1024,
   );
@@ -548,12 +548,9 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         En dessous, sa barre latérale se replie et sa carte
                         flottante remonte dans le flux — on ne verrait plus la
                         maquette du bureau mais une autre. */}
-                    <SwipeDeck
-                      designWidth={920}
-                      label={t({ fr: "Écran Prévisionnel, faites glisser pour voir", en: "Forecasting screen, swipe to explore" })}
-                    >
+                    <DesktopScale designWidth={920} upTo={1024}>
                       <PrevisionnelStudio />
-                    </SwipeDeck>
+                    </DesktopScale>
                   </div>
                 ) : it.media === "video" ? (
                   /* L'ENREGISTREMENT D'ÉCRAN, DANS SON CADRE, SUR DU BLANC.
@@ -632,13 +629,10 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         deux cartes blanches ont besoin d'un fond pour s'en
                         détacher. */}
                     <div className={`border-t ${rule} ${zone} px-4 py-8 md:px-12 md:py-12`}>
-                    <div className="mx-auto grid w-full max-w-[880px] gap-5 md:grid-cols-2 [&>*]:min-w-0">
-                      <SwipeDeck
-                        designWidth={400}
-                        label={t({ fr: "Carte Bilan développé, faites glisser pour voir", en: "Detailed balance sheet card, swipe to explore" })}
-                      >
+                    <div className="mx-auto grid w-full max-w-[880px] grid-cols-2 gap-2.5 md:gap-5 [&>*]:min-w-0">
+                      <DesktopScale designWidth={400} upTo={1024} className="self-center">
                         <BilanShowcaseCard />
-                      </SwipeDeck>
+                      </DesktopScale>
                       {/* BLANC FRANC, SANS NAPPE (client 2026-08-13 : « il
                           faut que cet encadré soit full blanc »). La nappe
                           bleutée de la carte voisine y avait été posée le
@@ -698,7 +692,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      client, « l'encadré est bien trop petit pour répliquer ».
                      La colonne de droite est élargie (1,15 fr) et la carte
                      garde sa hauteur de grille (620 px). */
-                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid lg:grid-cols-[1fr_1.15fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1fr_1.15fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -707,7 +701,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         droite fait 620 px, ce bloc en faisait 200 et restait
                         collé en haut. `justify-center` sur une colonne flex
                         le pose au milieu de la hauteur que la carte impose. */}
-                    <div className={`flex flex-col justify-center p-5 md:p-10 border-b lg:border-b-0 lg:border-r ${rule}`}>
+                    <div className={`flex flex-col justify-center p-3 md:p-10 border-r ${rule}`}>
                       <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
                         <span className="font-semibold text-[#111827] dark:text-white">
                           {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}
@@ -745,13 +739,10 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         Ces deux cellules portent une carte de la grille bento à
                         sa taille de grille ; sans lui, la cellule se cale sur la
                         largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 p-5 md:p-8 lg:overflow-hidden">
-                      <SwipeDeck
-                        designWidth={430}
-                        label={t({ fr: "Carte Changement de structure, faites glisser pour voir", en: "Structure change card, swipe to explore" })}
-                      >
+                    <div className="flex min-w-0 items-center overflow-hidden p-2 md:p-8">
+                      <DesktopScale designWidth={430} upTo={1024}>
                         <StructureShowcaseCard />
-                      </SwipeDeck>
+                      </DesktopScale>
                     </div>
                   </div>
                 ) : it.media === "valuation" ? (
@@ -759,7 +750,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      financière » de la grille, copie conforme et ENTIÈRE —
                      coque blanche, nappe, rubans de soie, carte-objet — posée
                      sur la nappe grise (« je veux même tout l'encadré »). */
-                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid lg:grid-cols-[1.15fr_1fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1.15fr_1fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -768,28 +759,25 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         Ces deux cellules portent une carte de la grille bento à
                         sa taille de grille ; sans lui, la cellule se cale sur la
                         largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 p-5 md:p-8 lg:overflow-hidden">
-                      <SwipeDeck
-                        designWidth={430}
-                        label={t({ fr: "Carte Évaluation d'entreprise, faites glisser pour voir", en: "Business valuation card, swipe to explore" })}
-                      >
+                    <div className="flex min-w-0 items-center overflow-hidden p-2 md:p-8">
+                      <DesktopScale designWidth={430} upTo={1024}>
                         <ValuationShowcaseCard />
-                      </SwipeDeck>
+                      </DesktopScale>
                     </div>
                     {/* À DROITE, les questions auxquelles la valorisation
                         répond, écrites l'une après l'autre (client
                         2026-08-13). Ce sont des QUESTIONS, pas des résultats :
                         annoncer un chiffre qui s'écrit tout seul laisserait
                         croire à un calcul en direct. */}
-                    <div className={`flex flex-col justify-center border-t lg:border-t-0 lg:border-l ${rule} p-5 md:p-10`}>
-                      <p className="font-inter text-[12px] md:text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
+                    <div className={`flex flex-col justify-center border-l ${rule} p-3 md:p-10`}>
+                      <p className="font-inter text-[9px] leading-tight md:text-[13px] md:leading-normal font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
                         {t({ fr: "Ce que la synthèse répond", en: "What the summary answers" })}
                       </p>
                       {/* min-h : la plus longue des quatre questions tient en
                           DEUX lignes à 350 px comme en colonne bureau — 4.6em
                           en réservait trois sur téléphone, soit une ligne de
                           vide sous la frappe (vu en capture le 2026-08-20). */}
-                      <p className="mt-4 min-h-[3.2em] font-instrument text-[1.25rem] font-normal leading-[1.35] tracking-[-0.02em] text-[#111827] md:mt-5 md:min-h-[3.9em] md:text-[1.5rem] dark:text-white">
+                      <p className="mt-3 min-h-[5.4em] font-instrument text-[0.9rem] font-normal leading-[1.3] tracking-[-0.02em] text-[#111827] md:mt-5 md:min-h-[3.9em] md:text-[1.5rem] md:leading-[1.35] dark:text-white">
                         <Typewriter
                           phrases={[
                             t({ fr: "Combien vaut cette entreprise, et pourquoi ?", en: "What is this business worth, and why?" }),
@@ -834,18 +822,18 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      filet du panneau suivant. En dessous de md la fenêtre
                      disparaît, il n'y a pas la place de montrer un bout
                      d'application sur une colonne de téléphone. */
-                  <div className={`mt-8 md:mt-11 border-t ${rule} ${zone} grid lg:grid-cols-[1fr_1.08fr] lg:overflow-hidden`}>
-                    <ul className={`border-b lg:border-b-0 lg:border-r px-5 py-7 ${rule} md:px-10 md:py-12`}>
+                  <div className={`mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1fr_1.08fr] overflow-hidden`}>
+                    <ul className={`border-r px-3 py-5 ${rule} md:px-10 md:py-12`}>
                       {it.modules.map((m) => (
-                        <li key={m.title} className={`border-t ${rule} py-4 first:border-t-0 first:pt-0 last:pb-0 md:py-5`}>
+                        <li key={m.title} className={`border-t ${rule} py-2.5 first:border-t-0 first:pt-0 last:pb-0 md:py-5`}>
                           {/* `max-md:` sur l'interlignage : sans préfixe il
                               fuyait au-dessus de md et raccourcissait les
                               quatre titres de 4 px chacun — 16 px de moins sur
                               la page du bureau, relevés à la mesure. */}
-                          <p className="font-inter text-[15px] font-semibold text-[#111827] md:text-[15.5px] dark:text-white">
+                          <p className="font-inter text-[11px] font-semibold leading-tight text-[#111827] md:text-[15.5px] md:leading-normal dark:text-white">
                             {m.title}
                           </p>
-                          <p className="mt-1.5 font-inter text-[14px] leading-relaxed md:text-[14.5px]">
+                          <p className="mt-1 font-inter text-[9.5px] leading-snug md:mt-1.5 md:text-[14.5px] md:leading-relaxed">
                             <span className="text-[#42506b] dark:text-gray-300">{m.lead}</span>{" "}
                             <span className="text-[#8b95a7] dark:text-gray-500">{m.rest}</span>
                           </p>
@@ -871,22 +859,23 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         </div>
                       </div>
                     ) : (
-                      <div aria-hidden className="min-w-0 px-5 pb-7">
-                        <SwipeDeck
-                          designWidth={1180}
-                          label={t({ fr: "Aperçu du logiciel", en: "A look at the software" })}
-                        >
+                      <div aria-hidden className="flex min-w-0 items-center p-2">
+                        <DesktopScale designWidth={1180} upTo={1024}>
                           {/* Hauteur RÉSERVÉE À LA MAIN : la scène est en
-                              position absolue, elle ne pousse donc rien. 280 px
-                              montrent la barre latérale, la salutation et la
-                              première rangée d'accès rapide — le même cadrage
-                              que le bureau, en plus haut. */}
-                          <div className="relative h-[280px] w-[1180px] overflow-hidden rounded-[10px]">
+                              position absolue, elle ne pousse donc rien. 720 px,
+                              soit la scène ENTIÈRE : le bureau n'en montre
+                              qu'une tranche parce que le bord de sa demi-colonne
+                              la coupe, mais sur téléphone la demande est de voir
+                              le tout d'un coup (client 2026-08-21 : « they just
+                              won't have their design or the whole thing to see
+                              at once »). Une tranche réduite ne montrerait qu'un
+                              bandeau de 90 px. */}
+                          <div className="relative h-[720px] w-[1180px] overflow-hidden rounded-[10px]">
                             <div className="absolute left-0 top-0 h-[720px] w-[1180px]">
                               <OraAppScene cropScale={0.82} chips="none" />
                             </div>
                           </div>
-                        </SwipeDeck>
+                        </DesktopScale>
                       </div>
                     )}
                   </div>

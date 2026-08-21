@@ -213,13 +213,37 @@ en gros caractères (2).
    vérifier `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
 
 **La section à onglets sur téléphone** (AutomationTabs) : le rail vertical est
-`hidden lg:block` comme à l'origine ; sous `lg`, une bande de pastilles
-horizontale, COLLANTE sous la nav (`top-[68px]`, hauteur mesurée de la barre),
-suit l'onglet actif et s'auto-défile pour le garder visible. Les cinq panneaux
-gardent la composition à deux colonnes du bureau, dès 0 px : texte + saisie |
-carte structure, carte évaluation | questions, quatre modules | réplique du
-logiciel, exemples sur deux colonnes, carte bilan | son texte. C'est le
-point 3 de l'historique ci-dessus, demandé module par module.
+`hidden lg:block` ; sous `lg`, une bande de pastilles horizontale, COLLANTE sous
+la nav (`top-[68px]`, hauteur mesurée de la barre), suit l'onglet actif et
+s'auto-défile pour le garder visible. C'est le SEUL défilement horizontal que la
+page conserve, et c'est une navigation, pas un design.
+
+**⚠ RIEN NE SE FAIT GLISSER (client 2026-08-21).** Une passe du 2026-08-20 avait
+rendu les maquettes à leur largeur de bureau dans des bandes défilantes
+(`SwipeDeck`, supprimé). Verdict : « the user on a phone won't scroll right and
+left, they just won't have their design or the whole thing to see at once ». La
+règle est donc : **toute maquette entre ENTIÈRE dans la largeur disponible**, par
+`DesktopScale` (largeur de mise en page imposée puis `transform: scale()`,
+plafonné à 1). Et **là où le bureau est vraiment en deux colonnes, le téléphone
+l'est aussi**, en réduit : « when there is a true design side by side, put them
+side by side so small ». Les quatre panneaux concernés portent donc des grilles
+SANS préfixe (`grid-cols-[1fr_1.15fr]`, `grid-cols-2`…), pas `lg:`.
+
+**Les décors animés tournent aussi sur téléphone** (même demande) : `ParticleOrbGL`
+portait `hidden md:block` dans ShowcaseCards, la carte réduite se lisait donc
+comme un cadre vide. Le semis est ALLÉGÉ, pas supprimé — un tiers des points, via
+`useIsPhone` (`src/lib/useIsPhone.ts`). Un crochet et pas une classe `md:` parce
+que `hidden` monte le composant et paie le contexte WebGL quand même.
+
+**Deux pièges de la mise à l'échelle, tous deux mesurés :**
+· Les media queries s'évaluent contre la FENÊTRE, jamais contre la boîte réduite.
+  Une hauteur `md:min-h-[620px]` disparaissait donc sous 768 et la carte
+  s'effondrait en languette de 40 px. Toute dimension de design d'un enfant de
+  `DesktopScale` se pose SANS préfixe.
+· Ce qui vit hors de la boîte réduite garde sa taille réelle. La pastille
+  d'agrandissement (28 px) couvre ~106 px de l'espace d'une carte à l'échelle
+  0,34, quand son titre n'en réservait que 56 : d'où `max-md:pr-32` sur les
+  titres de `CardShell`.
 
 **Le hero mobile n'a QU'UN bouton**, « Commencer ». Le pavé noir « Réserver un
 appel » qui le suivait a été retiré (client, point 3 : « why did you add the
