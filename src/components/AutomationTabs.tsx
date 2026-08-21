@@ -10,6 +10,7 @@ import Typewriter from "./Typewriter";
 import PrevisionnelStudio from "./PrevisionnelStudio";
 import { FileChipStrip } from "./StackingCards";
 import { ZoomButton, ZoomOverlay } from "./PanelZoom";
+import DesktopScale from "./DesktopScale";
 
 /**
  * AutomationTabs — la section « à la attio » (client 2026-08-12, captures
@@ -44,7 +45,8 @@ import { ZoomButton, ZoomOverlay } from "./PanelZoom";
  *     même sensation. Poser l'état à la main serait écrasé par le premier
  *     événement de défilement venu.
  * Sous lg, le rail disparaît : chaque panneau porte déjà son titre, la liste
- * ferait doublon sur une colonne de téléphone.
+ * ferait doublon sur une colonne de téléphone. À sa place, une bande
+ * d'onglets horizontale COLLANTE sous la barre de navigation (voir son pavé).
  *
  * LES PANNEAUX (refonte 2026-08-13, seconde passe le même jour) :
  *   · les zones de contenu sont des CADRES GRISÉS PLEINE LARGEUR : elles
@@ -112,6 +114,27 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
      panneau obligerait à six états parallèles. */
   const [zoom, setZoom] = useState<number | null>(null);
   const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
+  /* La rangée de pastilles de la bande mobile : l'auto-défilement de la bande
+     vers la pastille active a besoin d'atteindre ses enfants. */
+  const stripRef = useRef<HTMLDivElement>(null);
+  /* Au-dessus de lg, la scène du panneau « Contrôles et suivi » est rognée par
+     le bord de sa demi-colonne ; en dessous, elle est montrée ENTIÈRE, mise à
+     l'échelle de la colonne. Les deux cadres sont incompatibles, et il ne doit
+     exister qu'UNE instance d'OraAppScene — d'où cette lecture, plutôt qu'un
+     couple de blocs masqués en CSS. Même seuil que `DesktopScale` (1024). */
+  const [wide, setWide] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 1024,
+  );
+  useEffect(() => {
+    const read = () => setWide(window.innerWidth >= 1024);
+    read();
+    window.addEventListener("resize", read);
+    window.addEventListener("orientationchange", read);
+    return () => {
+      window.removeEventListener("resize", read);
+      window.removeEventListener("orientationchange", read);
+    };
+  }, []);
 
   /* La phrase de tête de chaque panneau suit la grammaire de la référence :
      un début en noir qui nomme le résultat, une suite en gris qui dit
@@ -271,6 +294,24 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     };
   }, [N]);
 
+  /* ── La bande mobile suit l'onglet actif ──────────────────────────────────
+     Sans cela, dès le troisième panneau la pastille active vit HORS CHAMP à
+     droite : la bande collante affiche alors six pastilles éteintes, autant
+     dire rien. On centre la pastille active à chaque changement.
+     `scrollTo` sur la bande, PAS `scrollIntoView` sur la pastille : ce dernier
+     fait aussi défiler la PAGE pour amener l'élément dans la fenêtre, et il se
+     battrait avec Lenis à chaque changement d'actif. */
+  useEffect(() => {
+    const strip = stripRef.current;
+    const chip = strip?.children[active] as HTMLElement | undefined;
+    if (!strip || !chip) return;
+    const parent = strip.parentElement as HTMLElement; // le conteneur défilant
+    parent.scrollTo({
+      left: chip.offsetLeft - (parent.clientWidth - chip.offsetWidth) / 2,
+      behavior: "smooth",
+    });
+  }, [active]);
+
   const rule = dk ? "border-white/10" : "border-[#0a2540]/[0.10]";
   /* ── LA NAPPE GRISE, ET SON UNIQUE VALEUR ────────────────────────────────
      Relevée sur la capture attio : un gris à peine posé, SANS coin ni liseré
@@ -300,13 +341,13 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     <section
       id="automatisations"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-0 bg-white dark:bg-black"
+      className="relative px-5 md:px-12 pt-16 md:pt-32 pb-0 bg-white dark:bg-black"
     >
       <div className={`mx-auto max-w-[86rem] border-x ${rule}`}>
         <motion.h2
           {...fadeUp}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="px-6 md:px-10 pb-14 md:pb-20 font-instrument font-normal tracking-[-0.03em] leading-[1.14] text-[clamp(1.9rem,3.9vw,3.3rem)]"
+          className="px-5 md:px-10 pb-10 md:pb-20 font-instrument font-normal tracking-[-0.03em] leading-[1.14] text-[clamp(1.7rem,3.9vw,3.3rem)]"
         >
           {/* ⚠ TITRE REPRIS le 2026-08-15 (client : « trouve une phrase plus
               générique qui permet de comprendre immédiatement ce que l'on fait
@@ -334,7 +375,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
           </span>
         </motion.h2>
 
-        {/* ── LE RAIL, VERSION TÉLÉPHONE (audit du 2026-08-15) ──────────────
+        {/* ── LE RAIL, VERSION TÉLÉPHONE (audit du 2026-08-15, rétabli et
+            rendu COLLANT le 2026-08-20) ──────────────────────────────────────
             Le rail de gauche est masqué sous lg. Le contenu survivait, mais un
             visiteur sur téléphone ou sur tablette ne voyait JAMAIS l'inventaire
             des modules ni l'entrée « Automatisations, tout ce qui n'entre dans
@@ -344,32 +386,44 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
             Une bande horizontale défilante le rend, dans la seule forme qui
             tienne sur 375 px. Les débords négatifs annulent le rembourrage de
             section pour que la bande file d'un bord à l'autre, comme la barre
-            d'onglets du carrousel d'Atlas. */}
-        <div className={`-mx-6 overflow-x-auto border-t px-6 lg:hidden ${rule}`}>
-          <div className="flex w-max gap-2 py-4">
-            {ITEMS.map((it, i) => {
-              const on = i === active;
-              return (
-                <button
-                  key={it.tab}
-                  type="button"
-                  onClick={() => animatedScrollToId(`autotab-${i}`, -110)}
-                  aria-pressed={on}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-inter text-[13px] ring-1 transition-colors duration-150 ${
-                    on
-                      ? "bg-[#f4f7fd] font-semibold text-[#111827] ring-[#3b82f6]/40 dark:bg-white/[0.08] dark:text-white dark:ring-white/20"
-                      : "font-medium text-[#5b6577] ring-[#0a2540]/[0.10] dark:text-gray-400 dark:ring-white/10"
-                  }`}
-                >
-                  {it.engineering && (
-                    <span aria-hidden className="text-brand-gradient leading-none">
-                      ✦
-                    </span>
-                  )}
-                  {it.tab}
-                </button>
-              );
-            })}
+            d'onglets du carrousel d'Atlas.
+            ⚠ Une passe du 2026-08-19 l'avait remplacée par le rail du bureau
+            compressé dans une colonne de 6,75 rem, panneaux écrasés à côté ; le
+            client l'a renvoyée le 2026-08-20 (« everything is compacted, no
+            spaces, we don't understand what we are doing »). La bande revient,
+            et elle devient COLLANTE : la section fait plus de six écrans de
+            téléphone, sans repère fixe on ne sait jamais où l'on en est.
+            `top-[68px]` est la hauteur mesurée de la barre de navigation
+            (l'overlay du menu mobile s'ouvre à ce même 68px, Navigation.tsx) ;
+            z-30 passe sous la nav (z-50) et sur les panneaux. Le fond opacifié
+            est indispensable : sans lui les panneaux défilent au travers. */}
+        <div className={`sticky top-[68px] z-30 -mx-5 border-t bg-white/95 px-5 backdrop-blur-md lg:hidden dark:bg-black/90 ${rule}`}>
+          <div className="overflow-x-auto [scrollbar-width:none]">
+            <div ref={stripRef} className="flex w-max gap-2 py-3">
+              {ITEMS.map((it, i) => {
+                const on = i === active;
+                return (
+                  <button
+                    key={it.tab}
+                    type="button"
+                    onClick={() => animatedScrollToId(`autotab-${i}`, -132)}
+                    aria-pressed={on}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-inter text-[13px] ring-1 transition-colors duration-150 ${
+                      on
+                        ? "bg-[#f4f7fd] font-semibold text-[#111827] ring-[#3b82f6]/40 dark:bg-white/[0.08] dark:text-white dark:ring-white/20"
+                        : "font-medium text-[#5b6577] ring-[#0a2540]/[0.10] dark:text-gray-400 dark:ring-white/10"
+                    }`}
+                  >
+                    {it.engineering && (
+                      <span aria-hidden className="text-brand-gradient leading-none">
+                        ✦
+                      </span>
+                    )}
+                    {it.tab}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -471,7 +525,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                 ref={(el) => { panelsRef.current[i] = el; }}
                 className={`min-w-0 ${i > 0 ? `border-t ${rule}` : ""}`}
               >
-                <p className="max-w-[46ch] px-6 pt-14 md:px-12 md:pt-16 font-instrument font-normal text-[1.35rem] md:text-[1.7rem] leading-[1.28] tracking-[-0.02em]">
+                <p className="max-w-[46ch] px-5 pt-10 md:px-12 md:pt-16 font-instrument font-normal text-[1.3rem] md:text-[1.7rem] leading-[1.28] tracking-[-0.02em]">
                   <span className="text-[#111827] dark:text-white">{it.lead}</span>{" "}
                   <span className="text-[#6b7688] dark:text-gray-500">{it.rest}</span>
                 </p>
@@ -484,12 +538,19 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      flottante déborde SOUS la fenêtre : la borner au même
                      rembourrage que les autres la ferait mordre sur le filet
                      du panneau suivant. */
-                  <div className={`group/panel relative mt-9 md:mt-11 border-t ${rule} ${zone} px-6 pb-16 pt-8 md:px-12 md:pb-24 md:pt-12`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} px-5 pb-12 pt-6 md:px-12 md:pb-24 md:pt-12`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
                     />
-                    <PrevisionnelStudio />
+                    {/* 920 px : la largeur de mise en page pour laquelle
+                        PrevisionnelStudio est composé (son `max-w-[920px]`).
+                        En dessous, sa barre latérale se replie et sa carte
+                        flottante remonte dans le flux — on ne verrait plus la
+                        maquette du bureau mais une autre. */}
+                    <DesktopScale designWidth={920} upTo={1024}>
+                      <PrevisionnelStudio />
+                    </DesktopScale>
                   </div>
                 ) : it.media === "video" ? (
                   /* L'ENREGISTREMENT D'ÉCRAN, DANS SON CADRE, SUR DU BLANC.
@@ -515,13 +576,13 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      supérieur de l'application, vu tout de suite par le
                      client. Un futur clip sans bande : rapport 1660 / 1080 et
                      retirer object-bottom. */
-                  <div className={`mt-9 md:mt-11 border-t ${rule}`}>
+                  <div className={`mt-8 md:mt-11 border-t ${rule}`}>
                     {/* LE REMBOURRAGE EST ICI, sur un bloc à lui, et pas sur
                         le conteneur du panneau : la nappe grise des deux
                         cartes qui suivent doit courir d'un filet à l'autre,
                         or un rembourrage posé plus haut la bordait de blanc
                         sur les côtés. */}
-                    <div className="px-6 py-8 md:px-12 md:py-12">
+                    <div className="px-4 py-6 md:px-12 md:py-12">
                     {/* REPRISE À ZÉRO À CHAQUE ARRIVÉE (client 2026-08-13 :
                         « quand l'utilisateur arrive sur Bilan développé, que
                         la vidéo reprenne à zéro depuis le début à chaque
@@ -567,9 +628,11 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         panneau : le clip est sur le blanc de la section, ces
                         deux cartes blanches ont besoin d'un fond pour s'en
                         détacher. */}
-                    <div className={`border-t ${rule} ${zone} px-6 py-10 md:px-12 md:py-12`}>
-                    <div className="mx-auto grid w-full max-w-[880px] gap-5 md:grid-cols-2">
-                      <BilanShowcaseCard />
+                    <div className={`border-t ${rule} ${zone} px-4 py-8 md:px-12 md:py-12`}>
+                    <div className="mx-auto grid w-full max-w-[880px] grid-cols-2 gap-2.5 md:gap-5 [&>*]:min-w-0">
+                      <DesktopScale designWidth={400} upTo={1024} className="self-center">
+                        <BilanShowcaseCard />
+                      </DesktopScale>
                       {/* BLANC FRANC, SANS NAPPE (client 2026-08-13 : « il
                           faut que cet encadré soit full blanc »). La nappe
                           bleutée de la carte voisine y avait été posée le
@@ -590,24 +653,24 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           `group` est posé sur CETTE carte et pas sur la rangée :
                           survoler l'une ne doit pas allumer l'autre. */}
                       <div className="group relative">
-                      <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[14px] bg-white p-7 ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] md:p-8">
-                        <h3 className="relative font-inter text-[1.3rem] font-normal leading-[1.15] tracking-[-0.025em] text-[#0a2540] md:text-[1.5rem]">
+                      <div className="relative flex h-full flex-col justify-center overflow-hidden rounded-[14px] bg-white ring-1 ring-[#0a2540]/[0.08] shadow-[0_2px_10px_-6px_rgba(10,37,64,0.14)] transform-gpu transition-[transform,box-shadow] duration-[620ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.012] group-hover:ring-[#3b82f6]/55 group-hover:shadow-[0_18px_44px_-22px_rgba(10,37,64,0.26)] p-3.5 md:p-8">
+                        <h3 className="relative font-inter text-[0.95rem] font-normal leading-[1.15] tracking-[-0.025em] text-[#0a2540] md:text-[1.5rem]">
                           {t({ fr: "Un bilan personnalisé", en: "A balance sheet of your own" })}
                         </h3>
-                        <p className="relative mt-4 font-inter text-[15px] leading-relaxed text-[#5b6577] md:text-[15.5px]">
+                        <p className="relative mt-2 font-inter text-[10.5px] leading-snug text-[#5b6577] md:mt-4 md:text-[15.5px] md:leading-relaxed">
                           {t({
                             fr: "Le bilan de votre client se regarde au lieu de se dérouler : marge, EBE, CAF, BFR et flux posés en grandes masses, avec la lecture qui va avec.",
                             en: "Your client's balance sheet is looked at rather than scrolled: margin, EBITDA, cash flow and working capital laid out as big blocks, with the reading to go with them.",
                           })}
                         </p>
-                        <ul className="relative mt-5 space-y-2.5">
+                        <ul className="relative mt-3 space-y-2 md:mt-5 md:space-y-2.5">
                           {[
                             t({ fr: "Les SIG en un coup d'œil : marge, valeur ajoutée, EBE, CAF", en: "Key indicators at a glance: margin, value added, EBITDA, cash flow" }),
                             t({ fr: "BFR et flux de trésorerie mis en regard du bilan", en: "Working capital and cash flows set against the balance sheet" }),
                             t({ fr: "Traitement 100 % local, vos fichiers ne quittent pas votre poste", en: "100% local processing, your files never leave your machine" }),
                           ].map((li) => (
-                            <li key={li} className="flex gap-2.5 font-inter text-[14px] leading-snug text-[#42506b]">
-                              <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-[#3b82f6]" />
+                            <li key={li} className="flex gap-2 font-inter text-[10.5px] leading-snug text-[#42506b] md:gap-2.5 md:text-[14px]">
+                              <span aria-hidden className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-[#3b82f6] md:mt-[7px] md:h-1.5 md:w-1.5" />
                               {li}
                             </li>
                           ))}
@@ -629,7 +692,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      client, « l'encadré est bien trop petit pour répliquer ».
                      La colonne de droite est élargie (1,15 fr) et la carte
                      garde sa hauteur de grille (620 px). */
-                  <div className={`group/panel relative mt-9 md:mt-11 border-t ${rule} ${zone} grid md:grid-cols-[1fr_1.15fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1fr_1.15fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -638,7 +701,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         droite fait 620 px, ce bloc en faisait 200 et restait
                         collé en haut. `justify-center` sur une colonne flex
                         le pose au milieu de la hauteur que la carte impose. */}
-                    <div className={`flex flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
+                    <div className={`flex flex-col justify-center p-3 md:p-10 border-r ${rule}`}>
                       <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
                         <span className="font-semibold text-[#111827] dark:text-white">
                           {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}
@@ -655,8 +718,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           saisie vit dans le logiciel. `min-w-0` sur le
                           conteneur du texte, sinon la phrase en cours de
                           frappe pousse la pastille bleue hors du champ. */}
-                      <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
-                        <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
+                      <div aria-hidden className="mt-7 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
+                        <span className="min-w-0 flex-1 truncate font-inter text-[13px] md:text-[13.5px] text-[#5b6577] dark:text-gray-300">
                           <Typewriter
                             phrases={[
                               t({
@@ -676,8 +739,10 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         Ces deux cellules portent une carte de la grille bento à
                         sa taille de grille ; sans lui, la cellule se cale sur la
                         largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 overflow-hidden p-6 md:p-8">
-                      <StructureShowcaseCard />
+                    <div className="flex min-w-0 items-center overflow-hidden p-2 md:p-8">
+                      <DesktopScale designWidth={430} upTo={1024}>
+                        <StructureShowcaseCard />
+                      </DesktopScale>
                     </div>
                   </div>
                 ) : it.media === "valuation" ? (
@@ -685,7 +750,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      financière » de la grille, copie conforme et ENTIÈRE —
                      coque blanche, nappe, rubans de soie, carte-objet — posée
                      sur la nappe grise (« je veux même tout l'encadré »). */
-                  <div className={`group/panel relative mt-9 md:mt-11 border-t ${rule} ${zone} grid md:grid-cols-[1.15fr_1fr]`}>
+                  <div className={`group/panel relative mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1.15fr_1fr]`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
@@ -694,19 +759,25 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         Ces deux cellules portent une carte de la grille bento à
                         sa taille de grille ; sans lui, la cellule se cale sur la
                         largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 overflow-hidden p-6 md:p-8">
-                      <ValuationShowcaseCard />
+                    <div className="flex min-w-0 items-center overflow-hidden p-2 md:p-8">
+                      <DesktopScale designWidth={430} upTo={1024}>
+                        <ValuationShowcaseCard />
+                      </DesktopScale>
                     </div>
                     {/* À DROITE, les questions auxquelles la valorisation
                         répond, écrites l'une après l'autre (client
                         2026-08-13). Ce sont des QUESTIONS, pas des résultats :
                         annoncer un chiffre qui s'écrit tout seul laisserait
                         croire à un calcul en direct. */}
-                    <div className={`flex flex-col justify-center border-t md:border-t-0 md:border-l ${rule} p-6 md:p-10`}>
-                      <p className="font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
+                    <div className={`flex flex-col justify-center border-l ${rule} p-3 md:p-10`}>
+                      <p className="font-inter text-[9px] leading-tight md:text-[13px] md:leading-normal font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
                         {t({ fr: "Ce que la synthèse répond", en: "What the summary answers" })}
                       </p>
-                      <p className="mt-5 min-h-[4.6em] font-instrument text-[1.25rem] font-normal leading-[1.35] tracking-[-0.02em] text-[#111827] md:min-h-[3.9em] md:text-[1.5rem] dark:text-white">
+                      {/* min-h : la plus longue des quatre questions tient en
+                          DEUX lignes à 350 px comme en colonne bureau — 4.6em
+                          en réservait trois sur téléphone, soit une ligne de
+                          vide sous la frappe (vu en capture le 2026-08-20). */}
+                      <p className="mt-3 min-h-[5.4em] font-instrument text-[0.9rem] font-normal leading-[1.3] tracking-[-0.02em] text-[#111827] md:mt-5 md:min-h-[3.9em] md:text-[1.5rem] md:leading-[1.35] dark:text-white">
                         <Typewriter
                           phrases={[
                             t({ fr: "Combien vaut cette entreprise, et pourquoi ?", en: "What is this business worth, and why?" }),
@@ -716,7 +787,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                           ]}
                         />
                       </p>
-                      <p className="mt-6 max-w-[38ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+                      <p className="mt-3 max-w-[38ch] font-inter text-[10.5px] leading-snug text-[#5b6577] md:mt-6 md:text-[14.5px] md:leading-relaxed dark:text-gray-400">
                         {t({
                           fr: "Chaque réponse est adossée à des multiples et des comparables explicites, pas à une moyenne opaque.",
                           en: "Every answer rests on explicit multiples and comparables, not an opaque average.",
@@ -751,14 +822,18 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      filet du panneau suivant. En dessous de md la fenêtre
                      disparaît, il n'y a pas la place de montrer un bout
                      d'application sur une colonne de téléphone. */
-                  <div className={`mt-9 md:mt-11 border-t ${rule} ${zone} grid overflow-hidden md:grid-cols-[1fr_1.08fr]`}>
-                    <ul className={`px-6 py-10 md:border-r ${rule} md:px-10 md:py-12`}>
+                  <div className={`mt-8 md:mt-11 border-t ${rule} ${zone} grid grid-cols-[1fr_1.08fr] overflow-hidden`}>
+                    <ul className={`border-r px-3 py-5 ${rule} md:px-10 md:py-12`}>
                       {it.modules.map((m) => (
-                        <li key={m.title} className={`border-t ${rule} py-5 first:border-t-0 first:pt-0 last:pb-0`}>
-                          <p className="font-inter text-[15.5px] font-semibold text-[#111827] dark:text-white">
+                        <li key={m.title} className={`border-t ${rule} py-2.5 first:border-t-0 first:pt-0 last:pb-0 md:py-5`}>
+                          {/* `max-md:` sur l'interlignage : sans préfixe il
+                              fuyait au-dessus de md et raccourcissait les
+                              quatre titres de 4 px chacun — 16 px de moins sur
+                              la page du bureau, relevés à la mesure. */}
+                          <p className="font-inter text-[11px] font-semibold leading-tight text-[#111827] md:text-[15.5px] md:leading-normal dark:text-white">
                             {m.title}
                           </p>
-                          <p className="mt-1.5 font-inter text-[14.5px] leading-relaxed">
+                          <p className="mt-1 font-inter text-[9.5px] leading-snug md:mt-1.5 md:text-[14.5px] md:leading-relaxed">
                             <span className="text-[#42506b] dark:text-gray-300">{m.lead}</span>{" "}
                             <span className="text-[#8b95a7] dark:text-gray-500">{m.rest}</span>
                           </p>
@@ -766,16 +841,43 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       ))}
                     </ul>
 
-                    <div aria-hidden className="relative hidden overflow-hidden md:block">
-                      <div className="absolute left-10 top-11 h-[720px] w-[1180px]">
-                        {/* `chips="none"` : les pastilles flottantes de la
-                            scène racontent l'entrée d'un fichier et la sortie
-                            des livrables. C'est le propos de la GRANDE CARTE,
-                            pas celui de ce panneau, et elles tomberaient de
-                            toute façon hors du rognage. */}
-                        <OraAppScene cropScale={0.82} chips="none" />
+                    {/* ⚠ BRANCHE JS, PAS DEUX BLOCS MASQUÉS EN CSS. La scène
+                        est montée dans un cadre différent de part et d'autre de
+                        lg — rognée par le bord d'une demi-colonne sur le
+                        bureau, posée dans une bande qu'on fait glisser en
+                        dessous — et `hidden lg:block` monterait DEUX
+                        OraAppScene : deux contextes WebGL et deux écouteurs
+                        `pointermove` pour une seule image visible. La page en
+                        fait déjà tourner trois.
+                        `chips="none"` : les pastilles flottantes racontent
+                        l'entrée d'un fichier et la sortie des livrables. C'est
+                        le propos de la GRANDE CARTE, pas celui de ce panneau. */}
+                    {wide ? (
+                      <div aria-hidden className="relative overflow-hidden">
+                        <div className="absolute left-3 top-5 h-[720px] w-[1180px] md:left-10 md:top-11">
+                          <OraAppScene cropScale={0.82} chips="none" />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div aria-hidden className="flex min-w-0 items-center p-2">
+                        <DesktopScale designWidth={1180} upTo={1024}>
+                          {/* Hauteur RÉSERVÉE À LA MAIN : la scène est en
+                              position absolue, elle ne pousse donc rien. 720 px,
+                              soit la scène ENTIÈRE : le bureau n'en montre
+                              qu'une tranche parce que le bord de sa demi-colonne
+                              la coupe, mais sur téléphone la demande est de voir
+                              le tout d'un coup (client 2026-08-21 : « they just
+                              won't have their design or the whole thing to see
+                              at once »). Une tranche réduite ne montrerait qu'un
+                              bandeau de 90 px. */}
+                          <div className="relative h-[720px] w-[1180px] overflow-hidden rounded-[10px]">
+                            <div className="absolute left-0 top-0 h-[720px] w-[1180px]">
+                              <OraAppScene cropScale={0.82} chips="none" />
+                            </div>
+                          </div>
+                        </DesktopScale>
+                      </div>
+                    )}
                   </div>
                 ) : it.examples ? (
                   /* LE FOURRE-TOUT, DANS SES COULEURS D'ORIGINE. Une passe du
@@ -789,12 +891,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      en lien dans la phrase. Ce qui distingue l'onglet reste
                      ENTIER dans le rail (le ✦, le filet pointillé, la glose) :
                      c'est là qu'il avait été demandé, et il n'a pas bougé. */
-                  <div className="px-6 pb-14 md:px-12 md:pb-16 mt-9 md:mt-11">
-                    <ul className="grid gap-x-10 sm:grid-cols-2">
+                  <div className="px-5 pb-10 md:px-12 md:pb-16 mt-7 md:mt-11">
+                    <ul className="grid grid-cols-2 gap-x-5 sm:gap-x-10">
                       {it.examples.map((ex) => (
                         <li
                           key={ex}
-                          className={`border-t ${rule} py-3 font-inter text-[14.5px] leading-snug text-[#42506b] dark:text-gray-400`}
+                          className={`border-t ${rule} py-2.5 font-inter text-[11.5px] leading-snug text-[#42506b] md:py-3 md:text-[14.5px] dark:text-gray-400`}
                         >
                           {ex}
                         </li>
@@ -816,8 +918,8 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                          lignes, les pastilles une seule ; alignées par le bas,
                          elles s'assoient sur la même ligne de base que la
                          dernière ligne de texte. */
-                      <div className="mt-7 flex flex-col gap-7 sm:flex-row sm:items-end sm:justify-between sm:gap-10">
-                        <p className="max-w-[52ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+                      <div className="mt-6 flex items-end justify-between gap-4 sm:mt-7 sm:gap-10">
+                        <p className="max-w-[52ch] font-inter text-[11px] leading-snug text-[#5b6577] md:text-[14.5px] md:leading-relaxed dark:text-gray-400">
                           {t({
                             fr: "Votre traitement n'est pas dans la liste ? Décrivez-le à ",
                             en: "Your routine is not on the list? Describe it to ",
@@ -840,7 +942,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                 ) : (
                   /* VIDE, à dessein : hauteur réservée en attendant
                      l'enregistrement d'écran du module. */
-                  <div aria-hidden className="mt-10 md:mt-12 h-[200px] md:h-[280px]" />
+                  <div aria-hidden className="mt-8 h-[140px] md:mt-12 md:h-[280px]" />
                 )}
               </div>
             ))}

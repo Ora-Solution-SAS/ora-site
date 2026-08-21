@@ -1922,7 +1922,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           largeur. D'où une branche tactile distincte, comme le fait déjà
           OraExperienceCarousel. */}
       <div className="md:hidden">
-        <OraHeroMobile openBooking={openBooking} />
+        <OraHeroMobile />
       </div>
 
       {/* ── LE TITRE, EN FLUX NORMAL (client 2026-08-13) ─────────────────────

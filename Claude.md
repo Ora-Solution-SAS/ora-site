@@ -156,6 +156,134 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
+## Mobile — LA COMPOSITION DU BUREAU, RÉDUITE, AVEC DE L'ESPACE (2026-08-20)
+
+⚠ TROIS ARBITRAGES SUCCESSIFS. Lire les trois avant de toucher au mobile.
+  1. 2026-08-19 : « je veux la même disposition et layout que sur l'ordinateur,
+     il faut juste réduire la taille de beaucoup d'encadrés ». Livré : grilles
+     du bureau tenues à largeur de téléphone, rembourrages compactés.
+  2. 2026-08-20 (matin) : « everything is compacted, there's no spaces between
+     each part, we don't really understand what we are doing ». Livré :
+     empilement sur une colonne, texte à 14 px, gros rembourrages.
+  3. 2026-08-20 (après-midi), sur cette version empilée : « the buttons are way
+     too big […] the size of the boxes is way too big, and they are not the
+     same as on the website version […] for budget tracking, cost price, VAT
+     and account matching, put them side by side, left to right, as they are on
+     the website on the computer version […] except for Atlas, which is done
+     right ».
+
+LA SYNTHÈSE, ET C'EST ELLE QUI FAIT LOI : **la COMPOSITION est celle du bureau
+(côte à côte, en grille), les TAILLES sont réduites, et il y a de l'ESPACE.**
+Le modèle explicitement validé est le bloc « What Atlas can do » : deux
+colonnes, tuiles de 62 px, corps de 11 à 13 px, gouttières larges. Aucun des
+deux extrêmes ne passe — ni le bureau écrasé sans air (1), ni la colonne unique
+en gros caractères (2).
+
+**Les quatre règles, dans cet ordre :**
+
+1. **Une valeur mobile ne doit JAMAIS fuir au-dessus de `md`.** Toute classe
+   ajoutée pour le téléphone porte soit un `md:` équivalant à la valeur
+   d'origine, soit le préfixe `max-md:`. Le piège se referme sur les
+   utilitaires Tailwind qui posent DEUX propriétés : `text-xl`, `text-3xl`,
+   `text-sm` posent une taille **et** une hauteur de ligne. Les remplacer par
+   une taille arbitraire (`text-[1.05rem]`) supprime la hauteur de ligne dont
+   héritait le `md:` — c'est ce qui a rallongé `/cgu` de 78 px sur le bureau.
+   Contrôle chiffré : l'accueil à 1440 × 900 se mesure à 17 879 ± 5 px (le ± 5
+   est le bruit du harnais, mesuré sur trois lectures du même commit).
+2. **Une grille de contenu GARDE ses colonnes sur téléphone.** `grid-cols-2`
+   sans préfixe, `gap-4`, `p-4` d'intérieur, corps de 11 à 12,5 px avec
+   `leading-snug`. On n'empile que si la cellule descend sous ~100 px utiles.
+   ⚠ Deux pièges mesurés à 320 px, tous deux dans des cartes `flex` icône +
+   texte : un enfant de flex garde `min-width: auto` et refuse de descendre
+   sous son mot le plus long (`min-w-0` sur le bloc de texte), et à deux
+   colonnes une pastille de 36 px ne laisse que 50 px au libellé (l'icône passe
+   au-dessus sous `xs`, plus `break-words` en filet).
+3. **Les maquettes se mettent à l'échelle, elles ne se replient pas.**
+   `DesktopScale` rend l'enfant à une largeur de bureau imposée puis le réduit ;
+   il vaut aussi en demi-colonne, c'est ainsi que les cartes du bureau tiennent
+   côte à côte sur un téléphone. ⚠ Il impose une LARGEUR, pas un contexte de
+   media query : les `md:` de l'enfant restent évalués contre la FENÊTRE. Toute
+   dimension structurelle de l'enfant doit donc être SANS préfixe — c'est ce qui
+   manquait à `min-h-[620px]` dans ShowcaseCards, dont les cartes s'effondraient
+   en languette sur téléphone. Et les hauteurs en pourcentage ne résolvent pas
+   sous transform : les nuages d'étiquettes prennent une enveloppe
+   `absolute inset-0`, jamais `h-full`.
+4. **Vérifier, pas supposer.** Avant de pousser : mesurer la hauteur de CHAQUE
+   route à 1440 × 900 avant et après (tolérance : le bruit ci-dessus), et
+   vérifier `scrollWidth === clientWidth` à 320, 390, 430, 768, 1024 et 1440.
+
+**La section à onglets sur téléphone** (AutomationTabs) : le rail vertical est
+`hidden lg:block` ; sous `lg`, une bande de pastilles horizontale, COLLANTE sous
+la nav (`top-[68px]`, hauteur mesurée de la barre), suit l'onglet actif et
+s'auto-défile pour le garder visible. C'est le SEUL défilement horizontal que la
+page conserve, et c'est une navigation, pas un design.
+
+**⚠ RIEN NE SE FAIT GLISSER (client 2026-08-21).** Une passe du 2026-08-20 avait
+rendu les maquettes à leur largeur de bureau dans des bandes défilantes
+(`SwipeDeck`, supprimé). Verdict : « the user on a phone won't scroll right and
+left, they just won't have their design or the whole thing to see at once ». La
+règle est donc : **toute maquette entre ENTIÈRE dans la largeur disponible**, par
+`DesktopScale` (largeur de mise en page imposée puis `transform: scale()`,
+plafonné à 1). Et **là où le bureau est vraiment en deux colonnes, le téléphone
+l'est aussi**, en réduit : « when there is a true design side by side, put them
+side by side so small ». Les quatre panneaux concernés portent donc des grilles
+SANS préfixe (`grid-cols-[1fr_1.15fr]`, `grid-cols-2`…), pas `lg:`.
+
+**Les décors animés tournent aussi sur téléphone** (même demande) : `ParticleOrbGL`
+portait `hidden md:block` dans ShowcaseCards, la carte réduite se lisait donc
+comme un cadre vide. Le semis est ALLÉGÉ, pas supprimé — un tiers des points, via
+`useIsPhone` (`src/lib/useIsPhone.ts`). Un crochet et pas une classe `md:` parce
+que `hidden` monte le composant et paie le contexte WebGL quand même.
+
+**Deux pièges de la mise à l'échelle, tous deux mesurés :**
+· Les media queries s'évaluent contre la FENÊTRE, jamais contre la boîte réduite.
+  Une hauteur `md:min-h-[620px]` disparaissait donc sous 768 et la carte
+  s'effondrait en languette de 40 px. Toute dimension de design d'un enfant de
+  `DesktopScale` se pose SANS préfixe.
+· Ce qui vit hors de la boîte réduite garde sa taille réelle. La pastille
+  d'agrandissement (28 px) couvre ~106 px de l'espace d'une carte à l'échelle
+  0,34, quand son titre n'en réservait que 56 : d'où `max-md:pr-32` sur les
+  titres de `CardShell`.
+
+**Le hero mobile n'a QU'UN bouton**, « Commencer ». Le pavé noir « Réserver un
+appel » qui le suivait a été retiré (client, point 3 : « why did you add the
+Book a Call button? there is already a button for it ») : le bureau ne porte
+pas d'équivalent à cet endroit, et la prise de rendez-vous reste atteignable
+par la barre de navigation et par le CTA de fin de page.
+
+**Paliers :** `xs` = 400 px a été ajouté (rien n'existait sous `sm` = 640, or
+320 → 430 px sépare un iPhone SE d'un 15 Pro Max). La carte `screens` est
+déclarée EN ENTIER dans `theme` et non dans `theme.extend` : sous `extend` un
+palier neuf est ajouté en fin de liste, ses règles sortent après celles de
+`md`, et à 800 px `xs:` écrasait `md:`. Ne pas remettre `screens` sous
+`extend`.
+
+**Le hero monte la MÊME réplique du logiciel que le bureau.** `OraHeroDemo`
+reste `hidden md:block` et `OraHeroMobile` prend sa place — la démo du bureau
+est une scène épinglée sur 300 à 800 vh, la porter telle quelle rallongerait la
+page de plusieurs écrans. Mais la fenêtre du logiciel qu'on y voit est
+`OraAppScene`, le composant du bureau, à son état de repos : même barre
+latérale, même grille de douze modules, mêmes pastilles flottantes.
+
+- ⚠ **Ne pas recomposer cette réplique à la largeur du téléphone.** Une version
+  recomposée a tenu cette place jusqu'au 2026-08-19, avec un bon argument (la
+  scène fait 1180 × 720 avec des corps de 7 à 13,5 px ; à l'échelle du
+  téléphone ils tombent à 2-4 px). Le client l'a renvoyée : « la réplication
+  layout du software n'est pas exactement la même que celle qu'on a sur la
+  version ordinateur du site ». **La fidélité prime sur la lisibilité du texte
+  de la maquette.** C'est une décision, pas un oubli.
+- **La largeur à donner est celle de la SCÈNE, pas de la composition.** Les
+  pastilles sont ancrées aux bords de la scène et débordent des deux côtés ;
+  mesurée, la composition entière fait ~1,33 fois la scène. Donner toute la
+  largeur à la scène pousse les pastilles hors de l'écran et rend la page
+  glissante latéralement.
+- **La scène n'est montée que sous 768 px** (`onPhone` dans `OraHeroMobile`).
+  Son conteneur est `md:hidden`, donc sur ordinateur elle serait dans le DOM
+  sans jamais être peinte, avec son écouteur `pointermove` qui mesure cinq
+  pastilles à chaque mouvement de souris.
+
+---
+
 ## Platform Compatibility
 
 **Target:** macOS and Windows (both required)
