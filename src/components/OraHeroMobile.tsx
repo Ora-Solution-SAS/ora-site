@@ -165,13 +165,25 @@ export default function OraHeroMobile() {
              ⚠ LA LARGEUR DONNÉE ICI EST CELLE DE LA SCÈNE, PAS CELLE DE LA
              COMPOSITION. Les pastilles sont ancrées aux BORDS de la scène et
              débordent des deux côtés (`right:calc(100% - 34px)` d'un côté,
-             `left:calc(100% - 18px)` de l'autre, voir OA_CSS). Mesurée sur le
-             bureau, la composition entière fait environ 1,33 fois la scène :
-             1310 px de large pour une scène de 983, et c'est ce rapport qui la
-             fait tenir dans la fenêtre. Donner ici toute la largeur à la scène
-             ferait sortir les pastilles de l'écran et rendrait la page
-             glissante latéralement. D'où le plafond, calé pour que scène ET
-             pastilles tiennent dans le viewport.
+             `left:calc(100% - 18px)` de l'autre, voir OA_CSS). Débord MESURÉ
+             sur cette scène : 45 px à gauche et 56 px à droite pour une scène
+             de 292, soit une composition de 393 px — 1,346 fois la scène.
+             Donner toute la largeur à la scène ferait sortir les pastilles de
+             l'écran. D'où le facteur : 0,74 × 1,346 = 0,996, la composition
+             occupe donc tout juste le viewport, à quelque chose près.
+
+             ⚠ IL N'Y A PLUS DE PLAFOND EN PIXELS, et c'est le correctif du
+             2026-08-21 (client : « fais en sorte que la réplication du
+             logiciel soit bien plus grande », capture à l'appui). La largeur
+             était `min(292px, 74vw)` : au-delà de ~395 px de large, le `74vw`
+             ne servait plus à rien et la scène restait figée à 292 px, îlot
+             minuscule au milieu d'une page vide. C'est exactement ce que
+             montrait la capture, prise vers 505 px (292 / 505 = 58 % de la
+             largeur). Le facteur relatif, lui, était juste : il est gardé seul.
+             Sur un téléphone de 390 px le rendu ne change pas d'un pixel — la
+             scène y valait déjà 288 px, c'est-à-dire 74vw — et tout le gain va
+             aux écrans plus larges, jusqu'aux 767 px où le hero du bureau
+             prend le relais.
 
              Les débords négatifs annulent le rembourrage de section : la
              composition dispose de toute la largeur de l'écran, comme sur le
@@ -182,9 +194,16 @@ export default function OraHeroMobile() {
              scène n'était pas montée ici ; les deux à la suite disaient deux
              fois la même chose, et le bureau ne montre que les pastilles. */}
       <motion.div {...rise(0.08)} className="-mx-5 mt-6 overflow-x-clip">
+        {/* `translateX` : c'est la SCÈNE que `mx-auto` centre, or la
+            composition est asymétrique — 45 px de débord à gauche contre 56 à
+            droite. Centrer la scène décale donc la composition de 5,5 px vers
+            la droite, et le bout de la pastille « Synthèse PDF » sortait de
+            l'écran (mesuré : 3 px à 320, 8 px à 767). Le décalage vaut la
+            moitié de l'écart, exprimé en pourcentage de la scène —
+            (56 − 45) / 2 / 292 = 1,88 % — il suit donc l'échelle tout seul. */}
         <div
           className="relative mx-auto"
-          style={{ width: "min(292px, 74vw)", aspectRatio: "1180 / 720" }}
+          style={{ width: "74vw", aspectRatio: "1180 / 720", transform: "translateX(-1.88%)" }}
         >
           {onPhone && <OraAppScene />}
         </div>
