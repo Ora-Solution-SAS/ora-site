@@ -1359,7 +1359,19 @@ const App = () => {
           en commençant ici. Les cartes blanches de la grille y gagnent en plus
           un fond dont elles se détachent, ce qui était une demande du
           2026-08-07 réglée à l'époque en teintant le fond en bleu. */}
-      <section id="features" className="relative pt-20 md:pt-28 pb-0 px-6 md:px-12 bg-[#fcfbf7] dark:bg-black md:dark:bg-background">
+      {/* ⚠ BLANC PUR, ET C'EST UN ÉCART À LA RÈGLE D'ALTERNANCE (client
+          2026-08-21 : « put the background of this part blank as it was
+          before »). La section portait `#fcfbf7`, le blanc cassé chaud de la
+          charte, et c'était son tour dans l'alternance de CLAUDE.md.
+          Ce qui a été confondu, et qu'il faut garder en tête : les CARTES de
+          cette grille sont blanches depuis toujours ; c'est le fond DERRIÈRE
+          elles qui était crème. À deux blancs si proches, l'écart ne se voyait
+          qu'aux bords des cartes, ce qui donnait l'impression d'un liseré sale
+          plutôt que d'une alternance.
+          Conséquence à surveiller : la section qui suit ouvre elle aussi sur du
+          clair, l'alternance saute donc sur ce couple. Si le rythme des fonds
+          est repris un jour, c'est ici qu'il faudra rétablir `#fcfbf7`. */}
+      <section id="features" className="relative pt-20 md:pt-28 pb-0 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-background">
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
