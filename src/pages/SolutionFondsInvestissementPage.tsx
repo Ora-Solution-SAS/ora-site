@@ -514,7 +514,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {solutions.map((sol, i) => {
               const Icon = sol.icon;
               return (
@@ -526,10 +526,10 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
                   <div className={["w-9 h-9 rounded-[10px] flex items-center justify-center mb-3 md:w-10 md:h-10 md:rounded-xl md:mb-5", dk ? "bg-blue-500/10" : "bg-blue-50"].join(" ")}>
                     <Icon className="w-5 h-5 text-blue-500" />
                   </div>
-                  <h3 className={["font-poppins text-[13px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2", textPrimary].join(" ")}>
+                  <h3 className={["font-poppins text-[15px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2", textPrimary].join(" ")}>
                     {sol.title}
                   </h3>
-                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[14px] leading-[1.5] md:leading-relaxed", textSecondary].join(" ")}>
                     {sol.desc}
                   </p>
                 </div>
@@ -538,7 +538,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
           </div>
 
           <div className={["mt-12 flex flex-col sm:flex-row sm:items-center gap-5 px-7 py-5 rounded-2xl border", borderMuted, dk ? "bg-white/[0.025]" : "bg-blue-50/40"].join(" ")}>
-            <p className={["font-inter text-[11.5px] md:text-[15px] leading-snug md:leading-relaxed flex-1", textSecondary].join(" ")}>
+            <p className={["font-inter text-[14.5px] leading-[1.5] md:text-[15px] md:leading-relaxed flex-1", textSecondary].join(" ")}>
               {t({ fr: "Ora se branche directement sur vos fichiers Excel existants. Aucune migration, aucune refonte de processus.", en: "Ora plugs directly into your existing Excel files. No migration, no process overhaul." })}
             </p>
             {/* "L'expérience Ora" link hidden until that page goes live. */}
@@ -570,7 +570,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:gap-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
             {performancePoints.map((pt, i) => (
               <div
                 key={i}
@@ -588,7 +588,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
                   <h3 className={["font-poppins text-[12.5px] md:text-[15px] font-semibold tracking-tight leading-snug mb-1.5 break-words", textPrimary].join(" ")}>
                     {pt.title}
                   </h3>
-                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[14px] leading-[1.5] md:leading-relaxed", textSecondary].join(" ")}>
                     {pt.desc}
                   </p>
                 </div>
@@ -628,7 +628,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
             {testimonials.map((testi, i) => (
               <div
                 key={i}
@@ -640,7 +640,7 @@ export default function SolutionFondsInvestissementPage({ theme, openBooking }: 
                     <Star key={s} className="w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
-                <blockquote className={["font-inter text-[11.5px] md:text-[15px] leading-snug md:leading-relaxed flex-1", textSecondary].join(" ")}>
+                <blockquote className={["font-inter text-[14.5px] leading-[1.5] md:text-[15px] md:leading-relaxed flex-1", textSecondary].join(" ")}>
                   &ldquo;{testi.quote}&rdquo;
                 </blockquote>
                 <div className="flex items-center gap-3 pt-2 border-t border-inherit">

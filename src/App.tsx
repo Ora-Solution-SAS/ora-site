@@ -1623,11 +1623,15 @@ const App = () => {
           possible, et la bande blanche le détache de la section qui précède. */}
       <section className="relative px-5 md:px-12 pt-12 md:pt-8 pb-24 md:pb-56 bg-white dark:bg-black md:dark:bg-black">
         <div className="mx-auto max-w-[46rem] text-center">
-          <h2 className="font-instrument font-normal text-[clamp(1.6rem,4vw,3rem)] leading-[1.12] tracking-[-0.03em]">
+          {/* MÊME RÈGLE QUE PARTOUT AILLEURS sur téléphone (2026-08-22) : la
+              seconde encre passe à la ligne, dans le corps du texte courant.
+              Les deux encres à 26 px faisaient cinq lignes centrées où l'appel
+              — c'est le DERNIER du site — se noyait dans son propre chapô. */}
+          <h2 className="font-instrument font-normal text-[1.45rem] md:text-[clamp(1.6rem,4vw,3rem)] leading-[1.12] tracking-[-0.03em]">
             <span className="text-[#111827] dark:text-white">
               {t({ fr: "Une demi-heure, sur vos propres fichiers.", en: "Half an hour, on your own files." })}
             </span>{" "}
-            <span className="text-[#7a8496] dark:text-gray-500">
+            <span className="text-[#7a8496] max-md:mx-auto max-md:mt-3 max-md:block max-md:max-w-[34ch] max-md:font-inter max-md:text-[0.95rem] max-md:leading-[1.55] max-md:tracking-normal dark:text-gray-500">
               {t({
                 fr: "On regarde ce qui se répète chez vous, et on vous dit ce qu'Ora reprend.",
                 en: "We look at what repeats in your work, and tell you what Ora takes over.",

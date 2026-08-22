@@ -78,7 +78,13 @@ function Shell({
     <motion.div
       {...fadeUp}
       transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-      className="relative overflow-hidden rounded-[18px] p-5 md:rounded-[26px] md:p-10 grid grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] items-center gap-5 lg:gap-14"
+      /* EMPILÉ SOUS 768 (2026-08-22, « minimaliste et bien fait pour mobile ») :
+         à gauche un DISCOURS — nom, titre, bouton, et une note de 135 signes —
+         à droite une maquette. Sur deux colonnes de téléphone la note tombait
+         dans 153 px, cinq lignes à 11 px, et la maquette dans 145. Ce n'est pas
+         « un design côte à côte », c'est du texte à côté d'une preuve : le
+         texte prend la largeur, la maquette la reprend en dessous. */
+      className="relative overflow-hidden rounded-[18px] p-5 md:rounded-[26px] md:p-10 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] items-center gap-7 md:gap-5 lg:gap-14"
     >
       {/* Encadré BLANC (client 2026-08-11). En mode sombre il ne peut pas
           rester blanc : il prend l'encre de section la plus claire de la
@@ -100,7 +106,7 @@ function Shell({
           </span>
         </div>
 
-        <h3 className="mt-4 max-w-[18ch] font-instrument font-normal text-[1.2rem] md:mt-6 md:text-[2rem] leading-[1.12] tracking-[-0.025em] text-[#111827] dark:text-white">
+        <h3 className="mt-4 max-w-[18ch] font-instrument font-normal text-[1.5rem] md:mt-6 md:text-[2rem] leading-[1.12] tracking-[-0.025em] text-[#111827] dark:text-white">
           {title}
         </h3>
 
@@ -114,14 +120,14 @@ function Shell({
         <button
           type="button"
           onClick={onCta}
-          className="group mt-5 inline-flex items-center gap-2 rounded-[7px] bg-[#3b82f6] px-4 py-2 font-inter font-semibold text-[12.5px] text-white transition-colors duration-150 hover:bg-[#2563eb] md:mt-7 md:gap-2.5 md:px-5 md:py-3 md:text-[14.5px]"
+          className="group mt-5 inline-flex items-center gap-2 rounded-[7px] bg-[#3b82f6] px-5 py-2.5 font-inter font-semibold text-[14px] text-white transition-colors duration-150 hover:bg-[#2563eb] md:mt-7 md:gap-2.5 md:px-5 md:py-3 md:text-[14.5px]"
         >
           {cta}
           <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
         </button>
 
         {note && (
-          <p className="mt-3 max-w-[34ch] font-inter text-[11px] leading-snug text-[#5b6577] md:mt-4 md:text-[13.5px] md:leading-relaxed dark:text-gray-400">
+          <p className="mt-3 max-w-[46ch] font-inter text-[13.5px] leading-[1.55] text-[#5b6577] md:mt-4 md:max-w-[34ch] md:leading-relaxed dark:text-gray-400">
             {note}
           </p>
         )}

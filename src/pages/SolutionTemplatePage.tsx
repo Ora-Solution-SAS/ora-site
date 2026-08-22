@@ -608,7 +608,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {solutions.map((sol, i) => {
               const Icon = sol.icon;
               return (
@@ -631,13 +631,13 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                   </div>
                   <h3
                     className={[
-                      "font-poppins text-[13px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2",
+                      "font-poppins text-[15px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2",
                       textPrimary,
                     ].join(" ")}
                   >
                     {sol.title}
                   </h3>
-                  <p className={["font-inter text-[11px] md:text-[14px] leading-snug md:leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[14px] leading-[1.5] md:leading-relaxed", textSecondary].join(" ")}>
                     {sol.desc}
                   </p>
                 </div>
@@ -677,7 +677,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
             {testimonials.map((t, i) => (
               <div
                 key={i}
@@ -694,7 +694,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 </div>
 
                 <blockquote
-                  className={["font-inter text-[11.5px] md:text-[15px] leading-snug md:leading-relaxed flex-1", textSecondary].join(" ")}
+                  className={["font-inter text-[14.5px] leading-[1.5] md:text-[15px] md:leading-relaxed flex-1", textSecondary].join(" ")}
                 >
                   &ldquo;{t.quote}&rdquo;
                 </blockquote>

@@ -156,9 +156,10 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
-## Mobile — LA COMPOSITION DU BUREAU, RÉDUITE, AVEC DE L'ESPACE (2026-08-20)
+## Mobile — TOUT ENTRE DANS L'ÉCRAN, ET UNE SEULE CHOSE À LA FOIS (2026-08-22)
 
-⚠ TROIS ARBITRAGES SUCCESSIFS. Lire les trois avant de toucher au mobile.
+⚠ SIX ARBITRAGES SUCCESSIFS. Lire les six avant de toucher au mobile — chacun a
+renvoyé le précédent, et le SIXIÈME fait loi.
   1. 2026-08-19 : « je veux la même disposition et layout que sur l'ordinateur,
      il faut juste réduire la taille de beaucoup d'encadrés ». Livré : grilles
      du bureau tenues à largeur de téléphone, rembourrages compactés.
@@ -171,6 +172,44 @@ les rétablir ensemble si la bascule revient un jour :
      and account matching, put them side by side, left to right, as they are on
      the website on the computer version […] except for Atlas, which is done
      right ».
+  4. 2026-08-21 (matin), sur une passe de bureau réduit : « c'est
+     catastrophique ce qu'on a » — d'où le prototype de maquettes à taille
+     réelle qu'on faisait glisser (`SwipeDeck`).
+  5. 2026-08-21 (après-midi), sur ce prototype : « it's better, definitely, but
+     […] the user on a phone won't scroll right and left, they just won't have
+     their design or the whole thing to see at once […] when there is a true
+     design side by side, put them side by side so small ». `SwipeDeck`
+     supprimé, tout entre dans l'écran par `DesktopScale`.
+  6. **2026-08-22, ET C'EST LA VERSION EN VIGUEUR** : « prends exemple de
+     DataSnipper (pour leur version mobile) et essaye de faire un site mobile
+     aussi minimaliste et bien fait pour mobile, sans inventer d'autre design à
+     part si il le faut ». Aucune identité nouvelle : mêmes polices, mêmes
+     encres, mêmes composants. Ce qui change est la DISCIPLINE — une hiérarchie
+     de titres au lieu d'un pavé, une seule chose à la fois, et jamais de texte
+     suivi dans une demi-colonne. (⚠ datasnipper.com est bloqué par la
+     politique de sortie réseau de la session : la référence n'a pas pu être
+     inspectée, la passe applique les conventions du genre.)
+
+**Les trois gestes de l'arbitrage 6, à respecter partout :**
+· **Le chapô se détache du titre sous 768.** Le site compose ses titres en une
+  phrase à deux encres (`<span>` foncé + `<span>` gris dans le même corps) :
+  c'est la figure du bureau et elle tient en deux lignes. Sur 350 px la même
+  figure fait sept lignes à 27 px où rien ne dit où finit le titre — c'est
+  littéralement le reproche « we even have words that are the same ». Le second
+  `<span>` prend donc `max-md:mt-3 max-md:block max-md:font-inter
+  max-md:text-[0.95rem] max-md:leading-[1.55] max-md:tracking-normal`, et le
+  titre tombe à 1,45 rem. Le bureau ne bouge pas d'un pixel.
+· **Le texte suivi ne partage pas une rangée avec une maquette.** L'arbitrage 5
+  parle de « a TRUE design side by side » : deux DESSINS. Une rangée
+  texte + maquette s'empile (`grid-cols-1 md:grid-cols-[…]`), le filet suit
+  (`max-md:border-b md:border-r`), et la maquette y gagne l'échelle — la carte
+  du bilan passe de 0,42 à 0,88.
+· **Une composition rognée est une composition de BUREAU.** Le rognage à
+  l'échelle 1 (fenêtre débordante à la Stripe) suppose une carte assez large
+  pour qu'il en reste quelque chose. Dans 350 px il ne montre plus que le tiers
+  gauche du logiciel, coupé au milieu d'un mot. Sous 768, la scène se rend
+  ENTIÈRE (`OraAppScene` sans `cropScale`), via `useIsPhone` et non `md:` —
+  deux cadres, pas deux habillages, sinon deux contextes WebGL.
 
 LA SYNTHÈSE, ET C'EST ELLE QUI FAIT LOI : **la COMPOSITION est celle du bureau
 (côte à côte, en grille), les TAILLES sont réduites, et il y a de l'ESPACE.**
@@ -190,9 +229,16 @@ en gros caractères (2).
    héritait le `md:` — c'est ce qui a rallongé `/cgu` de 78 px sur le bureau.
    Contrôle chiffré : l'accueil à 1440 × 900 se mesure à 17 879 ± 5 px (le ± 5
    est le bruit du harnais, mesuré sur trois lectures du même commit).
-2. **Une grille de contenu GARDE ses colonnes sur téléphone.** `grid-cols-2`
-   sans préfixe, `gap-4`, `p-4` d'intérieur, corps de 11 à 12,5 px avec
-   `leading-snug`. On n'empile que si la cellule descend sous ~100 px utiles.
+2. **Une grille de contenu garde ses colonnes sur téléphone SI ses cellules
+   sont des DESSINS.** `grid-cols-2` sans préfixe, `gap-4`, `p-4` d'intérieur.
+   ⚠ **AMENDÉE LE 2026-08-22, et c'est la version qui vaut** (arbitrage 6) :
+   dès qu'une cellule porte du TEXTE SUIVI, elle passe en pleine largeur sous
+   `sm`. Le seuil n'est plus « ~100 px utiles » mais la LIGNE DE LECTURE : sous
+   ~30 signes par ligne un paragraphe ne se lit plus, il se déchiffre. Mesuré
+   avant correction : 11 px dans 133 px de colonne, soit 23 signes, sur les six
+   fiches des pages Solution ; 10,5 px dans 125 px, neuf lignes, sur la carte
+   « Un bilan personnalisé ». Le corps plancher du texte suivi sur téléphone
+   est **14 px**, jamais 10 ou 11.
    ⚠ Deux pièges mesurés à 320 px, tous deux dans des cartes `flex` icône +
    texte : un enfant de flex garde `min-width: auto` et refuse de descendre
    sous son mot le plus long (`min-w-0` sur le bloc de texte), et à deux

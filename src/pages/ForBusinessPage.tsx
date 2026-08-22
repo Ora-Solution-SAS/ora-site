@@ -256,7 +256,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
             {benefits.map((b, i) => {
               const Icon = b.icon;
               return (
@@ -279,14 +279,14 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     </div>
                     <div>
                       <h3
-                        className={`text-[13px] md:text-[17px] font-semibold tracking-tight leading-snug ${
+                        className={`text-[15px] md:text-[17px] font-semibold tracking-tight leading-snug ${
                           dk ? "text-white" : "text-gray-900"
                         }`}
                       >
                         {b.title}
                       </h3>
                       <p
-                        className={`mt-1.5 md:mt-2 text-[11px] md:text-[15px] leading-snug md:leading-relaxed ${
+                        className={`mt-1.5 md:mt-2 text-[14px] leading-[1.5] md:text-[15px] md:leading-relaxed ${
                           dk ? "text-gray-400" : "text-gray-500"
                         }`}
                       >

@@ -60,8 +60,15 @@ const Footer = ({
                 )}
               </div>
             )}
+            {/* PIED DE PAGE, CORPS DE TEXTE (2026-08-22) : la baseline, les
+                colonnes de liens et la mention légale tournaient à 11,5 / 11 /
+                9,5 px. Ce sont des tailles de PIED DE BUREAU, où la colonne
+                fait 300 px et se lit à 60 cm ; sur un téléphone tenu à 30 cm
+                elles passent sous le seuil de lecture confortable. Les liens du
+                pied sont en outre des CIBLES TACTILES. Le bureau ne bouge pas :
+                toutes les valeurs `md:` sont inchangées. */}
             {tagline && (
-              <p className="mt-2 text-[11.5px] leading-snug text-gray-500 md:mt-4 md:text-sm md:leading-relaxed dark:text-gray-400 max-w-xs">
+              <p className="mt-2 text-[13.5px] leading-[1.5] text-gray-500 md:mt-4 md:text-sm md:leading-relaxed dark:text-gray-400 max-w-xs">
                 {tagline}
               </p>
             )}
@@ -70,23 +77,23 @@ const Footer = ({
           {/* Menu columns */}
           {menuItems.map((section, sectionIdx) => (
             <div key={sectionIdx}>
-              <h3 className="mb-2 text-[10px] font-semibold text-gray-900 md:mb-4 md:text-sm dark:text-white uppercase tracking-wider">
+              <h3 className="mb-2.5 text-[11.5px] font-semibold text-gray-900 md:mb-4 md:text-sm dark:text-white uppercase tracking-wider">
                 {section.title}
               </h3>
-              <ul className="space-y-1.5 md:space-y-3">
+              <ul className="space-y-2.5 md:space-y-3">
                 {section.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
                     {link.onClick ? (
                       <button
                         onClick={link.onClick}
-                        className="text-left text-[11px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                        className="text-left text-[13.5px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                       >
                         {link.text}
                       </button>
                     ) : (
                       <a
                         href={link.url ?? "#"}
-                        className="text-left text-[11px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
+                        className="text-left text-[13.5px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"
                       >
                         {link.text}
                       </a>
@@ -101,7 +108,7 @@ const Footer = ({
         {/* Bottom bar */}
         <div className="mt-6 border-t border-gray-200 pt-4 md:mt-10 md:pt-5 dark:border-gray-800">
           {legal && (
-            <p className="mb-3 text-[9.5px] max-md:leading-snug leading-relaxed text-gray-400 md:mb-4 md:text-[11px] dark:text-gray-500">
+            <p className="mb-3 text-[11px] max-md:leading-[1.5] leading-relaxed text-gray-400 md:mb-4 md:text-[11px] dark:text-gray-500">
               {legal}
             </p>
           )}
