@@ -113,7 +113,7 @@ export default function FAQ() {
        colonne se lit de haut en bas, et l'ouverture d'une réponse n'allonge
        que sa colonne. Sous lg les deux piles s'empilent et la liste redevient
        continue. */
-    <section id="faq" className="relative scroll-mt-24 bg-white px-6 pb-24 pt-16 md:px-12 md:pb-32 md:pt-20 dark:bg-black md:dark:bg-black">
+    <section id="faq" className="relative scroll-mt-24 bg-white px-5 pb-24 pt-16 md:px-12 md:pb-32 md:pt-20 dark:bg-black md:dark:bg-black">
       <div className="mx-auto max-w-7xl">
         <span className="font-inter text-xs font-semibold uppercase tracking-[0.18em] text-blue-500 dark:text-blue-400">
           {t({ fr: "FAQ", en: "FAQ" })}

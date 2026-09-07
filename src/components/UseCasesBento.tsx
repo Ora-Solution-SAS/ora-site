@@ -1881,7 +1881,10 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                    droits qui saigne vers les bords bas et droit. */
                 <div className="relative grid md:grid-cols-[1fr_1.8fr] gap-6 md:gap-10 items-center">
                   <h3
-                    className="font-inter font-normal text-[1.5rem] md:text-[1.85rem] tracking-[-0.025em] leading-[1.15] pr-14 md:pr-0"
+                    /* 1,5 rem faisait QUATRE lignes sur 260 px de colonne
+                       utile (pastille d'agrandissement déduite) : le titre
+                       occupait à lui seul le tiers haut de la carte. */
+                    className="font-inter font-normal text-[1.25rem] md:text-[1.85rem] tracking-[-0.025em] leading-[1.15] pr-14 md:pr-0"
                     style={{ color: c.ink ?? INK }}
                   >
                     {c.title}
@@ -1947,7 +1950,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
               ) : (
                 <>
                   <h3
-                    className={`relative font-inter font-normal text-[1.3rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] pr-14 ${c.titleClass ?? ""}`}
+                    className={`relative font-inter font-normal text-[1.15rem] md:text-[1.5rem] tracking-[-0.025em] leading-[1.15] pr-14 ${c.titleClass ?? ""}`}
                     style={{ color: c.ink ?? INK }}
                   >
                     {c.title}

@@ -416,7 +416,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
           1. HERO
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="relative overflow-hidden pt-28 pb-24 md:pt-36 md:pb-32 px-6 lg:px-10"
+        className="relative overflow-hidden pt-24 pb-14 md:pt-36 md:pb-32 px-5 lg:px-10"
         style={{ background: bg }}
       >
         {/* Halo arrière-plan */}
@@ -433,7 +433,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 xl:gap-20 items-center">
+          <div className="grid gap-9 lg:grid-cols-2 lg:gap-12 xl:gap-20 items-center">
 
             {/* ── Colonne gauche : copy ── */}
             <div className="max-w-[540px]">
@@ -456,7 +456,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
               <h1
                 className={[
                   "ec-stagger ec-d2",
-                  "font-poppins text-[clamp(2rem,4vw,3.4rem)] font-semibold leading-[1.1] tracking-[-0.03em]",
+                  "font-poppins text-[clamp(1.75rem,4vw,3.4rem)] font-semibold leading-[1.1] tracking-[-0.03em]",
                   textPrimary,
                 ].join(" ")}
               >
@@ -468,7 +468,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
               <p
                 className={[
                   "ec-stagger ec-d3",
-                  "font-inter mt-6 text-[clamp(0.95rem,1.6vw,1.05rem)] leading-[1.8]",
+                  "font-inter mt-5 md:mt-6 text-[clamp(0.95rem,1.6vw,1.05rem)] leading-[1.7] md:leading-[1.8]",
                   textSecondary,
                 ].join(" ")}
               >
@@ -528,15 +528,15 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
           2. SOLUTIONS METIER
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-24 md:py-32 px-6 lg:px-10"
+        className="py-16 md:py-32 px-5 lg:px-10"
         style={{ background: bgContrast }}
       >
         <div className="max-w-7xl mx-auto">
 
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-10 md:mb-16 max-w-2xl mx-auto">
             <h2
               className={[
-                "font-poppins text-[clamp(1.75rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.55rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
@@ -555,14 +555,14 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {solutions.map((sol, i) => {
               const Icon = sol.icon;
               return (
                 <div
                   key={i}
                   className={[
-                    "ec-card p-7 rounded-[20px] border transition-colors duration-200",
+                    "ec-card p-4 rounded-[16px] md:p-7 md:rounded-[20px] border transition-colors duration-200",
                     borderMuted, cardBg,
                     dk ? "hover:bg-white/[0.05]" : "hover:bg-gray-50/70",
                   ].join(" ")}
@@ -570,7 +570,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
                 >
                   <div
                     className={[
-                      "w-10 h-10 rounded-xl flex items-center justify-center mb-5",
+                      "w-9 h-9 rounded-[10px] flex items-center justify-center mb-3 md:w-10 md:h-10 md:rounded-xl md:mb-5",
                       dk ? "bg-blue-500/10" : "bg-blue-50",
                     ].join(" ")}
                   >
@@ -578,13 +578,13 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
                   </div>
                   <h3
                     className={[
-                      "font-poppins text-[16px] font-semibold tracking-tight leading-snug mb-2",
+                      "font-poppins text-[15px] md:text-[16px] font-semibold tracking-tight leading-snug mb-1.5 md:mb-2",
                       textPrimary,
                     ].join(" ")}
                   >
                     {sol.title}
                   </h3>
-                  <p className={["font-inter text-[14px] leading-relaxed", textSecondary].join(" ")}>
+                  <p className={["font-inter text-[14px] leading-[1.5] md:leading-relaxed", textSecondary].join(" ")}>
                     {sol.desc}
                   </p>
                 </div>
@@ -600,7 +600,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
               dk ? "bg-white/[0.025]" : "bg-blue-50/40",
             ].join(" ")}
           >
-            <p className={["font-inter text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}>
+            <p className={["font-inter text-[14.5px] leading-[1.5] md:text-[15px] md:leading-relaxed flex-1", textSecondary].join(" ")}>
               {t({
                 fr: "Ora se branche directement sur vos fichiers Excel existants. Aucune migration, aucune refonte de processus.",
                 en: "Ora plugs straight into your existing Excel files. No migration, no process overhaul.",
@@ -616,12 +616,12 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
           3. TESTIMONIALS
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-24 md:py-32 px-6 lg:px-10"
+        className="py-16 md:py-32 px-5 lg:px-10"
         style={{ background: bg }}
       >
         <div className="max-w-7xl mx-auto">
 
-          <div className="text-center mb-16 max-w-xl mx-auto">
+          <div className="text-center mb-10 md:mb-16 max-w-xl mx-auto">
             <p
               className={[
                 "font-inter text-[11px] font-semibold uppercase tracking-[0.18em] mb-4",
@@ -632,7 +632,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
             </p>
             <h2
               className={[
-                "font-poppins text-[clamp(1.75rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.55rem,3.5vw,2.75rem)] font-semibold leading-[1.15] tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
@@ -642,12 +642,12 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
             {testimonials.map((testi, i) => (
               <div
                 key={i}
                 className={[
-                  "ec-testi flex flex-col gap-5 p-7 rounded-[20px] border",
+                  "ec-testi flex flex-col gap-3 md:gap-5 p-4 rounded-[16px] md:p-7 md:rounded-[20px] border",
                   borderMuted, cardBg,
                 ].join(" ")}
                 data-delay={String(i * 100)}
@@ -659,7 +659,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
                 </div>
 
                 <blockquote
-                  className={["font-inter text-[15px] leading-relaxed flex-1", textSecondary].join(" ")}
+                  className={["font-inter text-[14.5px] leading-[1.5] md:text-[15px] md:leading-relaxed flex-1", textSecondary].join(" ")}
                 >
                   &ldquo;{testi.quote}&rdquo;
                 </blockquote>
@@ -674,7 +674,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
                   >
                     {testi.name.charAt(0)}
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className={["font-inter text-[13px] font-semibold", textPrimary].join(" ")}>
                       {testi.name}
                     </p>
@@ -693,13 +693,13 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
           4. CTA
       ══════════════════════════════════════════════════════════ */}
       <section
-        className="py-24 md:py-28 px-6 lg:px-10"
+        className="py-16 md:py-28 px-5 lg:px-10"
         style={{ background: bgContrast }}
       >
         <div className="max-w-3xl mx-auto text-center">
           <div
             className={[
-              "rounded-[32px] px-10 py-16 border",
+              "rounded-[24px] px-6 py-12 border md:rounded-[32px] md:px-10 md:py-16",
               borderMuted,
               dk ? "bg-white/[0.03]" : "bg-gray-50/80",
             ].join(" ")}
@@ -708,7 +708,7 @@ export default function SolutionExpertiseComptablePage({ theme, openBooking }: P
 
             <h2
               className={[
-                "font-poppins text-[clamp(1.6rem,3vw,2.5rem)] font-semibold tracking-[-0.03em]",
+                "font-poppins text-[clamp(1.45rem,3vw,2.5rem)] font-semibold tracking-[-0.03em]",
                 textPrimary,
               ].join(" ")}
             >
