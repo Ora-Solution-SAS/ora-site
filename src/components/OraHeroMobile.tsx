@@ -1,37 +1,40 @@
 import { motion } from "framer-motion";
-import {
-  ArrowRight, BarChart3, Bell, Check, ChevronRight, FileText, Globe, Plus, Sparkles,
-} from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
+import { VideoWithScrubber } from "./InViewVideo";
 import { useLang } from "@/lib/i18n";
+import { animatedScrollToId } from "@/lib/scrollTo";
 import { BOOKING_CTA } from "@/lib/bookingCta";
+import OraAppScene from "./OraAppScene";
 
 /**
- * OraHeroMobile — the hero for phones (< 768px), rendered instead of the
- * scroll-driven <OraHeroDemo> scene.
+ * OraHeroMobile — le hero des téléphones (< 768 px), monté à la place de la
+ * scène au défilement d'OraHeroDemo, qui est une grammaire de souris.
  *
- * Why a separate component rather than scaling the desktop scene down: the
- * desktop scene is a fixed 1040x640 stage holding a 1180x720 replica of the
- * app. Fitting either into a 327px-wide phone column gives a scale of ~0.29,
- * which renders the app's 7-13.5px type at 2-4px. Cropping instead of scaling
- * does not save it: the replica's type only stays legible at scale ~1, and at
- * that scale a 327px window shows 28% of the interface width, i.e. a fragment
- * with no meaning.
+ * ── CE QUE LE PREMIER ÉCRAN PORTE, ET RIEN D'AUTRE ──────────────────────────
+ * Refonte du 2026-09-07, sur trois captures de datasnipper.com fournies par le
+ * client : « c'est bien plus clair, bien plus propre, bien plus dégagé ».
+ * Ce qui produit cet effet chez eux n'est pas une couleur ni une police, c'est
+ * une RÈGLE DE RATIONNEMENT : un seul groupe par écran, et du blanc entre les
+ * groupes plutôt que du contenu.
  *
- * So the app is RECOMPOSED at phone width: same story, same copy, same
- * colours as OraAppScene, laid out full-width so every line is legible. Same
- * approach as OraExperienceCarousel, which already ships a distinct touch
- * branch instead of shrinking its desktop one.
+ * Le hero portait sept groupes empilés — pastille, titre, phrase, bouton,
+ * trois lignes de réassurance, la réplique du logiciel, une séquence dépôt →
+ * livrables en quatre cartes, un second bouton. Le premier écran s'arrêtait au
+ * milieu de la réassurance : le visiteur voyait la promesse et une liste de
+ * garanties, jamais le produit.
  *
- * No simulated mouse cursor and no scroll scrub here: both are desktop
- * grammar. The story reads top to bottom, in one normal scroll.
+ * Il en porte quatre, dans cet ordre : la promesse, la phrase qui l'explique,
+ * l'appel, le produit. La réassurance passe SOUS le produit — elle rassure
+ * quelqu'un déjà convaincu, elle ne convainc personne — et la séquence dépôt →
+ * livrables est retirée (client, même jour : « c'est pas ce que je veux »).
+ *
+ * ── L'APPEL N'EST PAS PLEINE LARGEUR ────────────────────────────────────────
+ * DataSnipper étend le sien d'un bord à l'autre. Ici non : le même bouton a
+ * déjà été jugé « trop gros » à 350 px le 2026-09-07. Il garde donc sa largeur
+ * propre, et gagne en présence par la hauteur (54 px) et l'ombre portée. La
+ * seconde action est un lien, pas un second bouton plein : deux pleins côte à
+ * côte se disputent le regard, et c'est la réservation qui compte.
  */
-
-/** Files of the « Reprendre » list, same set as OraAppScene. */
-const FILES: { name: string; meta: string; kind: "xlsx" | "txt"; state: "run" | "todo" }[] = [
-  { name: "01_grand_livre_client_a_nettoyer", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "run" },
-  { name: "demo_petit_5k_2024_N_studio (2)", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "todo" },
-  { name: "FEC_demo_2024_398k_lignes (2)", meta: "XLSX · 20 juil.", kind: "xlsx", state: "todo" },
-];
 
 /**
  * Arrivée au MONTAGE, pas au `whileInView`. Deux raisons : c'est le hero, donc
@@ -48,76 +51,36 @@ const rise = (delay: number) => ({
 export default function OraHeroMobile({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
 
-  /** Quick-access tiles: stacked full width instead of a 3-column grid. */
-  const quick = [
-    {
-      icon: <Plus className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#e8f0ff] text-[#2f6ff0]",
-      title: t({ fr: "Nouveau projet", en: "New project" }),
-      sub: "Deal PE, audit, M&A...",
-    },
-    {
-      icon: <Globe className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#f0ecfe] text-[#7c53e8]",
-      title: t({ fr: "Tous les Atlas", en: "All Atlas" }),
-      sub: t({ fr: "Liste de vos projets", en: "Your projects" }),
-    },
-    {
-      icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#fef3e2] text-[#d97a06]",
-      title: "Ora Engineering",
-      sub: t({ fr: "Automatisation sur-mesure", en: "Custom automation" }),
-    },
-  ];
-
-  /** What Ora gives back, told as a list instead of chips floating over the UI. */
-  const outputs = [
-    {
-      icon: <BarChart3 className="h-[17px] w-[17px]" strokeWidth={2.2} />,
-      tint: "bg-[#e8f0ff] text-[#2f6ff0]",
-      title: t({ fr: "Reporting généré", en: "Report generated" }),
-      sub: t({ fr: "Mis en forme, prêt à envoyer", en: "Formatted, ready to send" }),
-    },
-    {
-      icon: <Check className="h-[17px] w-[17px]" strokeWidth={2.6} />,
-      tint: "bg-[#f0ecfe] text-[#7c53e8]",
-      title: t({ fr: "398 000 lignes contrôlées", en: "398,000 rows checked" }),
-      sub: t({ fr: "Écritures atypiques repérées", en: "Unusual entries flagged" }),
-    },
-    {
-      icon: <FileText className="h-[17px] w-[17px]" strokeWidth={2.2} />,
-      tint: "bg-[#fef3e2] text-[#d97a06]",
-      title: t({ fr: "Synthèse PDF", en: "PDF summary" }),
-      sub: t({ fr: "Livrable final, en un clic", en: "Final deliverable, one click" }),
-    },
-  ];
-
   return (
-    <div className="relative px-5 pt-24 pb-16">
-      {/* Soft brand glow behind the phone card.
-          ⚠ `max-w-full` : le commentaire d'origine la disait « clipped by the
-          parent section », ce qui était faux — mesuré à 375 px, ce disque de
-          420 px atteignait x = 398 et participait au débordement horizontal de
-          la page. Rien ne la rognait. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-[46%] -z-10 h-[420px] w-[420px] max-w-full -translate-x-1/2 rounded-full opacity-70 dark:opacity-40"
-        style={{ background: "radial-gradient(circle at 40% 35%, #ffffff, #eef2fb 62%, transparent 74%)" }}
-      />
+    <div className="relative px-6 pb-14">
+      {/* ── 1. LA PROMESSE, CENTRÉE DANS L'ÉCRAN ─────────────────────────────
+             `min-h-svh` et centrage vertical, comme la référence : chez elle le
+             titre est au milieu de l'écran, pas posé sous la barre. Ici il
+             commençait 48 px sous le haut de page — et comme l'en-tête est
+             FIXE et haut de 68 px, la pastille de marque passait dessous, à
+             hauteur du logo : deux logos sur la même ligne, ce que le client a
+             relevé (« this double logo... is not good »).
+             Le retrait haut vaut donc la hauteur de l'en-tête, et `svh` plutôt
+             que `vh` : sur téléphone, `vh` compte la barre d'URL rétractée, ce
+             qui pousse le second bouton hors de l'écran tant qu'elle est là.
 
-      {/* ── Titre ─────────────────────────────────────────────────────── */}
-      <motion.div {...rise(0)} className="text-center">
-        <span className="inline-flex items-center gap-2 font-instrument font-medium text-[15px] tracking-[-0.01em]">
-          <img
-            src="/logos/icon-color.png"
-            alt=""
-            aria-hidden
-            className="h-[1.2em] w-auto select-none"
-            draggable={false}
-          />
-          <span className="text-brand-gradient">
-            {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
-          </span>
+             ⚠ 76svh ET NON 100 (client 2026-09-07 : « too much gap between the
+             button… and the actual replication »). À pleine hauteur, le
+             centrage laissait 161 px de vide sous le second bouton, plus le
+             rembourrage : 217 px avant la réplique du logiciel, soit un quart
+             d'écran de rien. Le bloc reste centré — c'est ce qui met le titre au
+             milieu et non sous la barre — mais dans les trois quarts de
+             l'écran : l'écart tombe à une centaine de pixels, assez pour
+             respirer, trop peu pour qu'on croie la page finie. */}
+      <motion.div
+        {...rise(0)}
+        className="flex min-h-[76svh] flex-col justify-center pb-6 pt-[68px] text-center"
+      >
+        {/* SANS LA MARQUE EN IMAGE : l'en-tête porte déjà le logo, dix pixels
+            plus haut. Les deux se lisaient comme un doublon, et la pastille
+            n'a pas besoin de le répéter pour dire ce qu'elle dit. */}
+        <span className="font-instrument text-[14px] font-medium uppercase tracking-[0.14em] text-brand-gradient">
+          {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
         </span>
 
         {/* Same face as the desktop hero (Instrument Sans, documented
@@ -127,8 +90,14 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
             lissage en niveaux de gris est le seul levier. Voir le pavé dans
             OraHeroDemo.tsx. */}
         {/* h1 : c'est le titre de la page sur téléphone, le hero desktop
-            étant masqué sous md. Voir le pavé d'OraHeroDemo. */}
-        <h1 className="antialiased mt-3 font-instrument font-normal text-[clamp(2.05rem,9.4vw,2.9rem)] leading-[1.06] tracking-[-0.035em] text-[#111827] dark:text-white">
+            étant masqué sous md. Voir le pavé d'OraHeroDemo.
+            La borne haute monte de 2,9 à 3,1 rem : sur la référence, le titre
+            occupe le tiers de l'écran à lui seul, et c'est lui qui fait la
+            hiérarchie — tout le reste de la page est plus petit que lui. La
+            borne fluide reste à 9,6vw : à 10,4 la première ligne venait mourir
+            sur le bord droit, ce qui se lit comme un débordement même quand
+            rien ne dépasse (mesuré : aucun, de 320 à 430 px). */}
+        <h1 className="antialiased mt-6 font-instrument font-normal text-[clamp(2.1rem,9.6vw,3.1rem)] leading-[1.04] tracking-[-0.038em] text-[#111827] dark:text-white">
           {/* Seconde ligne en dégradé de marque (client 2026-08-11 : « repasse
               cela en bleu »), au mot et au traitement près comme le hero
               desktop, sinon mobile et desktop ne montrent plus le même
@@ -140,219 +109,132 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </h1>
 
         {/* Même phrase que le hero desktop, au mot près (voir le pavé
-            d'OraHeroDemo : elle nomme le LOGICIEL, client 2026-08-18). */}
-        <p className="mt-3.5 font-instrument font-normal text-[16.5px] leading-[1.45] text-gray-500 dark:text-gray-400">
+            d'OraHeroDemo : elle nomme le LOGICIEL, client 2026-08-18).
+            Encre remontée de `gray-500` à #4b5563 : sous un titre de 3,2 rem,
+            le gris précédent lisait comme une légende et non comme la phrase
+            qui porte l'offre. */}
+        <p className="mx-auto mt-4 max-w-[34ch] font-instrument font-normal text-[17px] leading-[1.5] text-[#4b5563] dark:text-gray-400">
           {t({
             fr: "Le logiciel qui reprend le répétitif comptable, pour rediriger votre temps vers le conseil.",
             en: "The software that takes over repetitive accounting work, redirecting your time to advisory.",
           })}
         </p>
 
-        {/* Touch target kept at 52px tall.
-            ⚠ Mène à la RÉSERVATION depuis le 2026-08-26, comme le hero de
-            bureau : le lien vers la web app est retiré du site (voir le pavé
-            de OraHeroDemo). Les deux heros portent le même appel. */}
-        <button
-          type="button"
-          onClick={openBooking}
-          className="mt-6 inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter text-[16.5px] font-semibold text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2563eb]"
-        >
-          {t(BOOKING_CTA)}
-          <ArrowRight className="h-[18px] w-[18px]" />
-        </button>
-
-        {/* ⚠ MÊME RANGÉE DE PREUVE QUE LE HERO DE BUREAU (2026-08-21), au mot
-            près : les deux doivent dire la même chose, c'est le même écran vu
-            sur deux tailles. Voir le pavé de OraHeroDemo pour le détail des
-            arbitrages — notamment pourquoi « 100 % EU » est devenu « Hébergé en
-            Europe » (Genève n'est pas dans l'Union) et pourquoi « no LLM » n'y
-            figure pas.
-            Empilée et non sur une ligne : à cette largeur, la liste à « ✦ » du
-            bureau se coupait n'importe où. La quatrième mention est donc
-            abandonnée ici — quatre lignes de réassurance repousseraient la
-            réplique du logiciel hors du premier écran. */}
-        <ul className="mt-4 flex flex-col items-center gap-1.5 font-inter text-[13.5px] text-gray-400 dark:text-gray-500">
-          {[
-            t({ fr: "Hébergé en Europe, hors CLOUD Act", en: "Hosted in Europe, outside the CLOUD Act" }),
-            t({ fr: "Chiffré sur votre appareil", en: "Encrypted on your device" }),
-            t({ fr: "Même fichier, même résultat", en: "Same file, same result" }),
-          ].map((line) => (
-            <li key={line} className="flex items-center gap-1.5">
-              <Check className="h-[13px] w-[13px] shrink-0 text-emerald-500" strokeWidth={3} />
-              {line}
-            </li>
-          ))}
-        </ul>
+        {/* ── 2. LES DEUX ACTIONS ──────────────────────────────────────────
+            Motif de la référence : l'appel qui engage, et à côté la sortie de
+            secours pour qui n'est pas prêt à parler à quelqu'un. La seconde
+            descend vers la démo déjà servie par la page — elle n'ajoute pas de
+            contenu, elle ouvre un chemin.
+            ⚠ L'APPEL MÈNE À LA RÉSERVATION depuis le 2026-08-26 : le lien vers
+            la web app est retiré du site (voir le pavé d'OraHeroDemo). Les deux
+            heros portent le même. */}
+        {/* ⚠ DEUX BOUTONS DE MÊME TAILLE, ET C'EST LA DEMANDE (client
+            2026-09-07, capture à l'appui : « they have two buttons that are
+            exactly the same size, which I'd like you to copy »). Même largeur,
+            même hauteur, même rayon : ce qui les sépare est la SURFACE — encre
+            pleine pour l'appel qui engage, surface blanche cerclée pour la
+            sortie de secours de qui n'est pas prêt à parler à quelqu'un.
+            Cela revient sur le bouton à largeur propre posé plus tôt le même
+            jour, quand la consigne était l'inverse : le pleine largeur était
+            « trop gros » dans un hero à sept groupes. Il ne l'est plus dans un
+            hero qui n'en porte que quatre, et c'est cette forme-là que la
+            référence utilise.
+            Le rayon reste celui d'Ora, `rounded-full` : la référence a des
+            coins presque droits, mais tous les appels du site sont ronds, en-tête
+            compris. Copier son rayon romprait avec le reste des pages. */}
+        <div className="mt-9 flex flex-col gap-3">
+          {/* Le libellé vient de bookingCta.ts et le geste d'openBooking : tant
+              que la réservation est fermée, le second ouvre le brouillon de
+              courriel, et `VITE_BOOKING_ENABLED=true` rebranche les deux d'un
+              coup. Un `mailto:` écrit ici court-circuiterait cet interrupteur. */}
+          <button
+            type="button"
+            onClick={openBooking}
+            className="inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[#3b82f6] font-inter text-[16.5px] font-semibold text-white shadow-[0_16px_34px_-14px_rgba(59,130,246,0.75)] transition-transform duration-150 active:scale-[0.98] active:bg-[#2563eb]"
+          >
+            {t(BOOKING_CTA)}
+            <ArrowRight className="h-[18px] w-[18px]" />
+          </button>
+          <button
+            type="button"
+            onClick={() => animatedScrollToId("automatisations", -70)}
+            className="inline-flex h-[56px] w-full items-center justify-center gap-2.5 rounded-full bg-white font-inter text-[16.5px] font-semibold text-[#111827] ring-1 ring-inset ring-[#0a2540]/[0.14] transition-transform duration-150 active:scale-[0.98] active:bg-[#f7f8fa] dark:bg-white/[0.06] dark:text-white dark:ring-white/15"
+          >
+            <Play className="h-[13px] w-[13px] translate-x-[0.5px] fill-current text-[#3b82f6]" strokeWidth={0} />
+            {t({ fr: "Voir le logiciel", en: "See the software" })}
+          </button>
+        </div>
       </motion.div>
 
-      {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ── */}
+      {/* ── 3. LE PRODUIT ────────────────────────────────────────────────────
+             OraAppScene, le composant même du hero de bureau : il se compose à
+             1180 × 720 et se met tout seul à l'échelle de son cadre, il suffit
+             de lui donner le rapport de la scène. Aucune règle responsive
+             là-dedans — l'image est celle du PC, à l'échelle près, barre
+             latérale et grille d'accès rapides comprises.
+             `mt-12` et non `mt-8` : c'est le blanc qui sépare deux groupes, et
+             la référence en met toujours plus qu'on ne croit. */}
       <motion.div
         {...rise(0.08)}
-        className="mt-10 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
+        className="mt-4 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
       >
-        {/* Barre de fenêtre */}
-        <div className="flex items-center gap-2 border-b border-[#ececef] bg-[#f7f7f8] px-3.5 py-2.5">
-          <span className="flex gap-1.5">
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#ff5f57]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#febc2e]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#28c840]" />
-          </span>
-          <span className="flex-1 text-center font-inter text-[12px] font-semibold text-[#3f4652]">Ora</span>
-          <span className="w-[38px]" />
-        </div>
-
-        {/* En-tête applicatif */}
-        <div className="flex items-center gap-2 border-b border-[#f0f0f2] px-4 py-3">
-          <img src="/logos/logo-color-dark.png" alt="Ora" className="h-[19px] w-auto" draggable={false} />
-          <span className="ml-auto flex items-center gap-1.5 rounded-full border border-[#e6e7ea] px-2.5 py-1 font-inter text-[11.5px] font-semibold text-[#4b5160]">
-            <Bell className="h-[13px] w-[13px]" strokeWidth={2.2} />
-            <span className="inline-grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#2f6ff0] px-1 font-inter text-[10px] font-bold text-white">
-              1
-            </span>
-          </span>
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#2f6ff0] font-inter text-[12.5px] font-bold text-white">
-            T
-          </span>
-        </div>
-
-        <div className="bg-[#fdfdfb] px-4 pb-5 pt-4">
-          <p className="font-poppins text-[21px] font-semibold leading-tight tracking-[-0.02em] text-[#111827]">
-            {t({ fr: "Heureux de vous revoir", en: "Good to see you again" })}
-          </p>
-          <p className="mt-1 font-inter text-[12px] text-[#8b909b]">
-            {t({ fr: "Mercredi 29 juillet", en: "Wednesday, July 29" })}
-          </p>
-
-          {/* Grande carte bleue, pleine largeur : le geste central du produit. */}
-          <div
-            className="mt-4 flex items-center gap-3 rounded-[14px] px-4 py-3.5"
-            style={{
-              background: "linear-gradient(100deg,#2f6ff0,#3f7bf5 55%,#5b8cf8)",
-              boxShadow: "0 16px 34px -16px rgba(47,111,240,.75)",
-            }}
-          >
-            <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[11px] bg-white/[0.22] text-white">
-              <FileText className="h-[19px] w-[19px]" strokeWidth={2} />
-            </span>
-            <span className="min-w-0">
-              <b className="block font-inter text-[15.5px] font-bold text-white">
-                {t({ fr: "Ouvrir un fichier", en: "Open a file" })}
-              </b>
-              <span className="mt-0.5 block font-inter text-[12.5px] leading-snug text-white/[0.86]">
-                {t({
-                  fr: "Excel ou CSV, lancez vos automatisations en un clic",
-                  en: "Excel or CSV, run your automations in one click",
-                })}
-              </span>
-            </span>
-          </div>
-
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Accès rapide", en: "Quick access" })}
-          </p>
-          <div className="mt-2.5 flex flex-col gap-2">
-            {quick.map((q) => (
-              <div
-                key={q.title}
-                className="flex items-center gap-3 rounded-[13px] border border-[#eceef1] bg-white px-3.5 py-3"
-              >
-                <span className={`grid h-[36px] w-[36px] shrink-0 place-items-center rounded-[10px] ${q.tint}`}>
-                  {q.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block font-inter text-[13.5px] font-bold text-[#111827]">{q.title}</b>
-                  <span className="block font-inter text-[11.5px] text-[#8b909b]">{q.sub}</span>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#c3c6cd]" strokeWidth={2.2} />
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Reprendre", en: "Resume" })}
-          </p>
-          <div className="mt-2.5 overflow-hidden rounded-[13px] border border-[#eceef1] bg-white">
-            {FILES.map((f, i) => (
-              <div
-                key={f.name}
-                className={`flex items-center gap-3 px-3.5 py-2.5${i > 0 ? " border-t border-[#f4f5f7]" : ""}`}
-              >
-                <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-[#e9f7ee] text-[#177245]">
-                  <FileText className="h-[14px] w-[14px]" strokeWidth={2.2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block truncate font-inter text-[12.5px] font-semibold text-[#111827]">{f.name}</b>
-                  <span className="block font-inter text-[10.5px] text-[#9aa0aa]">{f.meta}</span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 font-inter text-[10.5px] font-semibold ${
-                    f.state === "run" ? "bg-[#eaf1ff] text-[#2f6ff0]" : "bg-[#f3f4f6] text-[#7b8190]"
-                  }`}
-                >
-                  {f.state === "run" ? t({ fr: "En cours", en: "Running" }) : t({ fr: "À faire", en: "To do" })}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="aspect-[1180/720] w-full">
+          <OraAppScene />
         </div>
       </motion.div>
 
-      {/* ── L'histoire entrée → sortie, en liste plutôt qu'en pastilles
-             flottantes (elles se chevauchaient et devenaient illisibles). ── */}
-      <motion.div {...rise(0.14)} className="mt-9">
-        <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
-          {t({ fr: "Vous déposez", en: "You drop in" })}
-        </p>
-        <div className="mt-2.5 flex items-center gap-3 rounded-[14px] bg-white px-3.5 py-3 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10">
-          <span className="grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] bg-[#e9f7ee] text-[#177245]">
-            <FileText className="h-[17px] w-[17px]" strokeWidth={2.2} />
-          </span>
-          <span className="min-w-0">
-            <b className="block font-inter text-[13.5px] font-bold text-[#111827] dark:text-white">
-              balance_2025.xlsx
-            </b>
-            <span className="block font-inter text-[11.5px] text-gray-500 dark:text-gray-400">
-              {t({ fr: "Déposé dans Ora", en: "Dropped into Ora" })}
-            </span>
-          </span>
-        </div>
-
-        <div className="my-3 flex justify-center" aria-hidden>
-          <svg width="16" height="22" viewBox="0 0 16 22" fill="none" className="text-gray-300 dark:text-gray-600">
-            <path d="M8 1v20m0 0 5-5m-5 5-5-5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </div>
-
-        <p className="font-inter text-[11px] font-bold uppercase tracking-[0.1em] text-gray-400 dark:text-gray-500">
-          {t({ fr: "Ora vous rend", en: "Ora hands back" })}
-        </p>
-        <div className="mt-2.5 flex flex-col gap-2">
-          {outputs.map((o) => (
-            <div
-              key={o.title}
-              className="flex items-center gap-3 rounded-[14px] bg-white px-3.5 py-3 ring-1 ring-black/[0.05] shadow-[0_8px_24px_-14px_rgba(15,23,42,0.3)] dark:bg-white/[0.04] dark:ring-white/10"
-            >
-              <span className={`grid h-[34px] w-[34px] shrink-0 place-items-center rounded-[9px] ${o.tint}`}>
-                {o.icon}
-              </span>
-              <span className="min-w-0">
-                <b className="block font-inter text-[13.5px] font-bold text-[#111827] dark:text-white">{o.title}</b>
-                <span className="block font-inter text-[11.5px] text-gray-500 dark:text-gray-400">{o.sub}</span>
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* ── LA DÉMO, SOUS LA RÉPLIQUE ────────────────────────────────────────
+             ora-1.mp4, le film du produit : la réplique montre l'écran, le clip
+             montre ce qu'on en fait. Client 2026-09-07 : « add the video demo
+             under this software replication ».
+             ⚠ 23 Mo, ET RIEN NE LES TÉLÉCHARGE AVANT L'ENTRÉE DANS L'ÉCRAN.
+             InViewVideo pose `preload="metadata"` — quelques dizaines de
+             kilo-octets d'en-tête — et n'appelle `play()` qu'à l'intersection :
+             le corps du fichier ne part qu'à ce moment. La première image
+             s'affiche entre-temps depuis le poster, sinon le cadre resterait
+             noir sur du blanc. La barre de lecture donne au visiteur la main
+             sur un mouvement qu'il n'a pas demandé. */}
+      <motion.div {...rise(0.12)} className="mt-4">
+        <VideoWithScrubber
+          src="/ora-1.mp4"
+          poster="/posters/ora-1.jpg"
+          frameClassName="relative overflow-hidden rounded-[20px] ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
+          frameStyle={{ aspectRatio: "16 / 9" }}
+          className="block h-full w-full object-cover"
+        />
       </motion.div>
 
-      {/* CTA de conversion : le but du site reste la prise de rendez-vous. */}
-      <motion.button
-        {...rise(0.2)}
-        onClick={openBooking}
-        className="mt-9 inline-flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
+      {/* ── 4. LA RÉASSURANCE, APRÈS LE PRODUIT ──────────────────────────────
+             ⚠ MÊME RANGÉE QUE LE HERO DE BUREAU (2026-08-21), au mot près : les
+             deux doivent dire la même chose, c'est le même écran vu sur deux
+             tailles. Voir le pavé d'OraHeroDemo pour les arbitrages — notamment
+             pourquoi « 100 % EU » est devenu « Hébergé en Europe » (Genève n'est
+             pas dans l'Union) et pourquoi « no LLM » n'y figure pas.
+             Elle occupait le bas du PREMIER écran, entre l'appel et le produit :
+             trois garanties lues par quelqu'un qui ne sait pas encore ce qu'on
+             lui vend. Elle passe sous le produit, et en séparateurs plutôt qu'en
+             liste à puces — une ligne de bas de page, pas un argumentaire. */}
+      <motion.ul
+        {...rise(0.14)}
+        className="mt-6 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 font-inter text-[13px] text-gray-400 dark:text-gray-500"
       >
-        {t(BOOKING_CTA)}
-        <ArrowRight className="h-[18px] w-[18px]" />
-      </motion.button>
+        {[
+          t({ fr: "Hébergé en Europe", en: "Hosted in Europe" }),
+          t({ fr: "Chiffré sur votre appareil", en: "Encrypted on your device" }),
+          t({ fr: "Même fichier, même résultat", en: "Same file, same result" }),
+        ].map((line, i) => (
+          <li key={line} className="flex items-center gap-2.5">
+            {line}
+            {i < 2 && <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-gray-300 dark:bg-gray-600" />}
+          </li>
+        ))}
+      </motion.ul>
+
+      {/* ⚠ PAS DE TROISIÈME APPEL ICI (client 2026-09-07 : « remove the black
+             button »). Le hero en porte déjà deux, de même taille, à un écran
+             au-dessus ; celui-ci refermait la section sur un troisième, plein
+             et noir, juste après la vidéo. La conversion reste servie par les
+             deux du premier écran et par ceux des sections suivantes. */}
     </div>
   );
 }

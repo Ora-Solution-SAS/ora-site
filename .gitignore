@@ -38,6 +38,9 @@ public/ora_pdf_extract_v3.mp4
 *.sln
 *.sw?
 
+# Aperçu autonome produit par scripts/build-preview.mjs
+dist-preview
+
 # Secrets de développement du service de réservation (CalDAV, Brevo, kMeet).
 # Les mêmes clés vivent en production dans les variables d'environnement Vercel.
 # ⚠ NE JAMAIS COMMITER CE FICHIER.

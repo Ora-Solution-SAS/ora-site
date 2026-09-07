@@ -11,6 +11,8 @@ import Typewriter from "./Typewriter";
 import PrevisionnelStudio from "./PrevisionnelStudio";
 import { FileChipStrip } from "./StackingCards";
 import { ZoomButton, ZoomOverlay } from "./PanelZoom";
+import DesktopThumb from "./DesktopThumb";
+import { useIsNarrow } from "@/lib/useIsNarrow";
 
 /**
  * AutomationTabs — la section « à la attio » (client 2026-08-12, captures
@@ -132,6 +134,16 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
      ITEMS, et lui inventer un index fausserait le rail et la fenêtre. */
   const [demo, setDemo] = useState(false);
   const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
+  /* ── SUR TÉLÉPHONE, LE RAIL EST UN VRAI JEU D'ONGLETS ─────────────────────
+     Les six panneaux empilés faisaient 6 521 px sur 390 px de large, un tiers
+     de la page d'accueil pour une section. Le rail existait déjà, mais il
+     n'était qu'un repère de lecture : cliquer faisait défiler jusqu'au panneau,
+     que l'on atteignait de toute façon en continuant. Sous `md`, il commute —
+     un seul panneau monté, les cinq autres absents du DOM.
+     Au-delà, RIEN NE CHANGE : la pile et son repère qui suit le défilement sont
+     la mise en page validée sur PC. */
+  const narrow = useIsNarrow();
+
   /** La bande d'onglets horizontale du mobile, et ses pastilles. */
   const stripRef = useRef<HTMLDivElement>(null);
   const pillsRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -271,11 +283,14 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
   ];
 
   const N = ITEMS.length;
+  // Le panneau courant seul sur téléphone, la pile entière au-delà.
+  const shown = narrow ? [{ it: ITEMS[active], i: active }] : ITEMS.map((it, i) => ({ it, i }));
 
   // ── L'onglet actif suit le panneau sous la ligne de repère ────────────────
   // Ligne à 42 % de l'écran : l'actif est le DERNIER panneau dont le haut est
   // passé au-dessus d'elle. Écouteur nu, écriture au changement seulement.
   useEffect(() => {
+    if (narrow) return;
     const lire = () => {
       const ligne = window.innerHeight * 0.42;
       let i = 0;
@@ -292,7 +307,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
       window.removeEventListener("scroll", lire);
       window.removeEventListener("resize", lire);
     };
-  }, [N]);
+  }, [N, narrow]);
 
   /* ── LA BANDE MOBILE SUIT L'ONGLET ACTIF ─────────────────────────────────
      Sans ça, la bande reste figée sur « Prévisionnel » alors que le lecteur
@@ -344,7 +359,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     <section
       id="automatisations"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-0 bg-white dark:bg-black"
+      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-0 bg-white dark:bg-black"
     >
       <div className={`mx-auto max-w-[86rem] border-x ${rule}`}>
         <motion.h2
@@ -463,7 +478,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                   key={it.tab}
                   ref={(el) => { pillsRef.current[i] = el; }}
                   type="button"
-                  onClick={() => animatedScrollToId(`autotab-${i}`, -110)}
+                  onClick={() => setActive(i)}
                   aria-pressed={on}
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 font-inter text-[13px] ring-1 transition-colors duration-150 ${
                     on
@@ -619,12 +634,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
               `max-w-[920px]` ne pouvait rien y faire, un maximum ne force pas un
               minimum à céder. */}
           <div className="min-w-0">
-            {ITEMS.map((it, i) => (
+            {shown.map(({ it, i }) => (
               <div
                 key={it.tab}
                 id={`autotab-${i}`}
                 ref={(el) => { panelsRef.current[i] = el; }}
-                className={`min-w-0 ${i > 0 ? `border-t ${rule}` : ""}`}
+                className={`min-w-0 ${i > 0 && !narrow ? `border-t ${rule}` : ""}`}
               >
                 {/* ⚠ REFONTE « À LA ATTIO » (client 2026-08-29 : « leurs polices sont
                     plus petites, il y a plus d'espace blanc, c'est plus
@@ -651,12 +666,20 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      flottante déborde SOUS la fenêtre : la borner au même
                      rembourrage que les autres la ferait mordre sur le filet
                      du panneau suivant. */
-                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone} px-6 pb-16 pt-8 md:px-12 md:pb-24 md:pt-12`}>
+                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone}`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
                     />
-                    <PrevisionnelStudio />
+                    {/* La maquette garde la mise en page du PC et se réduit à la
+                        largeur du téléphone (DesktopThumb) : recomposée en une colonne
+                        elle mesurait 1 268 px de haut pour 340 de large, et ce n'est
+                        plus l'écran validé qu'elle montre. Le cadre s'ouvre au doigt. */}
+                    <DesktopThumb onOpen={() => setZoom(i)} label={t({ fr: "Agrandir", en: "Enlarge" })}>
+                      <div className="px-6 pb-16 pt-8 md:px-12 md:pb-24 md:pt-12">
+                        <PrevisionnelStudio />
+                      </div>
+                    </DesktopThumb>
                   </div>
                 ) : it.media === "video" ? (
                   /* L'ENREGISTREMENT D'ÉCRAN, DANS SON CADRE, SUR DU BLANC.
@@ -808,110 +831,127 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                      client, « l'encadré est bien trop petit pour répliquer ».
                      La colonne de droite est élargie (1,15 fr) et la carte
                      garde sa hauteur de grille (620 px). */
-                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone} grid md:grid-cols-[1fr_1.15fr]`}>
+                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone}`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
                     />
-                    {/* CENTRÉ VERTICALEMENT (client 2026-08-13) : la carte de
-                        droite fait 620 px, ce bloc en faisait 200 et restait
-                        collé en haut. `justify-center` sur une colonne flex
-                        le pose au milieu de la hauteur que la carte impose. */}
-                    {/* `min-w-0` ICI AUSSI, et pas seulement sur la cellule
-                        voisine (2026-09-07). Le champ qui s'écrit tout seul est
-                        `truncate`, donc `white-space: nowrap` : sa largeur de
-                        contenu minimale est la phrase ENTIÈRE, et `min-w-0` sur
-                        la seule étiquette intérieure n'abaisse pas la
-                        contribution de la cellule. Résultat sur un téléphone de
-                        390 px : la piste de grille passait à 429 px et toute la
-                        page gagnait un défilement horizontal — mais seulement
-                        pendant que la phrase était complètement écrite, ce qui
-                        rendait le défaut intermittent d'une capture à l'autre. */}
-                    <div className={`flex min-w-0 flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
-                      <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
-                        <span className="font-semibold text-[#111827] dark:text-white">
-                          {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}
-                        </span>
-                        <span className="mt-1.5 block text-[#8b95a7] dark:text-gray-400">
-                          {t({
-                            fr: "SARL vers SAS, passage en holding : le scénario tient en une phrase.",
-                            en: "SARL to SAS, moving to a holding: the scenario fits in one sentence.",
-                          })}
-                        </span>
-                      </p>
-                      {/* Le champ s'écrit tout seul (client 2026-08-13). Reste
-                          un DÉCOR : aria-hidden, aucun input réel, la vraie
-                          saisie vit dans le logiciel. `min-w-0` sur le
-                          conteneur du texte, sinon la phrase en cours de
-                          frappe pousse la pastille bleue hors du champ. */}
-                      <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
-                        <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
-                          <Typewriter
-                            phrases={[
-                              t({
-                                fr: "Comment optimiser la rémunération du dirigeant",
-                                en: "How to optimise the director's pay",
-                              }),
-                            ]}
-                          />
-                        </span>
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
-                          <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-                        </span>
-                      </div>
-                    </div>
+                    {/* La maquette garde la mise en page du PC et se réduit à la
+                        largeur du téléphone (DesktopThumb) : recomposée en une colonne
+                        elle mesurait 1 268 px de haut pour 340 de large, et ce n'est
+                        plus l'écran validé qu'elle montre. Le cadre s'ouvre au doigt. */}
+                    <DesktopThumb onOpen={() => setZoom(i)} label={t({ fr: "Agrandir", en: "Enlarge" })}>
+                      <div className="grid md:grid-cols-[1fr_1.15fr]">
+                        {/* CENTRÉ VERTICALEMENT (client 2026-08-13) : la carte de
+                            droite fait 620 px, ce bloc en faisait 200 et restait
+                            collé en haut. `justify-center` sur une colonne flex
+                            le pose au milieu de la hauteur que la carte impose. */}
+                        {/* `min-w-0` ICI AUSSI, et pas seulement sur la cellule
+                            voisine (2026-09-07). Le champ qui s'écrit tout seul
+                            est `truncate`, donc `white-space: nowrap` : sa
+                            largeur de contenu minimale est la phrase ENTIÈRE, et
+                            `min-w-0` sur la seule étiquette intérieure n'abaisse
+                            pas la contribution de la cellule. Sur un téléphone de
+                            390 px, la piste de grille passait à 429 px et toute
+                            la page gagnait un défilement horizontal — mais
+                            seulement pendant que la phrase était complètement
+                            écrite, ce qui rendait le défaut intermittent d'une
+                            capture à l'autre. */}
+                        <div className={`flex min-w-0 flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
+                          <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
+                            <span className="font-semibold text-[#111827] dark:text-white">
+                              {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}
+                            </span>
+                            <span className="mt-1.5 block text-[#8b95a7] dark:text-gray-400">
+                              {t({
+                                fr: "SARL vers SAS, passage en holding : le scénario tient en une phrase.",
+                                en: "SARL to SAS, moving to a holding: the scenario fits in one sentence.",
+                              })}
+                            </span>
+                          </p>
+                          {/* Le champ s'écrit tout seul (client 2026-08-13). Reste
+                              un DÉCOR : aria-hidden, aucun input réel, la vraie
+                              saisie vit dans le logiciel. `min-w-0` sur le
+                              conteneur du texte, sinon la phrase en cours de
+                              frappe pousse la pastille bleue hors du champ. */}
+                          <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
+                            <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
+                              <Typewriter
+                                phrases={[
+                                  t({
+                                    fr: "Comment optimiser la rémunération du dirigeant",
+                                    en: "How to optimise the director's pay",
+                                  }),
+                                ]}
+                              />
+                            </span>
+                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
+                              <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
+                            </span>
+                          </div>
+                        </div>
 
-                    {/* `min-w-0` : voir le pavé de la colonne des panneaux.
-                        Ces deux cellules portent une carte de la grille bento à
-                        sa taille de grille ; sans lui, la cellule se cale sur la
-                        largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 overflow-hidden p-6 md:p-8">
-                      <StructureShowcaseCard />
-                    </div>
+                        {/* `min-w-0` : voir le pavé de la colonne des panneaux.
+                            Ces deux cellules portent une carte de la grille bento à
+                            sa taille de grille ; sans lui, la cellule se cale sur la
+                            largeur minimale de la carte et déborde du téléphone. */}
+                        <div className="min-w-0 overflow-hidden p-6 md:p-8">
+                          <StructureShowcaseCard />
+                        </div>
+                      </div>
+                    </DesktopThumb>
                   </div>
                 ) : it.media === "valuation" ? (
                   /* ÉVALUATION D'ENTREPRISE : LA CARTE « Évaluation
                      financière » de la grille, copie conforme et ENTIÈRE —
                      coque blanche, nappe, rubans de soie, carte-objet — posée
                      sur la nappe grise (« je veux même tout l'encadré »). */
-                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone} grid md:grid-cols-[1.15fr_1fr]`}>
+                  <div className={`group/panel relative mt-14 md:mt-20 border-t ${rule} ${zone}`}>
                     <ZoomButton
                       onClick={() => setZoom(i)}
                       label={t({ fr: "Agrandir", en: "Enlarge" })}
                     />
-                    {/* `min-w-0` : voir le pavé de la colonne des panneaux.
-                        Ces deux cellules portent une carte de la grille bento à
-                        sa taille de grille ; sans lui, la cellule se cale sur la
-                        largeur minimale de la carte et déborde du téléphone. */}
-                    <div className="min-w-0 overflow-hidden p-6 md:p-8">
-                      <ValuationShowcaseCard />
-                    </div>
-                    {/* À DROITE, les questions auxquelles la valorisation
-                        répond, écrites l'une après l'autre (client
-                        2026-08-13). Ce sont des QUESTIONS, pas des résultats :
-                        annoncer un chiffre qui s'écrit tout seul laisserait
-                        croire à un calcul en direct. */}
-                    <div className={`flex flex-col justify-center border-t md:border-t-0 md:border-l ${rule} p-6 md:p-10`}>
-                      <p className="font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
-                        {t({ fr: "Ce que la synthèse répond", en: "What the summary answers" })}
-                      </p>
-                      <p className="mt-5 min-h-[4.6em] font-instrument text-[1.25rem] font-normal leading-[1.35] tracking-[-0.02em] text-[#111827] md:min-h-[3.9em] md:text-[1.5rem] dark:text-white">
-                        <Typewriter
-                          phrases={[
-                            t({ fr: "Combien vaut cette entreprise, et pourquoi ?", en: "What is this business worth, and why?" }),
-                            t({ fr: "Quelle méthode tire la valeur vers le haut ?", en: "Which method pulls the value up?" }),
-                            t({ fr: "Quel écart entre les cinq approches ?", en: "How far apart are the five approaches?" }),
-                            t({ fr: "Que répondre si le client conteste le chiffre ?", en: "What to answer if the client disputes the figure?" }),
-                          ]}
-                        />
-                      </p>
-                      <p className="mt-6 max-w-[38ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
-                        {t({
-                          fr: "Chaque réponse est adossée à des multiples et des comparables explicites, pas à une moyenne opaque.",
-                          en: "Every answer rests on explicit multiples and comparables, not an opaque average.",
-                        })}
-                      </p>
-                    </div>
+                    {/* La maquette garde la mise en page du PC et se réduit à la
+                        largeur du téléphone (DesktopThumb) : recomposée en une colonne
+                        elle mesurait 1 268 px de haut pour 340 de large, et ce n'est
+                        plus l'écran validé qu'elle montre. Le cadre s'ouvre au doigt. */}
+                    <DesktopThumb onOpen={() => setZoom(i)} label={t({ fr: "Agrandir", en: "Enlarge" })}>
+                      <div className="grid md:grid-cols-[1.15fr_1fr]">
+                        {/* `min-w-0` : voir le pavé de la colonne des panneaux.
+                            Ces deux cellules portent une carte de la grille bento à
+                            sa taille de grille ; sans lui, la cellule se cale sur la
+                            largeur minimale de la carte et déborde du téléphone. */}
+                        <div className="min-w-0 overflow-hidden p-6 md:p-8">
+                          <ValuationShowcaseCard />
+                        </div>
+                        {/* À DROITE, les questions auxquelles la valorisation
+                            répond, écrites l'une après l'autre (client
+                            2026-08-13). Ce sont des QUESTIONS, pas des résultats :
+                            annoncer un chiffre qui s'écrit tout seul laisserait
+                            croire à un calcul en direct. */}
+                        <div className={`flex flex-col justify-center border-t md:border-t-0 md:border-l ${rule} p-6 md:p-10`}>
+                          <p className="font-inter text-[13px] font-semibold uppercase tracking-[0.14em] text-[#6b7688]">
+                            {t({ fr: "Ce que la synthèse répond", en: "What the summary answers" })}
+                          </p>
+                          <p className="mt-5 min-h-[4.6em] font-instrument text-[1.25rem] font-normal leading-[1.35] tracking-[-0.02em] text-[#111827] md:min-h-[3.9em] md:text-[1.5rem] dark:text-white">
+                            <Typewriter
+                              phrases={[
+                                t({ fr: "Combien vaut cette entreprise, et pourquoi ?", en: "What is this business worth, and why?" }),
+                                t({ fr: "Quelle méthode tire la valeur vers le haut ?", en: "Which method pulls the value up?" }),
+                                t({ fr: "Quel écart entre les cinq approches ?", en: "How far apart are the five approaches?" }),
+                                t({ fr: "Que répondre si le client conteste le chiffre ?", en: "What to answer if the client disputes the figure?" }),
+                              ]}
+                            />
+                          </p>
+                          <p className="mt-6 max-w-[38ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+                            {t({
+                              fr: "Chaque réponse est adossée à des multiples et des comparables explicites, pas à une moyenne opaque.",
+                              en: "Every answer rests on explicit multiples and comparables, not an opaque average.",
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </DesktopThumb>
                   </div>
                 ) : it.modules ? (
                   /* « CONTRÔLES ET SUIVI » : les quatre modules à gauche, et à

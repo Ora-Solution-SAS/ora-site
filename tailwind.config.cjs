@@ -56,5 +56,8 @@ module.exports = {
             },
         },
     },
+    // `force-desktop` est produit par postcss/force-desktop.cjs : les points
+    // de rupture sont des `screens`, pas des variantes, et `addVariant` sur
+    // leurs noms n'émet rien.
     plugins: [],
 };

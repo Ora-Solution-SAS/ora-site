@@ -120,8 +120,10 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
       /* Pied ramené de pb-40 à pb-16 (client 2026-09-02 : « réduis l'espace
          entre la partie contrôle total et questions ») : avec le pt-32 de la
          FAQ, les deux sections étaient séparées de ~290 px de blanc. L'écart
-         retombe à ~150 px, la moitié portée par chaque section. */
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-12 md:pb-16 bg-[#fcfbf7] dark:bg-black"
+         retombe à ~150 px, la moitié portée par chaque section.
+         Le retrait HAUT descend en plus à pt-14 sur téléphone seulement : les
+         deux réglages portent sur des côtés différents, ils se cumulent. */
+      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-12 md:pb-16 bg-[#fcfbf7] dark:bg-black"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       <div className="relative max-w-7xl mx-auto">
@@ -154,7 +156,7 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
         {/* Remonté de 20/28 à 10/14 (client 2026-08-11 : « les encadrés juste
             en dessous ») : le titre étant devenu fin, l'écart d'origine le
             laissait flotter seul en haut de section. */}
-        <div className="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-14 md:gap-y-20">
+        <div className="mt-6 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-8 md:gap-y-20">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (
