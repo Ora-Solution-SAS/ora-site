@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Check } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraAppScene from "./OraAppScene";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * OraHeroMobile — le hero des téléphones (< 768 px), monté à la place de
@@ -157,7 +158,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           onClick={openBooking}
           className="mt-6 inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full bg-[#3b82f6] px-5 font-inter font-semibold text-[13.5px] text-white active:bg-[#2563eb]"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="h-[15px] w-[15px]" />
         </button>
 
@@ -244,15 +245,15 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
 
       {/* ⚠ PAS DE SECOND BOUTON ICI (client 2026-08-20 : « why did you add the
           Book a Call button? there is already a button for it »). Un pavé noir
-          pleine largeur « Réserver un appel » suivait la réplique du logiciel ;
-          il n'existe nulle part sur le bureau, et deux boutons empilés sur un
-          même écran de téléphone se disputaient le clic.
-          ⚠ La règle vaut ENCORE PLUS depuis le 2026-08-26 : l'appel du hero
-          MÈNE LUI-MÊME à la réservation et en porte le libellé (le lien vers la
-          web app est retiré du site). Un second « Réserver un appel » ici serait
-          donc le même bouton, écrit deux fois à trois centimètres d'écart.
-          La prise de rendez-vous reste par ailleurs atteignable de la barre de
-          navigation et du CTA de fin de page. Ne pas remettre un chemin ici. */}
+          pleine largeur suivait la réplique du logiciel ; il n'existe nulle
+          part sur le bureau, et deux boutons empilés sur un même écran de
+          téléphone se disputaient le clic.
+          ⚠ La règle vaut ENCORE PLUS depuis que l'appel du hero porte le même
+          libellé que lui : jusqu'au 2026-08-26 c'était « Réserver un appel »,
+          depuis le 2026-09-06 c'est « Nous écrire » (bookingCta.ts) — dans les
+          deux cas un second bouton ici serait LE MÊME, écrit deux fois à trois
+          centimètres d'écart. Le chemin reste atteignable depuis la barre de
+          navigation et le bloc de clôture. Ne pas en remettre un ici. */}
     </div>
   );
 }

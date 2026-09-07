@@ -4,6 +4,7 @@ import { ArrowRight, Play } from "lucide-react";
 import { VideoWithScrubber } from "./InViewVideo";
 import OraAppScene from "./OraAppScene";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import { animatedScrollToId } from "@/lib/scrollTo";
 import { BilanShowcaseCard, StructureShowcaseCard, ValuationShowcaseCard } from "./ShowcaseCards";
 import Typewriter from "./Typewriter";
@@ -125,6 +126,11 @@ const fadeUp = {
  *  en service ». Voir le pavé de `readCrop`. */
 const CROP_DESK = 0.82;
 
+/** Le palier téléphone. Sert de sentinelle comme CROP_DESK : `crop ===
+ *  CROP_PHONE` vaut « la fenêtre fait moins de 768 px », c'est-à-dire « le
+ *  rognage est refusé en amont ». Voir le cadre de la scène. */
+const CROP_PHONE = 0.42;
+
 /* ── L'ÉCHELLE DE LA SCÈNE ROGNÉE (« Contrôles et suivi ») ──────────────────
    La scène du logiciel est composée à 1180 × 720 et TRANCHÉE par le bord de sa
    demi-colonne : c'est le procédé de la carte « Gagnez des heures », et c'est
@@ -141,7 +147,7 @@ const CROP_DESK = 0.82;
    obligerait l'effet à la déclarer en dépendance pour rien. */
 const readCrop = () => {
   const w = typeof window === "undefined" ? 1280 : window.innerWidth;
-  return w >= 1024 ? CROP_DESK : w >= 768 ? 0.62 : 0.42;
+  return w >= 1024 ? CROP_DESK : w >= 768 ? 0.62 : CROP_PHONE;
 };
 
 export default function AutomationTabs({ theme, openBooking }: AutomationTabsProps) {
@@ -157,9 +163,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
      ITEMS, et lui inventer un index fausserait le rail et la fenêtre. */
   const [demo, setDemo] = useState(false);
   const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
-  /* La rangée de pastilles de la bande mobile : l'auto-défilement de la bande
-     vers la pastille active a besoin d'atteindre ses enfants. */
+  /* La bande de pastilles du téléphone : le défileur, puis chaque pastille.
+     Le registre de pastilles vient de main — repérer la pastille active par
+     `children[active]` suppose que la bande n'a QUE des pastilles pour enfants,
+     ce qui n'est vrai que tant que personne n'y glisse un séparateur. */
   const stripRef = useRef<HTMLDivElement>(null);
+  const pillsRef = useRef<(HTMLButtonElement | null)[]>([]);
   /* L'échelle du rognage de la scène « Contrôles et suivi » — voir `readCrop`.
      ⚠ UNE SEULE INSTANCE D'OraAppScene, d'où cette lecture en JS plutôt qu'un
      couple de blocs masqués en CSS : deux blocs, ce seraient deux contextes
@@ -334,23 +343,27 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     };
   }, [N]);
 
-  /* ── La bande mobile suit l'onglet actif ──────────────────────────────────
-     Sans cela, dès le troisième panneau la pastille active vit HORS CHAMP à
-     droite : la bande collante affiche alors six pastilles éteintes, autant
-     dire rien. On centre la pastille active à chaque changement.
-     `scrollTo` sur la bande, PAS `scrollIntoView` sur la pastille : ce dernier
-     fait aussi défiler la PAGE pour amener l'élément dans la fenêtre, et il se
-     battrait avec Lenis à chaque changement d'actif. */
+  /* ── LA BANDE MOBILE SUIT L'ONGLET ACTIF ─────────────────────────────────
+     Sans ça, la bande reste figée sur « Prévisionnel » alors que le lecteur
+     est arrivé au cinquième panneau : la pastille allumée est hors écran, à
+     droite, et la bande annonce le contraire de ce qu'on regarde.
+     `scrollLeft` écrit à la main, PAS `scrollIntoView` : ce dernier remonte
+     aussi le conteneur le plus proche qui défile verticalement, c'est-à-dire
+     la page — il ferait sauter le défilement du lecteur à chaque changement
+     de panneau. Ici seule la bande bouge. */
   useEffect(() => {
     const strip = stripRef.current;
-    const chip = strip?.children[active] as HTMLElement | undefined;
-    if (!strip || !chip) return;
-    const parent = strip.parentElement as HTMLElement; // le conteneur défilant
-    parent.scrollTo({
-      left: chip.offsetLeft - (parent.clientWidth - chip.offsetWidth) / 2,
-      behavior: "smooth",
+    const pill = pillsRef.current[active];
+    if (!strip || !pill) return;
+    if (strip.scrollWidth <= strip.clientWidth) return;
+    const cible = pill.offsetLeft - (strip.clientWidth - pill.offsetWidth) / 2;
+    const max = strip.scrollWidth - strip.clientWidth;
+    strip.scrollTo({
+      left: Math.max(0, Math.min(max, cible)),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
     });
   }, [active]);
+
 
   const rule = dk ? "border-white/10" : "border-[#0a2540]/[0.10]";
   /* ── LA NAPPE GRISE, ET SON UNIQUE VALEUR ────────────────────────────────
@@ -520,13 +533,14 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
             défileur : dans le défileur il glisserait avec les pastilles. */}
         <div className={`sticky top-[68px] z-30 -mx-5 border-t bg-white/95 px-5 backdrop-blur-md lg:hidden dark:bg-black/90 ${rule}`}>
           <div className="relative">
-          <div className="overflow-x-auto [scrollbar-width:none]">
-            <div ref={stripRef} className="flex w-max gap-2 py-3">
+          <div ref={stripRef} className="overflow-x-auto [scrollbar-width:none]">
+            <div className="flex w-max gap-2 py-3">
               {ITEMS.map((it, i) => {
                 const on = i === active;
                 return (
                   <button
                     key={it.tab}
+                    ref={(el) => { pillsRef.current[i] = el; }}
                     type="button"
                     onClick={() => animatedScrollToId(`autotab-${i}`, -132)}
                     aria-pressed={on}
@@ -607,18 +621,30 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       className={`flex items-center gap-2 py-1 text-left font-inter text-[15px] tracking-[-0.01em] transition-colors duration-200 md:text-[16px] ${
                         on
                           ? "font-medium text-[#111827] dark:text-white"
-                          /* ⚠ NE PAS PÂLIR CETTE ENCRE. La référence attio affiche ses
-                             entrées inactives dans un gris très clair, et c'est
-                             tentant à recopier. CLAUDE.md l'interdit nommément :
-                             #c4cad6, #9aa4b5 et #9aa3b2 ont été essayés ici même,
-                             mesurés entre 1,6:1 et 2,5:1 de contraste, et « la
-                             navigation de la section à onglets était effectivement
-                             invisible ». La règle : rien sous #6b7688 sur fond
-                             clair ; si un texte doit reculer davantage, on le fait
-                             plus petit ou plus court, pas plus pâle.
-                             L'allègement demandé passe donc par la TAILLE et
-                             l'ESPACE, pas par le contraste. */
-                          : "font-normal text-[#7a8496] hover:text-[#5b6577] dark:text-white/30 dark:hover:text-white/55"
+                          /* ⚠ #d3d8df EST UNE EXCEPTION DEMANDÉE, PAS UN OUBLI.
+                             Client 2026-09-04, capture d'attio.com à l'appui :
+                             « apply the same grey for the similar part i have in
+                             the website ». La valeur est RELEVÉE sur la page de
+                             référence, pas estimée à l'œil : leur liste rend
+                             `lab(86.0989 -0.77799 -4.0961)`, soit #d3d8df.
+
+                             CE QUE ÇA COÛTE, MESURÉ : 1,43:1 sur blanc. C'est
+                             PLUS PÂLE que le #c4cad6 (1,64:1) essayé ici même le
+                             2026-08-15 et retiré parce que « la navigation de la
+                             section à onglets était effectivement invisible », et
+                             très en dessous du plancher #6b7688 (4,59:1) que
+                             CLAUDE.md fixe pour les fonds clairs. La règle
+                             générale reste : cette liste est la seule exception,
+                             elle est datée, elle ne se recopie pas ailleurs.
+
+                             ⚠ ET LA DIFFÉRENCE QUI EXPLIQUE TOUT : chez attio ces
+                             entrées font 18 px en graisse 500. Ici elles font 15
+                             (16 à md) en graisse 400. Le même gris sur un corps
+                             plus petit et plus maigre recule davantage. Si la
+                             liste redevient illisible, le levier est LÀ — monter
+                             en taille et en graisse comme la référence — pas
+                             re-foncer l'encre en douce. */
+                          : "font-normal text-[#d3d8df] hover:text-[#5b6577] dark:text-white/30 dark:hover:text-white/55"
                       }`}
                     >
                       {/* LE ✦, ET PAS UNE ICÔNE (client 2026-08-13, deuxième
@@ -940,6 +966,16 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         cellule de gauche étant du texte, elle passe à
                         l'échelle de téléphone — 11,5 px — et rend 8 px de
                         rembourrage. */}
+                    {/* `min-w-0` ICI AUSSI, et pas seulement sur la cellule
+                        voisine (2026-09-07). Le champ qui s'écrit tout seul est
+                        `truncate`, donc `white-space: nowrap` : sa largeur de
+                        contenu minimale est la phrase ENTIÈRE, et `min-w-0` sur
+                        la seule étiquette intérieure n'abaisse pas la
+                        contribution de la cellule. Résultat sur un téléphone de
+                        390 px : la piste de grille passait à 429 px et toute la
+                        page gagnait un défilement horizontal — mais seulement
+                        pendant que la phrase était complètement écrite, ce qui
+                        rendait le défaut intermittent d'une capture à l'autre. */}
                     <div className={`flex min-w-0 flex-col justify-center p-3 md:p-10 border-r ${rule}`}>
                       <p className="font-inter text-[11.5px] md:text-[16.5px] leading-snug">
                         <span className="font-semibold text-[#111827] dark:text-white">
@@ -1116,17 +1152,49 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         `chips="none"` : les pastilles flottantes racontent
                         l'entrée d'un fichier et la sortie des livrables. C'est
                         le propos de la GRANDE CARTE, pas celui de ce panneau. */}
-                    <div aria-hidden className="relative overflow-hidden">
-                      <div
-                        className="absolute left-2 h-[720px] w-[1180px] md:left-6 lg:left-10"
-                        style={
-                          crop === CROP_DESK
-                            ? { top: 44 }
-                            : { top: "50%", marginTop: -(720 * crop) / 2 }
-                        }
-                      >
-                        <OraAppScene cropScale={crop} chips="none" />
-                      </div>
+                    {/* ⚠ SOUS 768 px LE ROGNAGE N'EXISTE PLUS, ET CE N'EST PAS
+                        UN CHOIX D'ICI (fusion du 2026-09-07). OraAppScene
+                        refuse désormais `cropScale` sur téléphone et fait tenir
+                        la scène dans son cadre. Or ce cadre-ci est une boîte
+                        FIXE de 1180 × 720 taillée pour être tranchée : la scène
+                        s'y ajustait à l'échelle 1, et la colonne n'en laissait
+                        voir que les ~181 px de gauche à taille réelle — la
+                        barre latérale et rien d'autre, précisément l'accident
+                        de cadrage que la nouvelle règle veut supprimer.
+                        Le cadre suit donc la règle au lieu de lutter contre
+                        elle : sur téléphone, une boîte au RAPPORT de la scène,
+                        fenêtre entière, petite mais complète. C'est déjà ce que
+                        fait la carte « Gagnez des heures ».
+                        UNE SEULE INSTANCE dans les deux branches du ternaire. */}
+                    <div
+                      aria-hidden
+                      className={
+                        crop === CROP_PHONE
+                          ? /* La cellule est étirée par la grille sur la hauteur
+                               de la colonne de texte — 542 px mesurés à 390 px —
+                               alors que la scène entière n'en fait que 110. Calée
+                               en haut, elle laissait 432 px de nappe grise vide
+                               sous elle. Centrée, l'écart se partage. */
+                            "flex items-center overflow-hidden"
+                          : "relative overflow-hidden"
+                      }
+                    >
+                      {crop === CROP_PHONE ? (
+                        <div className="aspect-[1180/720] w-full">
+                          <OraAppScene chips="none" />
+                        </div>
+                      ) : (
+                        <div
+                          className="absolute left-2 h-[720px] w-[1180px] md:left-6 lg:left-10"
+                          style={
+                            crop === CROP_DESK
+                              ? { top: 44 }
+                              : { top: "50%", marginTop: -(720 * crop) / 2 }
+                          }
+                        >
+                          <OraAppScene cropScale={crop} chips="none" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : it.examples ? (
@@ -1226,7 +1294,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
           desc={ITEMS[zoom].rest}
           checks={ITEMS[zoom].examples}
           onBook={openBooking}
-          bookLabel={t({ fr: "Réserver un appel", en: "Book a call" })}
+          bookLabel={t(BOOKING_CTA)}
           seeLabel={
             ITEMS[zoom].media === "video"
               ? t({ fr: "Voir la démo", en: "Watch the demo" })
@@ -1280,7 +1348,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
             en: "A file goes in, the routines run one after another, the deliverable comes out. The same chain the modules below describe, filmed end to end.",
           })}
           onBook={openBooking}
-          bookLabel={t({ fr: "Réserver un appel", en: "Book a call" })}
+          bookLabel={t(BOOKING_CTA)}
           seeLabel={t({ fr: "Voir la démo", en: "Watch the demo" })}
           onClose={() => setDemo(false)}
         >

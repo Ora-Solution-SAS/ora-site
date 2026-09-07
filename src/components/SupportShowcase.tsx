@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import DownloadShowcase from "./DownloadShowcase";
 
 /**
@@ -164,7 +165,7 @@ export default function SupportShowcase({ theme, openBooking, onNavigate }: Supp
               onClick={openBooking}
               className="group inline-flex items-center gap-2 rounded-full bg-[#3b82f6] hover:bg-[#2563eb] px-6 py-3 font-inter font-semibold text-[14.5px] text-white shadow-[0_2px_12px_rgba(59,130,246,0.28)] transition-all duration-150 hover:-translate-y-px"
             >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
               <ArrowUpRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </button>
             {/* Second bouton vers Mon espace Ora : c'est LÀ que vivent les

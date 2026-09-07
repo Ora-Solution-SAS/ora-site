@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import OraAppScene, { OA_ASPECT } from "./OraAppScene";
 import InViewVideo from "./InViewVideo";
 import OraHeroMobile from "./OraHeroMobile";
@@ -385,8 +386,18 @@ const HD_CSS = `
    (l'effet monday.com — le changement est continu mais presque subliminal).
    hue-rotate sur le conteneur : le dégradé du texte ET le logo dérivent
    ensemble. */
+/* Client 2026-09-02 : « quand l'utilisateur arrive, la vitesse de changement
+   de couleur doit etre ultra rapide UNE fois, puis au rythme actuel ». Deux
+   animations chainees sur la meme propriete : la premiere fait un TOUR
+   COMPLET de teinte en 1,1 s et ne joue qu'une fois ; la seconde est la
+   derive lente d'origine (9 s, aller-retour), retardee d'autant pour prendre
+   le relais pile ou la premiere repose la teinte a zero. Meme filtre, donc
+   aucun saut au passage de relais.
+   (Pas d'accent grave dans ce bloc : template literal.) */
 .hd-brandline{display:inline-flex;align-items:center;gap:10px;
-  animation:hdBrandHue 9s ease-in-out infinite alternate}
+  animation:hdBrandTour 1.1s cubic-bezier(.3,0,.2,1) 1,
+    hdBrandHue 9s ease-in-out 1.1s infinite alternate}
+@keyframes hdBrandTour{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-360deg)}}
 @keyframes hdBrandHue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-45deg)}}
 @media (prefers-reduced-motion:reduce){
   .hd-blob{animation:none}
@@ -2087,14 +2098,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             {/* Même visage fin que monday.com : Instrument Sans en graisse
                 normale (la face déjà utilisée pour « Automatisez de bout en
                 bout » — exception documentée à la règle Poppins). */}
+            {/* ⚠ L'ICÔNE A ÉTÉ RETIRÉE (client 2026-09-02 : « enlève le
+                doublon de logo ») : la barre de navigation porte déjà le logo
+                Ora à quarante pixels au-dessus, et la ligne de marque le
+                répétait. Le dégradé animé du texte suffit à faire la ligne de
+                marque ; le gap de l'inline-flex ne s'applique plus qu'à un
+                seul enfant, donc il ne crée aucun trou. */}
             <span className="hd-brandline font-instrument font-medium text-[clamp(1rem,1.5vw,1.3rem)] tracking-[-0.01em]">
-              <img
-                src="/logos/icon-color.png"
-                alt=""
-                aria-hidden
-                className="h-[1.25em] w-auto select-none"
-                draggable={false}
-              />
               <span className="text-brand-gradient">
                 {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
               </span>
@@ -2206,7 +2216,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               onClick={openBooking}
               className="group inline-flex shrink-0 items-center gap-2.5 rounded-full bg-[#3b82f6] px-9 py-4 font-instrument text-[17px] font-medium text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200 hover:bg-[#2563eb]"
             >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>
             {/* ══ LA RANGÉE DE PREUVE ═════════════════════════════════════════
@@ -3378,7 +3388,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           transition={{ type: "spring", stiffness: 400, damping: 24, mass: 0.6 }}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_18px_55px_rgba(59,130,246,0.6)] transition-[background-color,box-shadow] duration-300 ease-out"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="w-5 h-5 transition-transform duration-300 ease-out group-hover:translate-x-1" />
         </motion.button>
       </div>

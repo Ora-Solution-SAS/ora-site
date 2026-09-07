@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import { animatedScrollToId } from "@/lib/scrollTo";
 
 /**
@@ -385,7 +386,7 @@ export default function IndustrySelector({
                       onClick={openBooking}
                       className="group mt-6 inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.30)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]"
                     >
-                      {t({ fr: "Réserver un appel", en: "Book a call" })}
+                      {t(BOOKING_CTA)}
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
                     </button>
                   </div>

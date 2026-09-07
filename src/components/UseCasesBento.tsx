@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, RefreshCw, Scale, TrendingUp, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import useIsPhone from "@/lib/useIsPhone";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
 import FormatageMockup from "./FormatageMockup";
@@ -1187,11 +1187,6 @@ function Mockup({ kind }: { kind: MockupKind }) {
 
 export default function UseCasesBento({ openBooking }: { openBooking?: () => void }) {
   const { t } = useLang();
-  // Voir la carte « Gagnez des heures » : le rognage à l'échelle 1 est une
-  // composition de BUREAU. Un crochet et non une classe `md:`, parce que les
-  // deux cadres ne diffèrent pas par l'affichage mais par la GÉOMÉTRIE de la
-  // scène, et qu'un `hidden md:block` monterait deux OraAppScene.
-  const phone = useIsPhone();
   const [detail, setDetail] = useState<BentoCase | null>(null);
   // Onglet actif de la carte pleine largeur. Un seul entier : une seule carte
   // en porte, inutile d'en faire une table.
@@ -2045,38 +2040,22 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                          « Reprendre ». Elle sert aussi à REMONTER la fenêtre :
                          le bloc visuel est en `mt-auto`, donc plus il est haut,
                          moins il reste de vide entre le titre et lui. */
-                      /* ⚠ DEUX CADRES, PAS DEUX HABILLAGES (2026-08-22).
-                         Le rognage à l'échelle 1 — la fenêtre débordante à la
-                         Stripe — suppose une carte assez large pour qu'il en
-                         reste quelque chose : sur le bureau la carte fait
-                         780 px et laisse voir la moitié gauche du logiciel.
-                         Sur un téléphone la même scène de 1015 px dans une
-                         carte de 350 n'en montrait plus que le TIERS gauche,
-                         mesuré : barre latérale, « Accueil », un morceau de
-                         salutation coupé au milieu d'un mot. Ce n'est plus une
-                         composition, c'est un accident de cadrage — et c'est
-                         exactement ce que le client refuse depuis le 21/08
-                         (« they just won't have their design or the whole
-                         thing to see at once »).
-                         Sous 768 la scène est donc rendue ENTIÈRE, sans
-                         `cropScale` : OraAppScene la fait alors tenir dans son
-                         cadre toute seule. */
-                      phone ? (
-                        <div className="-mx-3 -mb-8">
-                          <div className="aspect-[1180/720] w-full">
-                            <OraAppScene chips="none" />
-                          </div>
-                        </div>
-                      ) : (
-                      <div className="-mx-3 md:mx-0 md:ml-[86px] md:-mr-[104px] -mb-8 md:-mb-14">
-                        <div className="h-[300px] md:h-[470px]">
+                      /* SOUS md, LA FENÊTRE NE DÉBORDE PLUS (2026-09-07) :
+                          OraAppScene abandonne le rognage sur téléphone et rend
+                          la scène entière (voir son `fit`). Le cadre suit —
+                          rapport de la scène au lieu d'une hauteur fixe, sinon
+                          les 300 px laissaient 77 px de blanc sous la fenêtre —
+                          et le débord bas passe de 32 à 8 px, juste de quoi
+                          garder le contact avec le bord de la carte sans
+                          manger l'ombre portée. */
+                      <div className="-mx-3 -mb-2 md:mx-0 md:ml-[86px] md:-mr-[104px] md:-mb-14">
+                        <div className="aspect-[1180/720] md:aspect-auto md:h-[470px]">
                           {/* `chips="in"` : les trois livrables sortants sont
                               ancrés au bord DROIT de la scène, très au-delà de
                               la carte. Seule l'entrée reste à l'écran. */}
                           <OraAppScene cropScale={0.86} chips="in" />
                         </div>
                       </div>
-                      )
                     ) : c.mockup ? (
                       <div
                         // Les marges NÉGATIVES font déborder la maquette des
@@ -2278,7 +2257,7 @@ function CaseDetailOverlay({
                 }}
                 className="inline-flex items-center gap-2 rounded-[6px] bg-[#3b82f6] hover:bg-[#2563eb] px-6 py-3.5 font-inter font-semibold text-[15px] text-white transition-colors"
               >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
                 <ArrowRight className="h-4 w-4" />
               </button>
               {/* Libellé HONNÊTE : « Voir la démo » seulement quand un vrai

@@ -2,6 +2,7 @@ import { forwardRef, useRef, useEffect, useState, type CSSProperties, type FormE
 import { ArrowRight, Volume2, VolumeX, RotateCcw, ChevronDown, ShieldCheck, FileText, Maximize2 } from "lucide-react";
 import { AnimatedHeroTitle } from "./ui/animated-hero";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /* ── CSS ─────────────────────────────────────────────────────── */
 const heroCSS = `
@@ -569,7 +570,7 @@ const Hero = forwardRef<HTMLElement, HeroProps>(
                   onClick={openBooking}
                   className="group inline-flex items-center justify-center gap-2.5 whitespace-nowrap px-10 md:px-11 py-5 rounded-full text-[18px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.40)] hover:-translate-y-px active:translate-y-0 transition-all duration-150"
                 >
-                  {t({ fr: "Réserver un appel", en: "Book a call" })}
+                  {t(BOOKING_CTA)}
                   <ArrowRight className="w-5 h-5 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
                 </button>
               </div>

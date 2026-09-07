@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import OraAppScene from "./OraAppScene";
 
 /**
@@ -81,7 +82,7 @@ export default function OraAppHero({
           onClick={onBookCall}
           className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-[#3b82f6] px-9 py-4 font-instrument text-[17px] font-medium text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200 hover:bg-[#2563eb]"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="h-[18px] w-[18px]" />
         </button>
 

@@ -37,3 +37,10 @@ public/ora_pdf_extract_v3.mp4
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets de développement du service de réservation (CalDAV, Brevo, kMeet).
+# Les mêmes clés vivent en production dans les variables d'environnement Vercel.
+# ⚠ NE JAMAIS COMMITER CE FICHIER.
+.env
+.env.local
+.env.*.local

@@ -84,6 +84,10 @@ const Footer = ({
                 {section.links.map((link, linkIdx) => (
                   <li key={linkIdx}>
                     {link.onClick ? (
+                      /* `text-left` : un <button> centre son texte par
+                         défaut. Sur une colonne de téléphone, « Fonds
+                         d'investissement » passe à la ligne et se retrouve
+                         centré au milieu d'une liste alignée à gauche. */
                       <button
                         onClick={link.onClick}
                         className="text-left text-[13.5px] max-md:leading-snug text-gray-500 md:text-sm dark:text-gray-400 hover:text-brand-blue dark:hover:text-brand-blue transition-colors"

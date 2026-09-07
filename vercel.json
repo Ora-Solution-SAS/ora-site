@@ -4,16 +4,26 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "redirects": [
-    { "source": "/updates/:path*", "destination": "https://s3.pub2.infomaniak.cloud/object/v1/AUTH_fc95bcd7b43b43729fef023d528322bf/ora-releases/:path*", "permanent": false }
+    {
+      "source": "/updates/:path*",
+      "destination": "https://s3.pub2.infomaniak.cloud/object/v1/AUTH_fc95bcd7b43b43729fef023d528322bf/ora-releases/:path*",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     }
   ]

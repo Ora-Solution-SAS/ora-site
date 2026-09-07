@@ -363,7 +363,13 @@ export function ZoomOverlay({
                     }}
                     className="inline-flex items-center gap-2 rounded-[6px] bg-[#3b82f6] px-6 py-3.5 font-inter text-[15px] font-semibold text-white transition-colors hover:bg-[#2563eb]"
                   >
-                    {bookLabel ?? "Réserver un appel"}
+                    {/* Le repli n'écrit plus « Réserver un appel » en dur :
+                        ce composant n'a pas d'accès à la traduction, et un
+                        libellé figé ici a survécu au changement de 2026-09-07
+                        alors que ses deux appelants passaient à « Nous
+                        écrire ». Le repli est désormais muet, ce qui rend
+                        l'oubli VISIBLE au lieu de le rendre faux. */}
+                    {bookLabel}
                   </button>
                   <button
                     type="button"

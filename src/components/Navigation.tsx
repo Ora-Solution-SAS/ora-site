@@ -12,6 +12,7 @@ import {
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
 
@@ -369,7 +370,7 @@ const Navigation: React.FC<NavigationProps> = ({
             onClick={onBookCall}
             className="hidden md:inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
           >
-            {t({ fr: "Réserver un appel", en: "Book a call" })}
+            {t(BOOKING_CTA)}
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -377,7 +378,12 @@ const Navigation: React.FC<NavigationProps> = ({
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
-              "md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+              /* 44 x 44, la cible tactile minimale : a 36 px (w-9) le bouton
+                 etait la plus petite commande du site sur le seul appareil ou
+                 l'on vise au doigt. Le rond de survol grandit d'autant, d'ou
+                 le `-mr-1.5` qui rend au bandeau les 6 px gagnes a droite pour
+                 que le logo et le bouton restent sur le meme axe. */
+              "md:hidden -mr-1.5 h-11 w-11 rounded-full flex items-center justify-center transition-colors md:mr-0",
               overDark
                 ? "text-white/80 hover:text-white hover:bg-white/10"
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
@@ -428,7 +434,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
                 className="w-full py-3 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
               >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
               </button>
             </div>
           </div>
