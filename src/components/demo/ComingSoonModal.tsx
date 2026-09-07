@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * ComingSoonModal — annonce l'ouverture de la web app, avec un compte à rebours.
@@ -162,7 +163,7 @@ export default function ComingSoonModal({
               }}
               className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#3b82f6] font-inter text-[15px] font-semibold text-white transition-colors hover:bg-[#2563eb]"
             >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight size={16} />
             </button>
             <button

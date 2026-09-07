@@ -496,6 +496,7 @@ cal-inline-widget .cal-loading {
 `;
 import BookingFlow from "./components/booking/BookingFlow";
 import { BOOKING_ENABLED } from "./components/booking/bookingEnabled";
+import { BOOKING_CTA_MINE, contactMailto } from "./lib/bookingCta";
 import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
@@ -971,6 +972,20 @@ const App = () => {
   }, [isBookingOpen]);
 
   const openBooking = () => {
+    /* ══ LA BASCULE, ET ELLE EST ICI ET NULLE PART AILLEURS ═══════════════
+       Client 2026-09-07 : « supprime tout court le bouton Réserver un appel
+       pour l'instant », remplacé par « Nous écrire ».
+       Les quelque vingt appels à l'action du site passent TOUS par cette
+       fonction — c'est ce qui permet de changer le geste en une ligne au lieu
+       de traquer vingt gestionnaires de clic. Le libellé, lui, vit dans
+       lib/bookingCta.ts, lu par les mêmes vingt boutons.
+       Réservation fermée : on ouvre le brouillon de courriel. La fenêtre de
+       réservation reste montée et fonctionnelle, simplement plus atteignable ;
+       poser VITE_BOOKING_ENABLED=true la rebranche partout d'un coup. */
+    if (!BOOKING_ENABLED) {
+      window.location.href = contactMailto(lang);
+      return;
+    }
     // L'élément actif AU MOMENT DU CLIC, avant que React ne rende la fenêtre.
     bookingOpenerRef.current = document.activeElement as HTMLElement | null;
     setIsBookingOpen(true);
@@ -1593,7 +1608,7 @@ const App = () => {
                 onClick={openBooking}
                 className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
               >
-                {t({ fr: "Réserver mon appel", en: "Get started" })}
+                {t(BOOKING_CTA_MINE)}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
               </button>
               <button
@@ -1646,7 +1661,7 @@ const App = () => {
             onClick={openBooking}
             className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
           >
-            {t({ fr: "Réserver mon appel", en: "Book my call" })}
+            {t(BOOKING_CTA_MINE)}
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
           </button>
         </div>

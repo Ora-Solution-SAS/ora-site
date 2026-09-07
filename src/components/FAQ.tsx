@@ -83,8 +83,11 @@ export default function FAQ() {
     {
       q: t({ fr: "Combien ça coûte ?", en: "How much does it cost?" }),
       a: t({
-        fr: "Ora s'adapte à votre périmètre : abonnement annuel et accompagnement à la mise en place. Réservez un appel pour un devis adapté.",
-        en: "Ora adapts to your scope: annual subscription and onboarding support. Book a call for a tailored quote.",
+        /* ⚠ « Écrivez-nous » et non « réservez un appel » (2026-09-07) : la
+           prise de rendez-vous en ligne est fermée, et une réponse de FAQ qui
+           renvoie vers un bouton qui n'existe plus est un cul-de-sac. */
+        fr: "Ora s'adapte à votre périmètre : abonnement annuel et accompagnement à la mise en place. Écrivez-nous pour un devis adapté.",
+        en: "Ora adapts to your scope: annual subscription and onboarding support. Write to us for a tailored quote.",
       }),
     },
   ];

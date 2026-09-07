@@ -14,4 +14,7 @@
  * identifiants manquent aussi.
  */
 export const BOOKING_ENABLED =
-  (import.meta.env.VITE_BOOKING_ENABLED as string | undefined) === "true";
+  // `import.meta.env` n'existe que sous Vite : hors du navigateur (un script
+  // de vérification, un futur rendu serveur) l'accès direct lève. Le repli
+  // laisse la réservation FERMÉE, ce qui est le bon défaut.
+  (import.meta.env?.VITE_BOOKING_ENABLED as string | undefined) === "true";

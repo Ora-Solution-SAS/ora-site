@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { ArrowRight, ChevronDown, Maximize2, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * ValuePropsFlip — the "Tailored automation" split card, with a scroll-lock
@@ -53,7 +54,7 @@ function FrontCard({ openBooking }: { openBooking: () => void }) {
           onClick={openBooking}
           className="group mt-8 md:mt-9 inline-flex w-full md:w-fit items-center justify-center gap-2 px-7 py-4 md:py-3.5 rounded-full text-[16px] md:text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px transition-all duration-150"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
         </button>
       </div>
@@ -143,7 +144,7 @@ function BackCard({ openBooking }: { openBooking: () => void }) {
           onClick={openBooking}
           className="group mt-8 md:mt-9 inline-flex w-full md:w-fit items-center justify-center gap-2 px-7 py-4 md:py-3.5 rounded-full text-[16px] md:text-[15px] font-semibold font-inter text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_4px_18px_rgba(59,130,246,0.35)] hover:-translate-y-px transition-all duration-150"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="w-4 h-4 opacity-90 group-hover:translate-x-[3px] transition-transform duration-150" />
         </button>
       </div>
