@@ -846,6 +846,28 @@ function getPageFromPath(pathname: string): Page {
   return HIDDEN_PAGES.has(page) ? "not-found" : page;
 }
 
+/* ── ROUTAGE PAR HASH POUR LES APERÇUS STATIQUES ────────────────────────────
+   `VITE_HASH_ROUTER=1` au build fait lire et écrire la route dans le hash
+   (`#/for-business`) au lieu du chemin. C'est ce qui permet de servir tout le
+   site depuis un fichier unique posé à une URL quelconque — un aperçu publié,
+   un `file://` — où le chemin appartient à l'hôte et ne dira jamais `/`.
+   La variable n'est définie NULLE PART en production : `npm run dev`, `npm run
+   build` et le déploiement Vercel gardent le routage par chemin, seul capable
+   de servir quinze URL indexables. */
+const HASH_ROUTER = import.meta.env.VITE_HASH_ROUTER === "1";
+
+// La route que l'app doit afficher maintenant, lue là où ce build l'écrit.
+function currentRoutePath(): string {
+  if (!HASH_ROUTER) return window.location.pathname;
+  return window.location.hash.slice(1) || "/";
+}
+
+// La même route, écrite pour l'History API.
+function routeHref(page: Page): string {
+  const path = PAGE_TO_PATH[page];
+  return HASH_ROUTER ? `#${path}` : path;
+}
+
 const App = () => {
   const { t, lang } = useLang();
 
@@ -1029,7 +1051,7 @@ const App = () => {
 
 
 
-  const [page, setPage] = useState<Page>(() => getPageFromPath(window.location.pathname));
+  const [page, setPage] = useState<Page>(() => getPageFromPath(currentRoutePath()));
   const [notFoundKey, setNotFoundKey] = useState(0);
 
   /* ── LE TITRE ET LA DESCRIPTION SUIVENT LA PAGE ─────────────────────────
@@ -1061,7 +1083,7 @@ const App = () => {
   // Handle browser back / forward
   useEffect(() => {
     const onPopState = () => {
-      const newPage = getPageFromPath(window.location.pathname);
+      const newPage = getPageFromPath(currentRoutePath());
       if (newPage === "not-found") setNotFoundKey((k) => k + 1);
       setPage(newPage);
       const lenis = (window as any).__lenis;
@@ -1082,7 +1104,7 @@ const App = () => {
     if (target === "not-found" || HIDDEN_PAGES.has(target)) {
       setNotFoundKey((k) => k + 1);
       setPage("not-found");
-      window.history.pushState({}, "", PAGE_TO_PATH["not-found"]);
+      window.history.pushState({}, "", routeHref("not-found"));
       const lenis = (window as any).__lenis;
       if (lenis) { lenis.start(); lenis.scrollTo(0, { immediate: true }); }
       else window.scrollTo({ top: 0 });
@@ -1090,7 +1112,7 @@ const App = () => {
     }
     if (target === page) return;
     setPage(target);
-    window.history.pushState({}, "", PAGE_TO_PATH[target]);
+    window.history.pushState({}, "", routeHref(target));
     const lenis = (window as any).__lenis;
     if (lenis) {
       // Ensure Lenis isn't left stopped by Hero's scroll-lock state machine

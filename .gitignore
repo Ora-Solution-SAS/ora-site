@@ -37,3 +37,6 @@ public/ora_pdf_extract_v3.mp4
 *.njsproj
 *.sln
 *.sw?
+
+# Aperçu autonome produit par scripts/build-preview.mjs
+dist-preview
