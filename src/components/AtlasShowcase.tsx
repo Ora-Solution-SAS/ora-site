@@ -1333,10 +1333,17 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
           « fais un plus grand espace entre cette partie et celle juste en
           dessous ») : l'animation AtlasLiveAsk vit désormais au-dessus, elle a
           besoin d'air avant que la vidéo n'enchaîne. */}
+      {/* ⚠ RETIRÉE SUR TÉLÉPHONE (client 2026-09-07 : « remove the video in the
+          atlas part »). `hidden md:block` et non une suppression : le cadre
+          fait 1 280 px de large et 56 secondes, réglé avec le client le
+          2026-08-19 sur la largeur du carrousel qui le suit — c'est une
+          composition de large, et rien n'a été dit du bureau.
+          Sur téléphone il ne restait de ces 1 280 px qu'une bande de 342, dans
+          une page déjà longue, pour 18 Mo téléchargés au défilement. */}
       <section
         data-nav-dark
         data-nav-shy
-        className="relative z-[20] bg-black px-6 md:px-12 pt-20 md:pt-28 pb-2 md:pb-4"
+        className="relative z-[20] hidden bg-black px-6 md:block md:px-12 pt-20 md:pt-28 pb-2 md:pb-4"
       >
         <div className="mx-auto w-full max-w-7xl">
           <VideoWithScrubber

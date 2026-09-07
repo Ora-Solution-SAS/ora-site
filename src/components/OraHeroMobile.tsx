@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
+import { VideoWithScrubber } from "./InViewVideo";
 import { useLang } from "@/lib/i18n";
 import { animatedScrollToId } from "@/lib/scrollTo";
 import OraAppScene from "./OraAppScene";
@@ -168,6 +169,27 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </div>
       </motion.div>
 
+      {/* ── LA DÉMO, SOUS LA RÉPLIQUE ────────────────────────────────────────
+             ora-1.mp4, le film du produit : la réplique montre l'écran, le clip
+             montre ce qu'on en fait. Client 2026-09-07 : « add the video demo
+             under this software replication ».
+             ⚠ 23 Mo, ET RIEN NE LES TÉLÉCHARGE AVANT L'ENTRÉE DANS L'ÉCRAN.
+             InViewVideo pose `preload="metadata"` — quelques dizaines de
+             kilo-octets d'en-tête — et n'appelle `play()` qu'à l'intersection :
+             le corps du fichier ne part qu'à ce moment. La première image
+             s'affiche entre-temps depuis le poster, sinon le cadre resterait
+             noir sur du blanc. La barre de lecture donne au visiteur la main
+             sur un mouvement qu'il n'a pas demandé. */}
+      <motion.div {...rise(0.12)} className="mt-4">
+        <VideoWithScrubber
+          src="/ora-1.mp4"
+          poster="/posters/ora-1.jpg"
+          frameClassName="relative overflow-hidden rounded-[20px] ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
+          frameStyle={{ aspectRatio: "16 / 9" }}
+          className="block h-full w-full object-cover"
+        />
+      </motion.div>
+
       {/* ── 4. LA RÉASSURANCE, APRÈS LE PRODUIT ──────────────────────────────
              ⚠ MÊME RANGÉE QUE LE HERO DE BUREAU (2026-08-21), au mot près : les
              deux doivent dire la même chose, c'est le même écran vu sur deux
@@ -194,18 +216,11 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         ))}
       </motion.ul>
 
-      {/* ── 5. LA CLÔTURE ────────────────────────────────────────────────────
-             Le but du site reste la prise de rendez-vous : le hero se referme
-             sur le même appel, en encre pleine cette fois, à la sortie du
-             premier écran de contenu. */}
-      <motion.button
-        {...rise(0.2)}
-        onClick={openBooking}
-        className="mt-10 inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[#111827] font-inter text-[16.5px] font-semibold text-white transition-transform duration-150 active:scale-[0.99] active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
-      >
-        {t({ fr: "Réserver un appel", en: "Book a call" })}
-        <ArrowRight className="h-[18px] w-[18px]" />
-      </motion.button>
+      {/* ⚠ PAS DE TROISIÈME APPEL ICI (client 2026-09-07 : « remove the black
+             button »). Le hero en porte déjà deux, de même taille, à un écran
+             au-dessus ; celui-ci refermait la section sur un troisième, plein
+             et noir, juste après la vidéo. La conversion reste servie par les
+             deux du premier écran et par ceux des sections suivantes. */}
     </div>
   );
 }

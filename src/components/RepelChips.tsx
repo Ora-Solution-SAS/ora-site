@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useIsNarrow } from "@/lib/useIsNarrow";
 
 /**
  * RepelChips — nuage de petites étiquettes qui S'ÉCARTENT du curseur (client
@@ -59,10 +60,70 @@ export type Chip = {
 const RADIUS = 205;
 const PUSH = 130;
 
+/** La mise en forme d'une étiquette, commune aux deux rendus. */
+function chipClass(c: Chip) {
+  return `whitespace-nowrap rounded-[11px] px-3.5 py-2.5 font-inter text-[12.5px] md:text-[13.5px] font-medium ring-1 ${
+    c.tone === "advice"
+      ? "bg-[#eef4ff]/95 text-[#1d4ed8] ring-[#3b82f6]/40 shadow-[0_10px_28px_-12px_rgba(37,99,235,0.5)]"
+      : c.tone === "blue"
+        ? "bg-[#e8f0fe]/90 text-[#2563eb] ring-[#3b82f6]/20 shadow-[0_6px_18px_-10px_rgba(37,99,235,0.5)]"
+        : c.tone === "teal"
+          ? "bg-[#e6f5f2]/90 text-[#0f766e] ring-[#0d9488]/20 shadow-[0_6px_18px_-10px_rgba(13,148,136,0.45)]"
+          : "bg-white/[0.92] text-[#0a2540] ring-[#0a2540]/[0.08] shadow-[0_8px_22px_-12px_rgba(10,37,64,0.35)]"
+  }`;
+}
+
+/* ── LE NUAGE NE TIENT PAS SUR UN TÉLÉPHONE, ET IL NE BOUGE PAS NON PLUS ─────
+   Les étiquettes sont ancrées en POURCENTAGE et mesurées en pixels : sur les
+   420 px pour lesquels le semis a été réglé elles s'évitent, sur 290 elles se
+   recouvrent — « Cash flow » par-dessus « Value added », « Net cash » par-dessus
+   « Operating profit », relevé par le client le 2026-09-07.
+   Et le mouvement qui donne son sens à la carte — des postes qui fuient le
+   curseur, on ne peut pas les attraper un par un — n'existe pas au doigt : il
+   n'y a pas de survol, donc rien ne fuit jamais. Le téléphone n'avait qu'un
+   empilement figé et illisible.
+
+   D'où un second rendu, à la demande du client (« create an animation that
+   lives by itself, it's more easier when it comes to mobile ») : trois rangées
+   qui glissent en sens alternés, sans fin et sans qu'on ait à les toucher. Deux
+   choses en découlent, et ce sont les deux qui manquaient :
+     · une rangée est une ligne, donc plus aucun recouvrement possible, quelle
+       que soit la largeur ;
+     · le mouvement est autonome, donc le propos de la carte — ça se regarde, ça
+       ne se lit pas ligne à ligne — survit au passage sur téléphone.
+
+   La boucle est sans couture parce que chaque rangée est rendue DEUX FOIS et
+   translatée de la moitié de sa largeur : à l'instant où la première copie sort
+   à gauche, la seconde occupe exactement sa place. Les durées sont
+   volontairement premières entre elles, sinon les trois rangées se
+   resynchroniseraient périodiquement et l'œil verrait la boucle. */
+const MARQUEE_CSS = `
+@keyframes rc-slide-left  { from { transform: translate3d(0,0,0); }      to { transform: translate3d(-50%,0,0); } }
+@keyframes rc-slide-right { from { transform: translate3d(-50%,0,0); }   to { transform: translate3d(0,0,0); } }
+.rc-row { display: flex; width: max-content; gap: 10px; will-change: transform; }
+.rc-row--l { animation: rc-slide-left  var(--d) linear infinite; }
+.rc-row--r { animation: rc-slide-right var(--d) linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  /* Un défilement sans fin qu'on ne peut ni mettre en pause ni masquer est
+     exactement ce que vise le critère « Pause, Stop, Hide ». On pose les
+     rangées et on s'arrête là : la carte garde son sens, rien ne bouge. */
+  .rc-row--l, .rc-row--r { animation: none; }
+}
+`;
+
+/** Les trois rangées, dans l'ordre du semis d'origine. */
+function rows(chips: Chip[]): Chip[][] {
+  const out: Chip[][] = [[], [], []];
+  chips.forEach((c, i) => out[i % 3].push(c));
+  return out;
+}
+
 export default function RepelChips({ chips, className }: { chips: Chip[]; className?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const narrow = useIsNarrow();
 
   useEffect(() => {
+    if (narrow) return;
     const host = hostRef.current;
     if (!host) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -142,22 +203,70 @@ export default function RepelChips({ chips, className }: { chips: Chip[]; classN
       document.removeEventListener("pointerleave", onGone);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [chips]);
+  }, [chips, narrow]);
+
+  if (narrow) {
+    const durations = ["23s", "31s", "19s"];
+    return (
+      <div className={`relative ${className ?? ""}`}>
+        <style>{MARQUEE_CSS}</style>
+        {/* ⚠ `w-0 min-w-full`, ET CE N'EST PAS UNE COQUETTERIE. Une rangée est
+            en `width: max-content` — 713 px pour neuf étiquettes — et un enfant
+            de flex garde `min-width: auto` : il refuse de descendre sous la
+            largeur minimale de son contenu, et le refus remonte de parent en
+            parent. Mesuré : la carte hôte passait de 342 px à 1 046, et le
+            document entier avec elle.
+            Ni `overflow-hidden` ni `min-w-0` n'y suffisent — le premier rogne ce
+            qui dépasse sans empêcher la boîte de grandir, le second ne vaut que
+            pour le maillon où il est posé. `width: 0` annule la contribution
+            intrinsèque à la source, et `min-width: 100%` rend au bloc la largeur
+            de son parent, qui, lui, se résout dans l'autre sens.
+            Une position absolue réglerait la largeur aussi, mais retirerait le
+            bloc du flux : la carte hôte est haute de son contenu, et elle est
+            tombée de 280 px à 104 le temps d'un essai. */}
+        <div className="flex w-0 min-w-full flex-col justify-center gap-2.5 overflow-hidden">
+        {rows(chips).map((row, i) => (
+          <div
+            key={i}
+            className="w-full min-w-0 overflow-hidden"
+            /* Le fondu sur les deux bords : sans lui, une étiquette apparaît et
+               disparaît net au ras du cadre, et on voit la mécanique. Il MASQUE
+               seulement — c'est `overflow-hidden` qui rogne. */
+            style={{
+              maskImage: "linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%)",
+            }}
+          >
+            <div
+              className={`rc-row ${i % 2 ? "rc-row--r" : "rc-row--l"}`}
+              style={{ "--d": durations[i] } as React.CSSProperties}
+            >
+              {/* Deux copies : la seconde prend la place de la première au
+                  moment où celle-ci sort du cadre. `aria-hidden` sur la
+                  doublure, sinon un lecteur d'écran annonce tout en double. */}
+              {[0, 1].map((copy) => (
+                <div key={copy} className="flex shrink-0 gap-2.5" aria-hidden={copy === 1}>
+                  {row.map((c) => (
+                    <span key={c.label} className={chipClass(c)}>
+                      {c.label}
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={hostRef} className={`relative ${className ?? ""}`}>
       {chips.map((c) => (
         <span
           key={c.label}
-          className={`pointer-events-none absolute whitespace-nowrap rounded-[11px] px-3.5 py-2.5 font-inter text-[12.5px] md:text-[13.5px] font-medium ring-1 ${
-            c.tone === "advice"
-              ? "bg-[#eef4ff]/95 text-[#1d4ed8] ring-[#3b82f6]/40 shadow-[0_10px_28px_-12px_rgba(37,99,235,0.5)]"
-              : c.tone === "blue"
-                ? "bg-[#e8f0fe]/90 text-[#2563eb] ring-[#3b82f6]/20 shadow-[0_6px_18px_-10px_rgba(37,99,235,0.5)]"
-                : c.tone === "teal"
-                  ? "bg-[#e6f5f2]/90 text-[#0f766e] ring-[#0d9488]/20 shadow-[0_6px_18px_-10px_rgba(13,148,136,0.45)]"
-                  : "bg-white/[0.92] text-[#0a2540] ring-[#0a2540]/[0.08] shadow-[0_8px_22px_-12px_rgba(10,37,64,0.35)]"
-          }`}
+          className={`pointer-events-none absolute ${chipClass(c)}`}
           style={{
             left: `${c.x}%`,
             top: `${c.y}%`,
