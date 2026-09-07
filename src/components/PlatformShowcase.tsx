@@ -147,7 +147,7 @@ export default function PlatformShowcase({ openBooking }: PlatformShowcaseProps)
   const { t } = useLang();
 
   return (
-    <section id="plateforme" data-nav-shy className="relative px-6 md:px-12 py-20 md:py-28 bg-white dark:bg-black">
+    <section id="plateforme" data-nav-shy className="relative px-6 md:px-12 py-12 md:py-28 bg-white dark:bg-black">
       {/* LARGEUR ALIGNÉE SUR LA SECTION DU DESSUS (client 2026-08-14 : « il
           faudrait qu'il soit un peu plus large pour avoir plus de cohérence
           visuelle avec la partie au-dessus »). AutomationTabs pose son cadre à

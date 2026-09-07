@@ -846,7 +846,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                 Le dégradé de fondu vers le noir, juste au-dessus, reste : il
                 appartient à l'horizon, pas à la rangée. */}
 
-            <div ref={skyTypeRef} className="relative z-10 px-6 pt-[16vh] text-center md:px-12 md:pt-[19vh]">
+            <div ref={skyTypeRef} className="relative z-10 px-6 pt-[10vh] text-center md:px-12 md:pt-[19vh]">
               {/* LA PETITE ÉTOILE FILANTE EST REVENUE (client, même passe :
                   « tu as retiré l'espèce de petite étoile filante, elle rendait
                   très très bien, donc garde-la »). Elle avait sauté avec le
@@ -964,7 +964,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
               épinglée doit tenir ENTIÈRE dans l'écran qui la fige, c'est tout
               son contrat. Le pt-16 asymétrique laisse la place de la barre de
               navigation, fixe par-dessus. */}
-          <div className="px-6 pb-16 pt-20 md:px-10 md:pb-8 md:pt-16 lg:px-14">
+          <div className="px-6 pb-10 pt-12 md:px-10 md:pb-8 md:pt-16 lg:px-14">
             {/* La pastille. Bleu de la charte à faible opacité sur le noir,
                 le seul accent de tout le bloc. */}
             <span className="inline-flex items-center rounded-[7px] bg-[#3b82f6]/[0.16] px-2.5 py-1 font-inter text-[12.5px] font-semibold tracking-[-0.01em] text-[#8ab4fa]">

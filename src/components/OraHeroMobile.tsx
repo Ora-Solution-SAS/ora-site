@@ -92,7 +92,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
   ];
 
   return (
-    <div className="relative px-5 pt-24 pb-16">
+    <div className="relative px-5 pt-14 pb-10">
       {/* Soft brand glow behind the phone card.
           ⚠ `max-w-full` : le commentaire d'origine la disait « clipped by the
           parent section », ce qui était faux — mesuré à 375 px, ce disque de
@@ -147,14 +147,18 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           })}
         </p>
 
-        {/* Touch target kept at 52px tall.
+        {/* Cible tactile à 48 px : au-dessus des 44 px recommandés, et le
+            bouton se pose à sa propre largeur au lieu de tenir les 350 px de
+            l'écran. Pleine largeur, il lisait comme la validation d'un
+            formulaire et repoussait la rangée de preuve hors du premier écran ;
+            sur PC le même appel fait 193 px.
             ⚠ Mène à la RÉSERVATION depuis le 2026-08-26, comme le hero de
             bureau : le lien vers la web app est retiré du site (voir le pavé
             de OraHeroDemo). Les deux heros portent le même appel. */}
         <button
           type="button"
           onClick={openBooking}
-          className="mt-6 inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter text-[16.5px] font-semibold text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2563eb]"
+          className="mt-5 inline-flex h-[48px] items-center justify-center gap-2 rounded-full bg-[#3b82f6] px-6 font-inter text-[15.5px] font-semibold text-white shadow-[0_12px_28px_-12px_rgba(59,130,246,0.6)] active:bg-[#2563eb]"
         >
           {t({ fr: "Réserver un appel", en: "Book a call" })}
           <ArrowRight className="h-[18px] w-[18px]" />
@@ -347,7 +351,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
       <motion.button
         {...rise(0.2)}
         onClick={openBooking}
-        className="mt-9 inline-flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
+        className="mt-7 inline-flex h-[48px] items-center justify-center gap-2 rounded-full bg-[#111827] px-6 font-inter font-semibold text-[15.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
       >
         {t({ fr: "Réserver un appel", en: "Book a call" })}
         <ArrowRight className="h-[18px] w-[18px]" />

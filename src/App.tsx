@@ -1681,7 +1681,7 @@ const App = () => {
           Le blanc cassé #fcfbf7 tenait ici son tour d'alternance, mais c'est le
           dernier appel du site : le bouton bleu y gagne le fond le plus neutre
           possible, et la bande blanche le détache de la section qui précède. */}
-      <section className="relative px-6 md:px-12 pt-24 md:pt-20 pb-44 md:pb-56 bg-white dark:bg-black md:dark:bg-black">
+      <section className="relative px-6 md:px-12 pt-14 md:pt-20 pb-24 md:pb-56 bg-white dark:bg-black md:dark:bg-black">
         <div className="mx-auto max-w-[46rem] text-center">
           {/* ⚠ LA PHRASE A ÉTÉ RETIRÉE (client 2026-08-19 : « remove the phrase
               Une demi-heure, sur vos propres fichiers… »). Elle disait, en deux

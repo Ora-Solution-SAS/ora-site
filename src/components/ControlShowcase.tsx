@@ -117,7 +117,7 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
          Le pavé historique qui demandait qu'elle porte « le MÊME fond que
          PrivacyShowcase » est caduc : cette section a été retirée le
          2026-08-15, il n'y a plus de couture à effacer. */
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-28 md:pb-40 bg-[#fcfbf7] dark:bg-black"
+      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-16 md:pb-40 bg-[#fcfbf7] dark:bg-black"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       <div className="relative max-w-7xl mx-auto">
@@ -150,7 +150,7 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
         {/* Remonté de 20/28 à 10/14 (client 2026-08-11 : « les encadrés juste
             en dessous ») : le titre étant devenu fin, l'écart d'origine le
             laissait flotter seul en haut de section. */}
-        <div className="mt-10 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-14 md:gap-y-20">
+        <div className="mt-6 md:mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-10 lg:gap-x-16 gap-y-8 md:gap-y-20">
           {items.map((it, i) => {
             const Icon = it.icon;
             return (

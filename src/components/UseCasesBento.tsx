@@ -1500,7 +1500,7 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
   ];
 
   return (
-    <div className="relative mb-24 md:mb-32">
+    <div className="relative mb-14 md:mb-32">
       <style>{SPECKLE_CSS}</style>
       {/* ── LE TITRE DE SECTION A ÉTÉ RETIRÉ ──────────────────────────────
           Client 2026-08-14 : « enlève la phrase Concrètement ce qu'Ora peut
