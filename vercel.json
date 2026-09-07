@@ -6,8 +6,9 @@
   "redirects": [
     { "source": "/updates/:path*", "destination": "https://s3.pub2.infomaniak.cloud/object/v1/AUTH_fc95bcd7b43b43729fef023d528322bf/ora-releases/:path*", "permanent": false }
   ],
+  "_comment_rewrites": "api/ est exclu explicitement. Vercel consulte le systeme de fichiers (donc les fonctions) AVANT les rewrites, la regle ne devrait donc jamais s'appliquer a /api/... ; mais une reecriture silencieuse renverrait index.html la ou le front attend du JSON, et ce genre de panne se diagnostique mal. L'exclusion coute un groupe et enleve le doute.",
   "rewrites": [
-    { "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ],
   "headers": [
     {

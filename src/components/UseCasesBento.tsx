@@ -2036,8 +2036,16 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                          « Reprendre ». Elle sert aussi à REMONTER la fenêtre :
                          le bloc visuel est en `mt-auto`, donc plus il est haut,
                          moins il reste de vide entre le titre et lui. */
-                      <div className="-mx-3 md:mx-0 md:ml-[86px] md:-mr-[104px] -mb-8 md:-mb-14">
-                        <div className="h-[300px] md:h-[470px]">
+                      /* SOUS md, LA FENÊTRE NE DÉBORDE PLUS (2026-09-07) :
+                          OraAppScene abandonne le rognage sur téléphone et rend
+                          la scène entière (voir son `fit`). Le cadre suit —
+                          rapport de la scène au lieu d'une hauteur fixe, sinon
+                          les 300 px laissaient 77 px de blanc sous la fenêtre —
+                          et le débord bas passe de 32 à 8 px, juste de quoi
+                          garder le contact avec le bord de la carte sans
+                          manger l'ombre portée. */
+                      <div className="-mx-3 -mb-2 md:mx-0 md:ml-[86px] md:-mr-[104px] md:-mb-14">
+                        <div className="aspect-[1180/720] md:aspect-auto md:h-[470px]">
                           {/* `chips="in"` : les trois livrables sortants sont
                               ancrés au bord DROIT de la scène, très au-delà de
                               la carte. Seule l'entrée reste à l'écran. */}

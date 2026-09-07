@@ -201,7 +201,11 @@ function CardShell({
         >
           {title}
         </h3>
-        <div className="relative flex h-[280px] w-full flex-1 items-center justify-center md:h-[380px]">
+        {/* `mt-5` SOUS md : le nuage passe en grappe posee (RepelChips), il
+            n'est plus semi loin du titre — sur les titres a trois lignes il
+            venait toucher la derniere. Au-dessus de md rien ne change, les
+            etiquettes y sont en position absolue. */}
+        <div className="relative mt-5 flex h-[280px] w-full flex-1 items-center justify-center md:mt-0 md:h-[380px]">
           {children}
         </div>
       </div>

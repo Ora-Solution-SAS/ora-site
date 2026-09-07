@@ -377,7 +377,12 @@ const Navigation: React.FC<NavigationProps> = ({
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className={cn(
-              "md:hidden w-9 h-9 rounded-full flex items-center justify-center transition-colors",
+              /* 44 x 44, la cible tactile minimale : a 36 px (w-9) le bouton
+                 etait la plus petite commande du site sur le seul appareil ou
+                 l'on vise au doigt. Le rond de survol grandit d'autant, d'ou
+                 le `-mr-1.5` qui rend au bandeau les 6 px gagnes a droite pour
+                 que le logo et le bouton restent sur le meme axe. */
+              "md:hidden -mr-1.5 h-11 w-11 rounded-full flex items-center justify-center transition-colors md:mr-0",
               overDark
                 ? "text-white/80 hover:text-white hover:bg-white/10"
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.08]"
