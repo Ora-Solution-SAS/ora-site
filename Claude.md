@@ -183,6 +183,32 @@ les rétablir ensemble si la bascule revient un jour :
 
 ---
 
+## Deployment (`vercel.json`)
+
+> ### ⚠ NO COMMENTS IN `vercel.json`. EVER.
+> The file is validated against `https://openapi.vercel.sh/vercel.json`, whose
+> schema declares **`additionalProperties: false`** over 42 allowed keys. Any
+> extra key — including a `_comment` one — fails the deployment **before the
+> build starts**, with `Invalid vercel.json`. This happened on 2026-09-07: a
+> `_comment_rewrites` key explaining the rewrite rule broke the first
+> production deploy of the booking work. Explanations about deployment belong
+> here, in this file, not in the JSON.
+
+**The SPA rewrite excludes `/api/`.** Vercel checks the filesystem — static
+files *and* functions — before applying rewrites, so the rule should never
+catch a function. The exclusion is belt-and-braces: a silent rewrite would
+serve `index.html` where the front end expects JSON, and that failure is
+miserable to diagnose.
+
+**`api/` becomes serverless functions automatically.** Files and folders
+prefixed with `_` are excluded, which is why the shared code lives in
+`api/_lib/`. Imports inside `api/` carry the `.js` extension, as Node ESM
+requires; esbuild (which Vercel uses) maps `.js` back to `.ts` when the
+importer is TypeScript, and `vite.config.ts` does the same for `npm run dev`.
+Verified by bundling both entry points with esbuild and running them.
+
+---
+
 ## Booking service (`/api`)
 
 **Cal.com was removed on 2026-09-07** (client: *« est-ce que tu peux créer toi-même
