@@ -5,6 +5,8 @@ import {
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import OraJourney from "@/components/OraJourney";
+import { useIsNarrow } from "@/lib/useIsNarrow";
+import { bookingCtaLabel } from "@/lib/contact";
 
 interface OraExperiencePageProps {
   theme: "light" | "dark";
@@ -84,6 +86,7 @@ const pageCSS = `
 
 export default function OraExperiencePage({ theme, openBooking, onNavigate }: OraExperiencePageProps) {
   const { t } = useLang();
+  const narrow = useIsNarrow();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
   const lineRef = useRef<HTMLDivElement>(null);
@@ -262,7 +265,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               onClick={openBooking}
               className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_8px_rgba(0,0,0,0.1),0_8px_24px_rgba(37,99,235,0.35)] hover:shadow-[0_2px_8px_rgba(0,0,0,0.1),0_12px_32px_rgba(37,99,235,0.45)]"
             >
-              {t({ fr: "Réserver un appel gratuit", en: "Book a free call" })}
+              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel gratuit", en: "Book a free call" })}
               <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
             <span className={`text-[13px] ${dk ? "text-gray-500" : "text-gray-400"}`}>
@@ -707,7 +710,7 @@ export default function OraExperiencePage({ theme, openBooking, onNavigate }: Or
               onClick={openBooking}
               className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-[15px] font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-px active:translate-y-0 bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_28px_rgba(37,99,235,0.5)]"
             >
-              {t({ fr: "Réserver un appel", en: "Get started" })}
+              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel", en: "Get started" })}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
             <button

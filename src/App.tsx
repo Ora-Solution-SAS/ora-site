@@ -3,6 +3,8 @@ import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import { Analytics } from "@vercel/analytics/react";
 import { animatedScrollToId } from "./lib/scrollTo";
+import { useIsNarrow } from "./lib/useIsNarrow";
+import { mailtoHref } from "./lib/contact";
 import OraLogoSpinner from "./components/OraLogoSpinner";
 // ⚠ QualifierFlow, QualifierResult et GiftReveal NE SONT PLUS MONTÉS depuis le
 // 2026-08-19 (client : « fais quelque chose de beaucoup plus straight to the
@@ -1001,7 +1003,22 @@ const App = () => {
     };
   }, [isBookingOpen]);
 
+  /* ── SUR TÉLÉPHONE, « RÉSERVER » OUVRE UN COURRIEL ────────────────────────
+     Client 2026-09-07 : « replace book a call by the possibility to send us an
+     email… only for the mobile version ». La bascule est posée ICI, à la source,
+     et non bouton par bouton : `openBooking` est défini une seule fois et
+     descend en prop dans les quinze pages. Un bouton oublié quelque part mène
+     donc au courriel lui aussi, au lieu d'ouvrir un tunnel de réservation que
+     rien n'annonce plus.
+     Les libellés, eux, se changent au cas par cas (bookingCtaLabel) : ils sont
+     écrits dans le JSX de chaque page. */
+  const narrow = useIsNarrow();
+
   const openBooking = () => {
+    if (narrow) {
+      window.location.href = mailtoHref(t({ fr: "Découvrir Ora", en: "Discovering Ora" }));
+      return;
+    }
     // L'élément actif AU MOMENT DU CLIC, avant que React ne rende la fenêtre.
     bookingOpenerRef.current = document.activeElement as HTMLElement | null;
     setIsBookingOpen(true);
@@ -1694,13 +1711,31 @@ const App = () => {
               jour, la phrase est ici, mot pour mot, prête à revenir.
               Le pas du haut passe de pt-16/pt-8 à pt-24/pt-20 : sans titre,
               l'ancien blanc laissait le bouton coller au bord de section. */}
-          <button
-            onClick={openBooking}
-            className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
-          >
-            {t({ fr: "Réserver mon appel", en: "Book my call" })}
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
-          </button>
+          {/* ⚠ LE DERNIER APPEL DU SITE MÈNE AU COURRIEL SUR TÉLÉPHONE
+              (client 2026-09-07 : « il y a toujours book slots at the very end
+              of the website, remove it for replacing it with email us »). Les
+              quatre autres appels sont passés au courriel la veille au soir ;
+              celui-ci portait « Réserver mon appel » et non « Réserver un
+              appel », d'où son absence du relevé — c'était le seul rescapé.
+              Le bouton de bureau ne bouge pas : la bascule se fait sur la
+              largeur réelle, une classe ne changerait pas la destination. */}
+          {narrow ? (
+            <a
+              href={mailtoHref(t({ fr: "Découvrir Ora", en: "Discovering Ora" }))}
+              className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
+            >
+              {t({ fr: "Nous écrire", en: "Email us" })}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
+            </a>
+          ) : (
+            <button
+              onClick={openBooking}
+              className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_12px_40px_rgba(59,130,246,0.55)]"
+            >
+              {t({ fr: "Réserver mon appel", en: "Book my call" })}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-150" />
+            </button>
+          )}
         </div>
       </section>
 

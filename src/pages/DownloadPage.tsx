@@ -22,6 +22,8 @@ import { useEffect, useState } from "react";
 import { useLang } from "../lib/i18n";
 import DownloadShowcase from "../components/DownloadShowcase";
 import DeliverablesShowcase from "../components/DeliverablesShowcase";
+import { useIsNarrow } from "@/lib/useIsNarrow";
+import { bookingCtaLabel } from "@/lib/contact";
 
 /* ──────────────────────────────────────────────────────────────────────────
    CONFIG — edit these when a new build ships
@@ -159,6 +161,7 @@ type Props = {
 
 export default function DownloadPage({ theme, openBooking, onNavigate }: Props) {
   const { t, lang, setLang } = useLang();
+  const narrow = useIsNarrow();
   const [os] = useState<OS>(() => detectOS());
 
   // Safety net: after 1.5s, force-reveal all `.dl-rise` content regardless of
@@ -426,7 +429,7 @@ export default function DownloadPage({ theme, openBooking, onNavigate }: Props) 
               {t({ fr: "Écrire au support", en: "Email support" })}
             </a>
             <button type="button" onClick={openBooking} className={`${BTN_BASE} ${BTN_SOLID}`}>
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel", en: "Book a call" })}
             </button>
           </div>
 
