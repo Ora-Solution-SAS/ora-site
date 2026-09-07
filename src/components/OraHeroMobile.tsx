@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
-import {
-  ArrowRight, BarChart3, Bell, Check, ChevronRight, FileText, Globe, Plus, Sparkles,
-} from "lucide-react";
+import { ArrowRight, BarChart3, Check, FileText } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import OraAppScene from "./OraAppScene";
 
 /**
  * OraHeroMobile — the hero for phones (< 768px), rendered instead of the
@@ -25,13 +24,6 @@ import { useLang } from "@/lib/i18n";
  * grammar. The story reads top to bottom, in one normal scroll.
  */
 
-/** Files of the « Reprendre » list, same set as OraAppScene. */
-const FILES: { name: string; meta: string; kind: "xlsx" | "txt"; state: "run" | "todo" }[] = [
-  { name: "01_grand_livre_client_a_nettoyer", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "run" },
-  { name: "demo_petit_5k_2024_N_studio (2)", meta: "XLSX · il y a 7 h", kind: "xlsx", state: "todo" },
-  { name: "FEC_demo_2024_398k_lignes (2)", meta: "XLSX · 20 juil.", kind: "xlsx", state: "todo" },
-];
-
 /**
  * Arrivée au MONTAGE, pas au `whileInView`. Deux raisons : c'est le hero, donc
  * tout est vu tout de suite ou presque, et surtout un `whileInView` qui ne
@@ -46,28 +38,6 @@ const rise = (delay: number) => ({
 
 export default function OraHeroMobile({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
-
-  /** Quick-access tiles: stacked full width instead of a 3-column grid. */
-  const quick = [
-    {
-      icon: <Plus className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#e8f0ff] text-[#2f6ff0]",
-      title: t({ fr: "Nouveau projet", en: "New project" }),
-      sub: "Deal PE, audit, M&A...",
-    },
-    {
-      icon: <Globe className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#f0ecfe] text-[#7c53e8]",
-      title: t({ fr: "Tous les Atlas", en: "All Atlas" }),
-      sub: t({ fr: "Liste de vos projets", en: "Your projects" }),
-    },
-    {
-      icon: <Sparkles className="h-[18px] w-[18px]" strokeWidth={2.2} />,
-      tint: "bg-[#fef3e2] text-[#d97a06]",
-      title: "Ora Engineering",
-      sub: t({ fr: "Automatisation sur-mesure", en: "Custom automation" }),
-    },
-  ];
 
   /** What Ora gives back, told as a list instead of chips floating over the UI. */
   const outputs = [
@@ -188,115 +158,24 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         </ul>
       </motion.div>
 
-      {/* ── La réplique du logiciel, recomposée à la largeur du téléphone ── */}
+      {/* ── LA RÉPLIQUE DU LOGICIEL, CELLE DU PC ────────────────────────────
+             Ce bloc a longtemps été une SECONDE maquette, réécrite pour le
+             téléphone : fenêtre en pleine largeur, barre latérale supprimée,
+             accès rapides en liste, fichiers empilés. Elle était fidèle en
+             contenu et fausse en image — plus de 700 px de haut, et pas l'écran
+             que le PC montre.
+             C'est maintenant OraAppScene, le composant même du hero de bureau.
+             Il se compose à 1180 × 720 et se met tout seul à l'échelle de son
+             cadre : il suffit de lui donner le rapport de la scène pour qu'il
+             tienne entier, barre latérale et grille d'accès rapides comprises.
+             Aucune règle responsive là-dedans — la scène est dessinée à taille
+             fixe, donc l'image est celle du PC, à l'échelle près. */}
       <motion.div
         {...rise(0.08)}
-        className="mt-10 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
+        className="mt-8 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
       >
-        {/* Barre de fenêtre */}
-        <div className="flex items-center gap-2 border-b border-[#ececef] bg-[#f7f7f8] px-3.5 py-2.5">
-          <span className="flex gap-1.5">
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#ff5f57]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#febc2e]" />
-            <i className="block h-[9px] w-[9px] rounded-full bg-[#28c840]" />
-          </span>
-          <span className="flex-1 text-center font-inter text-[12px] font-semibold text-[#3f4652]">Ora</span>
-          <span className="w-[38px]" />
-        </div>
-
-        {/* En-tête applicatif */}
-        <div className="flex items-center gap-2 border-b border-[#f0f0f2] px-4 py-3">
-          <img src="/logos/logo-color-dark.png" alt="Ora" className="h-[19px] w-auto" draggable={false} />
-          <span className="ml-auto flex items-center gap-1.5 rounded-full border border-[#e6e7ea] px-2.5 py-1 font-inter text-[11.5px] font-semibold text-[#4b5160]">
-            <Bell className="h-[13px] w-[13px]" strokeWidth={2.2} />
-            <span className="inline-grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#2f6ff0] px-1 font-inter text-[10px] font-bold text-white">
-              1
-            </span>
-          </span>
-          <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[#2f6ff0] font-inter text-[12.5px] font-bold text-white">
-            T
-          </span>
-        </div>
-
-        <div className="bg-[#fdfdfb] px-4 pb-5 pt-4">
-          <p className="font-poppins text-[21px] font-semibold leading-tight tracking-[-0.02em] text-[#111827]">
-            {t({ fr: "Heureux de vous revoir", en: "Good to see you again" })}
-          </p>
-          <p className="mt-1 font-inter text-[12px] text-[#8b909b]">
-            {t({ fr: "Mercredi 29 juillet", en: "Wednesday, July 29" })}
-          </p>
-
-          {/* Grande carte bleue, pleine largeur : le geste central du produit. */}
-          <div
-            className="mt-4 flex items-center gap-3 rounded-[14px] px-4 py-3.5"
-            style={{
-              background: "linear-gradient(100deg,#2f6ff0,#3f7bf5 55%,#5b8cf8)",
-              boxShadow: "0 16px 34px -16px rgba(47,111,240,.75)",
-            }}
-          >
-            <span className="grid h-[42px] w-[42px] shrink-0 place-items-center rounded-[11px] bg-white/[0.22] text-white">
-              <FileText className="h-[19px] w-[19px]" strokeWidth={2} />
-            </span>
-            <span className="min-w-0">
-              <b className="block font-inter text-[15.5px] font-bold text-white">
-                {t({ fr: "Ouvrir un fichier", en: "Open a file" })}
-              </b>
-              <span className="mt-0.5 block font-inter text-[12.5px] leading-snug text-white/[0.86]">
-                {t({
-                  fr: "Excel ou CSV, lancez vos automatisations en un clic",
-                  en: "Excel or CSV, run your automations in one click",
-                })}
-              </span>
-            </span>
-          </div>
-
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Accès rapide", en: "Quick access" })}
-          </p>
-          <div className="mt-2.5 flex flex-col gap-2">
-            {quick.map((q) => (
-              <div
-                key={q.title}
-                className="flex items-center gap-3 rounded-[13px] border border-[#eceef1] bg-white px-3.5 py-3"
-              >
-                <span className={`grid h-[36px] w-[36px] shrink-0 place-items-center rounded-[10px] ${q.tint}`}>
-                  {q.icon}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block font-inter text-[13.5px] font-bold text-[#111827]">{q.title}</b>
-                  <span className="block font-inter text-[11.5px] text-[#8b909b]">{q.sub}</span>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#c3c6cd]" strokeWidth={2.2} />
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-5 font-inter text-[10px] font-bold uppercase tracking-[0.11em] text-[#a0a4ad]">
-            {t({ fr: "Reprendre", en: "Resume" })}
-          </p>
-          <div className="mt-2.5 overflow-hidden rounded-[13px] border border-[#eceef1] bg-white">
-            {FILES.map((f, i) => (
-              <div
-                key={f.name}
-                className={`flex items-center gap-3 px-3.5 py-2.5${i > 0 ? " border-t border-[#f4f5f7]" : ""}`}
-              >
-                <span className="grid h-[26px] w-[26px] shrink-0 place-items-center rounded-[7px] bg-[#e9f7ee] text-[#177245]">
-                  <FileText className="h-[14px] w-[14px]" strokeWidth={2.2} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <b className="block truncate font-inter text-[12.5px] font-semibold text-[#111827]">{f.name}</b>
-                  <span className="block font-inter text-[10.5px] text-[#9aa0aa]">{f.meta}</span>
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 font-inter text-[10.5px] font-semibold ${
-                    f.state === "run" ? "bg-[#eaf1ff] text-[#2f6ff0]" : "bg-[#f3f4f6] text-[#7b8190]"
-                  }`}
-                >
-                  {f.state === "run" ? t({ fr: "En cours", en: "Running" }) : t({ fr: "À faire", en: "To do" })}
-                </span>
-              </div>
-            ))}
-          </div>
+        <div className="aspect-[1180/720] w-full">
+          <OraAppScene />
         </div>
       </motion.div>
 

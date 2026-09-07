@@ -14,6 +14,7 @@ import OraHomeMockup from "./OraHomeMockup";
 import OraAppScene from "./OraAppScene";
 import ValuationCard from "./ValuationCard";
 import RepelChips, { type Chip } from "./RepelChips";
+import { useIsNarrow } from "@/lib/useIsNarrow";
 
 /* ⚠ CHARGÉS À LA DEMANDE, ET C'EST LE POSTE LE PLUS LOURD DU SITE (audit du
    2026-08-15). Ces deux composants tirent three.js, soit 488 ko minifiés, et
@@ -1185,6 +1186,9 @@ function Mockup({ kind }: { kind: MockupKind }) {
 }
 
 export default function UseCasesBento({ openBooking }: { openBooking?: () => void }) {
+  // Ce que la carte montre de la scène du logiciel dépend de la largeur réelle,
+  // pas d'une classe : le rognage se règle en JS, sur une prop du composant.
+  const narrow = useIsNarrow();
   const { t } = useLang();
   const [detail, setDetail] = useState<BentoCase | null>(null);
   // Onglet actif de la carte pleine largeur. Un seul entier : une seule carte
@@ -2036,14 +2040,35 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                          « Reprendre ». Elle sert aussi à REMONTER la fenêtre :
                          le bloc visuel est en `mt-auto`, donc plus il est haut,
                          moins il reste de vide entre le titre et lui. */
-                      <div className="-mx-3 md:mx-0 md:ml-[86px] md:-mr-[104px] -mb-8 md:-mb-14">
-                        <div className="h-[300px] md:h-[470px]">
-                          {/* `chips="in"` : les trois livrables sortants sont
-                              ancrés au bord DROIT de la scène, très au-delà de
-                              la carte. Seule l'entrée reste à l'écran. */}
-                          <OraAppScene cropScale={0.86} chips="in" />
+                      /* ⚠ LE ROGNAGE EST UNE COMPOSITION DE LARGE, PAS UNE
+                         MISE EN PAGE. À l'échelle 0,86 la scène fait 1 015 px :
+                         une carte de bureau en montre les deux tiers, et le
+                         tiers qui sort est la fenêtre débordante voulue. La
+                         même carte sur 390 px n'en montrait plus qu'un
+                         quart — barre latérale, « Home » coupé en deux, titres
+                         tronqués au bord. L'image n'était plus rognée, elle
+                         était amputée.
+                         Sous `md` la scène tient donc ENTIÈRE : pas de
+                         `cropScale`, un cadre au rapport de la scène, et
+                         OraAppScene se met lui-même à l'échelle. Les pastilles
+                         repassent à `all`, leurs ancrages redevenant dans le
+                         cadre. Au-delà, rien ne change. */
+                      narrow ? (
+                        <div className="-mx-3 -mb-8">
+                          <div className="aspect-[1180/720] w-full overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.08]">
+                            <OraAppScene chips="all" />
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="-mx-3 md:mx-0 md:ml-[86px] md:-mr-[104px] -mb-8 md:-mb-14">
+                          <div className="h-[300px] md:h-[470px]">
+                            {/* `chips="in"` : les trois livrables sortants sont
+                                ancrés au bord DROIT de la scène, très au-delà de
+                                la carte. Seule l'entrée reste à l'écran. */}
+                            <OraAppScene cropScale={0.86} chips="in" />
+                          </div>
+                        </div>
+                      )
                     ) : c.mockup ? (
                       <div
                         // Les marges NÉGATIVES font déborder la maquette des
