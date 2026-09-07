@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { VideoWithScrubber } from "./InViewVideo";
+import { useIsNarrow } from "@/lib/useIsNarrow";
+import { mailtoHref } from "@/lib/contact";
 import AtlasSlideVisual, { type AtlasVisual } from "./AtlasSlideVisual";
 import Typewriter from "./Typewriter";
 import AtlasLiveAsk from "./AtlasLiveAsk";
@@ -486,6 +488,7 @@ const SCENE_VARIANTS: Variants = {
 
 export default function AtlasShowcase({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
+  const narrow = useIsNarrow();
 
   /* ── LA MONTÉE DE LA PLANÈTE, ÉCRITE AU DÉFILEMENT ────────────────────────
    * Client 2026-08-14 : « une animation où l'écran se bloque et il y a
@@ -999,14 +1002,27 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                 bloc c'est la liste qui doit tenir le regard, pas le bouton. Le
                 bouton plein blanc reste celui de la grille, deux écrans plus
                 bas, qui ferme la démonstration. */}
-            <button
-              type="button"
-              onClick={openBooking}
-              className="group mt-9 inline-flex items-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 font-inter text-[14px] font-semibold text-white transition-colors duration-150 hover:border-white/50 hover:bg-white/[0.06] md:mt-6"
-            >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
-              <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
-            </button>
+            {/* Sur téléphone l'appel mène au courriel, sur PC à la réservation
+                (client 2026-09-07). Même bouton pour les deux tailles : la
+                bascule se fait sur la largeur réelle, pas sur une classe. */}
+            {narrow ? (
+              <a
+                href={mailtoHref(t({ fr: "Découvrir Atlas", en: "Discovering Atlas" }))}
+                className="group mt-9 inline-flex items-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 font-inter text-[14px] font-semibold text-white transition-colors duration-150 hover:border-white/50 hover:bg-white/[0.06] md:mt-6"
+              >
+                {t({ fr: "Nous écrire", en: "Email us" })}
+                <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={openBooking}
+                className="group mt-9 inline-flex items-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 font-inter text-[14px] font-semibold text-white transition-colors duration-150 hover:border-white/50 hover:bg-white/[0.06] md:mt-6"
+              >
+                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+              </button>
+            )}
 
             {/* ── LA LISTE DES CINQ CAPACITÉS ────────────────────────────────
                 Filets ENTRE les entrées et pas autour : `first:border-t-0`

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { useIsNarrow } from "@/lib/useIsNarrow";
+import { mailtoHref } from "@/lib/contact";
 import DownloadShowcase from "./DownloadShowcase";
 
 /**
@@ -79,6 +81,9 @@ function Shell({
   onCta: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useLang();
+  const narrow = useIsNarrow();
+
   return (
     <motion.div
       {...fadeUp}
@@ -116,6 +121,20 @@ function Shell({
             matin même — bouton de téléchargement plus lien d'essai — est
             retombée à un seul appel : plus d'arbitrage à faire pour le
             visiteur, donc plus besoin de départager un bouton et un lien. */}
+        {/* ⚠ SUR TÉLÉPHONE, L'APPEL MÈNE AU COURRIEL (client 2026-09-07 : « replace
+            book a call by the possibility to send us an email… only for the
+            mobile version »). Le bouton de bureau garde la réservation : c'est le
+            même composant pour les deux tailles, d'où la bascule sur la largeur
+            réelle et non une classe. */}
+        {narrow ? (
+          <a
+            href={mailtoHref(t({ fr: "Découvrir Ora", en: "Discovering Ora" }))}
+            className="group mt-7 inline-flex items-center gap-2.5 rounded-[7px] bg-[#3b82f6] px-5 py-3 font-inter font-semibold text-[14.5px] text-white transition-colors duration-150 hover:bg-[#2563eb]"
+          >
+            {t({ fr: "Nous écrire", en: "Email us" })}
+            <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
+          </a>
+        ) : (
         <button
           type="button"
           onClick={onCta}
@@ -124,6 +143,7 @@ function Shell({
           {cta}
           <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
         </button>
+        )}
 
         {note && (
           <p className="mt-4 max-w-[34ch] font-inter text-[13.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">

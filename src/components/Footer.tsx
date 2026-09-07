@@ -1,5 +1,7 @@
 import { Footer } from "./ui/footer";
 import { useLang } from "@/lib/i18n";
+import { useIsNarrow } from "@/lib/useIsNarrow";
+import { mailtoHref } from "@/lib/contact";
 
 type Page = "home" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "not-found";
 
@@ -11,6 +13,7 @@ interface OraFooterProps {
 
 const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
   const { t } = useLang();
+  const narrow = useIsNarrow();
   const logoSrc =
     theme === "dark"
       ? "/logos/logo-color-light.png"
@@ -40,7 +43,16 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
           links: [
             { text: t({ fr: "Accueil", en: "Home" }), onClick: () => onNavigate("home") },
             // "L'expérience Ora" and "Tarifs" temporarily hidden until live.
-            { text: t({ fr: "Réserver un appel", en: "Book a call" }), onClick: onBookCall },
+            /* Sur téléphone, l'entrée mène au courriel ; sur PC elle ouvre la
+               réservation (client 2026-09-07). Le pied de page est un composant
+               d'interface qui ne prend que des `onClick` : la navigation est
+               posée à la main plutôt que par un `href`. */
+            narrow
+              ? {
+                  text: t({ fr: "Nous écrire", en: "Email us" }),
+                  onClick: () => { window.location.href = mailtoHref(t({ fr: "Découvrir Ora", en: "Discovering Ora" })); },
+                }
+              : { text: t({ fr: "Réserver un appel", en: "Book a call" }), onClick: onBookCall },
           ],
         },
         {
