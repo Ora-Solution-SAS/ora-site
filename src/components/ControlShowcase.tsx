@@ -117,7 +117,11 @@ export default function ControlShowcase({ theme }: ControlShowcaseProps) {
          Le pavé historique qui demandait qu'elle porte « le MÊME fond que
          PrivacyShowcase » est caduc : cette section a été retirée le
          2026-08-15, il n'y a plus de couture à effacer. */
-      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-28 md:pb-40 bg-[#fcfbf7] dark:bg-black"
+      /* Pied ramené de pb-40 à pb-16 (client 2026-09-02 : « réduis l'espace
+         entre la partie contrôle total et questions ») : avec le pt-32 de la
+         FAQ, les deux sections étaient séparées de ~290 px de blanc. L'écart
+         retombe à ~150 px, la moitié portée par chaque section. */
+      className="relative px-6 md:px-12 pt-24 md:pt-32 pb-12 md:pb-16 bg-[#fcfbf7] dark:bg-black"
       style={{ background: dk ? "#000000" : "#ffffff" }}
     >
       <div className="relative max-w-7xl mx-auto">

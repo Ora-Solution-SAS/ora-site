@@ -131,6 +131,9 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
      ITEMS, et lui inventer un index fausserait le rail et la fenêtre. */
   const [demo, setDemo] = useState(false);
   const panelsRef = useRef<(HTMLDivElement | null)[]>([]);
+  /** La bande d'onglets horizontale du mobile, et ses pastilles. */
+  const stripRef = useRef<HTMLDivElement>(null);
+  const pillsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   /* La phrase de tête de chaque panneau suit la grammaire de la référence :
      un début en noir qui nomme le résultat, une suite en gris qui dit
@@ -290,6 +293,27 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     };
   }, [N]);
 
+  /* ── LA BANDE MOBILE SUIT L'ONGLET ACTIF ─────────────────────────────────
+     Sans ça, la bande reste figée sur « Prévisionnel » alors que le lecteur
+     est arrivé au cinquième panneau : la pastille allumée est hors écran, à
+     droite, et la bande annonce le contraire de ce qu'on regarde.
+     `scrollLeft` écrit à la main, PAS `scrollIntoView` : ce dernier remonte
+     aussi le conteneur le plus proche qui défile verticalement, c'est-à-dire
+     la page — il ferait sauter le défilement du lecteur à chaque changement
+     de panneau. Ici seule la bande bouge. */
+  useEffect(() => {
+    const strip = stripRef.current;
+    const pill = pillsRef.current[active];
+    if (!strip || !pill) return;
+    if (strip.scrollWidth <= strip.clientWidth) return;
+    const cible = pill.offsetLeft - (strip.clientWidth - pill.offsetWidth) / 2;
+    const max = strip.scrollWidth - strip.clientWidth;
+    strip.scrollTo({
+      left: Math.max(0, Math.min(max, cible)),
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+  }, [active]);
+
   const rule = dk ? "border-white/10" : "border-[#0a2540]/[0.10]";
   /* ── LA NAPPE GRISE, ET SON UNIQUE VALEUR ────────────────────────────────
      Relevée sur la capture attio : un gris à peine posé, SANS coin ni liseré
@@ -429,13 +453,14 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
             tienne sur 375 px. Les débords négatifs annulent le rembourrage de
             section pour que la bande file d'un bord à l'autre, comme la barre
             d'onglets du carrousel d'Atlas. */}
-        <div className={`-mx-6 overflow-x-auto border-t px-6 lg:hidden ${rule}`}>
+        <div ref={stripRef} className={`-mx-6 overflow-x-auto border-t px-6 lg:hidden ${rule}`}>
           <div className="flex w-max gap-2 py-4">
             {ITEMS.map((it, i) => {
               const on = i === active;
               return (
                 <button
                   key={it.tab}
+                  ref={(el) => { pillsRef.current[i] = el; }}
                   type="button"
                   onClick={() => animatedScrollToId(`autotab-${i}`, -110)}
                   aria-pressed={on}
@@ -510,18 +535,30 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       className={`flex items-center gap-2 py-1 text-left font-inter text-[15px] tracking-[-0.01em] transition-colors duration-200 md:text-[16px] ${
                         on
                           ? "font-medium text-[#111827] dark:text-white"
-                          /* ⚠ NE PAS PÂLIR CETTE ENCRE. La référence attio affiche ses
-                             entrées inactives dans un gris très clair, et c'est
-                             tentant à recopier. CLAUDE.md l'interdit nommément :
-                             #c4cad6, #9aa4b5 et #9aa3b2 ont été essayés ici même,
-                             mesurés entre 1,6:1 et 2,5:1 de contraste, et « la
-                             navigation de la section à onglets était effectivement
-                             invisible ». La règle : rien sous #6b7688 sur fond
-                             clair ; si un texte doit reculer davantage, on le fait
-                             plus petit ou plus court, pas plus pâle.
-                             L'allègement demandé passe donc par la TAILLE et
-                             l'ESPACE, pas par le contraste. */
-                          : "font-normal text-[#7a8496] hover:text-[#5b6577] dark:text-white/30 dark:hover:text-white/55"
+                          /* ⚠ #d3d8df EST UNE EXCEPTION DEMANDÉE, PAS UN OUBLI.
+                             Client 2026-09-04, capture d'attio.com à l'appui :
+                             « apply the same grey for the similar part i have in
+                             the website ». La valeur est RELEVÉE sur la page de
+                             référence, pas estimée à l'œil : leur liste rend
+                             `lab(86.0989 -0.77799 -4.0961)`, soit #d3d8df.
+
+                             CE QUE ÇA COÛTE, MESURÉ : 1,43:1 sur blanc. C'est
+                             PLUS PÂLE que le #c4cad6 (1,64:1) essayé ici même le
+                             2026-08-15 et retiré parce que « la navigation de la
+                             section à onglets était effectivement invisible », et
+                             très en dessous du plancher #6b7688 (4,59:1) que
+                             CLAUDE.md fixe pour les fonds clairs. La règle
+                             générale reste : cette liste est la seule exception,
+                             elle est datée, elle ne se recopie pas ailleurs.
+
+                             ⚠ ET LA DIFFÉRENCE QUI EXPLIQUE TOUT : chez attio ces
+                             entrées font 18 px en graisse 500. Ici elles font 15
+                             (16 à md) en graisse 400. Le même gris sur un corps
+                             plus petit et plus maigre recule davantage. Si la
+                             liste redevient illisible, le levier est LÀ — monter
+                             en taille et en graisse comme la référence — pas
+                             re-foncer l'encre en douce. */
+                          : "font-normal text-[#d3d8df] hover:text-[#5b6577] dark:text-white/30 dark:hover:text-white/55"
                       }`}
                     >
                       {/* LE ✦, ET PAS UNE ICÔNE (client 2026-08-13, deuxième
@@ -779,7 +816,17 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                         droite fait 620 px, ce bloc en faisait 200 et restait
                         collé en haut. `justify-center` sur une colonne flex
                         le pose au milieu de la hauteur que la carte impose. */}
-                    <div className={`flex flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
+                    {/* `min-w-0` ICI AUSSI, et pas seulement sur la cellule
+                        voisine (2026-09-07). Le champ qui s'écrit tout seul est
+                        `truncate`, donc `white-space: nowrap` : sa largeur de
+                        contenu minimale est la phrase ENTIÈRE, et `min-w-0` sur
+                        la seule étiquette intérieure n'abaisse pas la
+                        contribution de la cellule. Résultat sur un téléphone de
+                        390 px : la piste de grille passait à 429 px et toute la
+                        page gagnait un défilement horizontal — mais seulement
+                        pendant que la phrase était complètement écrite, ce qui
+                        rendait le défaut intermittent d'une capture à l'autre. */}
+                    <div className={`flex min-w-0 flex-col justify-center p-6 md:p-10 border-b md:border-b-0 md:border-r ${rule}`}>
                       <p className="font-inter text-[15.5px] md:text-[16.5px] leading-snug">
                         <span className="font-semibold text-[#111827] dark:text-white">
                           {t({ fr: "Vous décrivez le changement.", en: "You describe the change." })}

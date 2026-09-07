@@ -96,10 +96,31 @@ const FEED: {
   },
 ];
 
+/* ── LES PASTILLES D'ICÔNE, REPRISES LE 2026-09-05 ────────────────────────
+ * Client : « améliore les designs, surtout pour les icônes ». Elles étaient
+ * des aplats pastel nus : même teinte pour le fond et pour le trait, aucun
+ * relief, et le tout posé sur une plaque déjà claire. Un aplat pâle sur un
+ * fond pâle, ça ne se détache pas, ça flotte.
+ * Trois corrections, la même pour les trois tons :
+ *   · le FOND s'éclaircit d'un cran, il redevient un support et non une tache ;
+ *   · le TRAIT fonce nettement (le vert passe de #0f9d76 à #0a7d5e, le rouge
+ *     de #b4544a à #a3483e) : c'est le contraste dedans qui fait lire l'icône ;
+ *   · un LISERÉ INTERNE assorti donne l'arête que l'aplat n'avait pas.
+ * Les pastilles de tag gardent, elles, un fond plus soutenu : elles portent du
+ * texte, pas un pictogramme, et le texte a besoin de son propre appui. */
 const TONES = {
-  gain: { chip: "bg-[#d8f0e4] text-[#0f9d76]", ico: "bg-[#d8f0e4] text-[#0f9d76]" },
-  risque: { chip: "bg-[#f7d9d5] text-[#b4544a]", ico: "bg-[#f7d9d5] text-[#b4544a]" },
-  regle: { chip: "bg-[#e7effd] text-[#2563eb]", ico: "bg-[#e7effd] text-[#3b82f6]" },
+  gain: {
+    chip: "bg-[#d8f0e4] text-[#0a7d5e]",
+    ico: "bg-[#e6f7ef] text-[#0a7d5e] ring-1 ring-inset ring-[rgba(10,125,94,0.18)]",
+  },
+  risque: {
+    chip: "bg-[#f7d9d5] text-[#a3483e]",
+    ico: "bg-[#fdeeeb] text-[#a3483e] ring-1 ring-inset ring-[rgba(163,72,62,0.18)]",
+  },
+  regle: {
+    chip: "bg-[#e7effd] text-[#2563eb]",
+    ico: "bg-[#ebf2fe] text-[#2563eb] ring-1 ring-inset ring-[rgba(37,99,235,0.16)]",
+  },
 } as const;
 
 const STEP = 88;
@@ -223,9 +244,21 @@ export default function AtlasLiveNotify({ active = true }: { active?: boolean })
       `}</style>
 
       <div className="flex items-center gap-3">
+        {/* ⚠ LA CLOCHE A GAGNÉ SON RELIEF LE 2026-09-05 (client : « je pense à
+            la cloche en haut »). C'était un carré de dégradé nu, posé à plat
+            sur une plaque elle-même bleue : les deux bleus se marchaient dessus
+            et la pastille disparaissait dans le fond. Rien n'a changé de la
+            couleur — c'est le dégradé de marque, il reste. Ce qui a changé,
+            c'est ce qui la DÉTACHE : un liseré interne blanc qui dessine
+            l'arête vers la lumière, et une ombre portée teintée sarcelle qui la
+            décolle du fond. Un rayon d'un pixel de plus (10 → 11) l'accorde au
+            rayon des cartes en dessous. */}
         <span
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-[10px] text-white"
-          style={{ background: "linear-gradient(135deg, #3b82f6, #0d9488)" }}
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] text-white ring-1 ring-inset ring-white/25"
+          style={{
+            background: "linear-gradient(140deg, #4f8ef7 0%, #3b82f6 45%, #0d9488 100%)",
+            boxShadow: "0 8px 18px -8px rgba(13,148,136,0.7), inset 0 1px 0 rgba(255,255,255,0.28)",
+          }}
         >
           <span
             key={affiches[0]?.id ?? "vide"}
@@ -268,12 +301,12 @@ export default function AtlasLiveNotify({ active = true }: { active?: boolean })
               <div
                 className={`flex items-center gap-3.5 rounded-[14px] px-4 transition-colors duration-200 ${
                   it.sent
-                    ? "bg-[#f0faf5] shadow-[0_18px_44px_-18px_rgba(0,0,0,0.5),inset_0_0_0_1.5px_rgba(15,157,118,0.35)]"
+                    ? "bg-[#ecfaf3] shadow-[0_18px_44px_-18px_rgba(0,0,0,0.5),inset_0_0_0_1.5px_rgba(10,125,94,0.55)]"
                     : "bg-white shadow-[0_18px_44px_-18px_rgba(0,0,0,0.65)]"
                 }`}
                 style={{ height: CARD_H }}
               >
-                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[10px] ${tone.ico}`}>
+                <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-[11px] ${tone.ico}`}>
                   <Icon className="h-[17px] w-[17px]" strokeWidth={2} />
                 </span>
                 <span className="min-w-0 flex-1">
@@ -317,7 +350,9 @@ export default function AtlasLiveNotify({ active = true }: { active?: boolean })
                   }
                   transition={{ type: "spring", stiffness: 700, damping: 24 }}
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-[8px] px-3 py-1.5 font-inter text-[12px] font-semibold transition-colors duration-300 ${
-                    it.sent ? "bg-[#d8f0e4] text-[#0f9d76]" : "bg-[#3b82f6] text-white"
+                    it.sent
+                      ? "bg-[#0a7d5e] text-white shadow-[0_6px_14px_-6px_rgba(10,125,94,0.75)]"
+                      : "bg-[#3b82f6] text-white shadow-[0_6px_14px_-6px_rgba(59,130,246,0.7)]"
                   }`}
                 >
                   {it.sent && <Check className="h-3 w-3" strokeWidth={3.2} />}

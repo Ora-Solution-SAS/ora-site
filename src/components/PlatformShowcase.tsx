@@ -172,16 +172,22 @@ export default function PlatformShowcase({ openBooking }: PlatformShowcaseProps)
             fr: "Ora se télécharge en un clic.",
             en: "Ora downloads in one click.",
           })}
-          /* ⚠ « macOS aujourd'hui, Windows en cours » ET NON « Mac et Windows »
-             (audit du 2026-08-15). La FAQ de la même page dit, elle,
-             « disponible sur macOS aujourd'hui, avec Windows en cours de
-             déploiement » : deux sections de la même page se contredisaient à
-             quatre écrans d'écart, et c'est la version optimiste qui était en
-             haut. Sur un achat qui passe par une DSI, une disponibilité annoncée
-             puis démentie coûte plus que l'absence de Windows. */
+          /* ⚠ LES DEUX PLATEFORMES SONT LIVRÉES (client 2026-09-07 : « tout est
+             disponible dès maintenant »). La note disait « macOS aujourd'hui,
+             Windows en cours de déploiement » depuis l'audit du 2026-08-15 :
+             cette prudence-là n'a plus d'objet, Windows est sorti.
+
+             ⚠ CE QUI RESTE VRAI DE L'AUDIT, et qu'il ne faut pas reperdre : la
+             disponibilité est annoncée à DEUX endroits de la même page, ici et
+             dans la FAQ quatre écrans plus bas (FAQ.tsx, « Comment Ora se
+             déploie sur nos postes ? »). Les deux se contredisaient, et c'est
+             la version optimiste qui était en haut. Elles ont été remises
+             d'accord le même jour : toute évolution de disponibilité se
+             répercute sur LES DEUX, jamais sur une seule.
+             Troisième porteur, non monté sur l'accueil : SupportShowcase.tsx. */
           note={t({
-            fr: "macOS aujourd'hui, Windows en cours de déploiement. On vous accompagne ensuite à la prise en main, rendez-vous ouverts week-ends compris.",
-            en: "macOS today, Windows rolling out. We then walk you through your first runs, with slots open on weekends too.",
+            fr: "Disponible sur macOS et sur Windows. On vous accompagne ensuite à la prise en main, rendez-vous ouverts week-ends compris.",
+            en: "Available on macOS and on Windows. We then walk you through your first runs, with slots open on weekends too.",
           })}
           /* ── UN SEUL CHEMIN : L'ESSAI EN LIGNE ─────────────────────────────
              Client 2026-08-15, sixième passe : « enlève le télécharger

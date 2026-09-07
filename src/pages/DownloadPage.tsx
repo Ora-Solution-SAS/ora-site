@@ -36,8 +36,9 @@ const RELEASE_DATE = { fr: "Juin 2026", en: "June 2026" };
  * Vercel 307-redirects to the release bucket (see vercel.json `redirects`).
  * Leave `url: null` to show a "coming soon" disabled button instead.
  *   mac     → /updates/Ora-latest-macos.dmg      (Apple Silicon build)
- *   windows → /updates/Ora-latest-windows.exe    (404 until a Windows release
- *             is published on the bucket — keep null until then to avoid it)
+ *   windows → /updates/Ora-latest-windows.exe    (published: the client
+ *             confirmed on 2026-09-07 that both platforms are out. ⚠ If this
+ *             ever 404s, set `url: null` rather than leaving a dead button.)
  * `size` is optional display text (e.g. "78 Mo"); leave null to hide it.
  */
 const DOWNLOADS: Record<"windows" | "mac", { url: string | null; size: string | null }> = {

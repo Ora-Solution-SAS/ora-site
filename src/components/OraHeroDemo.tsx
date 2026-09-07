@@ -385,8 +385,18 @@ const HD_CSS = `
    (l'effet monday.com — le changement est continu mais presque subliminal).
    hue-rotate sur le conteneur : le dégradé du texte ET le logo dérivent
    ensemble. */
+/* Client 2026-09-02 : « quand l'utilisateur arrive, la vitesse de changement
+   de couleur doit etre ultra rapide UNE fois, puis au rythme actuel ». Deux
+   animations chainees sur la meme propriete : la premiere fait un TOUR
+   COMPLET de teinte en 1,1 s et ne joue qu'une fois ; la seconde est la
+   derive lente d'origine (9 s, aller-retour), retardee d'autant pour prendre
+   le relais pile ou la premiere repose la teinte a zero. Meme filtre, donc
+   aucun saut au passage de relais.
+   (Pas d'accent grave dans ce bloc : template literal.) */
 .hd-brandline{display:inline-flex;align-items:center;gap:10px;
-  animation:hdBrandHue 9s ease-in-out infinite alternate}
+  animation:hdBrandTour 1.1s cubic-bezier(.3,0,.2,1) 1,
+    hdBrandHue 9s ease-in-out 1.1s infinite alternate}
+@keyframes hdBrandTour{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-360deg)}}
 @keyframes hdBrandHue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-45deg)}}
 @media (prefers-reduced-motion:reduce){
   .hd-blob{animation:none}
@@ -2087,14 +2097,13 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
             {/* Même visage fin que monday.com : Instrument Sans en graisse
                 normale (la face déjà utilisée pour « Automatisez de bout en
                 bout » — exception documentée à la règle Poppins). */}
+            {/* ⚠ L'ICÔNE A ÉTÉ RETIRÉE (client 2026-09-02 : « enlève le
+                doublon de logo ») : la barre de navigation porte déjà le logo
+                Ora à quarante pixels au-dessus, et la ligne de marque le
+                répétait. Le dégradé animé du texte suffit à faire la ligne de
+                marque ; le gap de l'inline-flex ne s'applique plus qu'à un
+                seul enfant, donc il ne crée aucun trou. */}
             <span className="hd-brandline font-instrument font-medium text-[clamp(1rem,1.5vw,1.3rem)] tracking-[-0.01em]">
-              <img
-                src="/logos/icon-color.png"
-                alt=""
-                aria-hidden
-                className="h-[1.25em] w-auto select-none"
-                draggable={false}
-              />
               <span className="text-brand-gradient">
                 {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
               </span>

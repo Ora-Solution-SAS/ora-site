@@ -63,8 +63,14 @@ export default function FAQ() {
     {
       q: t({ fr: "Comment Ora se déploie sur nos postes ?", en: "How does Ora deploy on our machines?" }),
       a: t({
-        fr: "Ora est une application desktop native, disponible sur macOS aujourd'hui, avec Windows en cours de déploiement. Vos fichiers Excel se synchronisent automatiquement à chaque enregistrement.",
-        en: "Ora is a native desktop app, available on macOS today, with Windows rolling out. Your Excel files sync automatically on every save.",
+        /* ⚠ CETTE PHRASE DOIT DIRE LA MÊME CHOSE QUE LA NOTE DE
+           PlatformShowcase.tsx, quatre écrans plus haut. Les deux se sont
+           contredites jusqu'à l'audit du 2026-08-15, et c'était la version
+           optimiste qui était en haut de page. Windows étant sorti (client
+           2026-09-07 : « tout est disponible dès maintenant »), les deux
+           annoncent les deux plateformes. Ne jamais en changer une seule. */
+        fr: "Ora est une application desktop native, disponible sur macOS et sur Windows. Vos fichiers Excel se synchronisent automatiquement à chaque enregistrement.",
+        en: "Ora is a native desktop app, available on macOS and on Windows. Your Excel files sync automatically on every save.",
       }),
     },
     {
@@ -84,66 +90,98 @@ export default function FAQ() {
   ];
 
   return (
-    <section id="faq" className="relative py-24 md:py-32 px-6 md:px-12 bg-white dark:bg-black md:dark:bg-black scroll-mt-24">
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <span className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-500 dark:text-blue-400">
-            {t({ fr: "FAQ", en: "FAQ" })}
-          </span>
-          <h2 className="font-poppins font-semibold text-3xl md:text-[2.75rem] tracking-[-0.03em] leading-[1.12] text-[#111827] dark:text-white mt-4">
-            {t({ fr: "Vos questions, nos réponses", en: "Your questions, answered" })}
-          </h2>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {items.map((item, i) => {
-            const isOpen = open === i;
-            return (
-              <div
-                key={i}
-                className="rounded-2xl border border-gray-200/70 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] overflow-hidden"
-              >
-                <button
-                  onClick={() => setOpen(isOpen ? null : i)}
-                  className="w-full flex items-center justify-between gap-4 text-left px-5 md:px-6 py-4 md:py-5"
-                  aria-expanded={isOpen}
-                  aria-controls={`faq-panel-${i}`}
-                  id={`faq-button-${i}`}
-                >
-                  <span className="font-poppins font-semibold text-[15px] md:text-[16px] text-gray-900 dark:text-white">
-                    {item.q}
-                  </span>
-                  <ChevronDown
-                    className={`w-5 h-5 flex-shrink-0 text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {/* ⚠ `inert` SUR LE PANNEAU FERMÉ (audit du 2026-08-15). Le
-                    repli se fait par `grid-template-rows: 0fr` plus un
-                    `overflow-hidden` : visuellement le panneau disparaît, mais
-                    il reste dans l'arbre d'accessibilité. Un lecteur d'écran
-                    entendait donc les NEUF réponses à la suite, comme si tout
-                    l'accordéon était ouvert, ce qui rend la section illisible et
-                    vide la FAQ de sa fonction.
-                    `inert` plutôt que `hidden` : il retire le contenu de l'arbre
-                    et de la tabulation SANS toucher à l'affichage, donc
-                    l'animation d'ouverture est conservée telle quelle. */}
-                <div
-                  id={`faq-panel-${i}`}
-                  role="region"
-                  aria-labelledby={`faq-button-${i}`}
-                  inert={!isOpen}
-                  className="grid transition-all duration-300 ease-out"
-                  style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                >
-                  <div className="overflow-hidden">
-                    <p className="font-inter px-5 md:px-6 pb-5 text-[14.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-                      {item.a}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
+    /* ══ LAYOUT EN LARGEUR, CALQUÉ SUR « CONTRÔLE TOTAL » (client 2026-09-02,
+       seconde passe : « fais un layout en largeur pour la cohérence visuelle
+       avec contrôle total ») ══════════════════════════════════════════════════
+       ControlShowcase pose la grammaire : conteneur max-w-7xl, très grand
+       titre Instrument Sans à GAUCHE cassé en deux lignes par des `block`
+       explicites (la moitié droite reste vide, c'est ce déséquilibre qui fait
+       respirer), puis le contenu en grille sur toute la largeur. La FAQ la
+       reprend trait pour trait :
+         · même conteneur (max-w-7xl, mêmes rembourrages de section) ;
+         · titre en deux blocs « Vos questions, » / « nos réponses. », même
+           face, même graisse, un cran sous le corps de Contrôle total (5,5 rem
+           contre 7 : c'est une section de service, pas une clôture) ;
+         · les neuf questions passent en DEUX COLONNES sous le titre, liste à
+           filets conservée de la passe précédente.
+       ⚠ DEUX COLONNES EXPLICITES (0-4 à gauche, 5-8 à droite) et non un
+       `grid-cols-2` sur les neuf entrées : en grille, les items se rangent
+       LIGNE PAR LIGNE et l'ordre de lecture zigzague ; en deux piles, chaque
+       colonne se lit de haut en bas, et l'ouverture d'une réponse n'allonge
+       que sa colonne. Sous lg les deux piles s'empilent et la liste redevient
+       continue. */
+    <section id="faq" className="relative scroll-mt-24 bg-white px-6 pb-24 pt-16 md:px-12 md:pb-32 md:pt-20 dark:bg-black md:dark:bg-black">
+      <div className="mx-auto max-w-7xl">
+        <span className="font-inter text-xs font-semibold uppercase tracking-[0.18em] text-blue-500 dark:text-blue-400">
+          {t({ fr: "FAQ", en: "FAQ" })}
+        </span>
+        <h2
+          className="mt-4 font-instrument font-normal leading-[0.98] tracking-[-0.03em] text-[#111827] dark:text-white"
+          style={{ fontSize: "clamp(2.6rem, 6vw, 5.5rem)" }}
+        >
+          <span className="block">{t({ fr: "Vos questions,", en: "Your questions," })}</span>
+          <span className="block">{t({ fr: "nos réponses.", en: "answered." })}</span>
+        </h2>
+        {/* La ligne d'appui ne promet rien de neuf : elle reprend le délai
+            déjà affiché sur la page de téléchargement et dans la
+            réservation. */}
+        <p className="mt-5 max-w-[40ch] font-inter text-[14.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
+          {t({
+            fr: "Une question qui n'est pas ici ? Écrivez-nous, réponse sous 24 h ouvrées.",
+            en: "A question not covered here? Write to us, reply within 1 business day.",
           })}
+        </p>
+
+        <div className="mt-10 grid gap-x-16 md:mt-14 lg:grid-cols-2">
+          {[items.slice(0, 5), items.slice(5)].map((colonne, c) => (
+            <div key={c}>
+              {colonne.map((item, k) => {
+                const i = c * 5 + k;
+                const isOpen = open === i;
+                return (
+                  <div key={i} className="border-t border-[#0a2540]/[0.10] dark:border-white/[0.08]">
+                    <button
+                      onClick={() => setOpen(isOpen ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 py-4 text-left"
+                      aria-expanded={isOpen}
+                      aria-controls={`faq-panel-${i}`}
+                      id={`faq-button-${i}`}
+                    >
+                      <span className="font-inter text-[14.5px] font-semibold text-gray-900 md:text-[15px] dark:text-white">
+                        {item.q}
+                      </span>
+                      <ChevronDown
+                        className={`h-4 w-4 flex-shrink-0 text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    {/* ⚠ `inert` SUR LE PANNEAU FERMÉ (audit du 2026-08-15). Le
+                        repli se fait par `grid-template-rows: 0fr` plus un
+                        `overflow-hidden` : visuellement le panneau disparaît,
+                        mais il reste dans l'arbre d'accessibilité. Un lecteur
+                        d'écran entendait donc les NEUF réponses à la suite,
+                        comme si tout l'accordéon était ouvert.
+                        `inert` plutôt que `hidden` : il retire le contenu de
+                        l'arbre et de la tabulation SANS toucher à l'affichage,
+                        donc l'animation d'ouverture est conservée. */}
+                    <div
+                      id={`faq-panel-${i}`}
+                      role="region"
+                      aria-labelledby={`faq-button-${i}`}
+                      inert={!isOpen}
+                      className="grid transition-all duration-300 ease-out"
+                      style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="max-w-[64ch] pb-4 font-inter text-[14px] leading-relaxed text-gray-500 dark:text-gray-400">
+                          {item.a}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
     </section>

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * RepelChips — nuage de petites étiquettes qui S'ÉCARTENT du curseur (client
@@ -62,10 +62,30 @@ const PUSH = 130;
 export default function RepelChips({ chips, className }: { chips: Chip[]; className?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
 
+  /* Le meme point de bascule que les classes `md:` du rendu, lu en JS : sans
+     lui, une rotation de telephone (ou un redimensionnement de fenetre) laisse
+     l'effet branche sur une disposition qui n'existe plus. */
+  const [wide, setWide] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 768px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const sync = () => setWide(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    /* SOUS md, LE NUAGE N'EN EST PLUS UN : les etiquettes passent en flux
+       (voir le pave du rendu), donc `offsetLeft` ne decrit plus un semis et la
+       poussee deplacerait des elements deja ranges. Il n'y a de toute facon
+       pas de curseur a fuir sur un telephone : `pointerdown` suffirait a faire
+       sauter la rangee sous le doigt. */
+    if (!window.matchMedia("(min-width: 768px)").matches) return;
 
     let raf = 0;
     let px = -9999;
@@ -142,14 +162,28 @@ export default function RepelChips({ chips, className }: { chips: Chip[]; classN
       document.removeEventListener("pointerleave", onGone);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [chips]);
+  }, [chips, wide]);
 
+  /* ── SOUS md, LE SEMIS EST ABANDONNE ────────────────────────────────────
+     Les positions de `chips` sont des POURCENTAGES calibres sur le nuage de
+     bureau (~420 x 380 px). Une colonne de telephone n'en laisse que 294 x 280,
+     soit trois fois moins de pixels pour les memes ecarts relatifs :
+     « Optimisation remuneration dirigeant » fait 273 px de large a lui seul et
+     recouvrait ses voisines ET le titre de la carte. Mesure a 390 px de large,
+     avant correction, sur « Conseillez la bonne structure ».
+     Les etiquettes passent donc en FLUX (`static`, ce qui neutralise `left` et
+     `top` sans avoir a les retirer du style) et se rangent en grappe centree.
+     L'ordre de lecture ne change pas, la couleur des tons non plus : c'est le
+     meme nuage, pose au lieu d'etre seme. */
   return (
-    <div ref={hostRef} className={`relative ${className ?? ""}`}>
+    <div
+      ref={hostRef}
+      className={`relative flex flex-wrap content-center items-center justify-center gap-2 md:block ${className ?? ""}`}
+    >
       {chips.map((c) => (
         <span
           key={c.label}
-          className={`pointer-events-none absolute whitespace-nowrap rounded-[11px] px-3.5 py-2.5 font-inter text-[12.5px] md:text-[13.5px] font-medium ring-1 ${
+          className={`pointer-events-none static max-w-full rounded-[11px] px-3 py-2 font-inter text-[12px] font-medium ring-1 md:absolute md:max-w-none md:whitespace-nowrap md:px-3.5 md:py-2.5 md:text-[13.5px] ${
             c.tone === "advice"
               ? "bg-[#eef4ff]/95 text-[#1d4ed8] ring-[#3b82f6]/40 shadow-[0_10px_28px_-12px_rgba(37,99,235,0.5)]"
               : c.tone === "blue"

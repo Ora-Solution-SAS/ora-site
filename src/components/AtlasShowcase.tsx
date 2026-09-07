@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { AnimatePresence, motion, useScroll, type Variants } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useSpring, type Variants } from "framer-motion";
 import {
   ArrowRight,
   Bell,
@@ -13,11 +13,11 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { VideoWithScrubber } from "./InViewVideo";
 import AtlasSlideVisual, { type AtlasVisual } from "./AtlasSlideVisual";
 import Typewriter from "./Typewriter";
 import AtlasLiveAsk from "./AtlasLiveAsk";
 import AtlasLiveNotify from "./AtlasLiveNotify";
+import AtlasLivePrevisionnel from "./AtlasLivePrevisionnel";
 import { AtlasLiveDocs, AtlasLiveJour, AtlasLiveRelance } from "./AtlasLiveScenes";
 
 /**
@@ -109,52 +109,61 @@ const ATLAS_CSS = `
    doit dire sticky. (Pas d'accent grave dans ce bloc : template literal.) */
 .at-sky{overflow:hidden;background:#000}
 /* ── LA PLAQUE BLEUE QUI ACCUEILLE LES SCENES ANIMEES (2026-08-29) ──────────
-   Client : les animations jouees jusqu'ici sur le noir doivent se faire DANS
-   le cadre bleu des vignettes. Or elles ont ete dessinees pour un fond noir :
-   cinq motifs utilitaires y posent du blanc translucide (libelles d'etapes,
-   pilules fantomes, filets) qui devient invisible sur une plaque claire.
-   Plutot que de retoucher trois fichiers de scenes qui servent aussi
-   ailleurs, la plaque REMAPPE ces cinq motifs par selecteurs d'attribut :
-   la classe utilitaire reste dans le JSX, seule sa couleur change ici.
+   Les scenes AtlasLive* ont ete dessinees pour un fond noir : cinq motifs
+   utilitaires y posent du blanc translucide (libelles d'etapes, pilules
+   fantomes, filets) qui devient invisible sur une plaque claire. Plutot que de
+   retoucher trois fichiers de scenes qui servent aussi ailleurs, la plaque
+   REMAPPE ces cinq motifs par selecteurs d'attribut : la classe utilitaire
+   reste dans le JSX, seule sa couleur change ici.
    (Pas d'accent grave dans ce bloc : template literal.)
    ⚠ FRAGILE PAR NATURE : si une scene introduit un sixieme motif sur-noir,
-   il faudra l'ajouter ici. Le controle : chaque texte de scene doit rester
-   lisible en capture sur la plaque. */
+   il faudra l'ajouter ici. */
 .at-plate [class*="text-white/85"]{color:#111827!important}
 .at-plate [class*="text-white/70"]{color:#42506b!important}
 .at-plate [class*="border-white/"]{border-color:rgba(10,37,64,.16)!important}
 .at-plate [class*="bg-white/[0.06]"]{background:#fff!important}
 
-/* ── LA TRANSFORMATION SQUELETTE → CONTENU (2026-08-30, seconde passe) ─────
-   Client, apres l'envol en cascade : « des elements qui se transforment sous
-   nos yeux, sinon ca ne fait juste pas de sens ». Il a raison sur le fond :
-   des blocs qui s'envolent RACONTENT un depart, pas une transformation.
-
-   Ce que la vignette EST rend la transformation possible : un SQUELETTE de la
-   scene — les memes cartes blanches, aux memes places, avec des barres vides
-   la ou la scene a du texte. Le morphing juste est donc une MISE AU POINT :
+/* ── LA TRANSFORMATION SQUELETTE → CONTENU (2026-08-30) ────────────────────
+   Retablie le meme jour a la demande du client (« remets les animations
+   d'avant, elles etaient bien dans les encadres ») apres un essai de
+   chorégraphie par element des vignettes — recuperable dans l'historique git
+   de ce fichier a cette date (bloc AV-ANIME).
+   Ce que la vignette EST rend la transformation lisible : un SQUELETTE de la
+   scene — les memes cartes blanches, avec des barres vides la ou la scene a du
+   texte. Le morphing est une MISE AU POINT :
      · la vignette grossit d'un souffle (1 → 1,03) et se dissout dans un flou
        de 9 px — ses barres perdent leurs bords, deviennent de la matiere ;
-     · la scene vivante emerge du meme centre, du meme flou, en net —
-       la matiere reprend forme, avec du texte la ou il y avait des barres.
+     · la scene vivante emerge du meme centre, du meme flou, en net.
    Les deux courbes se croisent a mi-course : il y a toujours quelque chose de
-   visible, jamais deux choses nettes. L'oeil lit UN objet qui gagne du detail,
-   pas deux images echangees.
-
+   visible, jamais deux choses nettes. L'oeil lit UN objet qui gagne du detail.
    ⚠ LES DEUX ANIMATIONS DOIVENT RESTER JUMELLES : meme duree a 40 ms pres,
-   memes courbes douces (pas de ressort ici, le ressort vit DANS la scene qui
-   demarre ses cascades internes au meme moment). Si l'une change, changer
-   l'autre, sinon on retombe sur un fondu qui « ne fait pas de sens ».
-   Le flou est borne a un element de ~560 px, une fois, hors defilement : cout
-   raisonnable, rien a voir avec les flous plein ecran interdits ailleurs.
+   memes courbes douces. Le flou est borne a un element de ~560 px, une fois,
+   hors defilement.
    (Pas d'accent grave dans ce bloc : template literal.) */
-.at-fige-sortie .av-stage{animation:atFigeFond 430ms cubic-bezier(.4,0,.2,1) both;will-change:opacity,filter,transform}
+/* DUREES ET FLOU REVUS LE 2026-09-03, avec le reste de la fluidite de la
+   scene epinglee. 430/470 -> 300/340 : le reveil complet passe de 1 120 ms a
+   640, ce qui le fait tenir DANS le segment de defilement d'un argument
+   (~1,1 s a cadence de lecture) au lieu de le remplir. Le flou tombe de 9 a
+   6 px : deux couches de 560 x 440 floutees se croisent ici, et le cout d'un
+   flou monte avec son rayon, pas avec sa duree. A 6 px la mise au point se lit
+   toujours, l'oeil ne compte pas les pixels d'un flou.
+   ⚠ SI CES DEUX DUREES CHANGENT, MORPH DOIT SUIVRE dans le minuteur de
+   figeOn (constante MORPH), sinon la vignette quitte le DOM avant la fin de
+   sa dissolution.
+   ⚠ PAS DE will-change SUR .at-scene-entre, et c'est deliberé : contrairement
+   a .at-fige-sortie, qui n'est posee QUE pendant la dissolution et dont le
+   noeud est demonte juste apres, .at-scene-entre reste sur la scene toute sa
+   vie. Un will-change:filter permanent y garde une couche promue pour une
+   animation finie depuis longtemps — de la memoire GPU immobilisee, et sur
+   WebKit un rendu de texte qui peut perdre en nettete. Les keyframes suffisent
+   comme indice pendant les 340 ms ou elles jouent. */
+.at-fige-sortie .av-stage{animation:atFigeFond 300ms cubic-bezier(.4,0,.2,1) both;will-change:opacity,filter,transform}
 @keyframes atFigeFond{
   0%{opacity:1;filter:blur(0);transform:scale(1)}
-  100%{opacity:0;filter:blur(9px);transform:scale(1.03)}}
-.at-scene-entre{animation:atSceneNette 470ms cubic-bezier(.22,1,.36,1) both}
+  100%{opacity:0;filter:blur(6px);transform:scale(1.03)}}
+.at-scene-entre{animation:atSceneNette 340ms cubic-bezier(.22,1,.36,1) both}
 @keyframes atSceneNette{
-  0%{opacity:0;filter:blur(9px);transform:scale(.972)}
+  0%{opacity:0;filter:blur(6px);transform:scale(.978)}
   60%{opacity:1}
   100%{opacity:1;filter:blur(0);transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){
@@ -441,47 +450,61 @@ const PLATE_FONDS: Record<AtlasVisual, string> = {
     "linear-gradient(174deg,#eff5ff 0%,#dce8fd 20%,#aecbf8 44%,#679fee 70%,#45a6cd 88%,#5fc7a7 100%)",
 };
 
-/* ── LE SENS DU GESTE (2026-08-29) ────────────────────────────────────────
- * MESURÉ : à la remontée, aucune perte de performance (16,8 ms de moyenne des
- * deux côtés, zéro image au-delà de 30 ms). Le défaut était une FAUTE DE
- * DIRECTION : la scène sortante partait toujours par le haut et l'entrante
- * venait toujours du bas. À la descente ça accompagne le geste ; à la remontée
- * la même animation joue à contresens du doigt. C'est ce désaccord qu'on lit
- * comme « pas fluide », et il ne peut se voir QU'EN REMONTANT.
- * `sens` ne retourne que les composantes VERTICALES. Le décalage horizontal
- * reste indexé sur l'argument : c'est lui qui garantit que deux scènes
- * consécutives n'entrent jamais du même côté.
+/* ── PLUS AUCUN DÉPLACEMENT : UN FONDU CROISÉ SUR PLACE (2026-09-04) ──────
+ * Client : « il y a une transition entre rectangles, il disparaît, il y en a un
+ * qui réapparaît légèrement en venant du bas et qui remonte. Ça fait un peu un
+ * effet de bug. »
  *
- * ⚠ IL PASSE PAR LE `custom` D'ANIMATEPRESENCE, ET C'EST OBLIGATOIRE. Un objet
- * `exit` écrit en clair est FIGÉ au rendu où l'élément a été créé : la scène
- * qui sort emporterait le sens de l'ANCIEN geste, et le premier changement de
- * direction — le seul moment où l'œil regarde — sortirait du mauvais côté.
+ * Il avait raison, et la cause n'était pas la courbe : c'était la STRUCTURE.
+ * La plaque bleue elle-même vivait DANS le motion.div clé sur l'argument. On
+ * n'animait donc pas le contenu de l'encadré, on animait l'encadré : à chaque
+ * capacité, le rectangle entier sortait et un autre rectangle entrait en
+ * glissant. Deux objets de 560 x 440 qui se croisent en translation, ça ne se
+ * lit pas comme un changement de contenu, ça se lit comme un raté d'affichage.
+ * Aucun réglage de `y` ne pouvait corriger ça, et les deux passes précédentes
+ * (2026-08-29 sur le sens, 2026-09-03 sur le dosage) s'y sont usées.
+ *
+ * LA PLAQUE EST MAINTENANT PERMANENTE. Elle ne bouge plus, ne se démonte plus,
+ * ne change plus de taille (sa hauteur est fixée par min-h-[440px], et les
+ * scènes font 283 à 366 px : elle ne respire donc jamais). Ce qui se croise,
+ * ce sont ses deux couches internes, chacune sur place :
+ *   · le FOND, clé sur le visuel, en opacité pure ;
+ *   · le CONTENU, clé sur l'argument, en opacité plus un souffle d'échelle.
+ *
+ * ⚠ MÊME DURÉE ET MÊME COURBE POUR L'ENTRÉE ET LA SORTIE, et ce n'est pas de
+ * la symétrie décorative. Framer applique la courbe à la progression puis
+ * interpole : l'entrant vaut E(t), le sortant 1 - E(t). Les deux sont donc
+ * EXACTEMENT complémentaires, leur somme fait 1 à chaque image, et il n'y a ni
+ * creux noir ni surbrillance au croisement. Donner des durées ou des courbes
+ * différentes aux deux casse cette propriété : c'est ce qui produisait le
+ * clignotement des versions précédentes.
+ *
+ * ⚠ PLUS DE `sens`, ET C'EST UN GAIN. Une translation doit suivre le doigt,
+ * donc connaître la direction du défilement ; un fondu sur place n'a pas de
+ * direction. Tout l'appareillage qui portait le sens du geste (état `sens`,
+ * `custom` d'AnimatePresence, variantes fonctions) a disparu avec lui. La
+ * transition est identique à la descente et à la remontée, ce qui règle du même
+ * coup la plainte du 2026-08-29 sur la remontée.
  *
  * ⚠ NOMS DISTINCTS DE CEUX DES SCÈNES (avant/pose/apres et non
  * initial/enter/exit) : les scènes d'AtlasLive* posent leur label à la main,
  * la propagation s'arrête donc là ; mais si l'une l'oubliait, un nom commun
  * ferait jouer la mauvaise variante à ses enfants. */
-type SensScene = { sens: number; i: number };
+
+/** Le ressort de l'encadré actif. Au niveau module, et pas dans le composant :
+ *  il est relu par deux `useSpring`, et un littéral recréé à chaque rendu est
+ *  la première chose qu'on casse en croyant bien faire. */
+const RESSORT_CADRE = { stiffness: 300, damping: 34, mass: 1 } as const;
+
+/** Le fondu croisé du CONTENU de la plaque. Durées et courbes identiques en
+ *  entrée et en sortie : voir le pavé ci-dessus, c'est la condition pour que la
+ *  somme des opacités reste à 1. L'échelle est volontairement minuscule (1,5 %)
+ *  : elle donne le « ça se pose » sans jamais devenir un déplacement. */
+const FONDU = { duration: 0.42, ease: [0.22, 1, 0.36, 1] } as const;
 const SCENE_VARIANTS: Variants = {
-  avant: ({ sens, i }: SensScene) => ({
-    opacity: 0,
-    scale: 0.97,
-    x: [0, 44, -44][i % 3],
-    y: sens * (i % 3 === 0 ? 26 : 8),
-  }),
-  pose: {
-    opacity: 1,
-    x: 0,
-    y: 0,
-    scale: 1,
-    transition: { type: "spring", stiffness: 380, damping: 32, mass: 0.9 },
-  },
-  apres: ({ sens }: SensScene) => ({
-    opacity: 0,
-    y: sens * -20,
-    scale: 0.985,
-    transition: { duration: 0.22, ease: [0.4, 0, 1, 1] },
-  }),
+  avant: { opacity: 0, scale: 0.985 },
+  pose: { opacity: 1, scale: 1, transition: FONDU },
+  apres: { opacity: 0, scale: 1.008, transition: FONDU },
 };
 
 export default function AtlasShowcase({ openBooking }: { openBooking: () => void }) {
@@ -540,6 +563,10 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
    * `activeCap` est aussi ce qui pilotera les animations de droite : une par
    * capacité, à venir — c'est la moitié « pour l'instant » de la demande. */
   const capTrackRef = useRef<HTMLElement>(null);
+  /** L'écran épinglé lui-même (une fenêtre de haut). C'est LUI que
+   *  l'IntersectionObserver d'`enVue` observe, jamais le rail : voir le pavé
+   *  de l'observateur, la raison est une panne réelle. */
+  const capEcranRef = useRef<HTMLDivElement>(null);
   const capListRef = useRef<HTMLUListElement>(null);
   const [activeCap, setActiveCap] = useState(0);
   /* ── DEUX INDEX, ET C'EST TOUT LE CORRECTIF DE FLUIDITÉ (2026-08-28) ──────
@@ -554,9 +581,21 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
    *   · `sceneCap` ne bouge QU'À L'ARRÊT : il monte l'animation et sa glose.
    *     Un coup de molette ne monte donc plus qu'UNE scène. */
   const [sceneCap, setSceneCap] = useState(0);
-  /** 1 en descendant, -1 en remontant. Voir le pavé de SCENE_VARIANTS. */
-  const [sens, setSens] = useState(1);
-  const [capFrame, setCapFrame] = useState({ top: 0, height: 0 });
+  /* ── L'ENCADRÉ NE PASSE PLUS PAR REACT (2026-09-03) ──────────────────────
+   * Il vivait dans un `useState({top, height})` posé par `mesurerCadre`. Or
+   * ce dernier est appelé par le ResizeObserver de la liste, qui tire À CHAQUE
+   * IMAGE pendant que l'accordéon s'ouvre : top et height changeaient à chaque
+   * fois, la garde d'égalité ne filtrait donc rien, et TOUT AtlasShowcase se
+   * rendait ~12 fois par changement d'argument — scènes vivantes comprises,
+   * en plein milieu de leur transition. C'est du travail de rendu déposé
+   * exactement là où il ne faut pas.
+   * Deux ressorts Framer écrits en impératif (`.set()`) : la mesure ne coûte
+   * plus un seul rendu React, et le style est écrit directement sur le nœud.
+   * ⚠ `.jump()` À LA PREMIÈRE MESURE, sinon l'encadré part de 0 et traverse la
+   * liste au chargement. */
+  const cadreTop = useSpring(0, RESSORT_CADRE);
+  const cadreHaut = useSpring(0, RESSORT_CADRE);
+  const cadrePose = useRef(false);
   const { scrollYProgress: capProgress } = useScroll({
     target: capTrackRef,
     offset: ["start start", "end end"],
@@ -573,9 +612,19 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
   useEffect(() => {
     const N = ATLAS_CAPS.length;
     const MARGE = 0.15;
+    /* ⚠ LE PREMIER SEGMENT VAUT 1,6 SEGMENT (2026-09-02). Au défilement
+       continu, l'argument 0 ne tenait que ~1,3 s à cadence de lecture : son
+       intro (650 ms figés + 470 de morphing) était coupée en plein vol par le
+       passage à l'argument 1, et la première animation qu'on VOYAIT entière
+       était la mauvaise. L'étirement se paie sur les sept suivants (chacun
+       rend ~8,5 % de sa course), pas sur la longueur du rail. La
+       transformation est linéaire par morceaux et STRICTEMENT monotone :
+       la zone morte et l'index posé raisonnent dessus sans rien savoir. */
+    const ETIRE = 1.6;
     let courant = 0;
     return capProgress.on("change", (v) => {
-      const brut = Math.max(0, Math.min(N - 1e-4, v * N));
+      const b = Math.max(0, Math.min(N - 1e-4, v * N));
+      const brut = b <= ETIRE ? b / ETIRE : 1 + (b - ETIRE) * ((N - 1) / (N - ETIRE));
       const vise = Math.floor(brut);
       if (vise === courant) return;
       const frontiere = vise > courant ? courant + 1 : courant;
@@ -591,38 +640,151 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
      remarque à l'arrêt, où deux arguments sont séparés de plusieurs secondes.
      Au montage `sceneCap === activeCap` : la première scène est là tout de
      suite, l'entrée dans la section ne passe pas par l'attente. */
-  /* ── LE TEMPS FIGÉ DE LA PLAQUE (2026-08-30) ─────────────────────────────
-   * Client : « on part du design de l'encadré, une demi-seconde de latence,
-   * et les éléments s'animent tout d'un coup ». À chaque argument, la plaque
-   * ouvre donc sur la VIGNETTE FIXE (le design d'origine de l'encadré), la
-   * tient 650 ms, puis la scène vivante prend le relais — et comme les scènes
-   * entrent en ressort avec leurs cascades internes, le passage se lit
-   * exactement comme « les éléments se mettent à bouger ».
-   * 650 ms : assez long pour que l'image fixe soit VUE comme une image (sous
-   * ~400 ms elle se lirait comme un raté de chargement), assez court pour ne
-   * pas faire attendre l'animation promise. */
+  /* ── LE TEMPS FIGÉ DE LA PLAQUE ──────────────────────────────────────────
+   * À chaque argument : la VIGNETTE FIXE (le design d'origine) tenue 650 ms,
+   * puis la scène vivante prend le relais par le morphing squelette→contenu
+   * d'ATLAS_CSS. `sortie` arme la dissolution de la vignette, `figeOn` la
+   * garde montée le temps qu'elle finisse (430 ms), `vif` monte la scène.
+   * ⚠ RETABLI le 2026-08-30 après un essai « chorégraphie par élément »
+   * (les vignettes animant leurs propres blocs, sans scènes) : le client a
+   * tranché pour les scènes dans les encadrés. L'essai vit dans l'historique
+   * git à cette date. */
   const [vif, setVif] = useState(false);
-  /* `sortie` arme l'animation de réveil sur la vignette ; `figeOn` la garde
-   * montée le temps que ses blocs finissent de décoller (560 ms + cascade).
-   * Trois temps, donc : figé (0-650), réveil (650-1300, scène déjà montée
-   * dessous), vivant (vignette démontée — il ne restait d'elle que son fond,
-   * identique à celui de la plaque). */
   const [sortie, setSortie] = useState(false);
   const [figeOn, setFigeOn] = useState(true);
+
+  /* ── L'INTRO NE DÉMARRE QU'À L'ARRIVÉE (2026-09-02) ──────────────────────
+   * Client : « quand on arrive sur la première animation, on doit d'abord
+   * arriver sur Cherche dans vos dossiers ». MESURÉ avant correction, en
+   * simulant une vraie arrivée à la molette : l'argument 0 se présentait
+   * `fige:false` — son temps figé et son morphing avaient joué AU CHARGEMENT
+   * DE LA PAGE, deux écrans plus haut, et à l'arrivée on tombait sur une
+   * scène déjà en cours. La première intro VUE était donc celle de
+   * l'argument 1.
+   * `enVue` ne passe à vrai qu'une fois l'écran épinglé réellement à l'écran
+   * (un quart visible) ; tant qu'il est faux, le minuteur n'est pas armé et
+   * la plaque tient la vignette figée de l'argument 0. Il ne repasse jamais
+   * à faux : re-jouer l'intro à chaque aller-retour de défilement ferait de
+   * l'entrée un gag répété. */
+  const [enVue, setEnVue] = useState(false);
   useEffect(() => {
+    /* ⚠ ON OBSERVE L'ÉCRAN ÉPINGLÉ, PAS LE RAIL, ET C'EST UN CORRECTIF DE BOGUE
+       (2026-09-04). L'observateur portait sur `capTrackRef` avec
+       `threshold: 0.25`. Un seuil est une FRACTION DE L'ÉLÉMENT OBSERVÉ, pas de
+       la fenêtre : 25 % d'un rail de 360 vh font 90 vh, ça tenait dans une
+       fenêtre de 100 vh et la condition pouvait être vraie. En passant le rail
+       à 460 vh le même jour, 25 % sont devenus 115 vh — PLUS QUE LA FENÊTRE.
+       `isIntersecting` ne pouvait alors plus jamais être vrai, `enVue` restait
+       faux, et comme tout le réveil est derrière `if (!enVue) return`, AUCUNE
+       scène ne se montait sur AUCUNE capacité. Le rail rendait ses vignettes
+       figées et rien d'autre, sans la moindre erreur en console.
+       L'écran épinglé fait exactement une fenêtre de haut, quelle que soit la
+       longueur du rail : le seuil y garde son sens, et cette panne ne peut plus
+       revenir en changeant la hauteur de la section. */
+    const el = capEcranRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setEnVue(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /* ── LA CÉRÉMONIE D'ARRIVÉE N'EST PLUS REJOUÉE À CHAQUE FRANCHISSEMENT ────
+   * (2026-09-03) MESURÉ : un argument dure ~214 px de course, soit ~1,1 s à
+   * cadence de lecture. Le réveil en coûtait 1 120 — 650 de vignette FIGÉE
+   * puis 470 de morphing. Autrement dit, du premier au dernier argument, la
+   * plaque de droite montrait une IMAGE FIXE la quasi-totalité du temps : on
+   * défilait devant huit photos, pas devant huit animations. C'est la moitié
+   * du « ça pourrait être bien plus fluide ».
+   * La cérémonie longue est ce que le client a demandé POUR L'ARRIVÉE (« quand
+   * on arrive sur la première animation, on doit d'abord arriver sur Cherche
+   * dans vos dossiers ») : elle est gardée intacte, et seulement là. Les
+   * franchissements suivants tiennent la vignette 300 ms — assez pour lire
+   * « l'image figée qui s'éveille », le geste validé le 2026-08-30, sans
+   * manger l'animation qu'elle annonce.
+   * ⚠ MORPH = 340 DOIT SUIVRE LES DEUX ANIMATIONS CSS d'ATLAS_CSS
+   * (atFigeFond 300 ms, atSceneNette 340) : `figeOn` retire la vignette du DOM,
+   * la retirer avant la fin de sa dissolution la ferait disparaître d'un coup. */
+  /* ── LE DOIGT BOUGE-T-IL ? UN REF, PAS UN ÉTAT ───────────────────────────
+   * Écrit à chaque image de défilement. Un `useState` ici rendrait la section
+   * soixante fois par seconde — exactement le mal qu'on vient de retirer de
+   * l'encadré. Personne ne LIT cette valeur au rendu, seulement des minuteurs.
+   * 180 ms d'immobilité valent arrêt : plus court, l'inertie de Lenis en fin de
+   * course compte encore comme du mouvement ; plus long, l'éveil se fait
+   * attendre après qu'on s'est arrêté. */
+  const bougeRef = useRef(false);
+  useEffect(() => {
+    let t = 0;
+    const off = capProgress.on("change", () => {
+      bougeRef.current = true;
+      window.clearTimeout(t);
+      t = window.setTimeout(() => {
+        bougeRef.current = false;
+      }, 180);
+    });
+    return () => {
+      off();
+      window.clearTimeout(t);
+    };
+  }, [capProgress]);
+
+  /* ── LA SCÈNE NE S'ÉVEILLE QU'À L'ARRÊT (2026-09-04) ─────────────────────
+   * MESURÉ, molette à cadence de lecture, sur les huit arguments : les
+   * bascules tombent à 1675, 1958, 2224, 2491, 2758, 3024, 3308 ms. UN
+   * ARGUMENT DURE 270 ms. Le réveil, lui, en demandait 640 (300 de vignette
+   * tenue + 340 de morphing) — et 1 120 avant le 2026-09-03. Autrement dit :
+   * en défilant normalement, on ne voyait JAMAIS une animation vivante. Huit
+   * vignettes figées défilaient, chacune remplacée avant d'avoir fini de
+   * paraître. C'est ça, « ce n'est pas fluide du tout » — pas la cadence
+   * d'images, qui est à 60 en production (p99 17,7 ms, pire image 21,2, zéro
+   * image au-delà de 24 sur toute la descente).
+   *
+   * Le réveil attend donc l'ARRÊT au lieu d'attendre une durée. Tant que le
+   * doigt bouge, la plaque garde sa vignette : aucune scène vivante n'est
+   * montée, aucun flou ne joue, le défilement ne paie que le fond de plaque
+   * qui change. Dès qu'on s'arrête, l'argument sous les yeux s'éveille.
+   * Ce n'est pas qu'une économie : c'est le bon geste. On ne montre une
+   * animation qu'à qui s'arrête pour la regarder.
+   *
+   * ⚠ LA RÉ-TENTATIVE EST UN MINUTEUR CHAÎNÉ, PAS UNE DÉPENDANCE D'EFFET.
+   * Passer `immobile` en état et le mettre dans les dépendances paraît plus
+   * propre et ne marche pas : React nettoie AVANT de rejouer l'effet, donc le
+   * moindre soubresaut de défilement annulait les minuteurs déjà armés, et la
+   * garde « déjà éveillé » empêchait de les réarmer. La scène ne se réveillait
+   * plus jamais. Ici rien n'est nettoyé tant que l'argument ne change pas. */
+  const premiereScene = useRef(true);
+  useEffect(() => {
+    if (!enVue) return;
+    const TENUE = premiereScene.current ? 650 : 300;
+    const MORPH = 340;
+    premiereScene.current = false;
     setVif(false);
     setSortie(false);
     setFigeOn(true);
-    const t1 = window.setTimeout(() => {
+    let t1 = 0;
+    let t2 = 0;
+    const tenter = () => {
+      if (bougeRef.current) {
+        t1 = window.setTimeout(tenter, 90);
+        return;
+      }
       setVif(true);
       setSortie(true);
-    }, 650);
-    const t2 = window.setTimeout(() => setFigeOn(false), 1120);
+      t2 = window.setTimeout(() => setFigeOn(false), MORPH);
+    };
+    t1 = window.setTimeout(tenter, TENUE);
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
     };
-  }, [sceneCap]);
+  }, [sceneCap, enVue]);
 
   /* La largeur RÉELLE de la plaque, pour mettre la vignette figée à son
    * échelle : AtlasSlideVisual compose à 1000 x 880 en dur, et la plaque va
@@ -646,22 +808,19 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
 
   useEffect(() => {
     if (sceneCap === activeCap) return;
-    const t = window.setTimeout(() => {
-      // Les deux dans le même tour : React les groupe, la scène entrante et la
-      // sortante lisent donc le même sens, celui du geste qui vient de finir.
-      setSens(activeCap > sceneCap ? 1 : -1);
-      setSceneCap(activeCap);
-    }, 140);
+    // `sens` vivait ici : la transition étant devenue un fondu sur place, elle
+    // n'a plus de direction à connaître. Voir le pavé de SCENE_VARIANTS.
+    const t = window.setTimeout(() => setSceneCap(activeCap), 140);
     return () => window.clearTimeout(t);
   }, [activeCap, sceneCap]);
 
   /* ⚠ `querySelectorAll("li")` ET SURTOUT PAS `ul.children[activeCap]` :
      l'encadré est LUI-MÊME le premier enfant de la liste, tout serait décalé
      d'une entrée.
-     ⚠ LA GARDE D'ÉGALITÉ N'EST PAS DÉCORATIVE : l'observateur se déclenche à
-     chaque image pendant que l'accordéon s'ouvre, mais aussi sur des
-     changements de LARGEUR qui ne déplacent pas l'entrée. Sans elle, chacun de
-     ces appels rendait tout AtlasShowcase pour reposer les deux mêmes nombres. */
+     ⚠ L'ÉCRITURE PASSE PAR DEUX MOTIONVALUES, PAS PAR UN setState : voir le
+     pavé de `cadreTop`. L'observateur tire à chaque image pendant que
+     l'accordéon s'ouvre ; un état React ici rendait toute la section une
+     douzaine de fois par argument. `.set()` ne coûte rien. */
   const mesurerCadre = useCallback(() => {
     const ul = capListRef.current;
     if (!ul) return;
@@ -670,8 +829,15 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
     // 6 px de débord vertical : l'encadré respire autour de l'entrée.
     const top = li.offsetTop - 6;
     const height = li.offsetHeight + 12;
-    setCapFrame((prev) => (prev.top === top && prev.height === height ? prev : { top, height }));
-  }, [activeCap]);
+    if (!cadrePose.current) {
+      cadrePose.current = true;
+      cadreTop.jump(top);
+      cadreHaut.jump(height);
+      return;
+    }
+    cadreTop.set(top);
+    cadreHaut.set(height);
+  }, [activeCap, cadreTop, cadreHaut]);
 
   useEffect(() => mesurerCadre(), [mesurerCadre]);
 
@@ -790,24 +956,33 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
           <div className="at-sky sticky top-0 h-screen">
             <div aria-hidden className="at-lines" />
 
-            {/* LA PLANÈTE. Diamètre à 150 % de la largeur de l'écran : elle
-                doit sortir des deux côtés, sans quoi on lit un cercle et non
-                un horizon. Son sommet est calé à 60 % de la hauteur, ce qui
-                laisse le tiers de ciel noir que montre la capture entre le mot
-                et l'arc.
-                ⚠ RAMENÉE DE 178 À 150 % le 2026-08-15 (client : « que la
-                planète soit un peu plus petite et qu'on voie qu'il y a des
-                écritures juste en dessous »). À 178 %, l'arc était si tendu
-                qu'il ne restait rien sous lui : la rangée de capacités qui
-                ferme la scène, juste après, n'aurait pas eu de place. Un
-                disque plus petit courbe davantage et dégage ce pied d'écran.
+            {/* LA PLANÈTE. Diamètre à 108 % de la largeur de l'écran, sommet à
+                67 % de la hauteur.
+                ⚠ 178 → 150 % le 2026-08-15, puis 150 → 108 % le 2026-09-04.
+                La deuxième passe vient d'une capture d'attio.com : « take the
+                example of the screen because i like the smaller layout they
+                have for the half circle ».
+                CE QUI A ÉTÉ MESURÉ SUR LEUR ARC, parce que « plus petit » ne
+                dit pas de combien : chez eux, l'arc descend de 0,58 fois sa
+                demi-largeur entre le sommet et le bord de l'écran. À 150 %,
+                le nôtre ne descendait que de 0,38 : il était en réalité PLUS
+                PLAT et PLUS LARGE que la référence, pas plus gros. Un cercle
+                large s'aplatit, il ne rétrécit pas.
+                0,58 de chute correspond à un diamètre de ~115 % ; 108 % s'en
+                approche par le bas et referme mieux l'arc sur le bas d'écran,
+                où il sort par le SOL et non plus par les côtés. C'est ce qui
+                fait la « smaller layout » : ce n'est pas le cercle qui rétrécit,
+                c'est la part d'écran qu'il occupe.
+                Le sommet descend de 60 à 67 % dans le même mouvement, sinon un
+                disque plus courbé remonte dans la ligne « Atlas est l'assistant
+                qui connaît vos dossiers » posée juste dessous.
                 SA MONTÉE EST ÉCRITE AU DÉFILEMENT, dans l'effet plus bas :
                 elle entre par le bas et vient se poser. */}
             <div
               ref={planetRef}
               aria-hidden
               className="at-planet"
-              style={{ width: "150%", aspectRatio: "1 / 1", top: "60%" }}
+              style={{ width: "108%", aspectRatio: "1 / 1", top: "67%" }}
             >
               <div className="at-limbfade at-bloomfade">
                 <div className="at-bloomring">
@@ -936,20 +1111,38 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
           Le fond reste NOIR, dans la continuité de la scène de la planète
           au-dessus et de la vidéo en dessous : les trois blocs se lisent comme
           une seule surface depuis le 2026-08-15. */}
-      {/* LE RAIL D'ÉPINGLAGE : 360 vh sur md+ (100 d'écran + 260 de course,
-          soit ~32 vh de défilement par capacité, huit capacités depuis le
-          2026-08-23), hauteur libre sur téléphone où rien n'est épinglé.
-          Voir le pavé de `capTrackRef` en tête de composant. */}
+      {/* LE RAIL D'ÉPINGLAGE : 460 vh sur md+ (100 d'écran + 360 de course),
+          hauteur libre sur téléphone où rien n'est épinglé.
+          Voir le pavé de `capTrackRef` en tête de composant.
+
+          ⚠ 360 → 460 vh LE 2026-09-04, ET C'EST UNE MESURE, PAS UN GOÛT.
+          À 360, la course de 260 vh se partageait entre huit capacités : 468 px
+          pour la première (elle vaut 1,6 segment, voir ETIRE) et 267 px pour
+          chacune des sept autres. Chronométré à la molette, cadence de lecture :
+          une capacité durait 267 ms. Or l'encadré met ~240 ms à se poser sur son
+          ressort — il n'avait donc JAMAIS fini son mouvement quand le suivant
+          partait. Huit ressorts qui s'écrasent l'un l'autre, ça ne se lit pas
+          comme huit pas, ça se lit comme un fondu continu : c'est le « ce n'est
+          pas fluide entre les fonctionnalités » du client.
+          À 460, la course passe à 360 vh, soit 370 px et ~370 ms par capacité :
+          l'encadré se pose avec 130 ms de marge avant le pas suivant.
+          Pourquoi pas 580 vh (494 px, ~494 ms), qui donnerait encore plus d'air :
+          la page y gagnait 1 980 px de défilement au lieu de 900, sur une page
+          d'accueil dont tout l'objet est de mener à la réservation. Le rythme
+          n'est pas gratuit, il se paie en longueur.
+          ⚠ SI LE NOMBRE DE CAPACITÉS CHANGE, CETTE HAUTEUR DOIT SUIVRE :
+          il faut ~46 vh de course par capacité pour rester au-dessus des 240 ms
+          du ressort. Huit en demandent 360. */}
       <section
         ref={capTrackRef}
         data-nav-dark
         data-nav-shy
-        className="relative z-[20] bg-black md:h-[360vh]"
+        className="relative z-[20] bg-black md:h-[460vh]"
       >
         {/* L'ÉCRAN FIGÉ : sticky nu, contenu centré verticalement. `h-screen`
             et non `min-h-screen` — la boîte épinglée doit faire exactement un
             écran, c'est le contenu qui se centre dedans. */}
-        <div className="md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center">
+        <div ref={capEcranRef} className="md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center">
         {/* Les DEUX mises en page dev / production (RESERVE_VISUAL) ont vécu
             ici du 21 au 22 août, le temps que le visuel de droite existe.
             Retour à un seul chemin de rendu : deux colonnes, partout. */}
@@ -987,10 +1180,23 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                   en: "The assistant that knows your files.",
                 })}
               </span>{" "}
+              {/* ⚠ « IL LES A LUS » A ÉTÉ RETIRÉ LE 2026-09-04, ET NE DOIT PAS
+                  REVENIR. Client : « il les a lus, ça a des données
+                  confidentielles, donc il ne faut pas ». La phrase disait à un
+                  expert-comptable que l'outil a INGÉRÉ le dossier de ses
+                  clients. Sur la seule page qui doit lever l'objection
+                  confidentialité, c'était la créer.
+                  La promesse ne change pas d'un pouce : Atlas sait où regarder.
+                  Ce qui change, c'est qu'on ne revendique plus d'avoir lu ni
+                  gardé quoi que ce soit, et « sans rien retenir » répond
+                  directement à la peur (la rétention), pas à côté. Elle fait
+                  écho à la huitième capacité de la liste, « Ne sort jamais de
+                  chez vous » : les deux disent la même chose, l'une en promesse
+                  l'autre en fonctionnalité. */}
               <span className="text-white/40">
                 {t({
-                  fr: "Il les a lus, il sait où regarder.",
-                  en: "It has read them, it knows where to look.",
+                  fr: "Il sait où regarder, sans rien retenir.",
+                  en: "It knows where to look, and retains nothing.",
                 })}
               </span>
             </h2>
@@ -1032,11 +1238,15 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                   mais sec — un ressort Framer (raideur 380, amortissement 36,
                   quasi sans dépassement) suit le défilement avec l'inertie
                   d'un objet qui pèse, et s'arrête net sans osciller. */}
+              {/* ⚠ `style` ET NON `animate` depuis le 2026-09-03 : les deux
+                  valeurs sont des ressorts pilotés à la main par
+                  `mesurerCadre`, hors du cycle de rendu de React. Repasser par
+                  `animate={{top, height}}` ramènerait la douzaine de rendus
+                  par argument que ce détour supprime. */}
               <motion.span
                 aria-hidden
                 className="pointer-events-none absolute -left-4 -right-4 hidden rounded-[14px] border border-white/[0.22] bg-white/[0.04] md:block"
-                animate={{ top: capFrame.top, height: capFrame.height }}
-                transition={{ type: "spring", stiffness: 380, damping: 36, mass: 0.9 }}
+                style={{ top: cadreTop, height: cadreHaut }}
               />
               {/* ⚠ LA LISTE EST EN ACCORDÉON SUR L'ÉCRAN ÉPINGLÉ (2026-08-23) :
                   seule l'entrée ACTIVE déploie sa description, les autres ne
@@ -1079,7 +1289,26 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                         className="hidden overflow-hidden md:block"
                         initial={false}
                         animate={{ height: ouverte ? "auto" : 0, opacity: ouverte ? 1 : 0 }}
-                        transition={{ type: "spring", stiffness: 420, damping: 38, mass: 0.9 }}
+                        /* ⚠ LA HAUTEUR VA DEUX FOIS PLUS VITE QUE L'OPACITÉ, ET
+                           C'EST LE CORRECTIF DU TREMBLEMENT À LA DESCENTE
+                           (2026-09-03). L'accordéon et l'encadré couraient au
+                           MÊME ressort (420/38 contre 380/36, ~190 ms tous les
+                           deux) : en descendant, l'entrée qui se replie est
+                           AU-DESSUS de la nouvelle, sa fermeture remonte donc
+                           la cible pendant que l'encadré descend vers elle.
+                           L'encadré poursuivait une cible qui fuyait à sa
+                           propre vitesse — il dépassait puis revenait. La
+                           hauteur se pose maintenant en ~120 ms, l'encadré
+                           glisse en ~240 : quand il arrive, la mise en page
+                           ne bouge plus. (À la remontée le défaut n'existait
+                           pas : l'entrée qui se replie est en dessous, elle ne
+                           déplace rien.)
+                           L'opacité reste lente : c'est elle qu'on lit, et une
+                           description qui apparaît en 120 ms claque. */
+                        transition={{
+                          height: { type: "spring", stiffness: 700, damping: 46, mass: 0.7 },
+                          opacity: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                        }}
                       >
                         <p className="mt-1.5 max-w-[46ch] pb-0.5 font-inter text-[13.5px] leading-[1.45] text-white/45">
                           {t(c.desc)}
@@ -1110,7 +1339,12 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
           {/* ⚠ CINQ ANIMATIONS depuis le 2026-08-23, une par famille
               d'arguments, toutes dans la même cellule et croisées en fondu de
               350 ms. La carte des correspondances :
-                0-2 (chercher, relier, valider) → la boucle AtlasLiveAsk ;
+                0 et 2 (chercher, valider)      → la boucle AtlasLiveAsk ;
+                1 (relie aux sources)           → AtlasLivePrevisionnel : la
+                  demande tapée, le module qui s'ouvre, et surtout CHAQUE
+                  montant qui arrive avec la piece dont il sort. Client
+                  2026-09-05 ; il remplace la boucle AtlasLiveAsk, qui ne
+                  montrait aucune source et illustrait donc mal son argument ;
                 3 (signale)                     → le flux AtlasLiveNotify ;
                 4 (lit les documents)          → AtlasLiveDocs ;
                 5 (relance les pièces)         → AtlasLiveRelance ;
@@ -1154,19 +1388,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
               {/* `custom` EST PORTÉ DEUX FOIS : sur AnimatePresence il alimente
                   la scène QUI SORT (déjà retirée de l'arbre, elle n'a plus que
                   celui-ci), sur la motion.div celle qui ENTRE. */}
-              <AnimatePresence custom={{ sens, i: sceneCap }}>
-                {/* L'ENTRÉE CHANGE DE CÔTÉ avec l'argument : deux scènes
-                    consécutives n'arrivent jamais du même côté. Le VERTICAL,
-                    lui, suit le sens du défilement. */}
-                <motion.div
-                  key={sceneCap}
-                  custom={{ sens, i: sceneCap }}
-                  variants={SCENE_VARIANTS}
-                  initial="avant"
-                  animate="pose"
-                  exit="apres"
-                  className="col-start-1 row-start-1 self-center"
-                >
+              <div className="col-start-1 row-start-1 self-center">
                   {/* ══ LES SCÈNES ANIMÉES, DANS LE CADRE BLEU ══════════════
                       Client 2026-08-29 : « les animations qui étaient avant sur
                       un fond noir doivent se faire dans le cadre bleu, et
@@ -1195,69 +1417,106 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
                       lg:px-12 → lg:px-8 sur le conteneur parent). Le rembourrage
                       interne (p-6/p-8) laisse ~500 px utiles : la largeur
                       naturelle des scènes, aucune mise à l'échelle. */}
+                  {/* ⚠ CETTE PLAQUE NE SE DÉMONTE JAMAIS. Elle vivait sous
+                      l'AnimatePresence clé sur l'argument : c'est elle, et pas
+                      son contenu, qui glissait à chaque capacité. Voir le pavé
+                      de SCENE_VARIANTS. Elle n'a plus ni `key`, ni variante, ni
+                      transform. Sa hauteur est verrouillée par min-h-[440px]
+                      (les scènes font 283 à 366 px) : elle ne respire pas
+                      davantage qu'elle ne bouge. */}
                   <div
                     ref={plateRef}
                     className="at-plate relative flex min-h-[440px] w-full max-w-[560px] items-center justify-center overflow-hidden rounded-[36px] p-6 md:p-8"
-                    style={{ background: PLATE_FONDS[CAP_VISUELS[sceneCap]] }}
                   >
-                    {/* La scène vivante N'EST MONTÉE qu'à la fin du temps figé :
-                        montée cachée, ses minuteries tourneraient déjà et elle
-                        entrerait en cours de route au lieu de démarrer. */}
-                    {/* L'enveloppe at-scene-entre porte la moitié « mise au
-                        point » du morphing : la scène émerge du même flou que
-                        la vignette qui se dissout au-dessus d'elle. */}
-                    {vif && (
-                      <div className="at-scene-entre flex w-full items-center justify-center">
-                        {sceneCap === 3 ? (
-                          <AtlasLiveNotify />
-                        ) : sceneCap === 4 ? (
-                          <AtlasLiveDocs />
-                        ) : sceneCap === 5 ? (
-                          <AtlasLiveRelance />
-                        ) : sceneCap === 6 ? (
-                          <AtlasLiveJour />
-                        ) : (
-                          <AtlasLiveAsk variante={sceneCap} />
-                        )}
-                      </div>
-                    )}
+                    {/* LE FOND, CROISÉ EN OPACITÉ. Il était posé en `style` sur
+                        la plaque, donc il sautait d'un dégradé à l'autre sans
+                        transition possible : `background-image` ne s'interpole
+                        pas. Deux calques superposés qui se croisent en opacité,
+                        eux, se fondent.
+                        ⚠ CLÉ SUR LE VISUEL ET NON SUR L'ARGUMENT : six visuels
+                        pour huit arguments. Si deux arguments voisins
+                        partageaient un fond, la clé identique éviterait un
+                        fondu inutile. (Aujourd'hui aucun voisin n'est
+                        identique, mais CAP_VISUELS peut changer.) */}
+                    <AnimatePresence initial={false}>
+                      <motion.div
+                        key={CAP_VISUELS[sceneCap]}
+                        aria-hidden
+                        className="absolute inset-0"
+                        style={{ background: PLATE_FONDS[CAP_VISUELS[sceneCap]] }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={FONDU}
+                      />
+                    </AnimatePresence>
 
-                    {/* ── LA VIGNETTE FIGÉE, PAR-DESSUS ──────────────────────
-                        Le « design d'origine de l'encadré » que demande le
-                        client : la vignette de la grille, à l'échelle de la
-                        plaque, tenue 650 ms puis fondue en 300 ms pendant que
-                        la scène entre en ressort dessous.
-                        ⚠ ELLE COUVRE LA PLAQUE ENTIÈRE (inset-0, hors du
-                        rembourrage) : son propre fond est LE MÊME dégradé que
-                        la plaque (PLATE_FONDS est recopié d'AV_CSS), la
-                        jointure est donc invisible et le fondu ne fait bouger
-                        que les cartes blanches — pas le fond. */}
-                    {/* Plus de fondu plat : à `sortie`, la classe at-fige-sortie
-                        lance le décollage par élément défini dans ATLAS_CSS, et
-                        la vignette reste montée jusqu'à la fin de la cascade.
-                        Une fois ses blocs partis il ne reste d'elle que son
-                        dégradé, identique à celui de la plaque : le démontage
-                        est invisible. */}
-                    {figeOn && (
-                      <div
-                        className={`absolute inset-0 overflow-hidden rounded-[36px]${sortie ? " at-fige-sortie" : ""}`}
+                    {/* LE CONTENU, CROISÉ SUR PLACE. `absolute inset-0` et non
+                        en flux : deux contenus de hauteurs différentes qui se
+                        croisent en flux pousseraient la plaque, et on
+                        retrouverait le mouvement qu'on vient de retirer. */}
+                    <AnimatePresence initial={false}>
+                      <motion.div
+                        key={sceneCap}
+                        variants={SCENE_VARIANTS}
+                        initial="avant"
+                        animate="pose"
+                        exit="apres"
+                        className="absolute inset-0 flex items-center justify-center p-6 md:p-8"
                       >
-                        <div
-                          className="absolute left-0 top-0 h-[880px] w-[1000px] origin-top-left"
-                          style={{ transform: `scale(${plateW / 1000})` }}
-                        >
-                          <AtlasSlideVisual
-                            visual={CAP_VISUELS[sceneCap]}
-                            ask=""
-                            label={t(ATLAS_CAPS[sceneCap].label)}
-                            textless
-                          />
-                        </div>
-                      </div>
-                    )}
+                        {/* La scène vivante n'est montée qu'à l'arrêt du
+                            défilement : montée pendant le geste, ses minuteries
+                            tourneraient sans personne pour les regarder.
+                            L'enveloppe at-scene-entre porte la moitié « mise au
+                            point » du morphing. */}
+                        {vif && (
+                          <div className="at-scene-entre flex w-full items-center justify-center">
+                            {sceneCap === 1 ? (
+                              <AtlasLivePrevisionnel />
+                            ) : sceneCap === 3 ? (
+                              <AtlasLiveNotify />
+                            ) : sceneCap === 4 ? (
+                              <AtlasLiveDocs />
+                            ) : sceneCap === 5 ? (
+                              <AtlasLiveRelance />
+                            ) : sceneCap === 6 ? (
+                              <AtlasLiveJour />
+                            ) : (
+                              <AtlasLiveAsk variante={sceneCap} />
+                            )}
+                          </div>
+                        )}
+
+                        {/* LA VIGNETTE FIGÉE, PAR-DESSUS : le design d'origine
+                            de l'encadré, tenu le temps du réveil, puis dissous
+                            par at-fige-sortie pendant que la scène émerge du
+                            même flou dessous.
+                            ⚠ SON FOND PROPRE A ÉTÉ RETIRÉ (`-m-6 md:-m-8` pour
+                            reprendre toute la plaque) : le dégradé est
+                            désormais porté par le calque de fond permanent, en
+                            dessous. Le laisser ici en poserait un second,
+                            opaque, qui masquerait le fondu du premier. */}
+                        {figeOn && (
+                          <div
+                            className={`absolute inset-0 overflow-hidden rounded-[36px]${sortie ? " at-fige-sortie" : ""}`}
+                          >
+                            <div
+                              className="absolute left-0 top-0 h-[880px] w-[1000px] origin-top-left"
+                              style={{ transform: `scale(${plateW / 1000})` }}
+                            >
+                              <AtlasSlideVisual
+                                visual={CAP_VISUELS[sceneCap]}
+                                ask=""
+                                label={t(ATLAS_CAPS[sceneCap].label)}
+                                textless
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
             </div>
 
             {/* ── LA GLOSE, SOUS L'ANIMATION ───────────────────────────────
@@ -1302,52 +1561,20 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
         </div>
       </section>
 
-      {/* ── LA DÉMO DE L'ASSISTANT ──────────────────────────────────────────
-          Client 2026-08-19 : « il faut que la vidéo soit juste en dessous de »
-          la rangée des cinq capacités — l'ourlet qui ferme la scène de la
-          planète, juste au-dessus. L'enregistrement ORA_demo_Assistant_six_
-          usages montre l'assistant en situation sur six demandes : la version
-          RÉELLE de ce que le carrousel simule plus bas. Il avait d'abord été
-          posé après tout Atlas, sur fond clair ; il est remonté ici.
-          SUR LE NOIR, et ce n'est pas un choix libre : la scène d'ouverture et
-          le carrousel se lisent comme une seule surface noire depuis le
-          2026-08-15, une bande claire entre les deux la couperait en travers.
-          D'où `tone="dark"` sur la barre de lecture (rail blanc translucide,
-          le rail encre serait invisible ici) et le liseré blanc à 10 % à la
-          place de l'ombre, qu'un fond noir avale de toute façon.
-          56 secondes qui racontent quelque chose, donc AVEC la barre — même
-          règle que le clip du module dans AutomationTabs. Lu par InViewVideo :
-          MUET (sa piste audio n'est pas jouée, condition de l'autoplay), en
-          boucle, piloté au défilement, reprise à zéro à chaque entrée.
-          LARGEUR : `max-w-7xl`, la MÊME que le carrousel juste en dessous
-          (l:807). Client 2026-08-19 : « plus de place en longueur et en
-          largeur » — le cadre est passé de 980 px à 1280 px, et le rapport
-          16/9 verrouillé fait suivre la hauteur (551 → 720 px). Reprendre la
-          largeur du carrousel plutôt qu'un nombre libre aligne les deux blocs
-          sur les mêmes bords, à toutes les tailles d'écran : ils se lisent
-          comme une seule colonne sur le noir continu. Si le carrousel change
-          de largeur un jour, celle-ci doit suivre.
-          Le pas au-dessus est retombé de pt-24 à pt-16 : à 720 px de haut, la
-          vidéo ne tient plus dans une fenêtre de portable avec l'ancien blanc. */}
-      {/* Le pas du haut est remonté de pt-16 à pt-28 le 2026-08-22 (client :
-          « fais un plus grand espace entre cette partie et celle juste en
-          dessous ») : l'animation AtlasLiveAsk vit désormais au-dessus, elle a
-          besoin d'air avant que la vidéo n'enchaîne. */}
-      <section
-        data-nav-dark
-        data-nav-shy
-        className="relative z-[20] bg-black px-6 md:px-12 pt-20 md:pt-28 pb-2 md:pb-4"
-      >
-        <div className="mx-auto w-full max-w-7xl">
-          <VideoWithScrubber
-            src="/ORA_demo_Assistant_six_usages.mp4"
-            tone="dark"
-            frameClassName="relative overflow-hidden rounded-[12px] ring-1 ring-white/10"
-            frameStyle={{ aspectRatio: "1920 / 1080" }}
-            className="block h-full w-full object-cover"
-          />
-        </div>
-      </section>
+    {/* ══ LA DÉMO DE L'ASSISTANT A ÉTÉ RETIRÉE (2026-09-05) ══════════════
+        Client : « supprime la vidéo dans la partie Atlas ».
+        C'était ORA_demo_Assistant_six_usages.mp4, 56 secondes de l'assistant
+        en situation sur six demandes, posée sur le noir juste sous l'écran
+        épinglé depuis le 2026-08-19, avec sa barre de lecture au défilement.
+        Sont partis avec elle : sa section noire, son cadre max-w-7xl en 16/9
+        et l'import de VideoWithScrubber, qui n'avait plus d'autre usage ici.
+        ⚠ LE FICHIER public/ORA_demo_Assistant_six_usages.mp4 N'EST PAS
+        SUPPRIMÉ, seulement déréférencé : plus rien sur le site ne le pointe.
+        Le retirer de public/ est une décision à part, à prendre en sachant ce
+        qu'il pèse. La section entière est récupérable dans l'historique git de
+        ce fichier à cette date.
+        AtlasShowcase ne rend donc plus que DEUX sections : la scène de la
+        planète et l'écran épinglé des capacités. */}
 
     {/* ══ « CE QU'ATLAS SAIT FAIRE » A ÉTÉ RETIRÉE (2026-08-30) ═══════════
         Client : « supprime cette partie du site maintenant du coup ». Le
@@ -1379,8 +1606,8 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
         Sont partis avec : FileChipStrip (les pastilles de formats) et le
         conteneur d'entrée Framer de cette section. La carte des accès est dans
         l'historique git de ce fichier, à la date du 2026-08-15.
-        AtlasShowcase rend donc TROIS sections : la scène épinglée, la démo de
-        l'assistant, et le carrousel. */}
+        AtlasShowcase rend donc DEUX sections : la scène de la planète et
+        l'écran épinglé des capacités. */}
 
     </>
   );

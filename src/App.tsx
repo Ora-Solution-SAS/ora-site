@@ -3,13 +3,11 @@ import { createPortal } from "react-dom"; // used for booking modal
 import Lenis from "lenis";
 import { Analytics } from "@vercel/analytics/react";
 import { animatedScrollToId } from "./lib/scrollTo";
-import OraLogoSpinner from "./components/OraLogoSpinner";
 // ⚠ QualifierFlow, QualifierResult et GiftReveal NE SONT PLUS MONTÉS depuis le
 // 2026-08-19 (client : « fais quelque chose de beaucoup plus straight to the
 // point, ne mets pas combien d'heures vous passez »). Les trois fichiers
 // restent dans le dépôt ; les remonter demanderait de rétablir leurs phases
 // dans BookingPhase, leurs branches de rendu et leurs entrées de BOOKING_STEPS.
-import SlotPicker, { ContactDirect, type Slot } from "./components/SlotPicker";
 // StackingCards n'est plus monté du tout depuis le 2026-08-15 : les deux cartes
 // qui montaient l'une sur l'autre sont parties le 2026-08-14, et le bandeau de
 // formats (FileChipStrip) a suivi l'en-tête « Automatisez de bout en bout » le
@@ -496,7 +494,8 @@ cal-inline-widget .cal-loading {
   .cta-float { animation: none; }
 }
 `;
-import Cal from "@calcom/embed-react";
+import BookingFlow from "./components/booking/BookingFlow";
+import { BOOKING_ENABLED } from "./components/booking/bookingEnabled";
 import { Card } from "./components/ui/card";
 import Navigation from "./components/Navigation";
 import { OraFooter } from "./components/Footer";
@@ -542,7 +541,6 @@ const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
 import { useLang } from "./lib/i18n";
 import {
-  Clock,
   X,
   Zap,
   ArrowRight,
@@ -551,23 +549,21 @@ import {
   BarChart3,
 } from "lucide-react";
 
-// ← Replace with your Cal.com username/event-slug once your account is set up
-// Example: "raphael-gaugain/discovery-call"
-const CAL_LINK = "raphael-gaugain-cfjl0b/discovery-call";
+/* ══ CAL.COM EST PARTI (2026-09-07) ════════════════════════════════════════
+   Client : « est-ce que tu peux créer toi-même un système de calendrier relié
+   à mon adresse mail ». La prise de rendez-vous est désormais servie par nos
+   propres fonctions, `api/availability.ts` et `api/book.ts`, qui parlent à
+   l'agenda Infomaniak (CalDAV), créent la salle kMeet et envoient l'invitation.
+   Le compte Cal.com « raphael-gaugain-cfjl0b/discovery-call » n'est plus
+   appelé nulle part ; il reste ouvert le temps de vérifier le nouveau tunnel en
+   ligne, et sa dépendance `@calcom/embed-react` est retirée de package.json.
+   L'ancienne intégration est dans l'historique git à cette date. */
 
-/** Les DEUX temps de la fenêtre de réservation, pour le rail de gauche.
- *  Ils NOMMENT ce qui se passe, ils ne numérotent pas : « Étape 2 / 2 » ne dit
- *  rien de plus que la position, alors que « Vos coordonnées » dit ce qui est
- *  demandé à l'écran suivant.
- *  ⚠ Il y en avait TROIS jusqu'au 2026-08-19 (« Votre contexte », « Ce qu'on
- *  regarde », « Votre créneau ») : les deux premières nommaient le
- *  questionnaire et son récapitulatif, qui ont sauté. Un rail de deux entrées
- *  est à la limite de l'utile ; il est gardé parce qu'il annonce qu'un
- *  formulaire attend après le clic sur l'heure, ce qui, sans lui, surprend. */
-const BOOKING_STEPS = [
-  { fr: "Votre créneau", en: "Your slot" },
-  { fr: "Vos coordonnées", en: "Your details" },
-];
+/* ══ BOOKING_STEPS A ÉTÉ RETIRÉ (2026-09-05) ═══════════════════════════════
+   Le rail de gauche numérotait « Votre créneau » puis « Vos coordonnées », soit
+   les deux écrans de la fenêtre. Avec le retrait du pré-sélecteur il n'en reste
+   qu'un, et les deux temps qui subsistent se jouent DANS l'embed Cal, qui porte
+   sa propre progression. Voir le pavé du retrait, dans le composant. */
 
 // Adresse affichée en alternative au calendrier. Passée à la boîte générique le
 // 2026-08-03 sur demande du client : c'est celle qu'il relève, et elle est déjà
@@ -897,8 +893,6 @@ const App = () => {
   }, []);
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [bookingReady, setBookingReady] = useState(false);
-  const [bookingFading, setBookingFading] = useState(false);
   // ── LE PARCOURS N'A PLUS QUE DEUX TEMPS (client 2026-08-19) ──────────────
   //  - "slots"    : la grille de créneaux, quatre par jour, un jour sur deux
   //  - "calendar" : l'embed Cal.com, ouvert SUR le jour choisi, qui confirme
@@ -906,9 +900,6 @@ const App = () => {
   // "gift" (déjà court-circuitée depuis des semaines) puis "calendar". Les
   // trois écrans supprimés demandaient six clics avant de montrer la moindre
   // disponibilité, sur le seul chemin de conversion du site.
-  type BookingPhase = "slots" | "calendar";
-  const [bookingPhase, setBookingPhase] = useState<BookingPhase>("slots");
-  const [bookingSlot, setBookingSlot] = useState<Slot | null>(null);
 
   /* ── LA MODALE EST UN VRAI DIALOGUE (audit du 2026-08-15) ─────────────────
      Elle n'en avait AUCUN des comportements attendus, et c'est le seul chemin
@@ -983,51 +974,30 @@ const App = () => {
     // L'élément actif AU MOMENT DU CLIC, avant que React ne rende la fenêtre.
     bookingOpenerRef.current = document.activeElement as HTMLElement | null;
     setIsBookingOpen(true);
-    // Reset funnel state so each opening starts fresh
-    setBookingPhase("slots");
-    setBookingSlot(null);
-    setBookingReady(false);
-    setBookingFading(false);
+    /* ⚠ PLUS DE MINUTERIE D'OUVERTURE (2026-09-07). Elle armait un écran de
+       chargement de 650 ms pour couvrir le montage de l'iframe Cal, qui partait
+       sur un rectangle blanc. BookingFlow appelle notre propre service et porte
+       son état d'attente lui-même : une temporisation en dur ne ferait plus que
+       retarder l'affichage. */
   };
 
-  /* Une heure cliquée dans la grille → l'embed Cal.com, ouvert sur ce jour-là.
-     L'écran de chargement est RACCOURCI de 900 ms à 350 ms : il séparait deux
-     écrans de lecture (récap puis calendrier) et laissait le temps de souffler,
-     alors qu'il s'intercale maintenant entre un clic et sa conséquence directe.
-     Une seconde et demie d'attente après un clic sur « 09:30 » se lit comme une
-     panne, pas comme une transition. */
-  const handlePickSlot = (slot: Slot) => {
-    setBookingSlot(slot);
-    setBookingPhase("calendar");
-    setBookingReady(false);
-    setBookingFading(false);
-    setTimeout(() => {
-      setBookingFading(true);
-      setTimeout(() => setBookingReady(true), 300);
-    }, 350);
-  };
-
-  // Retour à la grille depuis le calendrier. Il n'y a plus de flèche « précédent »
-  // dans la colonne de droite (elle appartenait au questionnaire) : c'est le
-  // créneau rappelé au-dessus de l'embed qui porte le retour.
-  const handleSlotBack = () => {
-    setBookingPhase("slots");
-    setBookingSlot(null);
-  };
-
-  /* La note passée à Cal.com. Elle ne porte plus le contexte métier (il n'est
-     plus demandé) mais LE CRÉNEAU CHOISI ICI, et c'est le point important :
-     l'embed Cal ne peut être ouvert que sur un JOUR, pas sur une heure précise
-     (sa config accepte `date` et `month`, pas d'horaire). Écrire l'heure dans
-     les notes est ce qui permet de rattraper un visiteur qui, arrivé dans Cal,
-     cliquerait une autre heure que celle qu'il vient de choisir. */
-  const bookingNotes = bookingSlot
-    ? lang === "fr"
-      ? `Créneau choisi sur le site : ${bookingSlot.dayLabel} à ${bookingSlot.time}`
-      : `Slot picked on the website: ${bookingSlot.dayLabel} at ${bookingSlot.time}`
-    : "";
-
-
+  /* ══ LE PRÉ-SÉLECTEUR DE CRÉNEAU A ÉTÉ RETIRÉ (2026-09-05) ═══════════════
+     Client : « ça ne va pas car après on a cal.com qui nous affiche cela, pas
+     cohérent ».
+     Le tunnel avait DEUX calendriers à la suite : le nôtre, dont la
+     disponibilité était fabriquée (SlotPicker.buildOpenDays tirait l'ouverture
+     d'un jour d'un hash de sa date), puis celui de Cal.com, réel. Ils ne
+     pouvaient que se contredire. Pire, le visiteur choisissait son horaire
+     DEUX FOIS : l'embed Cal n'accepte qu'une date, pas une heure, donc l'heure
+     déjà cliquée ne partait que dans les notes et Cal la redemandait.
+     La fenêtre n'a donc plus qu'un seul écran, l'embed. Sont partis avec le
+     pré-sélecteur : `bookingPhase`, `bookingSlot`, `handlePickSlot`,
+     `handleSlotBack`, `bookingNotes`, la barre de rappel du créneau et le rail
+     d'étapes BOOKING_STEPS, qui n'avait plus que deux entrées pour un seul
+     écran. Tout est dans l'historique git à cette date.
+     ⚠ NE PAS REMETTRE DE CALENDRIER MAISON DEVANT L'EMBED sans brancher la
+     vraie disponibilité par l'API Cal : c'est la contradiction qu'on vient de
+     retirer. */
 
   const [page, setPage] = useState<Page>(() => getPageFromPath(window.location.pathname));
   const [notFoundKey, setNotFoundKey] = useState(0);
@@ -1689,7 +1659,7 @@ const App = () => {
       {/* Booking modal — portal, visible on all pages */}
       {isBookingOpen && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-start md:items-center justify-center bg-black/40 backdrop-blur-xl px-4 max-md:py-6 max-md:overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/40 backdrop-blur-xl md:items-center md:px-4 md:py-6"
           onClick={(e) => { if (e.target === e.currentTarget) setIsBookingOpen(false); }}
         >
           {/* `role="dialog"` + `aria-modal` + `aria-labelledby` : sans eux, un
@@ -1702,9 +1672,9 @@ const App = () => {
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-title"
-            className="relative w-full max-w-3xl"
+            className="relative h-[100dvh] w-full md:h-auto md:max-w-3xl"
           >
-            <Card className="relative overflow-hidden border-0 shadow-2xl rounded-[28px] bg-white dark:bg-black md:dark:bg-black">
+            <Card className="relative flex h-full flex-col overflow-hidden rounded-none border-0 bg-white shadow-2xl dark:bg-black md:h-auto md:block md:rounded-[28px] md:dark:bg-black">
               {/* Close button */}
               <button
                 type="button"
@@ -1715,7 +1685,19 @@ const App = () => {
                 <X className="w-4 h-4" aria-hidden />
               </button>
 
-              <div className="grid grid-cols-1 md:grid-cols-5">
+              {/* ══ SUR TÉLÉPHONE, LA FENÊTRE EST UNE FEUILLE PLEINE HAUTEUR
+                  (2026-09-07) ═══════════════════════════════════════════════
+                  Elle flottait au milieu de l'écran, avec l'en-tête de gauche
+                  empilé au-dessus de l'embed Cal borné à `max-h-[68vh]`.
+                  Mesuré sur un écran de 667 px : 190 px d'en-tête, 454 px pour
+                  un calendrier qui en demande 1 244, soit un défilement dans un
+                  défilement pour atteindre la liste des créneaux — sur le seul
+                  écran du site qui doit convertir.
+                  La feuille prend donc toute la hauteur, l'en-tête se compacte,
+                  et TOUT le reste va au calendrier. `min-h-0` sur les deux
+                  boîtes : sans lui, un enfant flex refuse de descendre sous sa
+                  hauteur de contenu et la feuille déborde au lieu de défiler. */}
+              <div className="flex min-h-0 flex-1 flex-col md:grid md:min-h-0 md:flex-none md:grid-cols-5">
                 {/* ══ LA COLONNE DE GAUCHE, REFAITE LE 2026-08-15 ═══════════
                     Client : « la partie appel est un peu bullshit et pas au
                     niveau design de ce que l'on fait ». Deux choses sautent.
@@ -1739,18 +1721,16 @@ const App = () => {
                        pastilles n'en faisaient aucun.
                     Le « 30 min, gratuit, sans engagement » n'est pas perdu : il
                     passe en pied de colonne, en petit, une fois. */}
-                <div className="md:col-span-2 flex flex-col justify-between overflow-hidden rounded-t-[26px] border-b border-[#0a2540]/[0.08] bg-[#fcfbf7] p-6 dark:border-white/10 dark:bg-[#111827] md:min-h-0 md:rounded-l-[26px] md:rounded-tr-none md:border-b-0 md:border-r md:p-8">
+                <div className="flex shrink-0 flex-col justify-between overflow-hidden border-b border-[#0a2540]/[0.08] bg-[#fcfbf7] px-5 py-4 dark:border-white/10 dark:bg-[#111827] md:col-span-2 md:min-h-0 md:rounded-l-[26px] md:border-b-0 md:border-r md:p-8">
                   <div>
-                    <img src="/logos/logo-color-dark.png" alt="Ora" className="h-7 w-auto dark:hidden" />
-                    <img src="/logos/logo-color-light.png" alt="Ora" className="hidden h-7 w-auto dark:block" />
+                    <img src="/logos/logo-color-dark.png" alt="Ora" className="h-6 w-auto dark:hidden md:h-7" />
+                    <img src="/logos/logo-color-light.png" alt="Ora" className="hidden h-6 w-auto dark:block md:h-7" />
 
                     {/* Titre en Instrument Sans, comme tous les grands titres du
                         site depuis le 2026-08-12. Le Poppins semi-gras d'avant
                         appartenait à une autre génération de la page. */}
-                    <h3 id="booking-title" className="mt-6 font-instrument text-[1.5rem] font-normal leading-[1.14] tracking-[-0.025em] text-[#111827] dark:text-white md:text-[1.7rem]">
-                      {bookingPhase === "slots"
-                        ? t({ fr: "Réservez un créneau.", en: "Book a slot." })
-                        : t({ fr: "Confirmez votre créneau.", en: "Confirm your slot." })}
+                    <h3 id="booking-title" className="mt-3 font-instrument text-[1.35rem] font-normal leading-[1.14] tracking-[-0.025em] text-[#111827] dark:text-white md:mt-6 md:text-[1.7rem]">
+                      {t({ fr: "Réservez un créneau.", en: "Book a slot." })}
                     </h3>
                     {/* ⚠ PAS DE PROMESSE ICI, et c'est délibéré (client
                         2026-08-19 : « beaucoup plus straight to the point »).
@@ -1759,147 +1739,69 @@ const App = () => {
                         — alors que le visiteur qui a ouvert cette fenêtre est
                         déjà convaincu : il cherche une heure, pas un argument.
                         Ne reste que ce qui l'aide à choisir, la durée. */}
-                    <p className="mt-3 font-inter text-[13.5px] leading-relaxed text-[#5b6577] dark:text-gray-400">
-                      {bookingPhase === "slots"
+                    {/* ⚠ CETTE PHRASE SUIT L'INTERRUPTEUR. Réservation fermée,
+                        « choisissez une heure, c'est tout » se lisait à trois
+                        centimètres d'un panneau disant que justement, non : les
+                        deux moitiés de la fenêtre se contredisaient. */}
+                    <p className="mt-1.5 font-inter text-[13px] leading-relaxed text-[#5b6577] dark:text-gray-400 md:mt-3 md:text-[13.5px]">
+                      {BOOKING_ENABLED
                         ? t({
                             fr: "Choisissez une heure, c'est tout. 30 minutes en visio.",
                             en: "Pick a time, that's it. 30 minutes over video.",
                           })
                         : t({
-                            fr: "Dernière étape : votre nom et votre e-mail.",
-                            en: "Last step: your name and your email.",
+                            fr: "Dites-nous vos disponibilités, on vous confirme un créneau sous 24 h ouvrées.",
+                            en: "Tell us when you are free and we will confirm a slot within one business day.",
                           })}
                     </p>
                   </div>
 
-                  {/* LE RAIL D'ÉTAPES. Trois entrées, jamais cliquables : c'est
-                      un repère, pas une navigation — revenir en arrière se fait
-                      par la flèche de la colonne de droite, qui, elle, sait
-                      quel état rétablir. Le filet vertical porte le repère bleu,
-                      exactement comme dans AutomationTabs. */}
+                  {/* ⚠ LE RAIL D'ÉTAPES A ÉTÉ RETIRÉ (2026-09-05), avec le
+                      pré-sélecteur qu'il numérotait. Il disait « Votre créneau »
+                      puis « Vos coordonnées » : deux entrées pour deux écrans à
+                      nous. Il n'y en a plus qu'un, et les deux temps qui restent
+                      (choisir l'heure, se présenter) se jouent DANS l'embed Cal,
+                      qui porte déjà sa propre progression. Un rail figé sur la
+                      première entrée aurait menti sur l'avancement.
+                      La mention de réassurance, elle, reste : elle ne numérotait
+                      rien. */}
                   <div className="relative mt-8 hidden md:block">
-                    <span aria-hidden className="absolute inset-y-0 left-0 w-px bg-[#0a2540]/[0.10] dark:bg-white/10" />
-                    <ul className="space-y-4">
-                      {BOOKING_STEPS.map((st, i) => {
-                        const idx = bookingPhase === "slots" ? 0 : 1;
-                        const on = i === idx;
-                        const done = i < idx;
-                        return (
-                          <li key={st.en} className="relative pl-4">
-                            {on && (
-                              <span aria-hidden className="absolute left-0 top-0 h-full w-[2px] bg-[#3b82f6]" />
-                            )}
-                            <span
-                              className={`block font-inter text-[13.5px] leading-tight transition-colors duration-200 ${
-                                on
-                                  ? "font-semibold text-[#111827] dark:text-white"
-                                  : done
-                                    ? "font-medium text-[#8b95a7] dark:text-gray-400"
-                                    : "font-medium text-[#7a8496] dark:text-white/25"
-                              }`}
-                            >
-                              {t(st)}
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
                     <p className="mt-8 font-inter text-[11.5px] text-[#6b7688] dark:text-gray-500">
                       {t({ fr: "30 min, gratuit, sans engagement.", en: "30 min, free, no commitment." })}
                     </p>
                   </div>
                 </div>
 
-                {/* RIGHT — 2 phases: slots → calendar */}
-                <div className="md:col-span-3 relative">
-                  {bookingPhase === "slots" && <SlotPicker onPick={handlePickSlot} />}
+                {/* ══ RIGHT — LA PRISE DE RENDEZ-VOUS, CHEZ NOUS ═══════════
+                    L'embed Cal.com est parti le 2026-09-07 (client : « crée
+                    toi-même un système de calendrier relié à mon adresse »).
+                    Ce qui le remplace lit l'agenda Infomaniak en CalDAV, écrit
+                    l'événement, crée la salle kMeet et envoie l'invitation :
+                    voir `api/availability.ts`, `api/book.ts` et le pavé
+                    d'en-tête de BookingFlow.tsx.
 
-                  {bookingPhase === "calendar" && (
-                    <>
-                      {/* Short loading transition between result and calendar */}
-                      {!bookingReady && (
-                        <div className={`absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-black md:dark:bg-black ${bookingFading ? "booking-loading-screen fade-out" : ""}`}>
-                          <OraLogoSpinner gradientId="g-booking" size={64} />
-                          <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
-                            {t({ fr: "Préparation de votre créneau...", en: "Preparing your slot..." })}
-                          </p>
-                        </div>
-                      )}
+                    ⚠ CE N'EST PAS UN RETOUR DU SÉLECTEUR RETIRÉ LE 2026-09-05.
+                    Celui-là fabriquait ses horaires et contredisait l'embed
+                    posé juste après. Ici il n'y a plus d'embed derrière, et
+                    aucun créneau n'est inventé : quand l'agenda ne répond pas,
+                    l'écran le dit et ne propose rien.
 
-                      <div
-                        className={`p-2 md:p-3 overflow-y-auto transition-opacity duration-500 max-h-[68vh] md:max-h-[80vh] ${bookingReady ? "opacity-100" : "opacity-0"}`}
-                      >
-                        {/* LE CRÉNEAU CHOISI, RAPPELÉ ET REPRENABLE. Sans cette
-                            barre, le visiteur passe d'une grille où il vient de
-                            cliquer « 09:30 » à un calendrier Cal.com qui affiche
-                            son propre mois : rien ne lui confirme que son choix
-                            a été retenu, et rien ne lui permet d'en changer sans
-                            fermer la fenêtre. C'est aussi le seul retour arrière
-                            du parcours depuis que la flèche du questionnaire est
-                            partie. */}
-                        {bookingSlot && (
-                          <div className="mb-2 flex items-center justify-between gap-3 rounded-[10px] border border-[#0a2540]/[0.10] bg-[#fcfbf7] px-3.5 py-2.5 dark:border-white/10 dark:bg-white/[0.04]">
-                            <p className="font-inter text-[13px] leading-tight text-[#42506b] dark:text-gray-300">
-                              <span className="font-semibold text-[#111827] first-letter:uppercase dark:text-white">
-                                {bookingSlot.dayLabel}
-                              </span>{" "}
-                              {t({ fr: "à", en: "at" })} {bookingSlot.time}
-                            </p>
-                            <button
-                              type="button"
-                              onClick={handleSlotBack}
-                              className="shrink-0 font-inter text-[13px] font-semibold text-[#3b82f6] transition-colors duration-150 hover:text-[#2563eb]"
-                            >
-                              {t({ fr: "Changer", en: "Change" })}
-                            </button>
-                          </div>
-                        )}
-
-                        {CAL_LINK ? (
-                          <Cal
-                            calLink={CAL_LINK}
-                            style={{ width: "100%", height: "100%", overflow: "auto" }}
-                            config={{
-                              layout: "month_view" as const,
-                              theme: theme === "dark" ? "dark" : "light",
-                              lang: lang,
-                              // ⚠ `date` + `month` OUVRENT CAL SUR LE JOUR CHOISI.
-                              // L'embed n'accepte pas d'horaire, seulement une
-                              // journée : l'heure exacte part dans `notes`
-                              // (voir bookingNotes). Sans ces deux clés, Cal
-                              // rouvrirait sur le mois courant et le clic que le
-                              // visiteur vient de faire dans la grille ne
-                              // servirait à rien.
-                              ...(bookingSlot
-                                ? { date: bookingSlot.iso, month: bookingSlot.iso.slice(0, 7) }
-                                : {}),
-                              notes: bookingNotes,
-                            }}
-                          />
-                        ) : (
-                          <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-6">
-                            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center mb-4">
-                              <Clock className="w-7 h-7 text-blue-500" />
-                            </div>
-                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {t({ fr: "Réservation bientôt disponible", en: "Booking coming soon" })}
-                            </h4>
-                            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-xs">
-                              {t({
-                                fr: "Notre système de prise de rendez-vous est en cours de configuration.",
-                                en: "Our scheduling system is being set up right now.",
-                              })}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Le même bouton qu'à l'étape du choix, pour qui
-                            arrive ici et change d'avis. Composant partagé :
-                            deux copies auraient divergé au premier mot. */}
-                        <ContactDirect />
-                      </div>
-                    </>
-                  )}
+                    ⚠ IL N'Y A PLUS D'ÉCRAN DE CHARGEMENT ICI. `bookingReady` /
+                    `bookingFading` servaient à masquer le montage de l'iframe
+                    Cal, qui prenait deux bonnes secondes ; notre appel rend en
+                    quelques dizaines de millisecondes et porte son propre état
+                    d'attente. Les deux états et leur minuterie sont donc partis
+                    avec l'embed. */}
+                <div className="relative flex min-h-0 flex-1 flex-col md:col-span-3 md:block md:flex-none">
+                  <div className="min-h-0 flex-1 overflow-y-auto md:max-h-[80vh] md:flex-none">
+                    {/* ⚠ `ContactDirect` (« aucune date ne me convient ») EST
+                        MONTÉ PAR BookingFlow, plus par cette fenêtre. Il n'a de
+                        sens que tant qu'on cherche une date : posé ici, il
+                        restait affiché sous l'écran de confirmation, à proposer
+                        d'écrire à quelqu'un avec qui on vient de prendre
+                        rendez-vous. */}
+                    <BookingFlow onClose={() => setIsBookingOpen(false)} />
+                  </div>
                 </div>
               </div>
             </Card>
