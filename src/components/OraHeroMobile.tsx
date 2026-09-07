@@ -50,20 +50,26 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
   const { t } = useLang();
 
   return (
-    <div className="relative px-6 pb-14 pt-12">
-      {/* ── 1. LA PROMESSE ─────────────────────────────────────────────── */}
-      <motion.div {...rise(0)} className="text-center">
-        <span className="inline-flex items-center gap-2 font-instrument font-medium text-[14px] tracking-[-0.01em]">
-          <img
-            src="/logos/icon-color.png"
-            alt=""
-            aria-hidden
-            className="h-[1.2em] w-auto select-none"
-            draggable={false}
-          />
-          <span className="text-brand-gradient">
-            {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
-          </span>
+    <div className="relative px-6 pb-14">
+      {/* ── 1. LA PROMESSE, CENTRÉE DANS L'ÉCRAN ─────────────────────────────
+             `min-h-svh` et centrage vertical, comme la référence : chez elle le
+             titre est au milieu de l'écran, pas posé sous la barre. Ici il
+             commençait 48 px sous le haut de page — et comme l'en-tête est
+             FIXE et haut de 68 px, la pastille de marque passait dessous, à
+             hauteur du logo : deux logos sur la même ligne, ce que le client a
+             relevé (« this double logo... is not good »).
+             Le retrait haut vaut donc la hauteur de l'en-tête, et `svh` plutôt
+             que `vh` : sur téléphone, `vh` compte la barre d'URL rétractée, ce
+             qui pousse le second bouton hors de l'écran tant qu'elle est là. */}
+      <motion.div
+        {...rise(0)}
+        className="flex min-h-svh flex-col justify-center pb-10 pt-[68px] text-center"
+      >
+        {/* SANS LA MARQUE EN IMAGE : l'en-tête porte déjà le logo, dix pixels
+            plus haut. Les deux se lisaient comme un doublon, et la pastille
+            n'a pas besoin de le répéter pour dire ce qu'elle dit. */}
+        <span className="font-instrument text-[14px] font-medium uppercase tracking-[0.14em] text-brand-gradient">
+          {t({ fr: "Ora Solution en action", en: "Ora Solution in action" })}
         </span>
 
         {/* Same face as the desktop hero (Instrument Sans, documented
@@ -80,7 +86,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
             borne fluide reste à 9,6vw : à 10,4 la première ligne venait mourir
             sur le bord droit, ce qui se lit comme un débordement même quand
             rien ne dépasse (mesuré : aucun, de 320 à 430 px). */}
-        <h1 className="antialiased mt-5 font-instrument font-normal text-[clamp(2.1rem,9.6vw,3.1rem)] leading-[1.04] tracking-[-0.038em] text-[#111827] dark:text-white">
+        <h1 className="antialiased mt-6 font-instrument font-normal text-[clamp(2.1rem,9.6vw,3.1rem)] leading-[1.04] tracking-[-0.038em] text-[#111827] dark:text-white">
           {/* Seconde ligne en dégradé de marque (client 2026-08-11 : « repasse
               cela en bleu »), au mot et au traitement près comme le hero
               desktop, sinon mobile et desktop ne montrent plus le même
@@ -111,11 +117,25 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
             ⚠ L'APPEL MÈNE À LA RÉSERVATION depuis le 2026-08-26 : le lien vers
             la web app est retiré du site (voir le pavé d'OraHeroDemo). Les deux
             heros portent le même. */}
-        <div className="mt-8 flex flex-col items-center gap-4">
+        {/* ⚠ DEUX BOUTONS DE MÊME TAILLE, ET C'EST LA DEMANDE (client
+            2026-09-07, capture à l'appui : « they have two buttons that are
+            exactly the same size, which I'd like you to copy »). Même largeur,
+            même hauteur, même rayon : ce qui les sépare est la SURFACE — encre
+            pleine pour l'appel qui engage, surface blanche cerclée pour la
+            sortie de secours de qui n'est pas prêt à parler à quelqu'un.
+            Cela revient sur le bouton à largeur propre posé plus tôt le même
+            jour, quand la consigne était l'inverse : le pleine largeur était
+            « trop gros » dans un hero à sept groupes. Il ne l'est plus dans un
+            hero qui n'en porte que quatre, et c'est cette forme-là que la
+            référence utilise.
+            Le rayon reste celui d'Ora, `rounded-full` : la référence a des
+            coins presque droits, mais tous les appels du site sont ronds, en-tête
+            compris. Copier son rayon romprait avec le reste des pages. */}
+        <div className="mt-9 flex flex-col gap-3">
           <button
             type="button"
             onClick={openBooking}
-            className="inline-flex h-[54px] items-center justify-center gap-2 rounded-full bg-[#3b82f6] px-7 font-inter text-[16px] font-semibold text-white shadow-[0_16px_34px_-14px_rgba(59,130,246,0.75)] transition-transform duration-150 active:scale-[0.98] active:bg-[#2563eb]"
+            className="inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[#3b82f6] font-inter text-[16.5px] font-semibold text-white shadow-[0_16px_34px_-14px_rgba(59,130,246,0.75)] transition-transform duration-150 active:scale-[0.98] active:bg-[#2563eb]"
           >
             {t({ fr: "Réserver un appel", en: "Book a call" })}
             <ArrowRight className="h-[18px] w-[18px]" />
@@ -123,11 +143,9 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           <button
             type="button"
             onClick={() => animatedScrollToId("automatisations", -70)}
-            className="inline-flex items-center gap-2 font-inter text-[15px] font-medium text-[#4b5563] dark:text-gray-400"
+            className="inline-flex h-[56px] w-full items-center justify-center gap-2.5 rounded-full bg-white font-inter text-[16.5px] font-semibold text-[#111827] ring-1 ring-inset ring-[#0a2540]/[0.14] transition-transform duration-150 active:scale-[0.98] active:bg-[#f7f8fa] dark:bg-white/[0.06] dark:text-white dark:ring-white/15"
           >
-            <span className="grid h-[26px] w-[26px] place-items-center rounded-full bg-[#eef2fb] text-[#3b82f6] dark:bg-white/10">
-              <Play className="h-[11px] w-[11px] translate-x-[0.5px] fill-current" strokeWidth={0} />
-            </span>
+            <Play className="h-[13px] w-[13px] translate-x-[0.5px] fill-current text-[#3b82f6]" strokeWidth={0} />
             {t({ fr: "Voir le logiciel", en: "See the software" })}
           </button>
         </div>
@@ -143,7 +161,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
              la référence en met toujours plus qu'on ne croit. */}
       <motion.div
         {...rise(0.08)}
-        className="mt-12 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
+        className="mt-4 overflow-hidden rounded-[20px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)] dark:ring-white/10"
       >
         <div className="aspect-[1180/720] w-full">
           <OraAppScene />
@@ -183,7 +201,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
       <motion.button
         {...rise(0.2)}
         onClick={openBooking}
-        className="mt-10 inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#111827] font-inter text-[16px] font-semibold text-white transition-transform duration-150 active:scale-[0.99] active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
+        className="mt-10 inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[#111827] font-inter text-[16.5px] font-semibold text-white transition-transform duration-150 active:scale-[0.99] active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
       >
         {t({ fr: "Réserver un appel", en: "Book a call" })}
         <ArrowRight className="h-[18px] w-[18px]" />
