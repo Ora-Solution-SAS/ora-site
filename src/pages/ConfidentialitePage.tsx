@@ -20,6 +20,7 @@ import {
   HardDrive,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA_MINE } from "@/lib/bookingCta";
 
 type Page =
   | "home"
@@ -434,7 +435,7 @@ const ConfidentialitePage: React.FC<Props> = ({ theme, openBooking }) => {
                 onClick={openBooking}
                 className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold font-inter text-white bg-gradient-to-r from-[#3b82f6] to-[#0d9488] shadow-[0_2px_12px_rgba(59,130,246,0.30)] hover:shadow-[0_4px_24px_rgba(59,130,246,0.42)] hover:-translate-y-px transition-all duration-150"
               >
-                {t({ fr: "Réserver mon appel", en: "Book my call" })}
+                {t(BOOKING_CTA_MINE)}
                 <ArrowRight className="w-4 h-4 opacity-80 group-hover:translate-x-[3px] transition-transform duration-150" />
               </button>
               <p className="mt-3 font-inter text-[12px] text-gray-400">{t({ fr: "Gratuit · Sans engagement", en: "Free · No commitment" })}</p>

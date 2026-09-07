@@ -3,6 +3,7 @@ import {
   ArrowRight, BarChart3, Bell, Check, ChevronRight, FileText, Globe, Plus, Sparkles,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * OraHeroMobile — the hero for phones (< 768px), rendered instead of the
@@ -156,7 +157,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
           onClick={openBooking}
           className="mt-6 inline-flex h-[52px] w-full items-center justify-center gap-2.5 rounded-full bg-[#3b82f6] px-8 font-inter text-[16.5px] font-semibold text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] active:bg-[#2563eb]"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="h-[18px] w-[18px]" />
         </button>
 
@@ -349,7 +350,7 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
         onClick={openBooking}
         className="mt-9 inline-flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#111827] px-8 font-inter font-semibold text-[16.5px] text-white active:bg-[#0b1220] dark:bg-white dark:text-[#111827]"
       >
-        {t({ fr: "Réserver un appel", en: "Book a call" })}
+        {t(BOOKING_CTA)}
         <ArrowRight className="h-[18px] w-[18px]" />
       </motion.button>
     </div>

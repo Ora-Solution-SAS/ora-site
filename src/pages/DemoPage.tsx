@@ -280,8 +280,11 @@ export default function DemoPage({ theme, openBooking, onNavigate }: Props) {
     } catch (err) {
       if (err instanceof DemoApiError && err.code === "no_credits") {
         setClaimError(t({
-          fr: "Cette adresse a épuisé ses 5 fichiers offerts. Réservez une démo pour aller plus loin.",
-          en: "This address has used its 5 free files. Book a demo to go further.",
+          /* ⚠ « Écrivez-nous » et non « réservez une démo » (2026-09-07) : la
+             prise de rendez-vous en ligne est fermée, ce message renvoyait vers
+             un geste que le site ne propose plus. */
+          fr: "Cette adresse a épuisé ses 5 fichiers offerts. Écrivez-nous pour aller plus loin.",
+          en: "This address has used its 5 free files. Write to us to go further.",
         }));
       } else {
         setClaimError(t({

@@ -22,6 +22,7 @@ import { useEffect, useState } from "react";
 import { useLang } from "../lib/i18n";
 import DownloadShowcase from "../components/DownloadShowcase";
 import DeliverablesShowcase from "../components/DeliverablesShowcase";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /* ──────────────────────────────────────────────────────────────────────────
    CONFIG — edit these when a new build ships
@@ -427,7 +428,7 @@ export default function DownloadPage({ theme, openBooking, onNavigate }: Props) 
               {t({ fr: "Écrire au support", en: "Email support" })}
             </a>
             <button type="button" onClick={openBooking} className={`${BTN_BASE} ${BTN_SOLID}`}>
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
             </button>
           </div>
 

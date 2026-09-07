@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Maximize2, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * OraHeroVideo — single-video black hero (temporary stand-in for the
@@ -134,7 +135,7 @@ export default function OraHeroVideo({ theme, openBooking }: OraHeroVideoProps) 
           transition={{ type: "spring", stiffness: 400, damping: 24, mass: 0.6 }}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_18px_55px_rgba(59,130,246,0.6)] transition-[background-color,box-shadow] duration-300 ease-out"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="w-5 h-5 transition-transform duration-300 ease-out group-hover:translate-x-1" />
         </motion.button>
       </motion.div>

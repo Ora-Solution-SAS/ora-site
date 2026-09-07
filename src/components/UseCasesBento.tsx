@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, RefreshCw, Scale, TrendingUp, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
 import FormatageMockup from "./FormatageMockup";
@@ -2253,7 +2254,7 @@ function CaseDetailOverlay({
                 }}
                 className="inline-flex items-center gap-2 rounded-[6px] bg-[#3b82f6] hover:bg-[#2563eb] px-6 py-3.5 font-inter font-semibold text-[15px] text-white transition-colors"
               >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
                 <ArrowRight className="h-4 w-4" />
               </button>
               {/* Libellé HONNÊTE : « Voir la démo » seulement quand un vrai

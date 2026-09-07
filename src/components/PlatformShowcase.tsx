@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import DownloadShowcase from "./DownloadShowcase";
 
 /**
@@ -206,7 +207,7 @@ export default function PlatformShowcase({ openBooking }: PlatformShowcaseProps)
              /telechargement/ora-app existe toujours et n'est simplement pas
              annoncée ici. La page /demo, elle, reste servie et joignable par
              lien direct — seuls les boutons qui y menaient sont retirés. */
-          cta={t({ fr: "Réserver un appel", en: "Book a call" })}
+          cta={t(BOOKING_CTA)}
           onCta={openBooking}
         >
           {/* UN SEUL panneau, celui que le client a nommé (« celui avec bilan

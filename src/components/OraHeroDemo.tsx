@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import OraAppScene, { OA_ASPECT } from "./OraAppScene";
 import InViewVideo from "./InViewVideo";
 import OraHeroMobile from "./OraHeroMobile";
@@ -2215,7 +2216,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
               onClick={openBooking}
               className="group inline-flex shrink-0 items-center gap-2.5 rounded-full bg-[#3b82f6] px-9 py-4 font-instrument text-[17px] font-medium text-white shadow-[0_14px_32px_-12px_rgba(59,130,246,0.6)] transition-colors duration-200 hover:bg-[#2563eb]"
             >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="h-[18px] w-[18px] transition-transform duration-200 group-hover:translate-x-0.5" />
             </button>
             {/* ══ LA RANGÉE DE PREUVE ═════════════════════════════════════════
@@ -3387,7 +3388,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           transition={{ type: "spring", stiffness: 400, damping: 24, mass: 0.6 }}
           className="group inline-flex items-center gap-3 px-12 py-6 rounded-full text-lg md:text-xl font-inter font-semibold text-white bg-[#3b82f6] hover:bg-[#2563eb] shadow-[0_8px_30px_rgba(59,130,246,0.4)] hover:shadow-[0_18px_55px_rgba(59,130,246,0.6)] transition-[background-color,box-shadow] duration-300 ease-out"
         >
-          {t({ fr: "Réserver un appel", en: "Book a call" })}
+          {t(BOOKING_CTA)}
           <ArrowRight className="w-5 h-5 transition-transform duration-300 ease-out group-hover:translate-x-1" />
         </motion.button>
       </div>

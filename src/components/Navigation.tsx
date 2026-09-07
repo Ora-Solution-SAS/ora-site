@@ -12,6 +12,7 @@ import {
 import { MenuToggleIcon } from "@/components/ui/menu-toggle-icon";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
 
@@ -369,7 +370,7 @@ const Navigation: React.FC<NavigationProps> = ({
             onClick={onBookCall}
             className="hidden md:inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
           >
-            {t({ fr: "Réserver un appel", en: "Book a call" })}
+            {t(BOOKING_CTA)}
             <ArrowRight className="w-4 h-4" />
           </button>
 
@@ -433,7 +434,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 onClick={() => { setMobileOpen(false); onBookCall?.(); }}
                 className="w-full py-3 rounded-full text-[15px] font-medium text-white bg-[#3b82f6] hover:bg-[#2563eb] transition-colors duration-150"
               >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
               </button>
             </div>
           </div>

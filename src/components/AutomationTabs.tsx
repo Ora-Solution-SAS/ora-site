@@ -4,6 +4,7 @@ import { ArrowRight, Play } from "lucide-react";
 import { VideoWithScrubber } from "./InViewVideo";
 import OraAppScene from "./OraAppScene";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import { animatedScrollToId } from "@/lib/scrollTo";
 import { BilanShowcaseCard, StructureShowcaseCard, ValuationShowcaseCard } from "./ShowcaseCards";
 import Typewriter from "./Typewriter";
@@ -1056,7 +1057,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
           desc={ITEMS[zoom].rest}
           checks={ITEMS[zoom].examples}
           onBook={openBooking}
-          bookLabel={t({ fr: "Réserver un appel", en: "Book a call" })}
+          bookLabel={t(BOOKING_CTA)}
           seeLabel={
             ITEMS[zoom].media === "video"
               ? t({ fr: "Voir la démo", en: "Watch the demo" })
@@ -1110,7 +1111,7 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
             en: "A file goes in, the routines run one after another, the deliverable comes out. The same chain the modules below describe, filmed end to end.",
           })}
           onBook={openBooking}
-          bookLabel={t({ fr: "Réserver un appel", en: "Book a call" })}
+          bookLabel={t(BOOKING_CTA)}
           seeLabel={t({ fr: "Voir la démo", en: "Watch the demo" })}
           onClose={() => setDemo(false)}
         >

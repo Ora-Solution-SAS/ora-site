@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import AtlasSlideVisual, { type AtlasVisual } from "./AtlasSlideVisual";
 import Typewriter from "./Typewriter";
 import AtlasLiveAsk from "./AtlasLiveAsk";
@@ -1210,7 +1211,7 @@ export default function AtlasShowcase({ openBooking }: { openBooking: () => void
               onClick={openBooking}
               className="group mt-9 inline-flex items-center gap-2.5 rounded-full border border-white/25 px-5 py-2.5 font-inter text-[14px] font-semibold text-white transition-colors duration-150 hover:border-white/50 hover:bg-white/[0.06] md:mt-6"
             >
-              {t({ fr: "Réserver un appel", en: "Book a call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" />
             </button>
 
