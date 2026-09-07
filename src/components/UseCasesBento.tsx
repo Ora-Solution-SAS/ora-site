@@ -1025,6 +1025,77 @@ function ReplayPanels() {
     { date: "3 mars, 09:14", by: "Camille M." },
     { date: "12 juin, 17:02", by: "Camille M." },
   ];
+  const narrow = useIsNarrow();
+  const journal = [
+    "Camille M. lance l'automatisation",
+    "Contrôles passés, écarts documentés",
+    "Classeur produit, prêt à signer",
+  ];
+  /* Les mêmes étapes, dites en trois mots : sur une colonne de 292 px, les
+     phrases entières tombaient sur deux lignes chacune. */
+  const journalShort = ["Lancé par Camille M.", "Contrôles passés", "Prêt à signer"];
+
+  /* ── SUR TÉLÉPHONE, UN SEUL CADRE ET PAS DEUX ─────────────────────────────
+     Les deux panneaux empilés sont une composition de large : sur une colonne
+     de 292 px ils faisaient 433 px de haut, soit une carte deux fois plus haute
+     que large pour dire une chose simple (client 2026-09-07 : « way too long…
+     it needs to be smaller and way better looking »).
+     Ce qui coûtait cette hauteur n'est pas le contenu, c'est la COQUE DOUBLÉE :
+     deux fois un rembourrage de 18 px, deux ombres, deux liserés, et l'écart
+     entre les deux. Le contenu, lui, tient en un cadre — l'en-tête, les deux
+     exécutions, le verdict, puis le journal sous un filet.
+     Le `zoom: 0.7` tombe avec : il servait à faire tenir 420 px de maquette
+     dans une demi-colonne de bureau. Ici la carte a toute la largeur, et à 70 %
+     les libellés descendaient sous 9 px. */
+  if (narrow) {
+    return (
+      <div className="w-full rounded-[14px] bg-white p-3.5 ring-1 ring-[#0a2540]/[0.06] shadow-[0_14px_36px_-20px_rgba(10,37,64,0.4)]">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#e7effd]">
+            <RefreshCw className="h-[18px] w-[18px] text-[#3b82f6]" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-inter text-[14px] font-medium leading-tight text-[#0a2540]">Bilan développé</div>
+            <div className="font-inter text-[12px] text-[#6b85a3]">Nexio 2025, deux exécutions</div>
+          </div>
+        </div>
+
+        <div className="mt-2.5 space-y-1.5">
+          {runs.map((r) => (
+            <div
+              key={r.date}
+              className="flex items-center justify-between gap-3 rounded-[9px] bg-[#f6f9fe] px-3 py-2 ring-1 ring-[#0a2540]/[0.04]"
+            >
+              <span className="font-inter text-[12.5px] text-[#0a2540]">{r.date}</span>
+              <span className="font-mono text-[11.5px] tracking-tight text-[#6b85a3]">a7f3·9c21</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 ring-1 ring-emerald-500/20">
+          <Check className="h-[13px] w-[13px] text-emerald-600" strokeWidth={2.6} />
+          <span className="font-inter text-[12px] font-medium text-emerald-700">Résultat identique</span>
+        </div>
+
+        {/* Le journal garde sa place — c'est lui qui dit QUI a lancé et ce qui a
+            été contrôlé — mais en une ligne à séparateurs sous un filet, au lieu
+            de trois puces dans une seconde coque. Les trois étapes tiennent en
+            trois mots chacune : titre de rubrique, puces, interlignes et
+            rembourrage coûtaient plus que le texte lui-même. */}
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-[#0a2540]/[0.07] pt-2.5 font-inter text-[11.5px] leading-snug text-[#93a3b8]">
+          {journalShort.map((l, i) => (
+            <span key={l} className="flex items-center gap-2">
+              {l}
+              {i < journalShort.length - 1 && (
+                <span aria-hidden className="h-[3px] w-[3px] rounded-full bg-[#c8d3e0]" />
+              )}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative mx-auto w-[70%] space-y-3 md:space-y-3.5" style={{ zoom: 0.7 }}>
       <div className="rounded-[12px] bg-white p-[18px] md:p-5 ring-1 ring-[#0a2540]/[0.05] shadow-[0_12px_32px_-18px_rgba(10,37,64,0.4)]">
@@ -1061,11 +1132,7 @@ function ReplayPanels() {
       <div className="rounded-[12px] bg-white p-[18px] md:p-5 ring-1 ring-[#0a2540]/[0.05] shadow-[0_12px_32px_-18px_rgba(10,37,64,0.4)]">
         <div className="font-inter font-medium text-[13.5px] text-[#0a2540]">Journal d'exécution</div>
         <div className="mt-3 space-y-2.5">
-          {[
-            "Camille M. lance l'automatisation",
-            "Contrôles passés, écarts documentés",
-            "Classeur produit, prêt à signer",
-          ].map((l) => (
+          {journal.map((l) => (
             <div key={l} className="flex items-start gap-2.5">
               <span className="mt-[6px] h-[6px] w-[6px] shrink-0 rounded-full bg-[#3b82f6]" />
               <span className="font-inter text-[12.5px] leading-snug text-[#6b85a3]">{l}</span>

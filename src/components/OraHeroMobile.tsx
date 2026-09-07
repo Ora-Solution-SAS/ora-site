@@ -61,10 +61,19 @@ export default function OraHeroMobile({ openBooking }: { openBooking: () => void
              relevé (« this double logo... is not good »).
              Le retrait haut vaut donc la hauteur de l'en-tête, et `svh` plutôt
              que `vh` : sur téléphone, `vh` compte la barre d'URL rétractée, ce
-             qui pousse le second bouton hors de l'écran tant qu'elle est là. */}
+             qui pousse le second bouton hors de l'écran tant qu'elle est là.
+
+             ⚠ 76svh ET NON 100 (client 2026-09-07 : « too much gap between the
+             button… and the actual replication »). À pleine hauteur, le
+             centrage laissait 161 px de vide sous le second bouton, plus le
+             rembourrage : 217 px avant la réplique du logiciel, soit un quart
+             d'écran de rien. Le bloc reste centré — c'est ce qui met le titre au
+             milieu et non sous la barre — mais dans les trois quarts de
+             l'écran : l'écart tombe à une centaine de pixels, assez pour
+             respirer, trop peu pour qu'on croie la page finie. */}
       <motion.div
         {...rise(0)}
-        className="flex min-h-svh flex-col justify-center pb-10 pt-[68px] text-center"
+        className="flex min-h-[76svh] flex-col justify-center pb-6 pt-[68px] text-center"
       >
         {/* SANS LA MARQUE EN IMAGE : l'en-tête porte déjà le logo, dix pixels
             plus haut. Les deux se lisaient comme un doublon, et la pastille
