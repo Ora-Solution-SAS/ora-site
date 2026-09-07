@@ -3,7 +3,7 @@ import { ArrowRight, Play } from "lucide-react";
 import { VideoWithScrubber } from "./InViewVideo";
 import { useLang } from "@/lib/i18n";
 import { animatedScrollToId } from "@/lib/scrollTo";
-import { mailtoHref } from "@/lib/contact";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import OraAppScene from "./OraAppScene";
 
 /**
@@ -48,7 +48,7 @@ const rise = (delay: number) => ({
   transition: { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
 });
 
-export default function OraHeroMobile() {
+export default function OraHeroMobile({ openBooking }: { openBooking: () => void }) {
   const { t } = useLang();
 
   return (
@@ -143,21 +143,18 @@ export default function OraHeroMobile() {
             coins presque droits, mais tous les appels du site sont ronds, en-tête
             compris. Copier son rayon romprait avec le reste des pages. */}
         <div className="mt-9 flex flex-col gap-3">
-          {/* ⚠ ÉCRIRE, ET NON RÉSERVER (client 2026-09-07 : « replace book a
-              call by the possibility to send us an email »). Sur téléphone
-              seulement — ce composant n'est monté que sous `md`, le hero de
-              bureau garde sa réservation.
-              Un vrai `<a href="mailto:">` et non un bouton qui pose
-              `window.location` : le lien s'ouvre dans l'application de courrier
-              déjà configurée, il se copie, il s'annonce comme un lien aux
-              lecteurs d'écran, et il n'attend pas le chargement du JavaScript. */}
-          <a
-            href={mailtoHref(t({ fr: "Découvrir Ora", en: "Discovering Ora" }))}
+          {/* Le libellé vient de bookingCta.ts et le geste d'openBooking : tant
+              que la réservation est fermée, le second ouvre le brouillon de
+              courriel, et `VITE_BOOKING_ENABLED=true` rebranche les deux d'un
+              coup. Un `mailto:` écrit ici court-circuiterait cet interrupteur. */}
+          <button
+            type="button"
+            onClick={openBooking}
             className="inline-flex h-[56px] w-full items-center justify-center gap-2 rounded-full bg-[#3b82f6] font-inter text-[16.5px] font-semibold text-white shadow-[0_16px_34px_-14px_rgba(59,130,246,0.75)] transition-transform duration-150 active:scale-[0.98] active:bg-[#2563eb]"
           >
-            {t({ fr: "Nous écrire", en: "Email us" })}
+            {t(BOOKING_CTA)}
             <ArrowRight className="h-[18px] w-[18px]" />
-          </a>
+          </button>
           <button
             type="button"
             onClick={() => animatedScrollToId("automatisations", -70)}

@@ -18,8 +18,7 @@ import {
   Star, CheckCircle, Clock, RefreshCcw,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { useIsNarrow } from "@/lib/useIsNarrow";
-import { bookingCtaLabel } from "@/lib/contact";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /* ── CSS local ───────────────────────────────────────────────────── */
 const pageCSS = `
@@ -324,7 +323,6 @@ interface SolutionTemplatePageProps {
 ════════════════════════════════════════════════════════════════════ */
 export default function SolutionTemplatePage({ theme, openBooking }: SolutionTemplatePageProps) {
   const { t } = useLang();
-  const narrow = useIsNarrow();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
 
@@ -545,7 +543,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                     "hover:shadow-[0_1px_3px_rgba(0,0,0,0.10),0_10px_32px_rgba(37,99,235,0.44)]",
                   ].join(" ")}
                 >
-                  {bookingCtaLabel(narrow, t, { fr: "Réserver un appel découverte", en: "Book a discovery call" })}
+                  {t(BOOKING_CTA)}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:translate-x-[3px] transition-all duration-150" />
                 </button>
               </div>
@@ -771,7 +769,7 @@ export default function SolutionTemplatePage({ theme, openBooking }: SolutionTem
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.42)]",
               ].join(" ")}
             >
-              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel gratuit", en: "Book a free call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
 

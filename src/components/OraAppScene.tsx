@@ -133,7 +133,10 @@ const OA_CSS = `
   font-size:10px;font-weight:700;display:inline-grid;place-items:center}
 .oa-avatar{width:32px;height:32px;border-radius:50%;background:#2f6ff0;color:#fff;display:grid;
   place-items:center;font-size:13px;font-weight:700}
-.oa-scroll{flex:1;min-height:0;padding:26px 30px 0;overflow:hidden}
+/* Rembourrage haut passe de 26 a 40 et l'entete de grille de 20 a 26 : la
+   rangee bleue retiree rendait ~110 px, la fenetre les redistribue au lieu de
+   laisser un trou en pied. Les tuiles gagnent aussi un rang d'interligne. */
+.oa-scroll{flex:1;min-height:0;padding:40px 30px 0;overflow:hidden}
 .oa-hello{font-size:29px;font-weight:700;letter-spacing:-.02em;color:#111827}
 .oa-date{margin-top:5px;font-size:12.5px;color:#8b909b}
 
@@ -158,9 +161,9 @@ const OA_CSS = `
 .oa-open span{display:block;margin-top:3px;font-size:12px;line-height:1.35;color:rgba(255,255,255,.86)}
 .oa-open .arw{margin-left:auto;color:#fff;flex-shrink:0}
 
-.oa-sec{margin-top:20px;font-size:9.5px;font-weight:700;letter-spacing:.11em;color:#a0a4ad}
+.oa-sec{margin-top:26px;font-size:9.5px;font-weight:700;letter-spacing:.11em;color:#a0a4ad}
 /* ACCÈS RAPIDE — tuiles colorées (enrichissement monday) */
-.oa-quick{margin-top:11px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.oa-quick{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .oa-qcard{display:flex;align-items:center;gap:12px;border:1px solid #eceef1;border-radius:13px;
   padding:14px 15px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .oa-qcard .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex-shrink:0}
@@ -407,7 +410,18 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
     const media = mediaRef.current, stage = stageRef.current;
     if (!media || !stage) return;
     const fit = () => {
-      if (cropScale) {
+      /* ⚠ LE ROGNAGE EST ABANDONNÉ SOUS 768 px (2026-09-07), et c'est la seule
+         chose que le téléphone change ici. Le rognage suppose une carte assez
+         large pour qu'il reste du logiciel lisible une fois la barre latérale
+         passée : à 0,86 sur une carte de 366 px, il n'en restait que 300 px de
+         scène sur 1 015, soit la barre latérale et deux mots coupés en leur
+         milieu (« Accue », « Rav »). Ça ne se lit pas comme un cadrage, ça se
+         lit comme un bug de mise en page.
+         La fenêtre revient donc ENTIÈRE et à l'échelle du cadre : petite, mais
+         complète et reconnaissable. C'est le même arbitrage que le hero, qui
+         recompose plutôt que de rogner (voir OraHeroMobile). */
+      const narrow = !window.matchMedia("(min-width: 768px)").matches;
+      if (cropScale && !narrow) {
         // Calée à GAUCHE et non centrée : c'est le flanc gauche du logiciel
         // (barre latérale, accueil, grande carte bleue) qui doit rester à
         // l'écran, le reste sort par la droite de la carte.
@@ -416,6 +430,11 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
         stage.style.transform = `scale(${cropScale})`;
         return;
       }
+      // Les deux propriétés sont réécrites et non laissées en l'état : la
+      // branche du rognage a pu poser `left:0` / `top left` juste avant, sur
+      // un simple changement de largeur de fenêtre.
+      stage.style.left = "50%";
+      stage.style.transformOrigin = "top center";
       const s = Math.min(media.clientWidth / W, media.clientHeight / H);
       stage.style.transform = `translateX(-50%) scale(${s})`;
     };
@@ -536,27 +555,20 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
                   <div className="oa-hello">{t({ fr: "Ravi de vous accueillir, Test", en: "Glad to have you, Test" })}</div>
                   <div className="oa-date">{t({ fr: "Mercredi 12 août", en: "Wednesday, August 12" })}</div>
 
-                  {/* DEUX cartes bleues, comme l'application. La PREMIÈRE reste
-                      la cible du curseur du hero : ne pas inverser l'ordre sans
-                      remesurer OPEN_CARD dans OraHeroDemo. */}
-                  <div className="oa-openrow">
-                    <div className="oa-open">
-                      <span className="ic"><IcoDoc s={21} /></span>
-                      <div className="tx">
-                        <b>{t({ fr: "Ouvrir un fichier", en: "Open a file" })}</b>
-                        <span>{t({ fr: "Excel ou CSV → lancez vos automatisations en un clic", en: "Excel or CSV → run your automations in one click" })}</span>
-                      </div>
-                      <span className="arw"><IcoArrow s={21} /></span>
-                    </div>
-                    <div className="oa-open assist">
-                      <span className="ic"><IcoSparkle s={21} /></span>
-                      <div className="tx">
-                        <b>{t({ fr: "Assistant", en: "Assistant" })}</b>
-                        <span>{t({ fr: "Votre journée, vos priorités, et l'analyse d'un document", en: "Your day, your priorities, and a document reviewed" })}</span>
-                      </div>
-                      <span className="arw"><IcoArrow s={21} /></span>
-                    </div>
-                  </div>
+                  {/* ══ LA RANGÉE DES DEUX CARTES BLEUES A ÉTÉ RETIRÉE ═══
+                      (client 2026-09-02 : « enlève les deux bleus pour ouvrir
+                      un fichier ou assistant »). Elles étaient là depuis la
+                      capture du 2026-08-12 ; sans elles, la grille ACCÈS
+                      RAPIDE devient le premier plan de l'accueil, et la scène
+                      perd ses deux seuls aplats saturés — ce qui rejoint la
+                      passe « moins IA, plus minimaliste » de la même journée.
+                      ⚠ CONSÉQUENCE CONNUE : OPEN_CARD dans OraHeroDemo — le
+                      repère de clic du curseur de la démo au défilement —
+                      visait la carte « Ouvrir un fichier ». La démo est
+                      éteinte (DEZOOM_AU_SCROLL = false) ; si elle est
+                      rallumée un jour, ce repère doit être re-mesuré ou le
+                      geste re-scénarisé. Le JSX des deux cartes vit dans
+                      l'historique git à cette date. */}
 
                   {/* ACCÈS RAPIDE */}
                   <div className="oa-sec">{t({ fr: "ACCÈS RAPIDE", en: "QUICK ACCESS" })}</div>
@@ -589,15 +601,15 @@ export default function OraAppScene({ playing = true, cropScale, chips: chipMode
             </div>
 
             {/* Lanceur « Assistant », posé en bas à droite de la fenêtre comme
-                dans l'application. Étincelle PLEINE (et non le tracé de
-                IcoSparkle réutilisé ailleurs) : la capture fournie montre un
-                glyphe plein, qui tient mieux à cette taille. */}
+                dans l'application. LA MÊME BULLE que la carte Assistant (client
+                2026-09-02 : « plus minimaliste et moins IA » — l'amas
+                d'étincelles pleines était le glyphe le plus chargé de la
+                scène). En PLEIN et non en tracé : à 19 px sur indigo, un
+                contour de 1,9 px scintille, un aplat tient. */}
             <div className="oa-assist" aria-hidden>
               <span className="ic">
                 <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2.6l1.95 5.63L19.4 10l-5.45 1.77L12 17.4l-1.95-5.63L4.6 10l5.45-1.77z" />
-                  <path d="M18.7 14.2l.78 2.22 2.12.78-2.12.78-.78 2.22-.78-2.22-2.12-.78 2.12-.78z" />
-                  <circle cx="5.4" cy="17.6" r="1.5" />
+                  <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4a8.4 8.4 0 0 1-3.8-.9L3 20.5l1.5-4.4A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4z" />
                 </svg>
               </span>
               <b>{t({ fr: "Assistant", en: "Assistant" })}</b>

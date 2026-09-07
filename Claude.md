@@ -21,15 +21,31 @@
 | `npm run dev` | Start local dev server |
 | `npm run build` | TypeScript check + Vite production build |
 | `npm run preview` | Preview production build locally |
+| `npm run check:booking` | Self-test of the booking service (timezones, iCalendar, slots) |
+| `npm run check:caldav` | Diagnoses the booking credentials, one by one, naming the culprit |
 
-> `dev` lance Vite via `node --max-http-header-size=65536` au lieu du binaire
-> `vite` nu. C'est un correctif, pas une préférence : le navigateur accumule les
-> cookies de TOUS les projets servis sur `localhost`, et une fois l'en-tête
-> au-delà des 16 Ko admis par défaut par Node, le serveur répond **431 Request
-> Header Fields Too Large** sur chaque module. La page part alors en dizaines
-> d'erreurs au lieu de se charger (constaté le 2026-08-12 sous Safari). Ne pas
-> revenir à `"dev": "vite"`. Si le problème réapparaît malgré ce flag, vider les
-> cookies `localhost` dans le navigateur.
+> `dev` **et `preview`** lancent Vite via `node --max-http-header-size=65536` au
+> lieu du binaire `vite` nu. C'est un correctif, pas une préférence : le
+> navigateur accumule les cookies de TOUS les projets servis sur `localhost`, et
+> une fois l'en-tête au-delà des 16 Ko admis par défaut par Node, le serveur
+> répond **431 Request Header Fields Too Large** sur chaque module. La page part
+> alors en dizaines d'erreurs au lieu de se charger (constaté le 2026-08-12 sous
+> Safari). Ne pas revenir à `"dev": "vite"`. Si le problème réapparaît malgré ce
+> flag, vider les cookies `localhost` dans le navigateur.
+>
+> ⚠ **`preview` a porté le défaut jusqu'au 2026-09-04** : il était resté à
+> `vite preview` nu, donc le build de production servi en local répondait 431
+> là où le serveur de dev passait. Le piège est qu'il ne se voit pas en ligne de
+> commande — `curl` n'envoie aucun cookie et reçoit un 200 franc. Pour le
+> reproduire, il faut envoyer l'en-tête soi-même :
+>
+> ```bash
+> curl -s -o /dev/null -w "%{http_code}\n" -H "Cookie: a=$(python3 -c "print('x'*20000)")" http://localhost:4820
+> ```
+>
+> Un `431` ici veut dire que le serveur a été lancé sans le drapeau. **Tout
+> nouveau serveur local ajouté au projet doit le porter**, y compris les
+> `vite preview` lancés à la main sur un port de test.
 
 ---
 
@@ -87,6 +103,17 @@ rewritten on 2026-08-15 to match what is actually shipped.
 > (`#c4cad6`, `#9aa4b5`, `#9aa3b2`) measured between 1.6:1 and 2.5:1 — the
 > tabbed section's own navigation was effectively invisible. If a text needs to
 > recede further than `#6b7688`, make it smaller or shorter, not paler.
+>
+> **UNE seule exception, datée : la liste d'onglets d'`AutomationTabs`.** Client
+> 2026-09-04, capture d'attio.com à l'appui : les entrées INACTIVES de cette
+> liste portent `#d3d8df`, relevé sur la page de référence
+> (`lab(86.0989 -0.77799 -4.0961)`), soit **1,43:1** sur blanc. C'est assumé et
+> c'est plus pâle que le `#c4cad6` retiré le 2026-08-15. Ne pas propager cette
+> valeur ailleurs, et ne pas la re-foncer sans le demander : c'est une décision
+> du client, pas une dérive.
+> À savoir si la liste redevient illisible : chez attio ces libellés font **18 px
+> en graisse 500**, ici 15 (16 à md) en graisse 400. Le levier est la taille et
+> la graisse, pas l'encre.
 
 Brand gradient: `linear-gradient(to right, #3b82f6, #0d9488)`
 
@@ -153,6 +180,99 @@ les rétablir ensemble si la bascule revient un jour :
 - `✓ Success message` — success
 - `✗ Error message` — error
 - `⚠ Warning message` — warning
+
+---
+
+## Deployment (`vercel.json`)
+
+> ### ⚠ NO COMMENTS IN `vercel.json`. EVER.
+> The file is validated against `https://openapi.vercel.sh/vercel.json`, whose
+> schema declares **`additionalProperties: false`** over 42 allowed keys. Any
+> extra key — including a `_comment` one — fails the deployment **before the
+> build starts**, with `Invalid vercel.json`. This happened on 2026-09-07: a
+> `_comment_rewrites` key explaining the rewrite rule broke the first
+> production deploy of the booking work. Explanations about deployment belong
+> here, in this file, not in the JSON.
+
+**The SPA rewrite excludes `/api/`.** Vercel checks the filesystem — static
+files *and* functions — before applying rewrites, so the rule should never
+catch a function. The exclusion is belt-and-braces: a silent rewrite would
+serve `index.html` where the front end expects JSON, and that failure is
+miserable to diagnose.
+
+**`api/` becomes serverless functions automatically.** Files and folders
+prefixed with `_` are excluded, which is why the shared code lives in
+`api/_lib/`. Imports inside `api/` carry the `.js` extension, as Node ESM
+requires; esbuild (which Vercel uses) maps `.js` back to `.ts` when the
+importer is TypeScript, and `vite.config.ts` does the same for `npm run dev`.
+Verified by bundling both entry points with esbuild and running them.
+
+---
+
+## Booking service (`/api`)
+
+**Cal.com was removed on 2026-09-07** (client: *« est-ce que tu peux créer toi-même
+un système de calendrier relié à mon adresse mail »*). The booking window is now
+served by our own Vercel functions.
+
+| Piece | File | What it does |
+|---|---|---|
+| Availability | `api/availability.ts` | Reads the real calendar, returns free slots |
+| Booking | `api/book.ts` | Re-checks, creates the room, writes the event, mails both parties |
+| CalDAV | `api/_lib/caldav.ts` | Discovery, `calendar-query`, `PUT` — talks to Infomaniak |
+| iCalendar | `api/_lib/ical.ts` | Parses busy windows, builds the `METHOD:REQUEST` invite |
+| Timezones | `api/_lib/time.ts` | Wall-clock ↔ instant, DST-correct, no dependency |
+| Slots | `api/_lib/slots.ts` | Opening hours → candidates, minus busy, minus buffer |
+| kMeet | `api/_lib/kmeet.ts` | Creates the Infomaniak video room |
+| Mail | `api/_lib/mail.ts` | Brevo, with the `.ics` attached |
+| UI | `src/components/booking/BookingFlow.tsx` | Month → hours → form → confirmation |
+
+**The stack is Infomaniak end to end**, which is the point: the site's whole
+argument is European hosting, and a booking flow going through a US calendar
+would contradict it on the one screen meant to convert.
+
+- Calendar: **CalDAV** on `https://sync.infomaniak.com` (auto-discovery, no
+  hard-coded collection path). App password required when 2FA is on.
+- Video: **kMeet**, `POST https://api.infomaniak.com/1/kmeet/rooms`. ⚠ Times in
+  that payload are `Y-m-d H:i:s` **read in the timezone sent alongside**, not
+  ISO 8601 — an `toISOString()` there silently shifts the meeting by an hour.
+  ⚠ That call **also creates the calendar event** (it returns `event_id`), which
+  is why `book.ts` skips the CalDAV `PUT` when the token is present. Writing
+  both would put two entries in the agenda for one meeting.
+- Mail: **Brevo** (the domain already carries a `brevo-code` TXT record, so
+  SPF/DKIM are done). The invitation is an **attachment**, not a link: a CalDAV
+  `PUT` sends no invitation unless the server implements iTIP scheduling.
+
+**Secrets live only in Vercel env vars.** `.env.example` documents every one of
+them; `.env.local` is gitignored and read into `process.env` by the dev-only
+Vite plugin in `vite.config.ts`. Never commit a value.
+
+> ### ⚠ THE RULE THAT COST A REWRITE: never invent availability.
+> A homemade slot picker existed before and was **removed on 2026-09-05** at the
+> client's request. It derived a day's opening from a hash of its date, then
+> handed over to Cal.com, which showed something else. `SlotPicker.tsx` still
+> carries the warning. The current flow is allowed to exist only because it
+> reads the real calendar. Two consequences, both load-bearing:
+> - with no CalDAV credentials the service answers `mock: true` and the UI shows
+>   an explicit banner; `/api/book` then refuses with `not_configured`;
+> - when the calendar is configured but **unreachable**, `/api/availability`
+>   returns **503 with no slots at all**. An empty window is honest, a wrong one
+>   is not. Do not add a fallback that fills it in.
+
+**Local test bench.** `api/` cannot be checked from a screenshot, so:
+
+```bash
+npx tsx scripts/fake-caldav.mts    # a minimal CalDAV server on :8910
+```
+
+Then put its URL in `.env.local` (`CALDAV_URL=http://127.0.0.1:8910`,
+`CALDAV_USERNAME=u`, `CALDAV_PASSWORD=p`) and run `npm run dev`. The fake server
+deliberately offers a mother collection, an inbox and a VTODO-only calendar
+alongside the real one, so discovery is actually exercised.
+
+`npm run check:booking` covers what fails **silently**: DST on both 2026
+switchovers, recurrence expansion, buffer arithmetic, iCalendar escaping and
+75-octet folding. Run it after touching `time.ts`, `ical.ts` or `slots.ts`.
 
 ---
 
@@ -302,5 +422,9 @@ audit was fixed the same day.
 - **Per-page social previews need pre-rendering.** `PAGE_META` in `App.tsx`
   sets title/description/canonical per route, and Google runs the JS. LinkedIn,
   Slack and iMessage do not: they all read `index.html`. Fixing it means SSG.
-- **The Cal.com iframe has no `title`** and its loading overlay has no
-  `role="status"`.
+- ~~**The Cal.com iframe has no `title`**~~ — moot since 2026-09-07: the embed
+  is gone, replaced by our own booking flow (see the booking service section).
+  ⚠ **Nothing has yet run against the real Infomaniak calendar.** The client is
+  verified end to end against `scripts/fake-caldav.mts`, and the kMeet payload
+  is built from Infomaniak's published API, but neither has met the production
+  account. First real booking to be watched.

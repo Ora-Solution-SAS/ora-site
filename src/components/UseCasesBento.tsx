@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Check, FileSpreadsheet, FileText, Gauge, Maximize2, Play, Presentation, RefreshCw, Scale, TrendingUp, X } from "lucide-react";
 import { useLang } from "@/lib/i18n";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 import ReportingMockup from "./ReportingMockup";
 import PointageMockup from "./PointageMockup";
 import FormatageMockup from "./FormatageMockup";
@@ -1255,7 +1256,6 @@ function Mockup({ kind }: { kind: MockupKind }) {
 export default function UseCasesBento({ openBooking }: { openBooking?: () => void }) {
   // Ce que la carte montre de la scène du logiciel dépend de la largeur réelle,
   // pas d'une classe : le rognage se règle en JS, sur une prop du composant.
-  const narrow = useIsNarrow();
   const { t } = useLang();
   const [detail, setDetail] = useState<BentoCase | null>(null);
   // Onglet actif de la carte pleine largeur. Un seul entier : une seule carte
@@ -2107,35 +2107,22 @@ export default function UseCasesBento({ openBooking }: { openBooking?: () => voi
                          « Reprendre ». Elle sert aussi à REMONTER la fenêtre :
                          le bloc visuel est en `mt-auto`, donc plus il est haut,
                          moins il reste de vide entre le titre et lui. */
-                      /* ⚠ LE ROGNAGE EST UNE COMPOSITION DE LARGE, PAS UNE
-                         MISE EN PAGE. À l'échelle 0,86 la scène fait 1 015 px :
-                         une carte de bureau en montre les deux tiers, et le
-                         tiers qui sort est la fenêtre débordante voulue. La
-                         même carte sur 390 px n'en montrait plus qu'un
-                         quart — barre latérale, « Home » coupé en deux, titres
-                         tronqués au bord. L'image n'était plus rognée, elle
-                         était amputée.
-                         Sous `md` la scène tient donc ENTIÈRE : pas de
-                         `cropScale`, un cadre au rapport de la scène, et
-                         OraAppScene se met lui-même à l'échelle. Les pastilles
-                         repassent à `all`, leurs ancrages redevenant dans le
-                         cadre. Au-delà, rien ne change. */
-                      narrow ? (
-                        <div className="-mx-3 -mb-8">
-                          <div className="aspect-[1180/720] w-full overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.08]">
-                            <OraAppScene chips="all" />
-                          </div>
+                      /* SOUS md, LA FENÊTRE NE DÉBORDE PLUS (2026-09-07) :
+                          OraAppScene abandonne le rognage sur téléphone et rend
+                          la scène entière (voir son `fit`). Le cadre suit —
+                          rapport de la scène au lieu d'une hauteur fixe, sinon
+                          les 300 px laissaient 77 px de blanc sous la fenêtre —
+                          et le débord bas passe de 32 à 8 px, juste de quoi
+                          garder le contact avec le bord de la carte sans
+                          manger l'ombre portée. */
+                      <div className="-mx-3 -mb-2 md:mx-0 md:ml-[86px] md:-mr-[104px] md:-mb-14">
+                        <div className="aspect-[1180/720] md:aspect-auto md:h-[470px]">
+                          {/* `chips="in"` : les trois livrables sortants sont
+                              ancrés au bord DROIT de la scène, très au-delà de
+                              la carte. Seule l'entrée reste à l'écran. */}
+                          <OraAppScene cropScale={0.86} chips="in" />
                         </div>
-                      ) : (
-                        <div className="-mx-3 md:mx-0 md:ml-[86px] md:-mr-[104px] -mb-8 md:-mb-14">
-                          <div className="h-[300px] md:h-[470px]">
-                            {/* `chips="in"` : les trois livrables sortants sont
-                                ancrés au bord DROIT de la scène, très au-delà de
-                                la carte. Seule l'entrée reste à l'écran. */}
-                            <OraAppScene cropScale={0.86} chips="in" />
-                          </div>
-                        </div>
-                      )
+                      </div>
                     ) : c.mockup ? (
                       <div
                         // Les marges NÉGATIVES font déborder la maquette des
@@ -2337,7 +2324,7 @@ function CaseDetailOverlay({
                 }}
                 className="inline-flex items-center gap-2 rounded-[6px] bg-[#3b82f6] hover:bg-[#2563eb] px-6 py-3.5 font-inter font-semibold text-[15px] text-white transition-colors"
               >
-                {t({ fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
                 <ArrowRight className="h-4 w-4" />
               </button>
               {/* Libellé HONNÊTE : « Voir la démo » seulement quand un vrai

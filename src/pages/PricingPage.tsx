@@ -3,8 +3,7 @@ import {
   ArrowRight, CalendarDays, Wrench, Monitor, Eye, Zap, CheckCircle, Package,
 } from "lucide-react";
 import { useLang } from "@/lib/i18n";
-import { useIsNarrow } from "@/lib/useIsNarrow";
-import { bookingCtaLabel } from "@/lib/contact";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 const pageCSS = `
 @keyframes prFadeUp {
@@ -38,7 +37,6 @@ interface Props {
 
 export default function PricingPage({ theme, openBooking }: Props) {
   const { t } = useLang();
-  const narrow = useIsNarrow();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
 
@@ -396,7 +394,7 @@ export default function PricingPage({ theme, openBooking }: Props) {
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.42)]",
               ].join(" ")}
             >
-              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel gratuit", en: "Book a free call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
 

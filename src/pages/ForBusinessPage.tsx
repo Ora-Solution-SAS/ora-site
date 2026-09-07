@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRight, CheckCircle, Zap, Shield, Clock, Users } from "lucide-react";
 import HeroOrbitAnimation from "../components/HeroOrbitAnimation";
 import { useLang } from "@/lib/i18n";
-import { useIsNarrow } from "@/lib/useIsNarrow";
-import { bookingCtaLabel } from "@/lib/contact";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 interface ForBusinessPageProps {
   theme: "light" | "dark";
@@ -33,7 +32,6 @@ const pageCSS = `
 
 export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageProps) {
   const { t } = useLang();
-  const narrow = useIsNarrow();
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
 
@@ -186,7 +184,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                     "hover:from-blue-500 hover:via-blue-400 hover:to-blue-500",
                   ].join(" ")}
                 >
-                  {bookingCtaLabel(narrow, t, { fr: "Réserver un appel découverte", en: "Book a discovery call" })}
+                  {t(BOOKING_CTA)}
                   <ArrowRight className="w-4 h-4 opacity-80 group-hover:opacity-100 group-hover:translate-x-[3px] transition-all duration-150" />
                 </button>
               </div>
@@ -344,7 +342,7 @@ export default function ForBusinessPage({ theme, openBooking }: ForBusinessPageP
                 "hover:shadow-[0_6px_28px_rgba(37,99,235,0.45)]",
               ].join(" ")}
             >
-              {bookingCtaLabel(narrow, t, { fr: "Réserver un appel découverte gratuit", en: "Book a free discovery call" })}
+              {t(BOOKING_CTA)}
               <ArrowRight className="w-4 h-4 group-hover:translate-x-[3px] transition-transform duration-150" />
             </button>
           </div>

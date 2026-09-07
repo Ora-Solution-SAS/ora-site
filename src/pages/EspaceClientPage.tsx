@@ -5,8 +5,7 @@ import {
   PlayCircle, Users, Workflow,
 } from "lucide-react";
 import { useLang } from "../lib/i18n";
-import { useIsNarrow } from "@/lib/useIsNarrow";
-import { bookingCtaLabel } from "@/lib/contact";
+import { BOOKING_CTA } from "@/lib/bookingCta";
 
 /**
  * EspaceClientPage — "Mon espace Ora", the client sign-in.
@@ -91,7 +90,6 @@ type EspaceClientPageProps = {
 
 export default function EspaceClientPage({ theme, onNavigate, openBooking }: EspaceClientPageProps) {
   const { t } = useLang();
-  const narrow = useIsNarrow();
   const [view, setView] = useState<"login" | "space">("login");
   const [userEmail, setUserEmail] = useState("");
   const [showPwd, setShowPwd] = useState(false);
@@ -274,10 +272,10 @@ export default function EspaceClientPage({ theme, onNavigate, openBooking }: Esp
                   onClick={openBooking ?? (() => onNavigate("home"))}
                   className="font-semibold text-[#3b82f6] hover:underline"
                 >
-                  {bookingCtaLabel(narrow, t, { fr: "Réservez un appel découverte", en: "Book a discovery call" })}
+                  {t(BOOKING_CTA)}
                 </button>
                 <span className="block text-[12.5px] text-gray-400 dark:text-gray-500">
-                  {t({ fr: "Pour vous ou votre équipe, week-ends compris.", en: "For you or your team, weekends included." })}
+                  {t({ fr: "Pour vous ou votre équipe, réponse sous 24 h ouvrées.", en: "For you or your team, reply within one business day." })}
                 </span>
               </p>
             </div>
@@ -429,7 +427,6 @@ function SpaceView({
   openBooking?: () => void;
 }) {
   const { t } = useLang();
-  const narrow = useIsNarrow();
 
   const kpis = [
     { label: t({ fr: "Automatisations actives", en: "Active automations" }), value: "4", icon: Workflow },
@@ -673,7 +670,7 @@ function SpaceView({
                 onClick={openBooking ?? (() => onNavigate("home"))}
                 className="group mt-4 inline-flex items-center gap-2 rounded-full bg-[#3b82f6] hover:bg-[#2563eb] px-5 py-2.5 font-inter font-semibold text-[13.5px] text-white shadow-[0_2px_10px_rgba(59,130,246,0.25)] transition-all duration-150 hover:-translate-y-px"
               >
-                {bookingCtaLabel(narrow, t, { fr: "Réserver un appel", en: "Book a call" })}
+                {t(BOOKING_CTA)}
                 <ArrowUpRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </button>
             </div>
