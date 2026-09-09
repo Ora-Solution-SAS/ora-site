@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import InViewVideo from "../components/InViewVideo";
+import {
+  APP_MODULES,
+  MockAnalyse,
+  MockAssistant,
+  MockDepot,
+  MockDossier,
+  MockHeroAccueil,
+  ModuleCard,
+} from "../components/produit/AppMockups";
 import { useLang } from "@/lib/i18n";
 import { BOOKING_CTA } from "@/lib/bookingCta";
 
@@ -12,9 +20,12 @@ interface ProduitPageProps {
 /* Page produit, composée le 2026-09-09 sur le modèle de legora.com/product/
    editor (référence fournie par le client) : héro en deux colonnes avec le
    média au bord droit, bande d'énoncé « étiquette à gauche, phrase à droite »,
-   trois rangées média 2/3 + texte 1/3 en alternance, bande noire vidéo avec
-   sa table de métadonnées, grille de modules, clôture. La typographie et les
-   couleurs restent celles d'Ora (Instrument Sans / Inter, un seul bleu). */
+   trois rangées média 2/3 + texte 1/3 en alternance, bande noire avec sa
+   table de métadonnées, grille de modules, clôture. La typographie et les
+   couleurs restent celles d'Ora (Instrument Sans / Inter, un seul bleu).
+   Les médias étaient d'abord les vidéos de démo ; remplacés le jour même par
+   des maquettes JSX des écrans ACTUELS du logiciel (client : « en reprenant
+   ce à quoi ressemble actuellement le software »), voir AppMockups.tsx. */
 
 const pageCSS = `
 @keyframes prdFadeUp {
@@ -101,70 +112,28 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       eyebrow: t({ fr: "Un résultat reproductible", en: "A reproducible result" }),
       title: t({ fr: "Automatisez. Sans surprise.", en: "Automate. No surprises." }),
       desc: t({
-        fr: "La même chaîne produit le même résultat à chaque exécution. Du FEC déposé au bilan développé, chaque chiffre reste traçable jusqu'à sa source, et chaque étape est consignée dans le journal.",
-        en: "The same chain produces the same result on every run. From the ledger you drop to the finished balance sheet, every figure stays traceable to its source, and every step is logged.",
+        fr: "Déposez le FEC de l'exercice : Ora le lit et le vérifie avant tout traitement. Partie double équilibrée au centime, exercice complet, à-nouveaux présents. Un fichier incomplet est refusé, jamais maquillé.",
+        en: "Drop the year's ledger file: Ora reads and checks it before any processing. Double entry balanced to the cent, complete fiscal year, opening balances present. An incomplete file is refused, never patched over.",
       }),
-      video: "/demo-automatisation.mp4",
-      poster: "/posters/demo-automatisation.jpg",
+      visual: <MockDepot />,
     },
     {
-      eyebrow: t({ fr: "Du classeur au livrable", en: "From workbook to deliverable" }),
-      title: t({ fr: "Le reporting, prêt à envoyer", en: "Reporting, ready to send" }),
+      eyebrow: t({ fr: "Du dossier au livrable", en: "From file to deliverable" }),
+      title: t({ fr: "Le dossier, prêt à envoyer", en: "The file, ready to send" }),
       desc: t({
-        fr: "Le classeur reçu est retraité, mis en forme et monté sur votre modèle. Le même livrable sort chaque mois, jusqu'à l'envoi par mail.",
-        en: "The workbook you receive is cleaned, formatted and built on your own template. The same deliverable comes out every month, all the way to the email.",
+        fr: "Classeur, dossier PDF et présentation sortent en une génération, à la charte du cabinet. Le design et les slides s'ajustent ensuite, devant les pièces produites.",
+        en: "Workbook, PDF file and slide deck come out in one generation, in your firm's house style. Design and slides are then adjusted in front of the produced documents.",
       }),
-      video: "/ora_reporting_v3.mp4",
-      poster: "/posters/ora_reporting_v3.jpg",
+      visual: <MockDossier />,
     },
     {
-      eyebrow: t({ fr: "Vos PDF, enfin exploitables", en: "Your PDFs, finally usable" }),
-      title: t({ fr: "L'extraction, sans ressaisie", en: "Extraction, no re-keying" }),
+      eyebrow: t({ fr: "Le dossier, lu et chiffré", en: "The file, read and figured" }),
+      title: t({ fr: "L'analyse, recalculée depuis la source", en: "Analysis, recomputed from the source" }),
       desc: t({
-        fr: "Factures, relevés et liasses PDF sont lus et transformés en tableau Excel exploitable. Chaque ligne, montant et référence extraits fidèlement, prêts à traiter.",
-        en: "Invoices, statements and PDF files are read and turned into a usable Excel table. Every line, amount and reference extracted faithfully, ready to work with.",
+        fr: "Le résultat, les soldes intermédiaires et les plus grosses dépenses ressortent immédiatement, à côté de la pièce. Les chiffres sont recalculés depuis le FEC, pas lus dans le PDF.",
+        en: "The result, intermediate balances and biggest expenses stand out immediately, next to the document. Figures are recomputed from the ledger, not read off the PDF.",
       }),
-      video: "/ora_pdf_extract_v5.mp4",
-      poster: "/posters/ora_pdf_extract_v5.jpg",
-    },
-  ];
-
-  const modules = [
-    {
-      title: t({ fr: "FEC Studio", en: "FEC Studio" }),
-      desc: t({
-        fr: "Le FEC importé, son intégrité contrôlée en quelques secondes, le dossier documenté.",
-        en: "The ledger imported, its integrity checked in seconds, the file documented.",
-      }),
-      poster: "/posters/ora_fec_demo_v2.jpg",
-      alt: t({ fr: "Import d'un FEC dans Ora", en: "Importing a ledger file into Ora" }),
-    },
-    {
-      title: t({ fr: "Pointage de comptes", en: "Account matching" }),
-      desc: t({
-        fr: "Les comptes pointés automatiquement, les écarts ressortent immédiatement.",
-        en: "Accounts matched automatically, discrepancies stand out immediately.",
-      }),
-      poster: "/posters/ora_pointage_v4.jpg",
-      alt: t({ fr: "Pointage de comptes dans Ora", en: "Account matching in Ora" }),
-    },
-    {
-      title: t({ fr: "Réconciliation", en: "Reconciliation" }),
-      desc: t({
-        fr: "Les écritures rapprochées et lettrées, les écarts prêts à justifier.",
-        en: "Entries reconciled and matched, discrepancies ready to justify.",
-      }),
-      poster: "/posters/ora_reconciliation.jpg",
-      alt: t({ fr: "Réconciliation d'écritures dans Ora", en: "Reconciling entries in Ora" }),
-    },
-    {
-      title: t({ fr: "Formatage pour logiciel métier", en: "Formatting for your software" }),
-      desc: t({
-        fr: "Vos fichiers mis au format attendu par votre logiciel, prêts à importer.",
-        en: "Your files converted to the format your software expects, ready to import.",
-      }),
-      poster: "/posters/ora_formatage.jpg",
-      alt: t({ fr: "Formatage d'un fichier d'import dans Ora", en: "Formatting an import file in Ora" }),
+      visual: <MockAnalyse />,
     },
   ];
 
@@ -210,14 +179,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
               </div>
             </div>
 
-            {/* Média : le film du FEC, collé au bord droit sur grand écran. */}
-            <div className="prd-stagger prd-d2 overflow-hidden rounded-2xl ring-1 ring-black/5 lg:h-[82vh] lg:rounded-r-none lg:rounded-l-3xl">
-              <InViewVideo
-                src="/final-fec.mp4"
-                poster="/posters/final-fec.jpg"
-                className="h-full w-full object-cover"
-                threshold={0.1}
-              />
+            {/* Média : l'écran d'accueil du logiciel, collé au bord droit sur
+                grand écran, cadré à la manière du héro legora. */}
+            <div className="prd-stagger prd-d2 h-[420px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[500px] lg:h-[82vh] lg:rounded-r-none lg:rounded-l-3xl">
+              <MockHeroAccueil />
             </div>
 
           </div>
@@ -249,14 +214,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
             {features.map((f, i) => (
               <div key={i} className="prd-reveal grid items-start gap-8 lg:grid-cols-3 lg:gap-12">
                 <div className={`overflow-hidden rounded-[18px] ring-1 ring-black/5 lg:col-span-2 ${i % 2 === 1 ? "lg:order-2" : ""}`}>
-                  {/* h-auto, pas d'aspect imposé : les clips n'ont pas tous le
-                      même ratio (demo-automatisation fait 1660 x 1080) et un
-                      object-cover rognerait la barre de titre de l'app. */}
-                  <InViewVideo
-                    src={f.video}
-                    poster={f.poster}
-                    className="block h-auto w-full"
-                  />
+                  {f.visual}
                 </div>
                 <div className={i % 2 === 1 ? "lg:order-1" : ""}>
                   <Eyebrow>{f.eyebrow}</Eyebrow>
@@ -290,19 +248,17 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
 
           <div className="prd-reveal mt-12 grid gap-10 lg:grid-cols-3 lg:gap-12" data-delay="120">
             <div className="overflow-hidden rounded-2xl ring-1 ring-white/10 lg:col-span-2">
-              <InViewVideo
-                src="/ORA_demo_Assistant_six_usages.mp4"
-                poster="/posters/ORA_demo_Assistant_six_usages.jpg"
-                className="aspect-video w-full object-cover"
-              />
+              <MockAssistant />
             </div>
-            {/* La table de métadonnées de la référence, calée en bas. */}
+            {/* La table de métadonnées de la référence, calée en bas. Les
+                valeurs reprennent les garanties que l'écran affiche lui-même. */}
             <div className="flex flex-col justify-end">
               <dl className="divide-y divide-white/10 border-t border-white/10">
                 {[
-                  { label: t({ fr: "Titre", en: "Title" }), value: t({ fr: "L'assistant, six usages", en: "The assistant, six uses" }) },
-                  { label: t({ fr: "Durée", en: "Duration" }), value: t({ fr: "56 secondes", en: "56 seconds" }) },
                   { label: t({ fr: "Module", en: "Module" }), value: t({ fr: "Assistant Ora", en: "Ora assistant" }) },
+                  { label: t({ fr: "Sources", en: "Sources" }), value: t({ fr: "Les seuls montants affichés", en: "Only the displayed amounts" }) },
+                  { label: t({ fr: "Envoi", en: "Sending" }), value: t({ fr: "Chiffres anonymisés", en: "Anonymized figures" }) },
+                  { label: t({ fr: "Relecture", en: "Review" }), value: t({ fr: "Par le cabinet", en: "By the firm" }) },
                 ].map((row) => (
                   <div key={row.label} className="flex items-baseline justify-between gap-6 py-3.5">
                     <dt className="font-inter text-[11px] font-semibold uppercase tracking-[0.08em] text-white/45">{row.label}</dt>
@@ -329,16 +285,12 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
               })}
             </p>
           </div>
-          <div className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
-            {modules.map((m, i) => (
-              <div key={m.title} className="prd-reveal" data-delay={String(i * 90)}>
-                <div className="overflow-hidden rounded-[14px] ring-1 ring-black/5">
-                  <img src={m.poster} alt={m.alt} loading="lazy" className="aspect-video w-full object-cover" />
-                </div>
-                <h3 className={`mt-4 font-inter text-[15px] font-semibold ${dk ? "text-white" : "text-[#111827]"}`}>
-                  {m.title}
-                </h3>
-                <p className="mt-1.5 font-inter text-[13px] leading-[1.6] text-[#5b6577]">{m.desc}</p>
+          {/* Les six cartes de l'écran d'accueil du logiciel, reprises telles
+              quelles : mêmes intitulés, mêmes sous-titres, mêmes teintes. */}
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {APP_MODULES.map((m, i) => (
+              <div key={m.title} className="prd-reveal" data-delay={String(i * 70)}>
+                <ModuleCard module={m} />
               </div>
             ))}
           </div>
