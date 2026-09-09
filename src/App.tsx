@@ -523,6 +523,7 @@ import OraHeroDemo from "./components/OraHeroDemo";
    ⚠ L'ACCUEIL N'EST PAS DANS CETTE LISTE. Il est rendu en ligne dans la branche
    finale du conditionnel, sans import de page ; le découper n'aurait aucun sens,
    c'est la page qu'on vient chercher. */
+const ProduitPage = lazy(() => import("./pages/ProduitPage"));
 const ForBusinessPage = lazy(() => import("./pages/ForBusinessPage"));
 const OraExperiencePage = lazy(() => import("./pages/OraExperiencePage"));
 const SolutionTemplatePage = lazy(() => import("./pages/SolutionTemplatePage"));
@@ -645,6 +646,7 @@ const FadeInOnScroll = ({
 // === URL-based routing helpers ===
 type Page =
   | "home"
+  | "produit"
   | "for-business"
   | "ora-experience"
   | "solution-template"
@@ -664,6 +666,7 @@ type Page =
 
 const PAGE_TO_PATH: Record<Page, string> = {
   "home": "/",
+  "produit": "/produit",
   "for-business": "/for-business",
   "ora-experience": "/ora-experience",
   "solution-template": "/solution-template",
@@ -713,6 +716,13 @@ const PAGE_META: Record<Page, { title: { fr: string; en: string }; desc: { fr: s
     desc: {
       fr: "Ora enchaîne le travail répétitif qui va de la donnée brute au document final. Traitement local, résultat reproductible, journal d'audit.",
       en: "Ora runs the repetitive chain from raw data to finished document. Local processing, reproducible results, audit trail.",
+    },
+  },
+  "produit": {
+    title: { fr: "L'application Ora", en: "The Ora app" },
+    desc: {
+      fr: "L'application qui enchaîne vos traitements récurrents, de la donnée brute au livrable : démonstrations en vidéo, module par module.",
+      en: "The app that runs your recurring work from raw data to deliverable: video demos, module by module.",
     },
   },
   "for-business": {
@@ -1257,6 +1267,8 @@ const App = () => {
       <Suspense fallback={<div className="min-h-screen" />}>
       {page === "not-found" ? (
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
+      ) : page === "produit" ? (
+        <ProduitPage theme={theme} openBooking={openBooking} />
       ) : page === "for-business" ? (
         <ForBusinessPage theme={theme} openBooking={openBooking} />
       ) : page === "ora-experience" ? (
