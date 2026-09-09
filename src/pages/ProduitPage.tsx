@@ -6,8 +6,8 @@ import {
   MockAgentLecture,
   MockAssistant,
   MockCoteACote,
-  MockDossier,
   MockHeroAccueil,
+  MockMoteur,
   ModuleCard,
 } from "../components/produit/AppMockups";
 import { useLang } from "@/lib/i18n";
@@ -128,20 +128,20 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       visual: <MockAgentLecture />,
     },
     {
-      eyebrow: t({ fr: "Du dossier au livrable", en: "From file to deliverable" }),
-      title: t({ fr: "Le dossier, prêt à envoyer", en: "The file, ready to send" }),
+      eyebrow: t({ fr: "Sous le capot", en: "Under the hood" }),
+      title: t({ fr: "Le moteur calcule. L'IA rédige.", en: "The engine computes. The AI writes." }),
       desc: t({
-        fr: "Classeur, dossier PDF et présentation sortent en une génération, à la charte du cabinet. Le design et les slides s'ajustent ensuite, devant les pièces produites.",
-        en: "Workbook, PDF file and slide deck come out in one generation, in your firm's house style. Design and slides are then adjusted in front of the produced documents.",
+        fr: "Chaque chiffre sort du moteur Ora, sur votre poste : un modèle ne calcule jamais rien. L'IA qui rédige, l'API de Mistral, prestataire français, ne reçoit que des chiffres anonymisés. Et chaque chiffre se refait à la main.",
+        en: "Every figure comes out of the Ora engine, on your machine: a model never computes anything. The writing AI, Mistral's API, a French provider, only ever receives anonymized figures. And every figure can be redone by hand.",
       }),
-      visual: <MockDossier />,
+      visual: <MockMoteur />,
     },
     {
       eyebrow: t({ fr: "Dans Excel, à côté du classeur", en: "In Excel, beside the workbook" }),
       title: t({ fr: "L'agent, côte à côte avec Excel", en: "The agent, side by side with Excel" }),
       desc: t({
-        fr: "Ora se range à côté de votre classeur et propose les gestes du moment : calculer la TVA, faire la balance, chercher les anomalies, éditer le document. Les chiffres viennent du moteur, anonymisés avant tout envoi.",
-        en: "Ora docks next to your workbook and suggests the moves that matter: compute VAT, run the balance, look for anomalies, edit the document. Figures come from the engine, anonymized before anything is sent.",
+        fr: "Demandez « fais la balance » : FEC Studio produit le classeur, débit et crédit équilibrés au centime, et le journal du moteur garde chaque étape. Le résultat s'ouvre dans Excel, prêt à éditer côte à côte.",
+        en: "Ask for the balance: FEC Studio produces the workbook, debit and credit balanced to the cent, and the engine's log keeps every step. The result opens in Excel, ready to edit side by side.",
       }),
       visual: <MockCoteACote />,
     },
@@ -244,7 +244,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       {/* ── Bande noire : la démonstration de l'assistant ───────────── */}
       {/* data-nav-dark : la barre de navigation passe en blanc sur noir tant
           que la section est sous le bandeau, comme sur les zones Atlas. */}
-      <section data-nav-dark className="py-24 md:py-32" style={{ background: "#111827" }}>
+      {/* Noir pur, pas le #111827 de la charte : demande datée du client
+          (2026-09-09 : « j'aimerais que la partie sombre soit vraiment
+          noire »), même statut d'exception que le noir d'ExcelReveal. */}
+      <section data-nav-dark className="py-24 md:py-32" style={{ background: "#000000" }}>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal">
             <Eyebrow onDark>{t({ fr: "Ora en action", en: "Ora in action" })}</Eyebrow>
