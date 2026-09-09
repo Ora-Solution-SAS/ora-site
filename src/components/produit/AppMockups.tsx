@@ -221,7 +221,10 @@ export function MockHeroAccueil() {
               <div className="min-w-0 flex-1">
                 <AppTopBar title="Accueil" />
                 <div className="px-8 pb-9 pt-6">
-                  <h3 className="text-[30px] font-semibold tracking-[-0.02em] text-[#0f172a]">
+                  {/* La salutation de l'app est GRANDE ET FINE (capture du
+                      client : « Re-bonjour, Test » en graisse normale), pas en
+                      semi-gras. */}
+                  <h3 className="text-[34px] font-normal tracking-[-0.022em] text-[#1e293b]">
                     Passez une bonne journée, Claire
                   </h3>
                   <p className="mt-1 text-[13px] text-[#64748b]">Mercredi 9 septembre</p>
@@ -493,7 +496,7 @@ export function MockAssistant() {
       <AppWindow width={820}>
         <div className="px-10 pb-8 pt-7 text-center">
           <Sparkles className="mx-auto h-6 w-6 text-[#3b82f6]" />
-          <h3 className="mt-3 text-[26px] font-semibold tracking-[-0.02em] text-[#0f172a]">
+          <h3 className="mt-3 text-[30px] font-normal tracking-[-0.022em] text-[#1e293b]">
             Passez une bonne journée, Claire
           </h3>
           <p className="mt-1 text-[13px] text-[#64748b]">Mercredi 9 septembre</p>
@@ -523,119 +526,199 @@ export function MockAssistant() {
   );
 }
 
-/* ── 6. Les modules, avec leurs scènes animées ───────────────────────────
-   L'équivalent des vignettes animées du « Explore the suite of tools » de
-   legora : chaque module porte une petite scène qui joue en boucle, dessinée
-   en CSS. Les keyframes vivent dans APP_MOCKUPS_CSS, injecté par la page ;
-   tout est coupé sous prefers-reduced-motion. */
+/* ── 6. Les modules, en vignettes verticales animées ─────────────────────
+   La reprise du « Explore the suite of tools » de legora, précisée par le
+   client (captures des deux états à l'appui) : des RECTANGLES VERTICAUX à
+   fond de couleur unie, et dedans des éléments d'interface qui BOUGENT :
+   pastilles qui basculent d'état comme leur « Sources », étapes qui
+   défilent comme leur « Step 1 / Step 2 », curseur qui va cliquer une
+   cellule, lignes d'un document qui s'écrivent. Titre et description sous
+   la carte, pas dedans. Les keyframes vivent dans APP_MOCKUPS_CSS ; tout
+   est coupé sous prefers-reduced-motion. */
 export const APP_MOCKUPS_CSS = `
-@keyframes mkSwapA { 0%, 45% { transform: scaleY(1); } 55%, 95% { transform: scaleY(0.45); } 100% { transform: scaleY(1); } }
-@keyframes mkSwapB { 0%, 45% { transform: scaleY(0.45); } 55%, 95% { transform: scaleY(1); } 100% { transform: scaleY(0.45); } }
-@keyframes mkGrow { 0% { transform: scaleY(0); } 12% { transform: scaleY(1); } 82% { transform: scaleY(1); } 95%, 100% { transform: scaleY(0); } }
-@keyframes mkDraw { 0% { stroke-dashoffset: 240; } 45%, 80% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -240; } }
-@keyframes mkRise { 0% { opacity: 0; transform: translateY(8px); } 15% { opacity: 1; transform: translateY(0); } 80% { opacity: 1; } 95%, 100% { opacity: 0; } }
-@keyframes mkFill { 0% { transform: scaleX(0); } 30%, 85% { transform: scaleX(1); } 100% { transform: scaleX(0); } }
-@keyframes mkNeedle { 0%, 10% { transform: rotate(-52deg); } 45%, 60% { transform: rotate(38deg); } 90%, 100% { transform: rotate(-52deg); } }
-@keyframes mkPulse { 0%, 100% { opacity: 0.35; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
-.mk-anim { animation-duration: 4.4s; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(.45,0,.25,1); }
-@media (prefers-reduced-motion: reduce) { .mk-anim { animation: none !important; } }
-.prd-module-card { transition: transform 0.25s cubic-bezier(.22,1,.36,1), box-shadow 0.25s; }
-.prd-module-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -18px rgba(15,23,42,0.18); }
-.prd-module-card:hover .prd-module-arrow { transform: translateX(3px); }
-.prd-module-arrow { transition: transform 0.25s; }
+@keyframes mkCycle { 0% { opacity: 0; transform: translateY(5px); } 4% { opacity: 1; transform: translateY(0); } 30% { opacity: 1; transform: translateY(0); } 36%, 100% { opacity: 0; transform: translateY(-5px); } }
+@keyframes mkActive { 0% { opacity: 0; } 5% { opacity: 1; } 30% { opacity: 1; } 37%, 100% { opacity: 0; } }
+@keyframes mkLineIn { 0% { opacity: 0; transform: translateY(3px); } 6% { opacity: 1; transform: translateY(0); } 86% { opacity: 1; } 94%, 100% { opacity: 0; } }
+@keyframes mkCursor { 0%, 12% { transform: translate(0, 0); } 38% { transform: translate(-86px, -74px); } 50%, 78% { transform: translate(-86px, -74px); } 100% { transform: translate(0, 0); } }
+@keyframes mkPop { 0%, 42% { opacity: 0; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1); } 84% { opacity: 1; } 92%, 100% { opacity: 0; } }
+@keyframes mkSweep { 0%, 10% { transform: translateY(0); } 28%, 42% { transform: translateY(38px); } 60%, 74% { transform: translateY(76px); } 92%, 100% { transform: translateY(0); } }
+.mkv { animation-duration: 6s; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(.4,0,.2,1); }
+@media (prefers-reduced-motion: reduce) { .mkv { animation: none !important; } }
 `;
 
-function SceneStructure() {
-  const bars = [64, 44, 82];
+/* Le curseur noir des vignettes legora. */
+function VCursor({ className, style }: { className?: string; style?: CSSProperties }) {
   return (
-    <div className="flex h-full items-end justify-center gap-8 pb-8">
-      <div className="flex items-end gap-2">
-        {bars.map((h, i) => (
-          <div key={i} className="mk-anim w-4 origin-bottom rounded-t-md bg-[#f5b04c]" style={{ height: h, animationName: "mkSwapA", animationDelay: `${i * 0.12}s` }} />
-        ))}
-      </div>
-      <ArrowLeftRight className="mb-6 h-4 w-4 text-[#c8b58f]" />
-      <div className="flex items-end gap-2">
-        {bars.map((h, i) => (
-          <div key={i} className="mk-anim w-4 origin-bottom rounded-t-md bg-[#d97706]" style={{ height: h, animationName: "mkSwapB", animationDelay: `${i * 0.12}s` }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function SceneBilan() {
-  const bars = [26, 44, 62, 38, 78];
-  return (
-    <div className="flex h-full items-end justify-center gap-2.5 pb-8">
-      {bars.map((h, i) => (
-        <div key={i} className="mk-anim w-6 origin-bottom rounded-t-md" style={{ height: h, background: i === 4 ? "#7c3aed" : "#c4b5fd", animationName: "mkGrow", animationDelay: `${i * 0.16}s` }} />
-      ))}
-    </div>
-  );
-}
-
-function ScenePrevisionnel() {
-  return (
-    <svg viewBox="0 0 200 110" className="h-full w-full px-6 py-5">
-      {[28, 55, 82].map((y) => (
-        <line key={y} x1="8" x2="192" y1={y} y2={y} stroke="#dbe4f0" strokeWidth="1" />
-      ))}
-      <path d="M8 92 C 50 88, 70 70, 100 62 S 160 30, 192 18" fill="none" stroke="#2563eb" strokeWidth="3" strokeLinecap="round" className="mk-anim" style={{ strokeDasharray: 240, animationName: "mkDraw" }} />
-      <circle cx="192" cy="18" r="4" fill="#2563eb" className="mk-anim" style={{ animationName: "mkPulse" }} />
+    <svg viewBox="0 0 24 24" className={className} style={style} width="18" height="18">
+      <path d="M5 3 L19 12.5 L12.2 13.8 L15.2 20.4 L12.6 21.5 L9.7 14.9 L5 18.6 Z" fill="#0f172a" stroke="#fff" strokeWidth="1.4" />
     </svg>
   );
 }
 
-function SceneImmobilier() {
-  const rows = ["Loyers", "Emprunt", "Apport"];
+/* Une pile de pastilles dont l'état actif tourne, comme le sélecteur
+   « Sources » de legora : la version translucide dessous, la version pleine
+   qui s'allume à tour de rôle par-dessus. */
+function ChipCycle({ label, chips, dark = false }: { label: string; chips: string[]; dark?: boolean }) {
   return (
-    <div className="flex h-full flex-col justify-center gap-2.5 px-7">
-      {rows.map((r, i) => (
-        <div key={r} className="mk-anim flex items-center gap-3" style={{ animationName: "mkRise", animationDelay: `${i * 0.22}s` }}>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#d1fae5]">
-            <Landmark className="h-3.5 w-3.5 text-[#059669]" />
-          </span>
-          <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[#e6f4ee]">
-            <div className="mk-anim h-full origin-left rounded-full bg-[#34d399]" style={{ width: `${78 - i * 18}%`, animationName: "mkFill", animationDelay: `${i * 0.22}s` }} />
+    <div className="flex h-full flex-col items-center justify-center">
+      <p className={`text-[13px] font-medium ${dark ? "text-white/90" : "text-[#334155]"}`}>{label}</p>
+      <div className="mt-3 flex flex-col items-center gap-2">
+        {chips.map((c, i) => (
+          <div key={c} className="relative">
+            <span
+              className={`block rounded-xl px-4 py-2 text-[13px] font-medium ${
+                dark ? "bg-white/20 text-white/75" : "bg-white/45 text-[#64748b]"
+              }`}
+            >
+              {c}
+            </span>
+            <span
+              className="mkv absolute inset-0 flex items-center justify-center rounded-xl bg-white text-[13px] font-medium text-[#0f172a] shadow-[0_6px_18px_rgba(15,23,42,0.14)]"
+              style={{ animationName: "mkActive", animationDelay: `${i * 2}s`, opacity: 0 }}
+            >
+              {c}
+            </span>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
 
-function SceneEvaluation() {
+/* Les étapes qui se succèdent dans une même puce de verre, comme le
+   « Step 1 / Step 2 » du panneau Workflows de legora. */
+function StepCycle({ steps }: { steps: [string, string][] }) {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="relative h-[86px] w-[240px] rounded-2xl bg-white/55 shadow-[0_10px_30px_rgba(15,23,42,0.12)] ring-1 ring-white/60 backdrop-blur-md">
+        {steps.map(([step, action], i) => (
+          <div
+            key={step}
+            className="mkv absolute inset-0 flex flex-col justify-center px-5"
+            style={{ animationName: "mkCycle", animationDelay: `${i * 2}s`, opacity: 0 }}
+          >
+            <p className="text-[12px] font-medium text-[#64748b]">{step}</p>
+            <p className="mt-1.5 flex items-center gap-2 text-[13.5px] font-semibold text-[#0f172a]">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#3b82f6]">
+                <ArrowRight className="h-3 w-3 text-white" />
+              </span>
+              {action}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Le document dont les lignes s'écrivent, comme la carte Word Add-In. */
+function SceneBilanDoc() {
+  const lines = [88, 96, 74, 0, 92, 83, 90, 58];
+  return (
+    <div className="flex h-full items-center justify-center">
+      <div className="h-[290px] w-[210px] rounded-md bg-white px-6 py-6 shadow-[0_18px_44px_rgba(15,23,42,0.14)]">
+        <p className="text-[11px] font-bold text-[#0f172a]">Bilan développé et SIG</p>
+        <div className="mt-1 h-[3px] w-9 rounded bg-[#e2e8f0]" />
+        <div className="mt-4">
+          {lines.map((w, i) =>
+            w === 0 ? (
+              <div key={i} className="h-2.5" />
+            ) : (
+              <div
+                key={i}
+                className="mkv mt-[8px] h-[5px] rounded-sm bg-[#e5e7eb]"
+                style={{ width: `${w}%`, animationName: "mkLineIn", animationDelay: `${0.35 * i}s`, opacity: 0 }}
+              />
+            ),
+          )}
+        </div>
+        <div className="mkv mt-4 overflow-hidden rounded-[4px] border border-[#eef1f5]" style={{ animationName: "mkPop", opacity: 0 }}>
+          <div className="flex bg-[#f8fafc] px-2 py-1 text-[8.5px] font-semibold text-[#475569]">
+            <span className="flex-1">Solde intermédiaire</span>
+            <span>2025</span>
+          </div>
+          {["Marge globale", "Valeur ajoutée", "Résultat"].map((r) => (
+            <div key={r} className="flex border-t border-[#f1f5f9] px-2 py-1 text-[8.5px] text-[#334155]">
+              <span className="flex-1">{r}</span>
+              <div className="my-auto h-[4px] w-8 rounded-sm bg-[#e5e7eb]" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* La table dont une cellule s'ouvre sous le curseur, comme la carte
+   Tabular Review. */
+function SceneTableCursor() {
+  const rows = ["Loyers annuels", "Emprunt", "Travaux", "Apport", "Assurance"];
   return (
     <div className="relative flex h-full items-center justify-center">
-      {[0, 1, 2, 3, 4].map((i) => {
-        const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
-        return (
-          <span
-            key={i}
-            className="mk-anim absolute h-2.5 w-2.5 rounded-full bg-[#fca5a5]"
-            style={{ left: `calc(50% + ${Math.cos(a) * 52}px)`, top: `calc(50% + ${Math.sin(a) * 38}px)`, animationName: "mkPulse", animationDelay: `${i * 0.3}s` }}
-          />
-        );
-      })}
-      <span className="flex h-12 w-12 rotate-45 items-center justify-center rounded-xl bg-[#fee2e2] ring-1 ring-[#fecaca]">
-        <Scale className="h-5 w-5 -rotate-45 text-[#dc2626]" />
-      </span>
+      <div className="w-[220px] rounded-lg bg-white/80 p-3 shadow-[0_14px_36px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+        <div className="flex items-center justify-between px-1 pb-2">
+          <p className="text-[10.5px] font-semibold text-[#334155]">Hypothèses</p>
+          <Plus className="h-3 w-3 text-[#94a3b8]" />
+        </div>
+        {rows.map((r) => (
+          <div key={r} className="mb-1.5 flex items-center gap-2 rounded-md bg-white px-2.5 py-1.5 ring-1 ring-[#eef1f5]">
+            <span className="flex h-4 w-4 items-center justify-center rounded bg-[#ecfdf5]">
+              <Landmark style={{ width: 9, height: 9, color: "#059669" }} />
+            </span>
+            <span className="text-[9.5px] text-[#475569]">{r}</span>
+            <div className="ml-auto h-[4px] w-10 rounded-sm bg-[#eef1f5]" />
+          </div>
+        ))}
+      </div>
+      <div
+        className="mkv absolute left-1/2 top-1/2 w-[150px] -translate-x-[20%] -translate-y-[80%] rounded-lg bg-white p-3 shadow-[0_16px_40px_rgba(15,23,42,0.22)]"
+        style={{ animationName: "mkPop", opacity: 0 }}
+      >
+        <p className="text-[9.5px] font-semibold text-[#0f172a]">Loyers annuels</p>
+        <div className="mt-1.5 h-[4px] w-[80%] rounded-sm bg-[#e5e7eb]" />
+        <div className="mt-1 h-[4px] w-[55%] rounded-sm bg-[#e5e7eb]" />
+        <p className="mt-2 text-[9px] font-medium text-[#2563eb]">Voir dans le dossier</p>
+      </div>
+      <VCursor className="mkv absolute" style={{ right: "18%", bottom: "12%", animationName: "mkCursor" }} />
     </div>
   );
 }
 
-function SceneBudget() {
+/* Le suivi dont le surlignage balaie les lignes, écart signalé au passage. */
+function SceneBudgetSweep() {
+  const rows = ["Charges de personnel", "Achats consommés", "Services extérieurs"];
   return (
-    <div className="relative flex h-full items-end justify-center pb-6">
-      <svg viewBox="0 0 120 66" className="h-[72%]">
-        <path d="M10 60 A 50 50 0 0 1 110 60" fill="none" stroke="#e0f2fe" strokeWidth="9" strokeLinecap="round" />
-        <path d="M10 60 A 50 50 0 0 1 78 16" fill="none" stroke="#0284c7" strokeWidth="9" strokeLinecap="round" />
-        <g className="mk-anim" style={{ transformOrigin: "60px 60px", animationName: "mkNeedle" }}>
-          <line x1="60" y1="60" x2="60" y2="22" stroke="#0f172a" strokeWidth="3" strokeLinecap="round" />
-        </g>
-        <circle cx="60" cy="60" r="4.5" fill="#0f172a" />
-      </svg>
+    <div className="relative flex h-full items-center justify-center">
+      <div className="relative w-[230px] rounded-lg bg-white p-3.5 shadow-[0_14px_36px_rgba(15,23,42,0.12)]">
+        <div className="flex justify-between px-1 pb-2 text-[9px] font-semibold uppercase tracking-[0.05em] text-[#94a3b8]">
+          <span>Poste</span>
+          <span>Réalisé / budget</span>
+        </div>
+        <div className="relative">
+          <div
+            className="mkv absolute left-0 right-0 top-0 h-[34px] rounded-md bg-[#eff6ff] ring-1 ring-[#bfdbfe]"
+            style={{ animationName: "mkSweep" }}
+          />
+          {rows.map((r) => (
+            <div key={r} className="relative flex h-[34px] items-center gap-2 px-2" style={{ marginBottom: 4 }}>
+              <span className="text-[9.5px] text-[#334155]">{r}</span>
+              <div className="ml-auto flex w-16 flex-col gap-1">
+                <div className="h-[4px] w-full rounded-sm bg-[#dbeafe]">
+                  <div className="h-full rounded-sm bg-[#3b82f6]" style={{ width: "72%" }} />
+                </div>
+                <div className="h-[4px] w-full rounded-sm bg-[#eef1f5]" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div
+          className="mkv absolute -right-3 -top-3 flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[9.5px] font-semibold text-[#b45309] shadow-[0_8px_22px_rgba(15,23,42,0.16)]"
+          style={{ animationName: "mkPop", opacity: 0 }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />
+          Écart repéré
+        </div>
+      </div>
     </div>
   );
 }
@@ -645,74 +728,79 @@ export const APP_MODULES = [
     icon: ArrowLeftRight,
     tint: "#d97706",
     bg: "#fffbeb",
-    stage: "linear-gradient(160deg, #faf3e4 0%, #fdf9f0 60%, #f5ecd9 100%)",
+    stage: "#ece9e1",
     title: "Changement de structure",
     sub: "Comparatif avant / après",
-    Scene: SceneStructure,
+    Scene: () => (
+      <ChipCycle
+        label="Pourquoi changer ?"
+        chips={["Améliorer le net du dirigeant", "Protéger le dirigeant", "Capitaliser et réinvestir"]}
+      />
+    ),
   },
   {
     icon: PieChart,
     tint: "#7c3aed",
     bg: "#f5f3ff",
-    stage: "linear-gradient(160deg, #efecfa 0%, #f8f6fd 60%, #e8e3f6 100%)",
+    stage: "#ced6d1",
     title: "Bilan développé et SIG",
     sub: "Le bilan et la formation du résultat",
-    Scene: SceneBilan,
+    Scene: SceneBilanDoc,
   },
   {
     icon: Store,
     tint: "#2563eb",
     bg: "#eff6ff",
-    stage: "linear-gradient(160deg, #e8eefa 0%, #f4f8fd 60%, #dfe9f7 100%)",
+    stage: "#cfd9e5",
     title: "Prévisionnel d'activité",
     sub: "Dix métiers et neuf filières agricoles : le plan banque",
-    Scene: ScenePrevisionnel,
+    Scene: () => (
+      <StepCycle
+        steps={[
+          ["Étape 1", "Le métier"],
+          ["Étape 2", "Les hypothèses"],
+          ["Étape 3", "Le dossier banque"],
+        ]}
+      />
+    ),
   },
   {
     icon: Landmark,
     tint: "#059669",
     bg: "#ecfdf5",
-    stage: "linear-gradient(160deg, #e6f4ec 0%, #f3faf6 60%, #ddeee5 100%)",
+    stage: "#dde6df",
     title: "Prévisionnel immobilier",
     sub: "Dossier banque en 5 min",
-    Scene: SceneImmobilier,
+    Scene: SceneTableCursor,
   },
   {
     icon: Scale,
     tint: "#dc2626",
     bg: "#fef2f2",
-    stage: "linear-gradient(160deg, #f9ebe9 0%, #fcf5f4 60%, #f3e0dd 100%)",
+    stage: "#e08f4f",
     title: "Évaluation d'entreprise",
     sub: "Cinq approches combinées",
-    Scene: SceneEvaluation,
+    Scene: () => <ChipCycle dark label="Approches" chips={["Multiples", "DCF", "Patrimoniale"]} />,
   },
   {
     icon: Gauge,
     tint: "#0284c7",
     bg: "#f0f9ff",
-    stage: "linear-gradient(160deg, #e6f0f7 0%, #f2f8fc 60%, #dcebf4 100%)",
+    stage: "#d8dde3",
     title: "Suivi budgétaire",
     sub: "Réalisé contre budget",
-    Scene: SceneBudget,
+    Scene: SceneBudgetSweep,
   },
 ];
 
 export function ModuleCard({ module: m }: { module: (typeof APP_MODULES)[number] }) {
   return (
-    <div className="prd-module-card overflow-hidden rounded-2xl bg-white font-inter shadow-[0_1px_2px_rgba(15,23,42,0.05)] ring-1 ring-[#e8edf3]">
-      <div className="h-[150px]" style={{ background: m.stage }}>
+    <div className="font-inter">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-[10px]" style={{ background: m.stage }}>
         <m.Scene />
       </div>
-      <div className="flex items-center gap-3.5" style={{ padding: 18 }}>
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: m.bg }}>
-          <m.icon className="h-5 w-5" style={{ color: m.tint }} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[15px] font-semibold text-[#0f172a]">{m.title}</p>
-          <p className="mt-0.5 truncate text-[13px] text-[#5b6577]">{m.sub}</p>
-        </div>
-        <ArrowRight className="prd-module-arrow h-4 w-4 shrink-0 text-[#94a3b8]" />
-      </div>
+      <h3 className="mt-4 text-[15px] font-semibold text-[#111827]">{m.title}</h3>
+      <p className="mt-1 text-[13px] leading-[1.6] text-[#5b6577]">{m.sub}</p>
     </div>
   );
 }

@@ -298,7 +298,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
           </div>
           {/* Les six modules de l'écran d'accueil du logiciel, mêmes
               intitulés et mêmes teintes, chacun surmonté de sa scène animée. */}
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {APP_MODULES.map((m, i) => (
               <div key={m.title} className="prd-reveal" data-delay={String(i * 70)}>
                 <ModuleCard module={m} />
