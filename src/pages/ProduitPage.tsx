@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import {
+  APP_MOCKUPS_CSS,
   APP_MODULES,
-  MockAnalyse,
+  MockAgentLecture,
   MockAssistant,
-  MockDepot,
+  MockCoteACote,
   MockDossier,
   MockHeroAccueil,
   ModuleCard,
@@ -45,6 +46,11 @@ const pageCSS = `
 }
 .prd-reveal { opacity: 0; }
 .prd-reveal.visible { animation: prdRevealIn 0.75s cubic-bezier(.22,1,.36,1) forwards; }
+
+/* « Les textes en gros un peu plus fins » (client 2026-09-09). Instrument
+   Sans n'a pas de graisse sous 400 : le seul levier d'affinage est le lissage
+   WebKit, documenté dans CLAUDE.md, et il suffit chez le client (Safari). */
+.prd-thin { -webkit-font-smoothing: antialiased; }
 `;
 
 /* L'œil de section : la même convention que le reste du site (12 px, Inter
@@ -78,8 +84,12 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
   const dk = theme === "dark";
   const [ready, setReady] = useState(false);
 
+  /* Un SEUL fond clair d'un bout à l'autre (client 2026-09-09 : « plus de
+     cohérence de couleur background... le background blanc derrière qui coupe
+     tout ») : l'alternance beige/blanc de CLAUDE.md est débrayée sur cette
+     page, comme chez legora où le corps est un seul blanc cassé et où la
+     variété vient des panneaux médias. */
   const bg = dk ? "#111827" : "#fcfbf7";
-  const bgContrast = dk ? "#0f172a" : "#ffffff";
 
   useEffect(() => {
     requestAnimationFrame(() => setReady(true));
@@ -112,10 +122,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       eyebrow: t({ fr: "Un résultat reproductible", en: "A reproducible result" }),
       title: t({ fr: "Automatisez. Sans surprise.", en: "Automate. No surprises." }),
       desc: t({
-        fr: "Déposez le FEC de l'exercice : Ora le lit et le vérifie avant tout traitement. Partie double équilibrée au centime, exercice complet, à-nouveaux présents. Un fichier incomplet est refusé, jamais maquillé.",
-        en: "Drop the year's ledger file: Ora reads and checks it before any processing. Double entry balanced to the cent, complete fiscal year, opening balances present. An incomplete file is refused, never patched over.",
+        fr: "Déposez un fichier : l'agent le reconnaît, le vérifie et le lit avant tout traitement. Les 18 colonnes légales du FEC, les 230 lignes, le résultat de l'exercice. Il répond sur ces seuls chiffres, et cite la provenance de chaque jugement.",
+        en: "Drop a file: the agent recognizes it, checks it and reads it before any processing. The ledger's 18 legal columns, its 230 lines, the year's result. It answers on those figures alone, and cites where every judgement comes from.",
       }),
-      visual: <MockDepot />,
+      visual: <MockAgentLecture />,
     },
     {
       eyebrow: t({ fr: "Du dossier au livrable", en: "From file to deliverable" }),
@@ -127,19 +137,19 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       visual: <MockDossier />,
     },
     {
-      eyebrow: t({ fr: "Le dossier, lu et chiffré", en: "The file, read and figured" }),
-      title: t({ fr: "L'analyse, recalculée depuis la source", en: "Analysis, recomputed from the source" }),
+      eyebrow: t({ fr: "Dans Excel, à côté du classeur", en: "In Excel, beside the workbook" }),
+      title: t({ fr: "L'agent, côte à côte avec Excel", en: "The agent, side by side with Excel" }),
       desc: t({
-        fr: "Le résultat, les soldes intermédiaires et les plus grosses dépenses ressortent immédiatement, à côté de la pièce. Les chiffres sont recalculés depuis le FEC, pas lus dans le PDF.",
-        en: "The result, intermediate balances and biggest expenses stand out immediately, next to the document. Figures are recomputed from the ledger, not read off the PDF.",
+        fr: "Ora se range à côté de votre classeur et propose les gestes du moment : calculer la TVA, faire la balance, chercher les anomalies, éditer le document. Les chiffres viennent du moteur, anonymisés avant tout envoi.",
+        en: "Ora docks next to your workbook and suggests the moves that matter: compute VAT, run the balance, look for anomalies, edit the document. Figures come from the engine, anonymized before anything is sent.",
       }),
-      visual: <MockAnalyse />,
+      visual: <MockCoteACote />,
     },
   ];
 
   return (
     <div className={ready ? "prd-ready" : ""}>
-      <style>{pageCSS}</style>
+      <style>{pageCSS + APP_MOCKUPS_CSS}</style>
 
       {/* ── Héro : texte à gauche, média au bord droit ──────────────── */}
       <section className="overflow-hidden pt-[68px]" style={{ background: bg }}>
@@ -158,7 +168,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
                   </span>
                 </p>
                 <h1
-                  className={`prd-stagger prd-d2 mt-8 font-instrument text-[clamp(2.5rem,4.8vw,4rem)] font-normal leading-[1.04] tracking-[-0.035em] ${
+                  className={`prd-thin prd-stagger prd-d2 mt-8 font-instrument text-[clamp(2.2rem,4vw,3.4rem)] font-normal leading-[1.06] tracking-[-0.03em] ${
                     dk ? "text-white" : "text-[#111827]"
                   }`}
                 >
@@ -190,11 +200,11 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       </section>
 
       {/* ── Bande d'énoncé : étiquette à gauche, phrase à droite ────── */}
-      <section className="py-24 md:py-32" style={{ background: bgContrast }}>
+      <section className="py-20 md:py-28" style={{ background: bg }}>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal grid gap-8 lg:grid-cols-[1fr_2fr]">
             <Eyebrow>{t({ fr: "De la donnée brute au livrable", en: "From raw data to deliverable" })}</Eyebrow>
-            <p className={`max-w-[34ch] font-instrument text-[clamp(1.6rem,2.6vw,2.15rem)] font-normal leading-[1.18] tracking-[-0.02em] ${dk ? "text-white" : "text-[#111827]"}`}>
+            <p className={`prd-thin max-w-[36ch] font-instrument text-[clamp(1.45rem,2.2vw,1.9rem)] font-normal leading-[1.22] tracking-[-0.015em] ${dk ? "text-white" : "text-[#111827]"}`}>
               {t({ fr: "Vous déposez un fichier, Ora déroule la chaîne complète. ", en: "Drop a file, and Ora runs the full chain. " })}
               <span className="text-[#6b7688]">
                 {t({
@@ -218,7 +228,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
                 </div>
                 <div className={i % 2 === 1 ? "lg:order-1" : ""}>
                   <Eyebrow>{f.eyebrow}</Eyebrow>
-                  <h2 className={`mt-4 font-instrument text-[1.7rem] font-normal leading-[1.12] tracking-[-0.025em] md:text-[1.95rem] ${dk ? "text-white" : "text-[#111827]"}`}>
+                  <h2 className={`prd-thin mt-4 font-instrument text-[1.55rem] font-normal leading-[1.15] tracking-[-0.02em] md:text-[1.8rem] ${dk ? "text-white" : "text-[#111827]"}`}>
                     {f.title}
                   </h2>
                   <p className={`mt-4 max-w-[46ch] font-inter text-[15px] leading-[1.7] ${dk ? "text-gray-400" : "text-[#5b6577]"}`}>
@@ -238,10 +248,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal">
             <Eyebrow onDark>{t({ fr: "Ora en action", en: "Ora in action" })}</Eyebrow>
-            <p className="mt-4 max-w-[38ch] font-instrument text-[clamp(1.5rem,2.3vw,1.95rem)] font-normal leading-[1.2] tracking-[-0.02em] text-white">
+            <p className="prd-thin mt-4 max-w-[40ch] font-instrument text-[clamp(1.4rem,2.1vw,1.8rem)] font-normal leading-[1.24] tracking-[-0.015em] text-white">
               {t({
-                fr: "L'assistant répond sur vos dossiers, montre ses sources et lance les traitements.",
-                en: "The assistant answers on your files, shows its sources and runs the processing.",
+                fr: "L'agent répond sur vos dossiers, cite la provenance de chaque jugement et lance les traitements.",
+                en: "The agent answers on your files, cites where every judgement comes from and runs the processing.",
               })}
             </p>
           </div>
@@ -255,8 +265,8 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
             <div className="flex flex-col justify-end">
               <dl className="divide-y divide-white/10 border-t border-white/10">
                 {[
-                  { label: t({ fr: "Module", en: "Module" }), value: t({ fr: "Assistant Ora", en: "Ora assistant" }) },
-                  { label: t({ fr: "Sources", en: "Sources" }), value: t({ fr: "Les seuls montants affichés", en: "Only the displayed amounts" }) },
+                  { label: t({ fr: "Module", en: "Module" }), value: t({ fr: "Agent Ora", en: "Ora agent" }) },
+                  { label: t({ fr: "Sources", en: "Sources" }), value: t({ fr: "Citées pour chaque jugement", en: "Cited for every judgement" }) },
                   { label: t({ fr: "Envoi", en: "Sending" }), value: t({ fr: "Chiffres anonymisés", en: "Anonymized figures" }) },
                   { label: t({ fr: "Relecture", en: "Review" }), value: t({ fr: "Par le cabinet", en: "By the firm" }) },
                 ].map((row) => (
@@ -271,8 +281,9 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         </div>
       </section>
 
-      {/* ── La grille des modules ───────────────────────────────────── */}
-      <section className="py-20 md:py-28" style={{ background: bgContrast }}>
+      {/* ── La grille des modules, scènes animées façon « Explore the
+          suite of tools » ─────────────────────────────────────────────── */}
+      <section className="py-20 md:py-28" style={{ background: bg }}>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal">
             <h2 className={`font-inter text-[15px] font-semibold ${dk ? "text-white" : "text-[#111827]"}`}>
@@ -285,9 +296,9 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
               })}
             </p>
           </div>
-          {/* Les six cartes de l'écran d'accueil du logiciel, reprises telles
-              quelles : mêmes intitulés, mêmes sous-titres, mêmes teintes. */}
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Les six modules de l'écran d'accueil du logiciel, mêmes
+              intitulés et mêmes teintes, chacun surmonté de sa scène animée. */}
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {APP_MODULES.map((m, i) => (
               <div key={m.title} className="prd-reveal" data-delay={String(i * 70)}>
                 <ModuleCard module={m} />
@@ -300,7 +311,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       {/* ── Clôture ─────────────────────────────────────────────────── */}
       <section className="py-24 md:py-32" style={{ background: bg }}>
         <div className="prd-reveal mx-auto max-w-2xl px-6 text-center">
-          <h2 className={`font-instrument text-[clamp(2rem,3.4vw,2.75rem)] font-normal leading-[1.1] tracking-[-0.03em] ${dk ? "text-white" : "text-[#111827]"}`}>
+          <h2 className={`prd-thin font-instrument text-[clamp(1.8rem,2.9vw,2.4rem)] font-normal leading-[1.14] tracking-[-0.025em] ${dk ? "text-white" : "text-[#111827]"}`}>
             {t({ fr: "Prêt à voir Ora sur vos fichiers ?", en: "Ready to see Ora on your files?" })}
           </h2>
           <p className="mt-4 font-inter text-[16px] leading-[1.7] text-[#5b6577]">
