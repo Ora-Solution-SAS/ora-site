@@ -218,8 +218,12 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="flex flex-col gap-20 md:gap-28">
             {features.map((f, i) => (
-              <div key={i} className="prd-reveal grid items-start gap-8 lg:grid-cols-3 lg:gap-12">
-                <div className={`overflow-hidden rounded-[18px] ring-1 ring-black/5 lg:col-span-2 ${i % 2 === 1 ? "lg:order-2" : ""}`}>
+              /* Le média occupe TROIS QUARTS de la rangée, pas deux tiers
+                 (client 2026-09-10, deux demandes d'agrandissement successives
+                 sur la rangée Excel). Le texte tient encore sur une colonne de
+                 ~330 px à 1440, sa mesure reste sous 45 caractères. */
+              <div key={i} className="prd-reveal grid items-start gap-8 lg:grid-cols-4 lg:gap-12">
+                <div className={`overflow-hidden rounded-[18px] ring-1 ring-black/5 lg:col-span-3 ${i % 2 === 1 ? "lg:order-2" : ""}`}>
                   {f.visual}
                 </div>
                 <div className={i % 2 === 1 ? "lg:order-1" : ""}>
