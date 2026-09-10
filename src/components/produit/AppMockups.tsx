@@ -664,7 +664,7 @@ function ChipCycle({ label, chips, dark = false }: { label: string; chips: strin
           <div key={c} className="relative">
             <span
               className={`block rounded-xl px-4 py-2 text-[13px] font-medium ${
-                dark ? "bg-white/20 text-white/75" : "bg-[#eaeff6] text-[#64748b]"
+                dark ? "bg-white/20 text-white/75" : "bg-white/45 text-[#64748b]"
               }`}
             >
               {c}
@@ -687,7 +687,7 @@ function ChipCycle({ label, chips, dark = false }: { label: string; chips: strin
 function StepCycle({ steps }: { steps: [string, string][] }) {
   return (
     <div className="flex h-full items-center justify-center">
-      <div className="relative h-[86px] w-[240px] rounded-2xl bg-white shadow-[0_10px_30px_rgba(15,23,42,0.10)] ring-1 ring-[#e6ecf4]">
+      <div className="relative h-[86px] w-[240px] rounded-2xl bg-white/55 shadow-[0_10px_30px_rgba(15,23,42,0.12)] ring-1 ring-white/60 backdrop-blur-md">
         {steps.map(([step, action], i) => (
           <div
             key={step}
@@ -713,7 +713,7 @@ function SceneBilanDoc() {
   const lines = [88, 96, 74, 0, 92, 83, 90, 58];
   return (
     <div className="flex h-full items-center justify-center">
-      <div className="h-[290px] w-[210px] rounded-md bg-white px-6 py-6 shadow-[0_18px_44px_rgba(15,23,42,0.12)] ring-1 ring-[#eef2f7]">
+      <div className="h-[290px] w-[210px] rounded-md bg-white px-6 py-6 shadow-[0_18px_44px_rgba(15,23,42,0.14)]">
         <p className="text-[11px] font-bold text-[#0f172a]">Bilan développé et SIG</p>
         <div className="mt-1 h-[3px] w-9 rounded bg-[#e2e8f0]" />
         <div className="mt-4">
@@ -752,7 +752,7 @@ function SceneTableCursor() {
   const rows = ["Loyers annuels", "Emprunt", "Travaux", "Apport", "Assurance"];
   return (
     <div className="relative flex h-full items-center justify-center">
-      <div className="w-[220px] rounded-lg bg-white p-3 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-[#eef2f7]">
+      <div className="w-[220px] rounded-lg bg-white/80 p-3 shadow-[0_14px_36px_rgba(15,23,42,0.12)] backdrop-blur-sm">
         <div className="flex items-center justify-between px-1 pb-2">
           <p className="text-[10.5px] font-semibold text-[#334155]">Hypothèses</p>
           <Plus className="h-3 w-3 text-[#94a3b8]" />
@@ -786,7 +786,7 @@ function SceneBudgetSweep() {
   const rows = ["Charges de personnel", "Achats consommés", "Services extérieurs"];
   return (
     <div className="relative flex h-full items-center justify-center">
-      <div className="relative w-[230px] rounded-lg bg-white p-3.5 shadow-[0_14px_36px_rgba(15,23,42,0.10)] ring-1 ring-[#eef2f7]">
+      <div className="relative w-[230px] rounded-lg bg-white p-3.5 shadow-[0_14px_36px_rgba(15,23,42,0.12)]">
         <div className="flex justify-between px-1 pb-2 text-[9px] font-semibold uppercase tracking-[0.05em] text-[#94a3b8]">
           <span>Poste</span>
           <span>Réalisé / budget</span>
@@ -820,21 +820,12 @@ function SceneBudgetSweep() {
   );
 }
 
-/* ⚠ TOUTES LES TUILES PARTAGENT LE MÊME FOND. Elles portaient six aplats
-   distincts repris de legora (greige, sauge, bleu-gris, vert, orange, gris) ;
-   le client les a remplacés le 2026-09-10 par le blanc bleuté essayé le matin
-   même sur la landing, puis retiré de la landing. Une seule couleur, très
-   proche du blanc : les scènes animées portent alors toute la variété, et la
-   grille cesse de ressembler à un nuancier. Changer cette constante change
-   les six tuiles d'un coup, c'est voulu. */
-const TILE_BG = "#f8fafd";
-
 export const APP_MODULES = [
   {
     icon: ArrowLeftRight,
     tint: "#d97706",
     bg: "#fffbeb",
-    stage: TILE_BG,
+    stage: "#ece9e1",
     title: "Changement de structure",
     sub: "Comparatif avant / après",
     Scene: () => (
@@ -848,7 +839,7 @@ export const APP_MODULES = [
     icon: PieChart,
     tint: "#7c3aed",
     bg: "#f5f3ff",
-    stage: TILE_BG,
+    stage: "#ced6d1",
     title: "Bilan développé et SIG",
     sub: "Le bilan et la formation du résultat",
     Scene: SceneBilanDoc,
@@ -857,7 +848,7 @@ export const APP_MODULES = [
     icon: Store,
     tint: "#2563eb",
     bg: "#eff6ff",
-    stage: TILE_BG,
+    stage: "#cfd9e5",
     title: "Prévisionnel d'activité",
     sub: "Dix métiers et neuf filières agricoles : le plan banque",
     Scene: () => (
@@ -874,7 +865,7 @@ export const APP_MODULES = [
     icon: Landmark,
     tint: "#059669",
     bg: "#ecfdf5",
-    stage: TILE_BG,
+    stage: "#dde6df",
     title: "Prévisionnel immobilier",
     sub: "Dossier banque en 5 min",
     Scene: SceneTableCursor,
@@ -883,16 +874,16 @@ export const APP_MODULES = [
     icon: Scale,
     tint: "#dc2626",
     bg: "#fef2f2",
-    stage: TILE_BG,
+    stage: "#e08f4f",
     title: "Évaluation d'entreprise",
     sub: "Cinq approches combinées",
-    Scene: () => <ChipCycle label="Approches" chips={["Multiples", "DCF", "Patrimoniale"]} />,
+    Scene: () => <ChipCycle dark label="Approches" chips={["Multiples", "DCF", "Patrimoniale"]} />,
   },
   {
     icon: Gauge,
     tint: "#0284c7",
     bg: "#f0f9ff",
-    stage: TILE_BG,
+    stage: "#d8dde3",
     title: "Suivi budgétaire",
     sub: "Réalisé contre budget",
     Scene: SceneBudgetSweep,
