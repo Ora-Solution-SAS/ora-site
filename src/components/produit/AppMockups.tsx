@@ -753,6 +753,14 @@ export const APP_MOCKUPS_CSS = `
 @keyframes mkCursor { 0%, 12% { transform: translate(0, 0); } 38% { transform: translate(-86px, -74px); } 50%, 78% { transform: translate(-86px, -74px); } 100% { transform: translate(0, 0); } }
 @keyframes mkPop { 0%, 42% { opacity: 0; transform: scale(0.96); } 50% { opacity: 1; transform: scale(1); } 84% { opacity: 1; } 92%, 100% { opacity: 0; } }
 @keyframes mkSweep { 0%, 10% { transform: translateY(0); } 28%, 42% { transform: translateY(38px); } 60%, 74% { transform: translateY(76px); } 92%, 100% { transform: translateY(0); } }
+/* La scène de saisie tourne sur 8 s, pas 6 : à 6 s la réponse n'avait que
+   quelques dixièmes à l'écran, on la manquait. Les pourcentages ci-dessous
+   sont donc lus sur 8 s (10 % = 0,8 s). */
+@keyframes mkPointer { 0% { opacity: 0; transform: translate(52px, 58px) scale(1); } 6% { opacity: 1; } 20% { transform: translate(0, 0) scale(1); } 24% { transform: translate(0, 0) scale(0.84); } 29% { transform: translate(0, 0) scale(1); } 40% { opacity: 1; } 48%, 100% { opacity: 0; transform: translate(0, 0) scale(1); } }
+@keyframes mkType { 0%, 22% { width: 0; } 52%, 92% { width: 100%; } 97%, 100% { width: 0; } }
+@keyframes mkCaret { 0%, 20% { opacity: 0; } 22%, 92% { opacity: 1; } 95%, 100% { opacity: 0; } }
+@keyframes mkSend { 0%, 52% { background: #bfd7fb; } 56%, 92% { background: #3b82f6; } 96%, 100% { background: #bfd7fb; } }
+@keyframes mkAnswer { 0%, 58% { opacity: 0; transform: translateY(8px); } 66%, 94% { opacity: 1; transform: translateY(0); } 99%, 100% { opacity: 0; } }
 .mkv { animation-duration: 6s; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(.4,0,.2,1); }
 @media (prefers-reduced-motion: reduce) { .mkv { animation: none !important; } }
 `;
@@ -934,6 +942,69 @@ function SceneBudgetSweep() {
   );
 }
 
+/* La barre de l'assistant du logiciel, jouée comme on s'en sert : le curseur
+   vient cliquer dedans, la question s'écrit, le bouton d'envoi s'allume, la
+   réponse monte. Reprend les éléments réels de l'app (le ✦, le +, le
+   trombone, la flèche d'envoi, les pastilles de réponse) plutôt qu'un décor
+   inventé — client 2026-09-10 : « pousse l'animation avec des éléments de
+   design du logiciel actuel, la barre de chatbot par exemple ». */
+function SceneDemandeStructure() {
+  return (
+    <div className="relative flex h-full flex-col justify-center px-6">
+      <div className="relative">
+        {/* La barre, au repos puis en saisie. */}
+        <div className="flex items-center gap-2 rounded-full bg-white py-2.5 pl-3.5 pr-2 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.28)] ring-1 ring-[#e6ecf4]">
+          <Plus className="h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
+          <OraStar className="h-3.5 w-3.5 shrink-0 text-[#3b82f6]" />
+          <div className="relative min-w-0 flex-1 overflow-hidden">
+            <span
+              className="mkv block overflow-hidden whitespace-nowrap text-[11.5px] text-[#0f172a]"
+              style={{ animationName: "mkType", animationDuration: "8s", animationTimingFunction: "steps(27, end)" }}
+            >
+              Faut-il passer en société ?
+            </span>
+            <span
+              className="mkv absolute right-0 top-1/2 h-[13px] w-px -translate-y-1/2 bg-[#3b82f6]"
+              style={{ animationName: "mkCaret", animationDuration: "8s", animationTimingFunction: "steps(1, end)" }}
+            />
+          </div>
+          <Paperclip className="h-3.5 w-3.5 shrink-0 text-[#cbd5e1]" />
+          <span
+            className="mkv flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+            style={{ animationName: "mkSend", animationDuration: "8s", background: "#bfd7fb" }}
+          >
+            <ArrowUp className="h-3 w-3 text-white" />
+          </span>
+        </div>
+
+        {/* Le curseur qui vient cliquer dans la barre. */}
+        <VCursor
+          className="mkv absolute left-[38%] top-1/2"
+          style={{ animationName: "mkPointer", animationDuration: "8s", animationTimingFunction: "cubic-bezier(.3,0,.2,1)" }}
+        />
+      </div>
+
+      {/* La réponse de l'agent : les trois motifs, comme dans le module. */}
+      <div
+        className="mkv mt-3.5 rounded-2xl bg-white px-4 py-3 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.24)] ring-1 ring-[#eef2f7]"
+        style={{ animationName: "mkAnswer", animationDuration: "8s" }}
+      >
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-[#94a3b8]">
+          Pourquoi changer ?
+        </p>
+        <div className="mt-2 flex flex-col gap-1.5">
+          {["Améliorer le net du dirigeant", "Protéger le dirigeant", "Capitaliser et réinvestir"].map((c) => (
+            <span key={c} className="flex items-center gap-2 text-[11.5px] text-[#334155]">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#d97706]" />
+              {c}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export const APP_MODULES = [
   {
     icon: ArrowLeftRight,
@@ -942,12 +1013,7 @@ export const APP_MODULES = [
     stage: "#ece9e1",
     title: "Changement de structure",
     sub: "Comparatif avant / après",
-    Scene: () => (
-      <ChipCycle
-        label="Pourquoi changer ?"
-        chips={["Améliorer le net du dirigeant", "Protéger le dirigeant", "Capitaliser et réinvestir"]}
-      />
-    ),
+    Scene: SceneDemandeStructure,
   },
   {
     icon: PieChart,

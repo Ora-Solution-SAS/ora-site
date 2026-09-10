@@ -61,21 +61,34 @@ const pageCSS = `
 `;
 
 /* Les portraits de l'équipe, en pile de ronds : mêmes fichiers que « Mon
-   espace Ora », où ils servent déjà à dire qu'il y a quelqu'un derrière. */
-function TeamAvatars({ size = 34, dk }: { size?: number; dk: boolean }) {
+   espace Ora », où ils servent déjà à dire qu'il y a quelqu'un derrière.
+   ⚠ LE VISAGE CHANGE D'UN ARTICLE À L'AUTRE (client 2026-09-10 : « varie nos
+   têtes, sinon c'est pas cohérent si on est tous les deux auteurs de tous les
+   articles ») : chaque entrée d'ARTICLES porte son `by`.
+   ⚠ AUCUN NOM N'EST AFFICHÉ, et ce n'est pas un oubli : les prénoms des
+   fondateurs n'apparaissent nulle part dans le dépôt, et la règle du projet
+   est de ne rien inventer de nominatif (voir EspaceClientPage). Le libellé
+   collectif reste donc vrai quel que soit le signataire. Le jour où le client
+   donne les prénoms, il suffit d'ajouter un `name` à chaque article. */
+type By = 1 | 2 | "both";
+
+function TeamAvatars({ size = 34, dk, by = "both" }: { size?: number; dk: boolean; by?: By }) {
   const { t } = useLang();
-  const cls = "rounded-full object-cover select-none";
   const ring = dk ? "ring-[#0f172a]" : "ring-white";
+  const srcs =
+    by === "both"
+      ? ["/equipe/fondateur-1.png", "/equipe/fondateur-2.png"]
+      : [`/equipe/fondateur-${by}.png`];
   return (
     <div className="flex -space-x-2.5 shrink-0">
-      {["/equipe/fondateur-1.png", "/equipe/fondateur-2.png"].map((src) => (
+      {srcs.map((src) => (
         <img
           key={src}
           src={src}
           alt={t({ fr: "Membre de l'équipe Ora", en: "Ora team member" })}
           draggable={false}
           style={{ width: size, height: size }}
-          className={`${cls} ring-[3px] ${ring}`}
+          className={`rounded-full object-cover select-none ring-[3px] ${ring}`}
         />
       ))}
     </div>
@@ -115,6 +128,7 @@ type TopicId = (typeof TOPICS)[number]["id"];
 const ARTICLES = [
   {
     id: "secret-professionnel",
+    by: "both" as By,
     topic: "reglementation" as TopicId,
     live: true,
     minutes: 9,
@@ -129,6 +143,7 @@ const ARTICLES = [
   },
   {
     id: "ai-act-calendrier",
+    by: 1 as By,
     topic: "reglementation" as TopicId,
     live: false,
     minutes: 6,
@@ -142,6 +157,7 @@ const ARTICLES = [
   },
   {
     id: "sous-traitance",
+    by: 2 as By,
     topic: "reglementation" as TopicId,
     live: false,
     minutes: 7,
@@ -155,6 +171,7 @@ const ARTICLES = [
   },
   {
     id: "moteur-deterministe",
+    by: 1 as By,
     topic: "produit" as TopicId,
     live: false,
     minutes: 8,
@@ -168,6 +185,7 @@ const ARTICLES = [
   },
   {
     id: "journal-execution",
+    by: 2 as By,
     topic: "produit" as TopicId,
     live: false,
     minutes: 5,
@@ -181,6 +199,7 @@ const ARTICLES = [
   },
   {
     id: "anonymisation",
+    by: "both" as By,
     topic: "donnees" as TopicId,
     live: false,
     minutes: 6,
@@ -248,7 +267,7 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
 
           {/* La ligne d'auteur de la référence : les visages, la date, la durée. */}
           <div className="mt-10 flex items-center gap-3.5">
-            <TeamAvatars size={44} dk={dk} />
+            <TeamAvatars size={44} dk={dk} by="both" />
             <div className="font-inter">
               <p className={`text-[15px] font-semibold ${ink}`}>{t({ fr: "L'équipe Ora", en: "The Ora team" })}</p>
               <p className="mt-0.5 text-[14px] text-[#6b7688]">
@@ -570,7 +589,7 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
               const inner = (
                 <>
                   <div className="flex items-center gap-3">
-                    <TeamAvatars dk={dk} />
+                    <TeamAvatars dk={dk} by={a.by} />
                     <div className="font-inter">
                       <p className={`text-[13.5px] font-semibold ${ink}`}>{t({ fr: "L'équipe Ora", en: "The Ora team" })}</p>
                       <p className="text-[12.5px] text-[#6b7688]">
