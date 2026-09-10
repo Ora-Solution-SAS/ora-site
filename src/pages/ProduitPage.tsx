@@ -187,7 +187,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
                 marges négatives annulent le `py-12` de la grille ; la hauteur
                 les récupère (72vh + 2 × 48 px) pour que le panneau touche les
                 deux bords sans étirer la colonne de texte. */}
-            <div className="prd-stagger prd-d2 h-[340px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[440px] lg:-mt-12 lg:-mb-12 lg:h-[calc(72vh+96px)] lg:rounded-r-none lg:rounded-l-3xl">
+            <div className="prd-stagger prd-d2 h-[340px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[440px] lg:-mt-12 lg:-mb-12 lg:h-[calc(72vh+96px)] lg:rounded-r-none lg:rounded-bl-3xl lg:rounded-tl-none">
               <MockHeroAccueil />
             </div>
 

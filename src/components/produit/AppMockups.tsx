@@ -410,39 +410,12 @@ const BALANCE_ROWS: [string, string, string[], string][] = [
   ["707000", "Ventes de marchandises", ["-42 350,00", "-43 200,00", "-44 050,00", "-44 900,00"], "-564 300,00"],
 ];
 
-/* L'écran de bureau : la barre de menus macOS, le fond de bureau, et les
-   fenêtres posées dessus. Ajouté le 2026-09-10 (client : « je veux que tu
-   mettes les éléments du 3e encadré comme dans un écran en plus de
-   l'encadré ») : sur les captures fournies, Excel et le volet Ora sont deux
-   fenêtres d'un même écran, pas deux images côte à côte. Les libellés de la
-   barre sont ceux d'Excel sur macOS, dans l'ordre de la capture. */
-function DesktopScreen({ width, children }: { width: number; children: ReactNode }) {
-  const menus = ["Fichier", "Édition", "Affichage", "Insérer", "Mise en forme", "Outils", "Données", "Fenêtre", "Aide"];
-  return (
-    <div
-      /* ⚠ shrink-0 : le conteneur du Stage fait la largeur du panneau AVANT
-         mise à l'échelle, donc une maquette plus large que lui est comprimée
-         par le flex et son contenu se casse. C'est le scale qui doit la
-         réduire, pas le flex. */
-      className="shrink-0 overflow-hidden rounded-[18px] font-inter shadow-[0_40px_100px_-30px_rgba(15,23,42,0.45),0_2px_10px_rgba(15,23,42,0.10)] ring-1 ring-black/[0.10]"
-      style={{ width }}
-    >
-      <div className="flex h-[30px] items-center gap-4 border-b border-black/[0.06] bg-[#f3f3f1] px-4">
-        <span className="text-[11.5px] font-bold text-[#1e293b]">Excel</span>
-        {menus.map((m) => (
-          <span key={m} className="text-[11.5px] text-[#334155]">{m}</span>
-        ))}
-        <span className="ml-auto text-[11.5px] text-[#334155]">Jeu. 10 sept. 10:28</span>
-      </div>
-      <div
-        className="flex items-stretch p-7"
-        style={{ background: "linear-gradient(150deg, #cfd8e6 0%, #dfe6ef 45%, #c9d3e2 100%)" }}
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
+/* ⚠ LE CADRE D'ÉCRAN A ÉTÉ RETIRÉ le 2026-09-10, quelques heures après
+   avoir été posé (client : « mets les éléments directement sur le
+   background, le design est moche sinon »). Il enveloppait les deux
+   fenêtres dans un bureau avec barre de menus macOS ; un cadre dans un
+   cadre, ça faisait deux bords concentriques et ça rapetissait les
+   fenêtres. Récupérable au commit 82aacd7 si l'idée revient. */
 
 /* ⚠ LE MENU DU BOUTON « + » A ÉTÉ RETIRÉ le 2026-09-10 (client : « je veux
    qu'il soit supprimé, on le mettra plus tard »). Sa constante PLUS_MENU et
@@ -456,8 +429,8 @@ function DesktopScreen({ width, children }: { width: number; children: ReactNode
    volet par-dessus, le menu au-dessus de tout. */
 export function MockCoteACote() {
   return (
-    <Stage variant="paper" designW={1250} className="aspect-[2/1]">
-      <DesktopScreen width={1076}>
+    <Stage variant="paper" designW={1120} className="aspect-[2/1]">
+      <div className="flex items-stretch">
         {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
         <div className="relative z-0 w-[640px] shrink-0 overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
@@ -585,7 +558,7 @@ export function MockCoteACote() {
             </p>
           </div>
         </div>
-      </DesktopScreen>
+      </div>
     </Stage>
   );
 }

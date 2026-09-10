@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **`/produit` : angle du héro à l'équerre, et plus de cadre autour de la scène Excel** (client 2026-09-10). Le panneau du héro touche la barre de navigation depuis qu'il occupe l'espace du haut : son coin **haut-gauche passe droit** (`rounded-tl-none`), un arrondi y dessinait une encoche ; le coin bas-gauche garde le sien. Et le **cadre d'écran de la scène Excel est retiré** quelques heures après avoir été posé (« mets les éléments directement sur le background, le design est moche sinon ») : les deux fenêtres reposent maintenant à même le fond bleu, sans bureau ni barre de menus macOS. Un cadre dans un cadre donnait deux bords concentriques et rapetissait les fenêtres. Récupérable au commit `82aacd7` si l'idée revient.
+
+### Changed
 - **`/produit`, trois réglages de fond** (client 2026-09-10, capture de legora.com à l'appui). (1) **Le panneau du héro occupe aussi l'espace du haut** : sur grand écran il remonte sous la barre de navigation et redescend jusqu'au bas de la section (marges négatives qui annulent le `py-12` de la grille, hauteur `72vh + 96px` pour les récupérer), comme le média pleine hauteur de la référence. (2) **Le gris de la scène « Automatisez » glisse en couleurs** : bleu-gris, lilas, vert d'eau, tous sous 4 % de saturation perçue, au-delà ils teintent la fenêtre blanche posée dessus. (3) **La scène Excel passe de l'ivoire au bleu**, en dégradé.
 
 ### Changed
