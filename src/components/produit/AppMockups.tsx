@@ -762,6 +762,7 @@ export const APP_MOCKUPS_CSS = `
 @keyframes mkType { 0%, 22% { width: 0; } 52%, 92% { width: 100%; } 97%, 100% { width: 0; } }
 @keyframes mkCaret { 0%, 20% { opacity: 0; } 22%, 92% { opacity: 1; } 95%, 100% { opacity: 0; } }
 @keyframes mkSend { 0%, 52% { background: #bfd7fb; } 56%, 92% { background: #3b82f6; } 96%, 100% { background: #bfd7fb; } }
+@keyframes mkFocus { 0%, 22% { opacity: 0; } 26%, 92% { opacity: 1; } 96%, 100% { opacity: 0; } }
 @keyframes mkAnswer { 0%, 58% { opacity: 0; transform: translateY(8px); } 66%, 94% { opacity: 1; transform: translateY(0); } 99%, 100% { opacity: 0; } }
 .mkv { animation-duration: 6s; animation-iteration-count: infinite; animation-timing-function: cubic-bezier(.4,0,.2,1); }
 @media (prefers-reduced-motion: reduce) { .mkv { animation: none !important; } }
@@ -944,49 +945,72 @@ function SceneBudgetSweep() {
   );
 }
 
-/* La barre de l'assistant du logiciel, jouée comme on s'en sert : le curseur
-   vient cliquer dedans, la question s'écrit, le bouton d'envoi s'allume, la
-   réponse monte. Reprend les éléments réels de l'app (le ✦, le +, le
-   trombone, la flèche d'envoi, les pastilles de réponse) plutôt qu'un décor
-   inventé — client 2026-09-10 : « pousse l'animation avec des éléments de
-   design du logiciel actuel, la barre de chatbot par exemple ». */
+/* La toolbar de l'assistant, reprise sur les captures du logiciel fournies le
+   2026-09-10 (accueil, page Agent, menu du « + » ouvert). Elle a DEUX
+   NIVEAUX, et c'est ce qui la rend reconnaissable : la question sur la
+   première ligne, puis une ligne d'outils qui porte le « + », le trombone, le
+   rappel « Entrée envoie, Maj et Entrée sautent une ligne » et le bouton
+   d'envoi rond. L'anneau bleu clair apparaît à la prise de focus, comme dans
+   l'app, et la note d'anonymisation vit sous le champ.
+   La boucle joue le geste complet : le curseur vient cliquer, le champ prend
+   le focus, la question s'écrit, l'envoi s'allume, la réponse monte. */
 function SceneDemandeStructure() {
   return (
-    <div className="relative flex h-full flex-col justify-center px-6">
+    <div className="relative flex h-full flex-col justify-center px-5">
       <div className="relative">
-        {/* La barre, au repos puis en saisie. */}
-        <div className="flex items-center gap-2 rounded-full bg-white py-2.5 pl-3.5 pr-2 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.28)] ring-1 ring-[#e6ecf4]">
-          <Plus className="h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
-          <OraStar className="h-3.5 w-3.5 shrink-0 text-[#3b82f6]" />
-          <div className="relative min-w-0 flex-1 overflow-hidden">
-            <span
-              className="mkv block overflow-hidden whitespace-nowrap text-[11.5px] text-[#0f172a]"
-              style={{ animationName: "mkType", animationDuration: "8s", animationTimingFunction: "steps(27, end)" }}
-            >
-              Faut-il passer en société ?
+        {/* Le champ, au repos puis en saisie. */}
+        <div className="relative rounded-[18px] bg-white px-3.5 pb-2 pt-3 shadow-[0_10px_28px_-14px_rgba(15,23,42,0.26)] ring-1 ring-[#e6ecf4]">
+          {/* L'anneau de focus, allumé au moment du clic. */}
+          <span
+            className="mkv pointer-events-none absolute inset-0 rounded-[18px] ring-2 ring-[#bfd7fb]"
+            style={{ animationName: "mkFocus", animationDuration: "8s", opacity: 0 }}
+          />
+
+          <div className="relative flex min-h-[18px] items-center gap-2">
+            <OraStar className="h-3.5 w-3.5 shrink-0 text-[#3b82f6]" />
+            <div className="relative min-w-0 flex-1 overflow-hidden">
+              <span
+                className="mkv block overflow-hidden whitespace-nowrap text-[11.5px] text-[#0f172a]"
+                style={{ animationName: "mkType", animationDuration: "8s", animationTimingFunction: "steps(27, end)" }}
+              >
+                Faut-il passer en société ?
+              </span>
+              <span
+                className="mkv absolute right-0 top-1/2 h-[13px] w-px -translate-y-1/2 bg-[#3b82f6]"
+                style={{ animationName: "mkCaret", animationDuration: "8s", animationTimingFunction: "steps(1, end)" }}
+              />
+            </div>
+          </div>
+
+          {/* La ligne d'outils, telle qu'elle est dans l'app. */}
+          <div className="relative mt-2.5 flex items-center gap-2">
+            <Plus className="h-3.5 w-3.5 shrink-0 text-[#64748b]" />
+            <Paperclip className="h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
+            <span className="truncate text-[9px] text-[#cbd5e1]">
+              Entrée envoie, Maj et Entrée sautent une ligne
             </span>
             <span
-              className="mkv absolute right-0 top-1/2 h-[13px] w-px -translate-y-1/2 bg-[#3b82f6]"
-              style={{ animationName: "mkCaret", animationDuration: "8s", animationTimingFunction: "steps(1, end)" }}
-            />
+              className="mkv ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+              style={{ animationName: "mkSend", animationDuration: "8s", background: "#bfd7fb" }}
+            >
+              <ArrowUp className="h-3 w-3 text-white" />
+            </span>
           </div>
-          <Paperclip className="h-3.5 w-3.5 shrink-0 text-[#cbd5e1]" />
-          <span
-            className="mkv flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-            style={{ animationName: "mkSend", animationDuration: "8s", background: "#bfd7fb" }}
-          >
-            <ArrowUp className="h-3 w-3 text-white" />
-          </span>
         </div>
 
-        {/* Le curseur qui vient cliquer dans la barre. */}
+        {/* La mention que l'app affiche sous le champ. */}
+        <p className="mt-2 text-center text-[8.5px] text-[#a8b0bd]">
+          Chiffres du moteur, anonymisés avant l'envoi ; à relire par le cabinet.
+        </p>
+
+        {/* Le curseur qui vient cliquer dans le champ. */}
         <VCursor
-          className="mkv absolute left-[38%] top-1/2"
+          className="mkv absolute left-[40%] top-[38%]"
           style={{ animationName: "mkPointer", animationDuration: "8s", animationTimingFunction: "cubic-bezier(.3,0,.2,1)" }}
         />
       </div>
 
-      {/* La réponse de l'agent : les trois motifs, comme dans le module. */}
+      {/* La réponse de l'agent : les trois motifs du module. */}
       <div
         className="mkv mt-3.5 rounded-2xl bg-white px-4 py-3 shadow-[0_10px_28px_-16px_rgba(15,23,42,0.24)] ring-1 ring-[#eef2f7]"
         style={{ animationName: "mkAnswer", animationDuration: "8s" }}

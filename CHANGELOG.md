@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **La vignette « Changement de structure » reprend la VRAIE toolbar de l'assistant** (client 2026-09-10, trois captures du logiciel à l'appui : accueil, page Agent, menu du « + » ouvert). Elle a **deux niveaux**, et c'est ce qui la rend reconnaissable : la question sur la première ligne derrière le ✦, puis une ligne d'outils qui porte le `+`, le trombone, le rappel « Entrée envoie, Maj et Entrée sautent une ligne » et le bouton d'envoi rond. L'**anneau bleu clair de focus** s'allume au moment du clic, comme dans l'app, et la note « Chiffres du moteur, anonymisés avant l'envoi » vit sous le champ. La boucle de 8 s joue le geste complet : curseur, clic, focus, frappe, envoi qui s'allume, réponse qui monte.
+
+### Changed
 - **Le panneau « Bilan développé » de la landing porte une image, plus un clip** (client 2026-09-10 : « mets l'image pour le bilan imagé »). C'est `ora_bilan_illustration.jpg`, le bilan imagé proprement dit : actif et passif en blocs proportionnels, la formation du résultat dessous. L'enregistrement d'écran qu'elle remplace (`demo-automatisation.mp4`, fourni le 2026-08-13) montrait la version précédente du module ; le fichier reste dans `public/` et tout l'appareillage vidéo (VideoWithScrubber, reprise à zéro à l'arrivée, barre de lecture) est récupérable au commit `a664e11`. Les libellés suivent : « Agrandir l'image », « Voir l'aperçu ». Deux autres captures du même parcours attendent dans `public/posters/` si l'on veut le détailler : `ora_bilan_entrees.jpg` (le choix de la pièce) et `ora_bilan_developpe.jpg` (les montants lus).
 
 ### Changed
