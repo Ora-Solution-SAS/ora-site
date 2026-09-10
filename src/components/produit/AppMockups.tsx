@@ -70,9 +70,14 @@ function useScale(designW: number) {
 /* Les fonds de scène, calqués sur les mises en scène de la bibliothèque
    legora : un studio gris dégradé, un sable chaud, un bleu discret. */
 const STAGES: Record<string, string> = {
-  studio: "linear-gradient(160deg, #eceef1 0%, #f6f7f8 45%, #e2e5e9 100%)",
-  /* Aplat ivoire fourni par le client (2026-09-10) pour la scène Excel. */
-  paper: "#f4f2ed",
+  /* Le gris de la scène « Automatisez » n'est plus un pur gris : il glisse du
+     bleu-gris au lilas puis au vert d'eau, très bas en saturation (client
+     2026-09-10 : « pour le deuxième fond, en gris, crée un peu de dégradé de
+     couleurs »). Les teintes restent sous 4 % de saturation perçue, sinon
+     elles teintent la fenêtre blanche posée dessus. */
+  studio: "linear-gradient(150deg, #e6ebf4 0%, #f1eef6 38%, #f5f4f2 62%, #e7eeea 100%)",
+  /* La scène Excel passe de l'ivoire au BLEU (client, même jour). */
+  paper: "linear-gradient(150deg, #cbdcf5 0%, #e2edfb 45%, #bed4f2 100%)",
   night: "#000000",
 };
 

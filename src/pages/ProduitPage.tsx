@@ -180,8 +180,14 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
             </div>
 
             {/* Média : l'écran d'accueil du logiciel, collé au bord droit sur
-                grand écran, cadré à la manière du héro legora. */}
-            <div className="prd-stagger prd-d2 h-[340px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[440px] lg:h-[72vh] lg:rounded-r-none lg:rounded-l-3xl">
+                grand écran, cadré à la manière du héro legora.
+                ⚠ SUR GRAND ÉCRAN IL REMONTE SOUS LA BARRE DE NAVIGATION et
+                redescend jusqu'au bas de la section (client 2026-09-10 :
+                « chez legora le fond prend aussi l'espace du haut »). Les
+                marges négatives annulent le `py-12` de la grille ; la hauteur
+                les récupère (72vh + 2 × 48 px) pour que le panneau touche les
+                deux bords sans étirer la colonne de texte. */}
+            <div className="prd-stagger prd-d2 h-[340px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[440px] lg:-mt-12 lg:-mb-12 lg:h-[calc(72vh+96px)] lg:rounded-r-none lg:rounded-l-3xl">
               <MockHeroAccueil />
             </div>
 
