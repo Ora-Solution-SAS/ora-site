@@ -7,6 +7,12 @@ Format: `[version] YYYY-MM-DD — description`
 
 ## [Unreleased]
 
+### Added
+- **Une page `/reglementation`** (client 2026-09-10, capture de medium.com à l'appui) : un article de fond sur notre position face au **RGPD, à l'AI Act et au secret professionnel de l'expert-comptable**. Mise en page éditoriale à la Medium : colonne de 720 px, titre sans empattement, **corps en serif** (pile système Iowan/Palatino/Georgia, aucune police ajoutée à la charte), interlignage long, ligne d'auteur avec date et temps de lecture. C'est la seule page dont le corps n'est pas en Inter, et le fichier dit pourquoi. ⚠ Le texte décrit une architecture et **ne revendique aucune certification** (une section entière énumère ce que nous n'avons pas : ni ISO 27001, ni HDS, ni SecNumCloud, et aucun label RGPD puisqu'il n'en existe pas). Ne rien y ajouter qui ne soit pas documenté. Route câblée dans `App.tsx` (type, chemin, meta, branche de rendu), lien ajouté dans la colonne « Produit » du pied de page.
+
+### Changed
+- **`/produit` : les trois blocs de la scène Excel se chevauchent** (client 2026-09-10), le volet de 8 px sur Excel et le menu de 64 px sur le volet, avec un décalage vertical. La composition est resserrée, l'encadré ivoire raccourci (rapport 9/4 au lieu de 2/1). Le chevauchement d'Excel reste volontairement minime : au-delà, le volet mangeait la colonne « Total général ».
+
 ### Changed
 - **`/produit` v7 : la scène Excel devient trois objets distincts** (client 2026-09-10). Son fond passe à l'**ivoire `#f4f2ed`** fourni par le client (variante `paper` des scènes, qui remplace `sand` et `blue`, désormais sans emploi), et le **menu du bouton « + » sort du volet** : il n'est plus superposé mais posé à côté, comme un troisième objet de design, ce qui rend enfin visible la carte « Édition du classeur · fond rouge — Terminé » qu'il masquait. Le panneau passe en 2/1, une scène large et plate flottait au milieu d'un 16/10. **La rangée « Le moteur calcule. L'IA rédige » est retirée** ; l'argument moteur/anonymisation ne subsiste plus que dans les notes de bas de volet (« Chiffres du moteur, anonymisés avant l'envoi ») et dans la table de la bande noire, l'API Mistral n'est plus nommée nulle part sur la page.
 

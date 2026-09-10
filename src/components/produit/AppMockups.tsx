@@ -416,14 +416,16 @@ const PLUS_MENU = [
   { icon: Search, label: "Que surveiller l'an prochain ?", tint: "#0891b2", bg: "#ecfeff" },
 ];
 
-/* Panneau moins haut que les autres : la scène est large et plate (trois blocs
-   côte à côte), un 16/10 la laisserait flotter au milieu du vide. */
+/* Panneau court et large : les trois blocs se CHEVAUCHENT légèrement (client
+   2026-09-10), ce qui resserre la composition et raccourcit l'encadré. Les
+   marges négatives font l'empilement, les z-index l'ordre : Excel dessous, le
+   volet par-dessus, le menu au-dessus de tout. */
 export function MockCoteACote() {
   return (
-    <Stage variant="paper" designW={1390} className="aspect-[2/1]">
-      <div className="flex items-stretch gap-5">
+    <Stage variant="paper" designW={1300} className="aspect-[9/4]">
+      <div className="flex items-stretch">
         {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
-        <div className="w-[640px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        <div className="relative z-0 w-[640px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1d6f42]">
               <FileSpreadsheet className="h-3.5 w-3.5 text-white" />
@@ -492,7 +494,7 @@ export function MockCoteACote() {
         </div>
 
         {/* Le volet Ora, avec le menu du « + » ouvert */}
-        <div className="relative flex w-[360px] flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        <div className="relative z-10 -ml-2 flex w-[360px] flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2 border-b border-[#eef1f5] px-4 py-3">
             <OraStar className="h-4 w-4 text-[#3b82f6]" />
             <span className="text-[13px] font-semibold text-[#0f172a]">Fais la balance</span>
@@ -553,7 +555,7 @@ export function MockCoteACote() {
         {/* Le menu du « + », posé À CÔTÉ et non par-dessus le volet : c'est un
             objet de design à part entière (client 2026-09-10), et superposé il
             cachait la carte du traitement qu'il faut voir. */}
-        <div className="flex w-[268px] shrink-0 flex-col justify-center">
+        <div className="relative z-20 -ml-16 flex w-[268px] shrink-0 translate-y-8 flex-col justify-center">
           <div className="overflow-hidden rounded-[14px] bg-white py-2.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35),0_2px_8px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.07]">
             {PLUS_MENU.map((m) => (
               <div key={m.label} className="flex items-center gap-2.5 px-4 py-[7px]">

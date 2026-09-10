@@ -524,6 +524,7 @@ import OraHeroDemo from "./components/OraHeroDemo";
    finale du conditionnel, sans import de page ; le découper n'aurait aucun sens,
    c'est la page qu'on vient chercher. */
 const ProduitPage = lazy(() => import("./pages/ProduitPage"));
+const ReglementationPage = lazy(() => import("./pages/ReglementationPage"));
 const ForBusinessPage = lazy(() => import("./pages/ForBusinessPage"));
 const OraExperiencePage = lazy(() => import("./pages/OraExperiencePage"));
 const SolutionTemplatePage = lazy(() => import("./pages/SolutionTemplatePage"));
@@ -647,6 +648,7 @@ const FadeInOnScroll = ({
 type Page =
   | "home"
   | "produit"
+  | "reglementation"
   | "for-business"
   | "ora-experience"
   | "solution-template"
@@ -667,6 +669,7 @@ type Page =
 const PAGE_TO_PATH: Record<Page, string> = {
   "home": "/",
   "produit": "/produit",
+  "reglementation": "/reglementation",
   "for-business": "/for-business",
   "ora-experience": "/ora-experience",
   "solution-template": "/solution-template",
@@ -723,6 +726,13 @@ const PAGE_META: Record<Page, { title: { fr: string; en: string }; desc: { fr: s
     desc: {
       fr: "L'application qui enchaîne vos traitements récurrents, de la donnée brute au livrable : démonstrations en vidéo, module par module.",
       en: "The app that runs your recurring work from raw data to deliverable: video demos, module by module.",
+    },
+  },
+  "reglementation": {
+    title: { fr: "Réglementation et conformité", en: "Regulation and compliance" },
+    desc: {
+      fr: "Où se place Ora face au RGPD, à l'AI Act et au secret professionnel de l'expert-comptable : le détail de nos choix d'architecture.",
+      en: "Where Ora stands on GDPR, the AI Act and accountants' professional secrecy: our architecture choices, in detail.",
     },
   },
   "for-business": {
@@ -1269,6 +1279,8 @@ const App = () => {
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
       ) : page === "produit" ? (
         <ProduitPage theme={theme} openBooking={openBooking} />
+      ) : page === "reglementation" ? (
+        <ReglementationPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "for-business" ? (
         <ForBusinessPage theme={theme} openBooking={openBooking} />
       ) : page === "ora-experience" ? (

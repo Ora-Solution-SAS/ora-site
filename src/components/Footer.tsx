@@ -2,7 +2,7 @@ import { Footer } from "./ui/footer";
 import { useLang } from "@/lib/i18n";
 import { BOOKING_CTA } from "@/lib/bookingCta";
 
-type Page = "home" | "produit" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "not-found";
+type Page = "home" | "produit" | "reglementation" | "for-business" | "ora-experience" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "not-found";
 
 interface OraFooterProps {
   onNavigate: (page: Page) => void;
@@ -41,6 +41,7 @@ const OraFooter = ({ onNavigate, onBookCall, theme }: OraFooterProps) => {
           links: [
             { text: t({ fr: "Accueil", en: "Home" }), onClick: () => onNavigate("home") },
             { text: t({ fr: "L'application", en: "The app" }), onClick: () => onNavigate("produit") },
+            { text: t({ fr: "Réglementation", en: "Regulation" }), onClick: () => onNavigate("reglementation") },
             // "L'expérience Ora" and "Tarifs" temporarily hidden until live.
             { text: t(BOOKING_CTA), onClick: onBookCall },
           ],

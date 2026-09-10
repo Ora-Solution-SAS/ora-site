@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import { BOOKING_CTA } from "@/lib/bookingCta";
 
-type Page = "home" | "produit" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
+type Page = "home" | "produit" | "reglementation" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
