@@ -96,9 +96,18 @@ interface AutomationTabsProps {
   openBooking: () => void;
 }
 
-/** L'enregistrement d'écran du module Bilan développé (fourni le 2026-08-13,
- *  Built-in Retina Display.mp4, 1660 x 1080). */
-const DEMO_CLIP = "/demo-automatisation.mp4";
+/** ⚠ LE PANNEAU « BILAN DÉVELOPPÉ » PORTE UNE IMAGE, PLUS UN CLIP. Le client
+ *  a fourni le 2026-09-10 trois captures du module refait ; celle-ci est le
+ *  « bilan imagé » proprement dit : l'actif et le passif en blocs
+ *  proportionnels, et la formation du résultat dessous. L'enregistrement
+ *  d'écran qu'elle remplace (/demo-automatisation.mp4, 2026-08-13) montrait la
+ *  version précédente du module ; il reste dans public/, et tout
+ *  l'appareillage vidéo (VideoWithScrubber, reprise à zéro, barre de lecture)
+ *  est récupérable au commit a664e11.
+ *  Les deux autres captures sont disponibles si l'on veut détailler le
+ *  parcours : ora_bilan_entrees.jpg (le choix de la pièce) et
+ *  ora_bilan_developpe.jpg (les montants lus). */
+const BILAN_IMAGE = "/posters/ora_bilan_illustration.jpg";
 
 /** ── LA DÉMO PRINCIPALE ────────────────────────────────────────────────────
  *  ora-1.mp4, 3840 x 2160, 34 secondes : le film du produit, celui que le
@@ -747,15 +756,15 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       <div className="mb-3 flex justify-end">
                         <ZoomButton
                           onClick={() => setZoom(i)}
-                          label={t({ fr: "Agrandir la vidéo", en: "Enlarge the video" })}
+                          label={t({ fr: "Agrandir l’image", en: "Enlarge the image" })}
                           inline
                         />
                       </div>
-                      <VideoWithScrubber
-                        src={DEMO_CLIP}
-                        frameClassName="relative overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
-                        frameStyle={{ aspectRatio: "1660 / 1037" }}
-                        className="block h-full w-full object-cover object-bottom"
+                      <img
+                        src={BILAN_IMAGE}
+                        alt=""
+                        loading="lazy"
+                        className="block w-full rounded-[12px] bg-white object-contain ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
                       />
                     </div>
                     </div>
@@ -1099,20 +1108,17 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
           onBook={openBooking}
           bookLabel={t(BOOKING_CTA)}
           seeLabel={
-            ITEMS[zoom].media === "video"
-              ? t({ fr: "Voir la démo", en: "Watch the demo" })
-              : t({ fr: "Voir l'aperçu", en: "See the preview" })
+t({ fr: "Voir l'aperçu", en: "See the preview" })
           }
           onClose={() => setZoom(null)}
         >
           {ITEMS[zoom].media === "previsionnel" ? (
             <PrevisionnelStudio />
           ) : ITEMS[zoom].media === "video" ? (
-            <VideoWithScrubber
-              src={DEMO_CLIP}
-              frameClassName="relative overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.10] dark:ring-white/10"
-              frameStyle={{ aspectRatio: "1660 / 1037" }}
-              className="block h-full w-full object-cover object-bottom"
+            <img
+              src={BILAN_IMAGE}
+              alt=""
+              className="block w-full rounded-[12px] bg-white object-contain ring-1 ring-[#0a2540]/[0.10] dark:ring-white/10"
             />
           ) : ITEMS[zoom].media === "structure" ? (
             <StructureShowcaseCard />

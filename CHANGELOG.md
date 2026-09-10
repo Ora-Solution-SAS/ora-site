@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **Le panneau « Bilan développé » de la landing porte une image, plus un clip** (client 2026-09-10 : « mets l'image pour le bilan imagé »). C'est `ora_bilan_illustration.jpg`, le bilan imagé proprement dit : actif et passif en blocs proportionnels, la formation du résultat dessous. L'enregistrement d'écran qu'elle remplace (`demo-automatisation.mp4`, fourni le 2026-08-13) montrait la version précédente du module ; le fichier reste dans `public/` et tout l'appareillage vidéo (VideoWithScrubber, reprise à zéro à l'arrivée, barre de lecture) est récupérable au commit `a664e11`. Les libellés suivent : « Agrandir l'image », « Voir l'aperçu ». Deux autres captures du même parcours attendent dans `public/posters/` si l'on veut le détailler : `ora_bilan_entrees.jpg` (le choix de la pièce) et `ora_bilan_developpe.jpg` (les montants lus).
+
+### Changed
 - **Les fenêtres de la rangée Excel rétrécissent DANS leur encadré** (client 2026-09-10). Le panneau ne bouge pas (1020 × 574, trois quarts de la rangée) ; `designW` remonte de 1050 à 1260, donc Excel et le volet se dessinent plus petits : 819 × 484, soit 100 px de fond bleu de chaque côté et 45 px en haut et en bas, contre 18 et 28 auparavant. ⚠ Deux réglages distincts à ne pas confondre : **la taille de l'encadré** vient de la grille et du ratio, **celle des fenêtres** de `designW`.
 
 ### Changed
