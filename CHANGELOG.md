@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **Le héro de `/produit` : la fenêtre grandit et déborde du cadre en bas à droite** (client 2026-09-10). Elle n'est plus centrée mais ancrée en haut à gauche (`transform-origin` au coin, 4 % / 11 %) et dessinée plus grande que le panneau : le bord de l'encadré en coupe 226 px à droite et 77 px en bas, tandis que le coin visible garde ce qui porte l'argument, la barre latérale, la salutation, les deux gestes et la barre de l'assistant. Le panneau raccourcit (72 vh au lieu de 82) : une fenêtre qui déborde a besoin d'un cadre moins haut qu'elle, sinon il reste du vide dessous. ⚠ Ne pas re-centrer cette maquette : le débordement est l'effet demandé, pas un défaut de mise en page.
+
+### Changed
 - **`/produit` : la scène Excel est posée dans un écran, et le menu du « + » disparaît** (client 2026-09-10). Les deux fenêtres ne flottent plus dans l'encadré : elles sont sur un **bureau**, sous une barre de menus macOS (Excel, Fichier, Édition… et l'heure à droite), comme sur les captures fournies. Le menu des huit traitements est retiré, il reviendra plus tard ; le récupérer au commit `21e0f81` plutôt que de le réécrire. La copie de la rangée ne parle plus du bouton « + » puisqu'il n'est plus montré. ⚠ Deux pièges rencontrés en chemin, notés dans le code : **le conteneur du `Stage` fait la largeur du panneau AVANT mise à l'échelle**, donc toute maquette plus large que lui est comprimée par le flex et son contenu se casse (`shrink-0` sur l'écran et sur chaque fenêtre) ; et le chevauchement des deux fenêtres rognait la colonne « Total général », c'est-à-dire le chiffre que la scène doit prouver, remplacé par un écart de 12 px.
 
 ### Changed

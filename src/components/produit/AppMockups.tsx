@@ -203,10 +203,14 @@ function PromptBar({ placeholder, width }: { placeholder: string; width?: number
    en scène du héro legora, la photo de bureau remplacée par des nappes de
    couleur, comme demandé. ───────────────────────────────────────────────── */
 export function MockHeroAccueil() {
-  /* 1290 pour 1180 + 2 × 24 de verre : la fenêtre remplit presque tout le
-     panneau (client 2026-09-10 : « agrandis la réplication de la page
-     d'accueil »). Descendre encore mangerait l'encadré de verre. */
-  const { ref, scale } = useScale(1290);
+  /* La fenêtre est plus grande que le panneau et ANCRÉE EN HAUT À GAUCHE :
+     elle sort du cadre en bas et à droite, où le bord de l'encadré la coupe
+     (client 2026-09-10 : « qu'elle prenne plus de place mais surtout soit un
+     peu cachée en bas à droite par la délimitation de l'encadré »). Le coin
+     visible est celui qui porte l'argument : la barre latérale, la
+     salutation, les deux gestes et la barre de l'assistant. Ne pas
+     re-centrer : le débordement est l'effet recherché, pas un défaut. */
+  const { ref, scale } = useScale(1010);
   const files = [
     { icon: FileText, tint: "#64748b", bg: "#f1f5f9", name: "FEC 2025 Negoce du Port", kind: "TXT" },
     { icon: FileSpreadsheet, tint: "#16a34a", bg: "#f0fdf4", name: "Fais la balance", kind: "XLSX · FEC" },
@@ -222,7 +226,10 @@ export function MockHeroAccueil() {
       <div className="pointer-events-none absolute bottom-[-25%] right-[-8%] h-[75%] w-[50%] rounded-full opacity-60" style={{ background: "radial-gradient(closest-side, rgba(13,148,136,0.28), transparent)" }} />
       <div className="pointer-events-none absolute left-[35%] top-[55%] h-[50%] w-[40%] rounded-full opacity-50" style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.9), transparent)" }} />
 
-      <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${scale})` }}>
+      <div
+        className="absolute"
+        style={{ left: "4%", top: "11%", transform: `scale(${scale})`, transformOrigin: "top left" }}
+      >
         {/* L'encadré de verre, gris clair et très flouté. */}
         <div className="rounded-[26px] bg-white/40 p-5 shadow-[0_40px_90px_-30px_rgba(15,23,42,0.35)] ring-1 ring-white/60 backdrop-blur-2xl">
           <AppWindow width={1180}>

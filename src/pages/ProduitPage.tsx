@@ -181,7 +181,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
 
             {/* Média : l'écran d'accueil du logiciel, collé au bord droit sur
                 grand écran, cadré à la manière du héro legora. */}
-            <div className="prd-stagger prd-d2 h-[420px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[500px] lg:h-[82vh] lg:rounded-r-none lg:rounded-l-3xl">
+            <div className="prd-stagger prd-d2 h-[340px] overflow-hidden rounded-2xl ring-1 ring-black/5 sm:h-[440px] lg:h-[72vh] lg:rounded-r-none lg:rounded-l-3xl">
               <MockHeroAccueil />
             </div>
 
