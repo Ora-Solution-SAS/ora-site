@@ -13,19 +13,14 @@ import {
   Landmark,
   LayoutGrid,
   MessageCircle,
-  HelpCircle,
   Moon,
   Palette,
   Paperclip,
-  Percent,
   PieChart,
   Plus,
   RotateCcw,
   Scale,
-  Search,
-  ShieldCheck,
   Store,
-  TrendingUp,
 } from "lucide-react";
 
 /* L'étoile Ora : QUATRE branches concaves (le ✦ du logiciel), pas le
@@ -403,18 +398,45 @@ const BALANCE_ROWS: [string, string, string[], string][] = [
   ["707000", "Ventes de marchandises", ["-42 350,00", "-43 200,00", "-44 050,00", "-44 900,00"], "-564 300,00"],
 ];
 
-/* Le menu du bouton « + », repris de la capture : huit propositions, chacune
-   avec sa pastille de couleur. */
-const PLUS_MENU = [
-  { icon: Percent, label: "Calcule la TVA", tint: "#0284c7", bg: "#eff6ff" },
-  { icon: Landmark, label: "Quel impôt sur les sociétés ?", tint: "#d97706", bg: "#fffbeb" },
-  { icon: Scale, label: "Fais la balance", tint: "#059669", bg: "#ecfdf5" },
-  { icon: ShieldCheck, label: "Y a-t-il des anomalies ?", tint: "#ea580c", bg: "#fff7ed" },
-  { icon: Palette, label: "Éditer le document", tint: "#475569", bg: "#f1f5f9" },
-  { icon: TrendingUp, label: "Explique la formation du résultat", tint: "#7c3aed", bg: "#f5f3ff" },
-  { icon: HelpCircle, label: "Quelles questions poser au client ?", tint: "#dc2626", bg: "#fef2f2" },
-  { icon: Search, label: "Que surveiller l'an prochain ?", tint: "#0891b2", bg: "#ecfeff" },
-];
+/* L'écran de bureau : la barre de menus macOS, le fond de bureau, et les
+   fenêtres posées dessus. Ajouté le 2026-09-10 (client : « je veux que tu
+   mettes les éléments du 3e encadré comme dans un écran en plus de
+   l'encadré ») : sur les captures fournies, Excel et le volet Ora sont deux
+   fenêtres d'un même écran, pas deux images côte à côte. Les libellés de la
+   barre sont ceux d'Excel sur macOS, dans l'ordre de la capture. */
+function DesktopScreen({ width, children }: { width: number; children: ReactNode }) {
+  const menus = ["Fichier", "Édition", "Affichage", "Insérer", "Mise en forme", "Outils", "Données", "Fenêtre", "Aide"];
+  return (
+    <div
+      /* ⚠ shrink-0 : le conteneur du Stage fait la largeur du panneau AVANT
+         mise à l'échelle, donc une maquette plus large que lui est comprimée
+         par le flex et son contenu se casse. C'est le scale qui doit la
+         réduire, pas le flex. */
+      className="shrink-0 overflow-hidden rounded-[18px] font-inter shadow-[0_40px_100px_-30px_rgba(15,23,42,0.45),0_2px_10px_rgba(15,23,42,0.10)] ring-1 ring-black/[0.10]"
+      style={{ width }}
+    >
+      <div className="flex h-[30px] items-center gap-4 border-b border-black/[0.06] bg-[#f3f3f1] px-4">
+        <span className="text-[11.5px] font-bold text-[#1e293b]">Excel</span>
+        {menus.map((m) => (
+          <span key={m} className="text-[11.5px] text-[#334155]">{m}</span>
+        ))}
+        <span className="ml-auto text-[11.5px] text-[#334155]">Jeu. 10 sept. 10:28</span>
+      </div>
+      <div
+        className="flex items-stretch p-7"
+        style={{ background: "linear-gradient(150deg, #cfd8e6 0%, #dfe6ef 45%, #c9d3e2 100%)" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ⚠ LE MENU DU BOUTON « + » A ÉTÉ RETIRÉ le 2026-09-10 (client : « je veux
+   qu'il soit supprimé, on le mettra plus tard »). Sa constante PLUS_MENU et
+   son encadré vivaient ici ; les récupérer au commit 21e0f81 plutôt que de
+   les réécrire, les huit libellés et leurs pastilles venaient d'une capture
+   de l'application. */
 
 /* Panneau court et large : les trois blocs se CHEVAUCHENT légèrement (client
    2026-09-10), ce qui resserre la composition et raccourcit l'encadré. Les
@@ -422,10 +444,10 @@ const PLUS_MENU = [
    volet par-dessus, le menu au-dessus de tout. */
 export function MockCoteACote() {
   return (
-    <Stage variant="paper" designW={1300} className="aspect-[9/4]">
-      <div className="flex items-stretch">
+    <Stage variant="paper" designW={1250} className="aspect-[2/1]">
+      <DesktopScreen width={1076}>
         {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
-        <div className="relative z-0 w-[640px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        <div className="relative z-0 w-[640px] shrink-0 overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1d6f42]">
               <FileSpreadsheet className="h-3.5 w-3.5 text-white" />
@@ -494,7 +516,7 @@ export function MockCoteACote() {
         </div>
 
         {/* Le volet Ora, avec le menu du « + » ouvert */}
-        <div className="relative z-10 -ml-2 flex w-[360px] flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        <div className="relative z-10 ml-3 flex w-[360px] shrink-0 flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2 border-b border-[#eef1f5] px-4 py-3">
             <OraStar className="h-4 w-4 text-[#3b82f6]" />
             <span className="text-[13px] font-semibold text-[#0f172a]">Fais la balance</span>
@@ -551,23 +573,7 @@ export function MockCoteACote() {
             </p>
           </div>
         </div>
-
-        {/* Le menu du « + », posé À CÔTÉ et non par-dessus le volet : c'est un
-            objet de design à part entière (client 2026-09-10), et superposé il
-            cachait la carte du traitement qu'il faut voir. */}
-        <div className="relative z-20 -ml-16 flex w-[268px] shrink-0 translate-y-8 flex-col justify-center">
-          <div className="overflow-hidden rounded-[14px] bg-white py-2.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35),0_2px_8px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.07]">
-            {PLUS_MENU.map((m) => (
-              <div key={m.label} className="flex items-center gap-2.5 px-4 py-[7px]">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: m.bg }}>
-                  <m.icon style={{ width: 13, height: 13, color: m.tint }} />
-                </span>
-                <span className="text-[12px] font-medium text-[#0f172a]">{m.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      </DesktopScreen>
     </Stage>
   );
 }

@@ -130,8 +130,8 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       eyebrow: t({ fr: "Dans Excel, à côté du classeur", en: "In Excel, beside the workbook" }),
       title: t({ fr: "L'agent, côte à côte avec Excel", en: "The agent, side by side with Excel" }),
       desc: t({
-        fr: "Ora se range à côté du classeur et écrit dedans. Demandez la balance, un fond de couleur sur la sélection, une correction : le geste est fait dans Excel, et le bouton « + » ouvre les traitements du moment.",
-        en: "Ora docks next to the workbook and writes into it. Ask for the balance, a fill colour on the selection, a correction: the move happens inside Excel, and the plus button opens the tasks that matter right now.",
+        fr: "Ora se range à côté du classeur et écrit dedans. Demandez la balance, un fond de couleur sur la sélection, une correction : le geste est fait dans Excel, sur votre poste, et le journal du moteur garde chaque étape.",
+        en: "Ora docks next to the workbook and writes into it. Ask for the balance, a fill colour on the selection, a correction: the move happens inside Excel, on your machine, and the engine log keeps every step.",
       }),
       visual: <MockCoteACote />,
     },
