@@ -76,8 +76,8 @@ function useScale(designW: number) {
    legora : un studio gris dégradé, un sable chaud, un bleu discret. */
 const STAGES: Record<string, string> = {
   studio: "linear-gradient(160deg, #eceef1 0%, #f6f7f8 45%, #e2e5e9 100%)",
-  sand: "linear-gradient(160deg, #f3efe7 0%, #faf8f3 50%, #e9e4d9 100%)",
-  blue: "linear-gradient(160deg, #e7edf6 0%, #f4f7fb 50%, #dfe7f2 100%)",
+  /* Aplat ivoire fourni par le client (2026-09-10) pour la scène Excel. */
+  paper: "#f4f2ed",
   night: "#000000",
 };
 
@@ -380,75 +380,6 @@ export function MockAgentLecture() {
   );
 }
 
-/* ── 3. Sous le capot : le moteur calcule, l'IA rédige ───────────────────
-   Remplace « Tout est prêt » (client 2026-09-09, 21 h : « je n'aime pas du
-   tout le dossier prêt à envoyer... parler plus du produit, l'API de
-   Mistral, nos prestataires »). Le schéma que la bibliothèque legora
-   recommandait de publier : moteur déterministe local d'un côté, IA
-   rédactionnelle de l'autre, l'anonymisation entre les deux. Les chiffres
-   sont ceux du dossier Negoce du Port (rangée 1). */
-export function MockMoteur() {
-  return (
-    <Stage variant="sand" designW={1150}>
-      <div className="flex items-center gap-4">
-        <div className="w-[210px] rounded-2xl bg-white p-5 shadow-[0_18px_44px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.05]">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#f1f5f9]">
-            <FileText className="h-4.5 w-4.5 text-[#64748b]" style={{ width: 18, height: 18 }} />
-          </span>
-          <p className="mt-3 text-[13.5px] font-semibold text-[#0f172a]">FEC 2025 Negoce du Port</p>
-          <p className="mt-1 text-[12px] text-[#94a3b8]">Déposé · 230 lignes d'écritures</p>
-        </div>
-
-        <ArrowRight className="h-5 w-5 shrink-0 text-[#b0a795]" />
-
-        <div className="w-[290px] rounded-2xl bg-white p-5 shadow-[0_18px_44px_rgba(15,23,42,0.14)] ring-1 ring-black/[0.05]">
-          <div className="flex items-center gap-2.5">
-            <img src="/logos/icon-color.png" alt="" className="h-5 w-auto" />
-            <p className="text-[14px] font-semibold text-[#0f172a]">Le moteur Ora</p>
-          </div>
-          <p className="mt-1 text-[12px] text-[#94a3b8]">Calcule sur votre poste, jamais dans un modèle</p>
-          <div className="mt-3.5 space-y-2">
-            {[
-              "Partie double équilibrée au centime",
-              "Résultat de l'exercice : 44 144 €",
-              "Chaque chiffre se refait à la main",
-            ].map((li) => (
-              <div key={li} className="flex items-center gap-2 text-[12px] text-[#334155]">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#dcfce7]">
-                  <Check className="h-2.5 w-2.5 text-[#16a34a]" strokeWidth={3} />
-                </span>
-                {li}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
-          <span className="rounded-full bg-[#f5f3ff] px-3 py-1 text-[10.5px] font-semibold text-[#6d28d9] ring-1 ring-[#ddd6fe]">
-            chiffres anonymisés
-          </span>
-          <ArrowRight className="h-5 w-5 text-[#b0a795]" />
-        </div>
-
-        <div className="w-[250px] rounded-2xl bg-white p-5 shadow-[0_18px_44px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.05]">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fff7ed]">
-              <OraStar className="h-4 w-4 text-[#ea580c]" />
-            </span>
-            <p className="text-[14px] font-semibold text-[#0f172a]">L'IA rédactionnelle</p>
-          </div>
-          <p className="mt-1 text-[12px] text-[#94a3b8]">API Mistral, prestataire français</p>
-          <div className="mt-3.5 space-y-[7px]">
-            {[92, 100, 78].map((w, i) => (
-              <div key={i} className="h-[5px] rounded-sm bg-[#eef1f5]" style={{ width: `${w}%` }} />
-            ))}
-          </div>
-          <p className="mt-3 text-[11px] text-[#94a3b8]">Rédige et reformule. Ne calcule jamais.</p>
-        </div>
-      </div>
-    </Stage>
-  );
-}
 
 /* ── 4. Excel côte à côte avec le volet Ora, sur la capture du 2026-09-10 :
    la BALANCE MENSUELLE produite par FEC Studio, et l'agent qui vient d'y
@@ -485,10 +416,12 @@ const PLUS_MENU = [
   { icon: Search, label: "Que surveiller l'an prochain ?", tint: "#0891b2", bg: "#ecfeff" },
 ];
 
+/* Panneau moins haut que les autres : la scène est large et plate (trois blocs
+   côte à côte), un 16/10 la laisserait flotter au milieu du vide. */
 export function MockCoteACote() {
   return (
-    <Stage variant="blue" designW={1240}>
-      <div className="flex items-stretch gap-4">
+    <Stage variant="paper" designW={1390} className="aspect-[2/1]">
+      <div className="flex items-stretch gap-5">
         {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
         <div className="w-[640px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
@@ -601,18 +534,6 @@ export function MockCoteACote() {
             </div>
           </div>
 
-          {/* Le menu des propositions, ouvert au-dessus de la barre. */}
-          <div className="absolute inset-x-3 bottom-[74px] overflow-hidden rounded-2xl bg-white py-1 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.28)] ring-1 ring-[#eef1f5]">
-            {PLUS_MENU.map((m) => (
-              <div key={m.label} className="flex items-center gap-2.5 px-3 py-[4px]">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ background: m.bg }}>
-                  <m.icon style={{ width: 11, height: 11, color: m.tint }} />
-                </span>
-                <span className="text-[11px] font-medium text-[#0f172a]">{m.label}</span>
-              </div>
-            ))}
-          </div>
-
           <div className="relative px-4 pb-3.5">
             <div className="flex items-center gap-2 rounded-full py-2 pl-3.5 pr-2 ring-1 ring-[#e2e8f0]">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#eff6ff]">
@@ -626,6 +547,22 @@ export function MockCoteACote() {
             <p className="mt-2 text-[10px] leading-[1.5] text-[#94a3b8]">
               Chiffres du moteur, anonymisés avant l'envoi ; à relire par le cabinet.
             </p>
+          </div>
+        </div>
+
+        {/* Le menu du « + », posé À CÔTÉ et non par-dessus le volet : c'est un
+            objet de design à part entière (client 2026-09-10), et superposé il
+            cachait la carte du traitement qu'il faut voir. */}
+        <div className="flex w-[268px] shrink-0 flex-col justify-center">
+          <div className="overflow-hidden rounded-[14px] bg-white py-2.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35),0_2px_8px_rgba(15,23,42,0.08)] ring-1 ring-black/[0.07]">
+            {PLUS_MENU.map((m) => (
+              <div key={m.label} className="flex items-center gap-2.5 px-4 py-[7px]">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: m.bg }}>
+                  <m.icon style={{ width: 13, height: 13, color: m.tint }} />
+                </span>
+                <span className="text-[12px] font-medium text-[#0f172a]">{m.label}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

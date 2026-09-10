@@ -7,7 +7,6 @@ import {
   MockAssistant,
   MockCoteACote,
   MockHeroAccueil,
-  MockMoteur,
   ModuleCard,
 } from "../components/produit/AppMockups";
 import { useLang } from "@/lib/i18n";
@@ -135,15 +134,6 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         en: "Ora docks next to the workbook and writes into it. Ask for the balance, a fill colour on the selection, a correction: the move happens inside Excel, and the plus button opens the tasks that matter right now.",
       }),
       visual: <MockCoteACote />,
-    },
-    {
-      eyebrow: t({ fr: "Sous le capot", en: "Under the hood" }),
-      title: t({ fr: "Le moteur calcule. L'IA rédige.", en: "The engine computes. The AI writes." }),
-      desc: t({
-        fr: "Chaque chiffre sort du moteur Ora, sur votre poste : un modèle ne calcule jamais rien. L'IA qui rédige, l'API de Mistral, prestataire français, ne reçoit que des chiffres anonymisés. Et chaque chiffre se refait à la main.",
-        en: "Every figure comes out of the Ora engine, on your machine: a model never computes anything. The writing AI, Mistral's API, a French provider, only ever receives anonymized figures. And every figure can be redone by hand.",
-      }),
-      visual: <MockMoteur />,
     },
   ];
 
