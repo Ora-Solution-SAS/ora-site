@@ -432,11 +432,13 @@ const BALANCE_ROWS: [string, string, string[], string][] = [
    volet par-dessus, le menu au-dessus de tout. */
 export function MockCoteACote() {
   return (
-    /* Encadré agrandi (client 2026-09-10 : « fais en sorte que l'encadré à côté
-     du texte soit plus grand ») : le panneau gagne en hauteur (16/9 au lieu
-     de 2/1) et les fenêtres remplissent presque toute sa largeur. Descendre
-     `designW` sous 1050 les collerait au bord. */
-    <Stage variant="paper" designW={1050} className="aspect-[16/9]">
+    /* Le panneau garde sa taille (16/9, trois quarts de la rangée) mais les
+     fenêtres RESPIRENT DEDANS : `designW` remonte de 1050 à 1260, donc elles
+     se dessinent plus petites et laissent du fond bleu tout autour
+     (client 2026-09-10 : « rétrécis la taille des designs à l'intérieur de
+     l'encadré »). Ne pas confondre les deux réglages : la taille de l'encadré
+     vient de la grille et du ratio, celle des fenêtres de `designW`. */
+    <Stage variant="paper" designW={1260} className="aspect-[16/9]">
       <div className="flex items-stretch">
         {/* Excel : la balance mensuelle, fond bleu appliqué par l'agent */}
         <div className="relative z-0 w-[640px] shrink-0 overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">

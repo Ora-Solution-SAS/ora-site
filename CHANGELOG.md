@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **Les fenêtres de la rangée Excel rétrécissent DANS leur encadré** (client 2026-09-10). Le panneau ne bouge pas (1020 × 574, trois quarts de la rangée) ; `designW` remonte de 1050 à 1260, donc Excel et le volet se dessinent plus petits : 819 × 484, soit 100 px de fond bleu de chaque côté et 45 px en haut et en bas, contre 18 et 28 auparavant. ⚠ Deux réglages distincts à ne pas confondre : **la taille de l'encadré** vient de la grille et du ratio, **celle des fenêtres** de `designW`.
+
+### Changed
 - **`/reglementation` : les visages changent d'un article à l'autre** (client 2026-09-10 : « sinon c'est pas cohérent si on est tous les deux auteurs de tous les articles »). Chaque article porte un `by` (`1`, `2` ou `"both"`) ; l'article publié reste co-signé, les sujets annoncés alternent. ⚠ **Aucun nom n'est affiché, et ce n'est pas un oubli** : les prénoms des fondateurs n'apparaissent nulle part dans le dépôt et la règle du projet est de ne rien inventer de nominatif. Le libellé collectif reste vrai quel que soit le signataire ; le jour où les prénoms sont fournis, il suffit d'ajouter un `name` par article.
 - **La vignette « Changement de structure » joue la barre de l'assistant, pas un décor** (client, même jour : « pousse l'animation avec des éléments de design du logiciel actuel, la barre de chatbot par exemple »). La boucle enchaîne le curseur qui vient cliquer dans la barre, la question qui s'écrit au caractère (« Faut-il passer en société ? »), le bouton d'envoi qui s'allume, puis la réponse qui monte avec les trois motifs du module. Tous les éléments sont ceux de l'app : le ✦, le `+`, le trombone, la flèche d'envoi. La boucle dure **8 s et non 6** : à 6 s la réponse n'avait que quelques dixièmes à l'écran et on la manquait.
 
