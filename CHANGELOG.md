@@ -8,6 +8,10 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **Le panneau « Changement de structure » DE LA LANDING porte la vraie toolbar de l'assistant** (client 2026-09-10 : « tu n'as absolument pas appliqué ce que je voulais en reprenant des designs issus du logiciel »). La demande visait ce panneau d'`AutomationTabs`, pas la vignette de `/produit` corrigée juste avant. La pilule de décor (une ligne, un texte gris qui s'écrit, une pastille bleue à flèche) est remplacée par la toolbar à **deux niveaux** du logiciel : la question derrière le ✦, puis la ligne d'outils avec le `+`, le trombone, « Entrée envoie, Maj et Entrée sautent une ligne » et le bouton d'envoi rond ; la note d'anonymisation vit dessous. La frappe automatique (Typewriter) et le statut de décor (`aria-hidden`, aucun input réel) sont conservés.
+- **L'étoile ✦ devient un composant partagé** (`src/components/ui/OraStar.tsx`). Elle servait déjà les maquettes de `/produit` et sert maintenant la landing : la dupliquer la ferait diverger, et importer `AppMockups` depuis la landing y ferait entrer toutes les maquettes Excel pour un seul SVG.
+
+### Changed
 - **La vignette « Changement de structure » reprend la VRAIE toolbar de l'assistant** (client 2026-09-10, trois captures du logiciel à l'appui : accueil, page Agent, menu du « + » ouvert). Elle a **deux niveaux**, et c'est ce qui la rend reconnaissable : la question sur la première ligne derrière le ✦, puis une ligne d'outils qui porte le `+`, le trombone, le rappel « Entrée envoie, Maj et Entrée sautent une ligne » et le bouton d'envoi rond. L'**anneau bleu clair de focus** s'allume au moment du clic, comme dans l'app, et la note « Chiffres du moteur, anonymisés avant l'envoi » vit sous le champ. La boucle de 8 s joue le geste complet : curseur, clic, focus, frappe, envoi qui s'allume, réponse qui monte.
 
 ### Changed

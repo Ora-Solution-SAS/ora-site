@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowUp, Paperclip, Play, Plus } from "lucide-react";
+import OraStar from "./ui/OraStar";
 import { VideoWithScrubber } from "./InViewVideo";
 import OraAppScene from "./OraAppScene";
 import { useLang } from "@/lib/i18n";
@@ -878,25 +879,54 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                               })}
                             </span>
                           </p>
-                          {/* Le champ s'écrit tout seul (client 2026-08-13). Reste
-                              un DÉCOR : aria-hidden, aucun input réel, la vraie
-                              saisie vit dans le logiciel. `min-w-0` sur le
+                          {/* ⚠ CE N'EST PLUS UNE PILULE DE DÉCOR, C'EST LA TOOLBAR
+                              DE L'ASSISTANT, à l'identique (client 2026-09-10,
+                              trois captures du logiciel à l'appui : « reprends
+                              des designs issus du logiciel »). Ce qui la rend
+                              reconnaissable, c'est qu'elle a DEUX NIVEAUX : la
+                              question derrière le ✦, puis une ligne d'outils
+                              qui porte le +, le trombone, le rappel de saisie et
+                              le bouton d'envoi rond. La note d'anonymisation
+                              vit dessous, comme dans l'app.
+                              Reste un DÉCOR : aria-hidden, aucun input réel, la
+                              vraie saisie vit dans le logiciel. `min-w-0` sur le
                               conteneur du texte, sinon la phrase en cours de
-                              frappe pousse la pastille bleue hors du champ. */}
-                          <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
-                            <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
-                              <Typewriter
-                                phrases={[
-                                  t({
-                                    fr: "Comment optimiser la rémunération du dirigeant",
-                                    en: "How to optimise the director's pay",
-                                  }),
-                                ]}
-                              />
-                            </span>
-                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
-                              <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-                            </span>
+                              frappe pousse le bouton hors du champ. */}
+                          <div aria-hidden className="mt-10 md:mt-16">
+                            <div className="rounded-[18px] bg-white px-4 pb-2.5 pt-3.5 ring-1 ring-[#0a2540]/[0.10] shadow-[0_10px_30px_-18px_rgba(10,37,64,0.35)] dark:bg-[#111827] dark:ring-white/10">
+                              <div className="flex min-h-[20px] items-center gap-2.5">
+                                <OraStar className="h-4 w-4 shrink-0 text-[#3b82f6]" />
+                                <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#0f172a] dark:text-gray-200">
+                                  <Typewriter
+                                    phrases={[
+                                      t({
+                                        fr: "Comment optimiser la rémunération du dirigeant",
+                                        en: "How to optimise the director's pay",
+                                      }),
+                                    ]}
+                                  />
+                                </span>
+                              </div>
+                              <div className="mt-3 flex items-center gap-2.5">
+                                <Plus className="h-4 w-4 shrink-0 text-[#64748b] dark:text-gray-400" />
+                                <Paperclip className="h-4 w-4 shrink-0 text-[#94a3b8] dark:text-gray-500" />
+                                <span className="hidden truncate font-inter text-[11px] text-[#c4cad6] dark:text-gray-600 sm:block">
+                                  {t({
+                                    fr: "Entrée envoie, Maj et Entrée sautent une ligne",
+                                    en: "Enter sends, Shift and Enter add a line",
+                                  })}
+                                </span>
+                                <span className="ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
+                                  <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
+                                </span>
+                              </div>
+                            </div>
+                            <p className="mt-2.5 text-center font-inter text-[11px] text-[#a8b0bd] dark:text-gray-600">
+                              {t({
+                                fr: "Chiffres du moteur, anonymisés avant l'envoi ; à relire par le cabinet.",
+                                en: "Figures from the engine, anonymised before sending; to be reviewed by the firm.",
+                              })}
+                            </p>
                           </div>
                         </div>
 

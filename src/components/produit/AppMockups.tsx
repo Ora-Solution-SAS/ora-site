@@ -22,18 +22,7 @@ import {
   Scale,
   Store,
 } from "lucide-react";
-
-/* L'étoile Ora : QUATRE branches concaves (le ✦ du logiciel), pas le
-   Sparkles de Lucide — le client a signalé la différence, captures à
-   l'appui (2026-09-09, 21 h). À réutiliser pour toute évocation de
-   l'assistant. */
-function OraStar({ className, style }: { className?: string; style?: CSSProperties }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className} style={style} aria-hidden>
-      <path d="M12 2C12.9 7.6 16.4 11.1 22 12C16.4 12.9 12.9 16.4 12 22C11.1 16.4 7.6 12.9 2 12C7.6 11.1 11.1 7.6 12 2Z" />
-    </svg>
-  );
-}
+import OraStar from "../ui/OraStar";
 
 /* Visuels de la page produit, v2 du 2026-09-09 au soir. Le client a fourni
    six captures de l'application RÉELLE (barre latérale Accueil / Agent /
