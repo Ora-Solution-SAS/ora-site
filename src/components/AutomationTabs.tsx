@@ -356,10 +356,19 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
   const zone = "bg-[#f8f8f7] dark:bg-white/[0.04]";
 
   return (
+    /* ⚠ CETTE SECTION N'EST PLUS BLANCHE : elle porte le blanc bleuté
+       `#f8fafd` et le liseré qui le sépare du blanc pur du héro (client
+       2026-09-10, capture de stripe.com à l'appui : « le haut de la landing
+       full blanc, puis quelque chose de très légèrement plus grisaillé mais
+       toujours très proche du blanc »). Le raccord est un dégradé, il vit à
+       la fin d'OraHeroDemo ; ici il n'y a plus qu'un aplat, et le liseré qui
+       marque la limite. C'est une exception assumée à l'alternance
+       `#fcfbf7` / `#ffffff` de la charte, sur cette section uniquement. */
     <section
       id="automatisations"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-0 bg-white dark:bg-black"
+      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-0 border-t border-[#e3edf5] dark:border-white/5 dark:bg-black"
+      style={{ backgroundColor: "#f8fafd" }}
     >
       <div className={`mx-auto max-w-[86rem] border-x ${rule}`}>
         <motion.h2

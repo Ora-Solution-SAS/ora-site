@@ -1424,7 +1424,17 @@ const App = () => {
               l'intérieur d'une même colonne.
           Le rembourrage latéral passe de la section au cadre, sinon il se
           compterait deux fois et la grille rentrerait de 48 px sur les onglets. */}
-      <section id="features" className="relative pt-0 pb-0 bg-white dark:bg-black md:dark:bg-background">
+      {/* La remontée du blanc bleuté vers le blanc pur se fait en dégradé sur
+          160 px, comme la descente à la fin du héro : sans lui, la sortie de
+          la section à onglets dessine une ligne franche là où stripe.com ne
+          montre aucune limite. Style en ligne plutôt que classe : le mode
+          sombre est verrouillé (voir CLAUDE.md), et `dark:bg-black` reste en
+          place pour le jour où il reviendrait. */}
+      <section
+        id="features"
+        className="relative pt-0 pb-0 dark:bg-black md:dark:bg-background"
+        style={{ background: "linear-gradient(#f8fafd 0px, #ffffff 160px)" }}
+      >
         {/* Ambient blue/pink tints — pure radial gradients, NO blur filter
             (same perf rule as the experience section). The section is very
             tall, so blobs are sprinkled along it. Every ellipse fades to
