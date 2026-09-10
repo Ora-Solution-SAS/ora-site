@@ -216,7 +216,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       {/* ── Trois rangées média + texte, en alternance ──────────────── */}
       <section className="py-20 md:py-28" style={{ background: bg }}>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
-          <div className="flex flex-col gap-20 md:gap-28">
+          <div className="flex flex-col gap-28 md:gap-44">
             {features.map((f, i) => (
               /* Le média occupe TROIS QUARTS de la rangée, pas deux tiers
                  (client 2026-09-10, deux demandes d'agrandissement successives

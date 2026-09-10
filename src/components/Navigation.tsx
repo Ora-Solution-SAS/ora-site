@@ -272,6 +272,24 @@ const Navigation: React.FC<NavigationProps> = ({
                 </button>
               </NavigationMenuItem>
 
+              {/* Réglementation — le centre de ressources (client 2026-09-10 :
+                  « mets aussi un lien pour voir la page réglementation »). En
+                  barre principale plutôt qu'en pied de page : sur ce marché la
+                  conformité est une objection d'achat, pas une mention légale. */}
+              <NavigationMenuItem>
+                <button
+                  type="button"
+                  onClick={() => { setMenuValue(""); setMobileOpen(false); onNavigate("reglementation"); }}
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "text-[15.5px] font-normal text-[#323338] hover:text-[#323338] dark:text-gray-300",
+                    overDark && "text-white/85 hover:text-white hover:bg-white/10",
+                  )}
+                >
+                  {t({ fr: "Réglementation", en: "Regulation" })}
+                </button>
+              </NavigationMenuItem>
+
               {/* Solutions */}
               {/* Liens en Figtree 400, 15,5 px, encre quasi noire #323338 — les
                   valeurs de la barre monday (client 2026-08-08 : « même police,
@@ -423,6 +441,14 @@ const Navigation: React.FC<NavigationProps> = ({
               className="flex items-center px-3 py-2.5 mt-1 rounded-lg text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-left"
             >
               {t({ fr: "Produit", en: "Product" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMobileOpen(false); onNavigate("reglementation"); }}
+              className="flex items-center px-3 py-2.5 rounded-lg text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-left"
+            >
+              {t({ fr: "Réglementation", en: "Regulation" })}
             </button>
 
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>

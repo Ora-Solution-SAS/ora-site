@@ -8,6 +8,12 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **`/produit` : plus d'air entre les rangées, et un Excel qui ressemble à Excel** (client 2026-09-10). L'écart entre les rangées de features passe de 112 à 176 px (224 px mesurés bord à bord). La fenêtre Excel gagne ce qui la faisait lire comme un simple tableau : **ruban à onglets soulignés, groupes d'outils** (gras/italique/souligné, Calibri 11, le pot de peinture en surbrillance puisque c'est l'outil que l'agent vient d'employer), **barre de formule** (cellule A8, `fx`, contenu), **en-têtes de colonnes A à G et numéros de lignes**, **barre d'état** (Prêt, Moyenne, Nb, Somme, zoom) et un « + » après les onglets de feuilles. Le fond appliqué par l'agent devient un **dégradé de bleus**, du plus soutenu en haut au plus clair en bas. ⚠ Les numéros de lignes vivent DANS la table, pas dans une gouttière à côté : une colonne séparée ne peut pas garantir que ses hauteurs suivent celles des cellules, et le décalage se voyait dès la troisième ligne.
+
+### Added
+- **Un lien « Réglementation » dans la barre de navigation** (client, même jour), en desktop et dans le tiroir mobile. Il n'était jusque-là qu'en pied de page : sur ce marché la conformité est une objection d'achat, pas une mention légale.
+
+### Changed
 - **Plus de rouge dans la scène Excel** (client 2026-09-10 : « j'aime pas du tout »). Le fond que l'agent applique sur la sélection passe du rouge au **bleu** `#e6eefb`, et les onglets de feuilles, rouges sur la capture d'origine, deviennent un ruban sobre (actif en blanc cerné, les autres en gris). La conversation du volet suit : « peux-tu mettre en bleu la zone sélectionnée », « Édition du classeur · fond bleu », « Fond bleu appliqué sur : Balance mensuelle ». La scène garde sa raison d'être : prouver que l'agent **écrit** dans le classeur, pas seulement qu'il le lit.
 
 ### Changed

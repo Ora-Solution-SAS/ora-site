@@ -447,49 +447,158 @@ export function MockCoteACote() {
             <span className="text-[12px] font-semibold text-[#1e293b]">FEC 2025 Negoce du Port (xlsx)_studio</span>
             <span className="ml-auto text-[11px] text-[#94a3b8]">Enregistrement automatique</span>
           </div>
+          {/* Le ruban, ses groupes d'outils, la barre de formule, les
+              en-têtes de colonnes et de lignes, la barre d'état : c'est ce qui
+              fait lire « Excel » plutôt que « tableau » (client 2026-09-10 :
+              « une réplication d'un Excel un peu plus réaliste »). */}
           <div className="flex gap-4 border-b border-[#e6e8ec] px-4 py-1.5 text-[11px] text-[#475569]">
-            {["Accueil", "Insertion", "Formules", "Données", "Affichage", "Ora"].map((t, i) => (
-              <span key={t} className={i === 0 ? "font-semibold text-[#1d6f42]" : i === 5 ? "font-semibold text-[#3b82f6]" : ""}>{t}</span>
+            {["Accueil", "Insertion", "Formules", "Données", "Révision", "Affichage", "Ora"].map((t, i) => (
+              <span
+                key={t}
+                className={
+                  i === 0
+                    ? "border-b-2 border-[#1d6f42] pb-0.5 font-semibold text-[#1d6f42]"
+                    : i === 6
+                      ? "font-semibold text-[#3b82f6]"
+                      : ""
+                }
+              >
+                {t}
+              </span>
             ))}
           </div>
-          <div className="px-4 pt-3">
-            <p className="text-[12.5px] font-bold text-[#0f172a]">BALANCE MENSUELLE</p>
-            <p className="mt-0.5 text-[9.5px] italic text-[#94a3b8]">
-              Le solde de chaque compte, mois par mois, en colonnes.
-            </p>
+
+          {/* Les groupes du ruban d'accueil. */}
+          <div className="flex items-center gap-3 border-b border-[#e6e8ec] bg-[#fbfcfd] px-4 py-2">
+            <div className="flex items-center gap-1.5 border-r border-[#e6e8ec] pr-3">
+              <span className="rounded px-1.5 py-0.5 text-[10px] font-bold text-[#475569] ring-1 ring-[#dbe3ec]">B</span>
+              <span className="rounded px-1.5 py-0.5 text-[10px] italic text-[#475569] ring-1 ring-[#dbe3ec]">I</span>
+              <span className="rounded px-1.5 py-0.5 text-[10px] text-[#475569] underline ring-1 ring-[#dbe3ec]">S</span>
+            </div>
+            <div className="flex items-center gap-1.5 border-r border-[#e6e8ec] pr-3">
+              <span className="text-[10px] text-[#64748b]">Calibri</span>
+              <span className="text-[10px] text-[#94a3b8]">11</span>
+            </div>
+            {/* Le pot de peinture, en surbrillance : c'est l'outil que l'agent
+                vient d'utiliser. */}
+            <div className="flex items-center gap-1.5 border-r border-[#e6e8ec] pr-3">
+              <span className="flex items-center gap-1 rounded bg-[#e6eefb] px-1.5 py-0.5 ring-1 ring-[#bfd4f2]">
+                <Palette style={{ width: 11, height: 11, color: "#2563eb" }} />
+                <span className="h-[3px] w-3 rounded-sm bg-[#2f6db4]" />
+              </span>
+              <span className="text-[10px] text-[#64748b]">%</span>
+              <span className="text-[10px] text-[#64748b]">0,00</span>
+            </div>
+            <span className="text-[10px] text-[#64748b]">Fusionner</span>
+            <span className="ml-auto text-[10px] text-[#94a3b8]">Somme automatique</span>
           </div>
-          <table className="mt-2 w-full border-collapse text-[9.5px]">
-            <thead>
-              <tr className="bg-[#2f6db4] text-left text-white">
-                <th className="px-2.5 py-1.5 font-semibold">Compte</th>
-                <th className="px-2.5 py-1.5 font-semibold">Libellé</th>
-                {MOIS.map((m) => (
-                  <th key={m} className="px-2 py-1.5 text-right font-semibold">{m}</th>
-                ))}
-                <th className="px-2.5 py-1.5 text-right font-semibold">Total général</th>
-              </tr>
-            </thead>
-            <tbody className="text-[#334155]">
-              {BALANCE_ROWS.map((r) => (
-                /* Le fond que l'agent vient d'appliquer. */
-                <tr key={r[0]} className="bg-[#e6eefb]">
-                  <td className="px-2.5 py-[4px]">{r[0]}</td>
-                  <td className="px-2.5 py-[4px]">{r[1]}</td>
-                  {r[2].map((v, i) => (
-                    <td key={i} className="px-2 py-[4px] text-right">{v}</td>
-                  ))}
-                  <td className="px-2.5 py-[4px] text-right">{r[3]}</td>
-                </tr>
+
+          {/* Barre de formule : la cellule active et son contenu. */}
+          <div className="flex items-center gap-2 border-b border-[#e6e8ec] px-3 py-1.5">
+            <span className="w-16 rounded bg-white px-2 py-0.5 text-center text-[10px] font-medium text-[#334155] ring-1 ring-[#dbe3ec]">A8</span>
+            <span className="text-[10px] font-serif italic text-[#64748b]">fx</span>
+            <span className="flex-1 text-[10px] text-[#334155]">101000</span>
+          </div>
+
+          {/* La feuille : en-têtes de colonnes, numéros de lignes, sélection. */}
+          <div className="flex">
+            {/* La gouttière ne porte que les lignes AU-DESSUS du tableau ; les
+                numéros des lignes de données vivent dans la table, sinon rien
+                ne garantit qu'ils restent en face de leur ligne. */}
+            <div className="w-[26px] shrink-0 border-r border-[#e6e8ec] bg-[#f6f8fa]">
+              <div className="h-[22px] border-b border-[#e6e8ec]" />
+              {[5, 6, 7].map((n) => (
+                <div key={n} className="flex h-[21px] items-center justify-center border-b border-[#eef1f5] text-[8.5px] text-[#94a3b8]">
+                  {n}
+                </div>
               ))}
-              <tr className="bg-[#e6eefb] font-semibold text-[#0f172a] ring-1 ring-[#2f6db4]">
-                <td className="px-2.5 py-[4px]" colSpan={2}>Total général</td>
-                {MOIS.map((m) => (
-                  <td key={m} className="px-2 py-[4px] text-right">0,00</td>
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <div className="flex h-[22px] border-b border-[#e6e8ec] bg-[#f6f8fa] text-[8.5px] text-[#94a3b8]">
+                {["A", "B", "C", "D", "E", "F", "G"].map((c, i) => (
+                  <span
+                    key={c}
+                    className={`flex items-center justify-center border-r border-[#e6e8ec] ${
+                      i === 1 ? "flex-[2]" : "flex-1"
+                    } ${i <= 6 ? "bg-[#dbe7f6] font-semibold text-[#2f6db4]" : ""}`}
+                  >
+                    {c}
+                  </span>
                 ))}
-                <td className="px-2.5 py-[4px] text-right">0,00</td>
-              </tr>
-            </tbody>
-          </table>
+              </div>
+
+              <div className="h-[63px] px-3 pt-2">
+                <p className="text-[12px] font-bold text-[#0f172a]">BALANCE MENSUELLE</p>
+                <p className="text-[9px] italic text-[#94a3b8]">
+                  Le solde de chaque compte, mois par mois, en colonnes.
+                </p>
+              </div>
+
+              {/* La plage sélectionnée porte le liseré vert d'Excel. */}
+              <table className="-ml-[26px] w-[calc(100%+26px)] border-collapse text-[9.5px]">
+                <thead>
+                  <tr className="bg-[#2f6db4] text-left text-white">
+                    <th className="w-[26px] border-r border-[#e6e8ec] bg-[#f6f8fa] px-0 py-1.5 text-center text-[8.5px] font-normal text-[#94a3b8]" />
+                    <th className="px-2.5 py-1.5 font-semibold">Compte</th>
+                    <th className="px-2.5 py-1.5 font-semibold">Libellé</th>
+                    {MOIS.map((m) => (
+                      <th key={m} className="px-2 py-1.5 text-right font-semibold">{m}</th>
+                    ))}
+                    <th className="px-2.5 py-1.5 text-right font-semibold">Total général</th>
+                  </tr>
+                </thead>
+                <tbody className="text-[#334155]">
+                  {BALANCE_ROWS.map((r, i) => (
+                    /* Le fond que l'agent vient d'appliquer : un DÉGRADÉ de
+                       bleus, du plus soutenu en haut au plus clair en bas
+                       (client 2026-09-10), plutôt qu'un aplat uniforme. */
+                    <tr key={r[0]}>
+                      <td className="w-[26px] border-b border-r border-[#eef1f5] bg-[#f6f8fa] py-[4px] text-center text-[8.5px] text-[#94a3b8]">
+                        {i + 8}
+                      </td>
+                      <td
+                        className="border-r border-white/70 px-2.5 py-[4px]"
+                        style={{ background: `rgba(47, 109, 180, ${0.2 - i * 0.014})` }}
+                      >
+                        {r[0]}
+                      </td>
+                      <td
+                        className="border-r border-white/70 px-2.5 py-[4px]"
+                        style={{ background: `rgba(47, 109, 180, ${0.2 - i * 0.014})` }}
+                      >
+                        {r[1]}
+                      </td>
+                      {r[2].map((v, j) => (
+                        <td
+                          key={j}
+                          className="border-r border-white/70 px-2 py-[4px] text-right"
+                          style={{ background: `rgba(47, 109, 180, ${0.2 - i * 0.014})` }}
+                        >
+                          {v}
+                        </td>
+                      ))}
+                      <td
+                        className="px-2.5 py-[4px] text-right"
+                        style={{ background: `rgba(47, 109, 180, ${0.2 - i * 0.014})` }}
+                      >
+                        {r[3]}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-[#2f6db4] font-semibold text-[#0f172a]">
+                    <td className="w-[26px] border-r border-[#eef1f5] bg-[#f6f8fa] py-[4px] text-center text-[8.5px] font-normal text-[#94a3b8]">34</td>
+                    <td className="px-2.5 py-[4px]" colSpan={2} style={{ background: "rgba(47, 109, 180, 0.06)" }}>Total général</td>
+                    {MOIS.map((m) => (
+                      <td key={m} className="px-2 py-[4px] text-right" style={{ background: "rgba(47, 109, 180, 0.06)" }}>0,00</td>
+                    ))}
+                    <td className="px-2.5 py-[4px] text-right" style={{ background: "rgba(47, 109, 180, 0.06)" }}>0,00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div className="flex gap-1.5 border-t border-[#e6e8ec] bg-[#f6f8fa] px-3 py-1.5 text-[9px]">
             {["Sommaire", "Paramètres", "Synthèse du dossier", "Balance mensuelle", "Balances (données)"].map((t, i) => (
               <span
@@ -503,6 +612,14 @@ export function MockCoteACote() {
                 {t}
               </span>
             ))}
+            <span className="ml-2 text-[9px] text-[#94a3b8]">+</span>
+          </div>
+          <div className="flex items-center gap-4 border-t border-[#e6e8ec] bg-[#f6f8fa] px-4 py-1 text-[9px] text-[#64748b]">
+            <span>Prêt</span>
+            <span>Moyenne : 24 315,71</span>
+            <span>Nb (non vides) : 84</span>
+            <span>Somme : 656 493,86</span>
+            <span className="ml-auto">100 %</span>
           </div>
         </div>
 
