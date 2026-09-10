@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **Plus de rouge dans la scène Excel** (client 2026-09-10 : « j'aime pas du tout »). Le fond que l'agent applique sur la sélection passe du rouge au **bleu** `#e6eefb`, et les onglets de feuilles, rouges sur la capture d'origine, deviennent un ruban sobre (actif en blanc cerné, les autres en gris). La conversation du volet suit : « peux-tu mettre en bleu la zone sélectionnée », « Édition du classeur · fond bleu », « Fond bleu appliqué sur : Balance mensuelle ». La scène garde sa raison d'être : prouver que l'agent **écrit** dans le classeur, pas seulement qu'il le lit.
+
+### Changed
 - **Les encadrés des rangées de features sont agrandis, en deux passes** (client 2026-09-10). D'abord le panneau de la rangée Excel passe du 2/1 au 16/9 et ses fenêtres grandissent (`designW` 1120 → 1050) ; puis, « agrandis encore », le média prend **trois quarts de la rangée au lieu de deux tiers** (`lg:grid-cols-4` + `col-span-3`). Mesuré à 1440 px : le panneau passe de 901 × 507 à **1020 × 574** et son contenu de 868 × 405 à **983 × 458**, soit +13 % sur les deux dimensions. La colonne de texte tombe à 308 px, assez pour une mesure de 40 caractères ; en dessous il faudrait réduire le corps.
 
 ### Changed

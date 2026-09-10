@@ -390,9 +390,12 @@ export function MockAgentLecture() {
 
 /* ── 4. Excel côte à côte avec le volet Ora, sur la capture du 2026-09-10 :
    la BALANCE MENSUELLE produite par FEC Studio, et l'agent qui vient d'y
-   appliquer un fond rouge sur la sélection. Deux choses que le client a
+   appliquer un fond de couleur sur la sélection. Deux choses que le client a
    demandé de montrer : le double écran réel, et le menu de propositions qui
-   s'ouvre au clic sur le « + ». Le fond rouge n'est pas décoratif : c'est
+   s'ouvre au clic sur le « + ». ⚠ CE FOND ÉTAIT ROUGE, comme sur la capture
+   d'origine ; il est passé au bleu le 2026-09-10 (« le Excel ne doit pas être
+   en rouge, j'aime pas du tout »), onglets de feuilles compris. Le fond
+   coloré n'est pas décoratif : c'est
    la preuve que l'agent ÉCRIT dans le classeur, pas seulement qu'il lit. */
 const MOIS = ["2025-01", "2025-02", "2025-03", "2025-04"];
 const BALANCE_ROWS: [string, string, string[], string][] = [
@@ -435,7 +438,7 @@ export function MockCoteACote() {
      `designW` sous 1050 les collerait au bord. */
     <Stage variant="paper" designW={1050} className="aspect-[16/9]">
       <div className="flex items-stretch">
-        {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
+        {/* Excel : la balance mensuelle, fond bleu appliqué par l'agent */}
         <div className="relative z-0 w-[640px] shrink-0 overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1d6f42]">
@@ -468,8 +471,8 @@ export function MockCoteACote() {
             </thead>
             <tbody className="text-[#334155]">
               {BALANCE_ROWS.map((r) => (
-                /* Le fond rouge que l'agent vient d'appliquer. */
-                <tr key={r[0]} className="bg-[#fde8e8]">
+                /* Le fond que l'agent vient d'appliquer. */
+                <tr key={r[0]} className="bg-[#e6eefb]">
                   <td className="px-2.5 py-[4px]">{r[0]}</td>
                   <td className="px-2.5 py-[4px]">{r[1]}</td>
                   {r[2].map((v, i) => (
@@ -478,7 +481,7 @@ export function MockCoteACote() {
                   <td className="px-2.5 py-[4px] text-right">{r[3]}</td>
                 </tr>
               ))}
-              <tr className="bg-[#fde8e8] font-semibold text-[#0f172a] ring-1 ring-[#2f6db4]">
+              <tr className="bg-[#e6eefb] font-semibold text-[#0f172a] ring-1 ring-[#2f6db4]">
                 <td className="px-2.5 py-[4px]" colSpan={2}>Total général</td>
                 {MOIS.map((m) => (
                   <td key={m} className="px-2 py-[4px] text-right">0,00</td>
@@ -493,10 +496,9 @@ export function MockCoteACote() {
                 key={t}
                 className={
                   i === 3
-                    ? "rounded px-2 py-0.5 font-semibold text-[#0f172a] ring-1 ring-[#dbe3ec]"
-                    : "rounded bg-[#c0392b] px-2 py-0.5 font-medium text-white"
+                    ? "rounded bg-white px-2 py-0.5 font-semibold text-[#0f172a] ring-1 ring-[#dbe3ec]"
+                    : "rounded px-2 py-0.5 font-medium text-[#64748b]"
                 }
-                style={i === 3 ? { background: "#fdf6e3" } : undefined}
               >
                 {t}
               </span>
@@ -515,7 +517,7 @@ export function MockCoteACote() {
           <div className="flex-1 px-4 py-3.5">
             <div className="flex justify-end">
               <p className="max-w-[80%] rounded-2xl rounded-br-md bg-[#f1f5f9] px-3.5 py-2 text-[11.5px] font-medium text-[#0f172a]">
-                peux-tu mettre en rouge la zone sélectionnée
+                peux-tu mettre en bleu la zone sélectionnée
               </p>
             </div>
             <div className="mt-3 rounded-xl ring-1 ring-[#eef1f5]">
@@ -525,7 +527,7 @@ export function MockCoteACote() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[11.5px] font-semibold text-[#0f172a]">
-                    Édition du classeur · fond rouge · sélection A8:…
+                    Édition du classeur · fond bleu · sélection A8:…
                   </p>
                   <p className="text-[10.5px] text-[#94a3b8]">Terminé</p>
                 </div>
@@ -535,7 +537,7 @@ export function MockCoteACote() {
               </div>
             </div>
             <p className="mt-3 text-[11.5px] leading-[1.6] text-[#334155]">
-              Voici le résultat. Fond rouge appliqué sur : Balance mensuelle (lignes 8 à 34,
+              Voici le résultat. Fond bleu appliqué sur : Balance mensuelle (lignes 8 à 34,
               colonnes 1 à 16). Le classeur se rouvre dans Excel.
             </p>
             <div className="mt-3 flex items-center gap-2">
