@@ -1994,10 +1994,6 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
   }, [scrollYProgress, reduced]);
 
   return (
-    /* ⚠ LE HAUT DE LA LANDING EST BLANC PUR, ET LE RESTE. L'essai en ivoire
-       `#fcfbf7` du 2026-09-10 a été annulé le jour même : le client veut le
-       blanc de Stripe en haut, puis un dégradé à peine perceptible vers un
-       blanc bleuté juste après (voir la fin de ce composant). */
     <section data-nav-shy className="relative bg-white dark:bg-black">
       <style>{HD_CSS}</style>
 
@@ -3382,16 +3378,7 @@ export default function OraHeroDemo({ theme, openBooking }: OraHeroDemoProps) {
           bouton anime son entrée.
           `hidden md:flex` : sur mobile OraHeroMobile porte déjà son propre
           bouton de réservation. */}
-      {/* Le raccord blanc → blanc bleuté, à la manière de stripe.com (client
-          2026-09-10, capture à l'appui) : le blanc tient tout le héro, puis
-          le fond glisse vers #f8fafd sur les derniers 60 % de ce bloc. Le
-          dégradé évite la marche que produirait un simple changement de
-          couleur entre deux sections. Le liseré qui suit, dans App.tsx,
-          termine le raccord. */}
-      <div
-        className="relative z-10 dark:bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center"
-        style={{ background: "linear-gradient(#ffffff 0%, #ffffff 40%, #f8fafd 100%)" }}
-      >
+      <div className="relative z-10 bg-white dark:bg-black pt-10 md:pt-12 pb-16 md:pb-24 px-6 md:px-12 hidden md:flex justify-center">
         <motion.button
           onClick={openBooking}
           initial={{ opacity: 0, y: 28 }}
