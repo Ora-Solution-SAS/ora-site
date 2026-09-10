@@ -893,33 +893,33 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                               conteneur du texte, sinon la phrase en cours de
                               frappe pousse le bouton hors du champ. */}
                           <div aria-hidden className="mt-10 md:mt-16">
-                            <div className="rounded-[18px] bg-white px-4 pb-2.5 pt-3.5 ring-1 ring-[#0a2540]/[0.10] shadow-[0_10px_30px_-18px_rgba(10,37,64,0.35)] dark:bg-[#111827] dark:ring-white/10">
-                              <div className="flex min-h-[20px] items-center gap-2.5">
-                                <OraStar className="h-4 w-4 shrink-0 text-[#3b82f6]" />
-                                <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#0f172a] dark:text-gray-200">
-                                  <Typewriter
-                                    phrases={[
-                                      t({
-                                        fr: "Comment optimiser la rémunération du dirigeant",
-                                        en: "How to optimise the director's pay",
-                                      }),
-                                    ]}
-                                  />
-                                </span>
-                              </div>
-                              <div className="mt-3 flex items-center gap-2.5">
-                                <Plus className="h-4 w-4 shrink-0 text-[#64748b] dark:text-gray-400" />
-                                <Paperclip className="h-4 w-4 shrink-0 text-[#94a3b8] dark:text-gray-500" />
-                                <span className="hidden truncate font-inter text-[11px] text-[#c4cad6] dark:text-gray-600 sm:block">
-                                  {t({
-                                    fr: "Entrée envoie, Maj et Entrée sautent une ligne",
-                                    en: "Enter sends, Shift and Enter add a line",
-                                  })}
-                                </span>
-                                <span className="ml-auto grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
-                                  <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
-                                </span>
-                              </div>
+                            {/* ⚠ UNE SEULE RANGÉE, TOUS LES ÉLÉMENTS SUR LE MÊME
+                                AXE (client 2026-09-10 : « il faut que tous les
+                                éléments soient horizontalement alignés sur la
+                                toolbar »). C'est la barre d'ACCUEIL du logiciel,
+                                pas celle de la page Agent : le +, l'étoile, la
+                                question, le trombone et l'envoi se suivent sur
+                                une ligne. La version à deux niveaux décalait le
+                                texte de la seconde ligne par rapport à celui de
+                                la première, et le rappel « Entrée envoie… »,
+                                absent de la barre d'accueil, part avec elle. */}
+                            <div className="flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] shadow-[0_10px_30px_-18px_rgba(10,37,64,0.35)] dark:bg-[#111827] dark:ring-white/10">
+                              <Plus className="h-4 w-4 shrink-0 text-[#64748b] dark:text-gray-400" />
+                              <OraStar className="h-4 w-4 shrink-0 text-[#3b82f6]" />
+                              <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#0f172a] dark:text-gray-200">
+                                <Typewriter
+                                  phrases={[
+                                    t({
+                                      fr: "Comment optimiser la rémunération du dirigeant",
+                                      en: "How to optimise the director's pay",
+                                    }),
+                                  ]}
+                                />
+                              </span>
+                              <Paperclip className="h-4 w-4 shrink-0 text-[#94a3b8] dark:text-gray-500" />
+                              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
+                                <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
+                              </span>
                             </div>
                             <p className="mt-2.5 text-center font-inter text-[11px] text-[#a8b0bd] dark:text-gray-600">
                               {t({
