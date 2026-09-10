@@ -13,13 +13,19 @@ import {
   Landmark,
   LayoutGrid,
   MessageCircle,
+  HelpCircle,
   Moon,
+  Palette,
   Paperclip,
+  Percent,
   PieChart,
   Plus,
   RotateCcw,
   Scale,
+  Search,
+  ShieldCheck,
   Store,
+  TrendingUp,
 } from "lucide-react";
 
 /* L'étoile Ora : QUATRE branches concaves (le ✦ du logiciel), pas le
@@ -202,7 +208,10 @@ function PromptBar({ placeholder, width }: { placeholder: string; width?: number
    en scène du héro legora, la photo de bureau remplacée par des nappes de
    couleur, comme demandé. ───────────────────────────────────────────────── */
 export function MockHeroAccueil() {
-  const { ref, scale } = useScale(1400);
+  /* 1290 pour 1180 + 2 × 24 de verre : la fenêtre remplit presque tout le
+     panneau (client 2026-09-10 : « agrandis la réplication de la page
+     d'accueil »). Descendre encore mangerait l'encadré de verre. */
+  const { ref, scale } = useScale(1290);
   const files = [
     { icon: FileText, tint: "#64748b", bg: "#f1f5f9", name: "FEC 2025 Negoce du Port", kind: "TXT" },
     { icon: FileSpreadsheet, tint: "#16a34a", bg: "#f0fdf4", name: "Fais la balance", kind: "XLSX · FEC" },
@@ -220,7 +229,7 @@ export function MockHeroAccueil() {
 
       <div className="absolute inset-0 flex items-center justify-center" style={{ transform: `scale(${scale})` }}>
         {/* L'encadré de verre, gris clair et très flouté. */}
-        <div className="rounded-[26px] bg-white/40 p-6 shadow-[0_40px_90px_-30px_rgba(15,23,42,0.35)] ring-1 ring-white/60 backdrop-blur-2xl">
+        <div className="rounded-[26px] bg-white/40 p-5 shadow-[0_40px_90px_-30px_rgba(15,23,42,0.35)] ring-1 ring-white/60 backdrop-blur-2xl">
           <AppWindow width={1180}>
             <div className="flex">
               <AppSidebar />
@@ -344,6 +353,27 @@ export function MockAgentLecture() {
               </div>
             </div>
           </div>
+
+          {/* La barre de saisie, en bas comme dans l'app : sans elle on ne
+              comprend pas qu'on peut répondre (client 2026-09-10). */}
+          <div className="mt-6 rounded-2xl px-4 pb-3 pt-3.5 ring-1 ring-[#e2e8f0]">
+            <p className="text-[13.5px] text-[#94a3b8]">
+              Demandez : « explique la formation du résultat en trois phrases »
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <Plus className="h-4 w-4 text-[#64748b]" />
+              <Paperclip className="h-4 w-4 text-[#94a3b8]" />
+              <span className="flex-1 text-[11.5px] text-[#cbd5e1]">
+                Entrée envoie, Maj et Entrée sautent une ligne
+              </span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#bfd7fb]">
+                <ArrowUp className="h-4 w-4 text-white" />
+              </span>
+            </div>
+          </div>
+          <p className="mt-2.5 text-center text-[11px] text-[#94a3b8]">
+            Chiffres du moteur, anonymisés avant l'envoi ; à relire par le cabinet.
+          </p>
         </div>
       </AppWindow>
     </Stage>
@@ -420,30 +450,52 @@ export function MockMoteur() {
   );
 }
 
-/* ── 4. Excel côte à côte avec le volet Ora : la balance produite
-   (capture réelle du 2026-09-09, 21 h : FEC-2024-comptoir-des-flandres,
-   FEC Studio « Fais la balance », 372 écritures, totaux 656 493,86). Le
-   volet arrondit à 656 494 € : c'est l'app, pas une coquille. ──────────── */
-const BALANCE_ROWS: [string, string, string, string][] = [
-  ["164000", "Emprunts", "0,00", "-50 000,00"],
-  ["401000", "Fournisseurs", "30 150,89", "-19 924,19"],
-  ["411000", "Clients", "95 667,94", "27 750,58"],
-  ["512000", "Banque", "117 917,36", "86 916,47"],
-  ["641000", "Rémunérations du personnel", "244 670,83", "244 670,83"],
-  ["707000", "Ventes de marchandises", "0,00", "-79 723,28"],
+/* ── 4. Excel côte à côte avec le volet Ora, sur la capture du 2026-09-10 :
+   la BALANCE MENSUELLE produite par FEC Studio, et l'agent qui vient d'y
+   appliquer un fond rouge sur la sélection. Deux choses que le client a
+   demandé de montrer : le double écran réel, et le menu de propositions qui
+   s'ouvre au clic sur le « + ». Le fond rouge n'est pas décoratif : c'est
+   la preuve que l'agent ÉCRIT dans le classeur, pas seulement qu'il lit. */
+const MOIS = ["2025-01", "2025-02", "2025-03", "2025-04"];
+const BALANCE_ROWS: [string, string, string[], string][] = [
+  ["101000", "Capital", ["-60 000,00", "", "", ""], "-60 000,00"],
+  ["164000", "Emprunts", ["-78 000,00", "", "", ""], "-78 000,00"],
+  ["215400", "Matériel industriel", ["96 000,00", "", "", ""], "96 000,00"],
+  ["401000", "Fournisseurs", ["-39 100,00", "-900,00", "-900,00", "-900,00"], "-81 400,00"],
+  ["411000", "Clients", ["40 300,00", "2 100,00", "2 100,00", "2 100,00"], "63 400,00"],
+  ["421000", "Personnel, rémunérations dues", ["-15 100,00", "0,00", "0,00", "0,00"], "-15 100,00"],
+  ["512000", "Banque", ["68 784,00", "27 792,00", "15 556,00", "19 392,00"], "290 284,00"],
+  ["607000", "Achats de marchandises", ["18 720,00", "19 040,00", "19 360,00", "20 000,00"], "245 760,00"],
+  ["641000", "Rémunérations du personnel", ["12 400,00", "12 400,00", "12 400,00", "12 400,00"], "148 800,00"],
+  ["645000", "Charges de sécurité sociale", ["5 208,00", "5 208,00", "5 208,00", "5 208,00"], "62 496,00"],
+  ["445710", "TVA collectée 20 %", ["-8 470,00", "-8 640,00", "-8 810,00", "-8 980,00"], "-112 860,00"],
+  ["707000", "Ventes de marchandises", ["-42 350,00", "-43 200,00", "-44 050,00", "-44 900,00"], "-564 300,00"],
+];
+
+/* Le menu du bouton « + », repris de la capture : huit propositions, chacune
+   avec sa pastille de couleur. */
+const PLUS_MENU = [
+  { icon: Percent, label: "Calcule la TVA", tint: "#0284c7", bg: "#eff6ff" },
+  { icon: Landmark, label: "Quel impôt sur les sociétés ?", tint: "#d97706", bg: "#fffbeb" },
+  { icon: Scale, label: "Fais la balance", tint: "#059669", bg: "#ecfdf5" },
+  { icon: ShieldCheck, label: "Y a-t-il des anomalies ?", tint: "#ea580c", bg: "#fff7ed" },
+  { icon: Palette, label: "Éditer le document", tint: "#475569", bg: "#f1f5f9" },
+  { icon: TrendingUp, label: "Explique la formation du résultat", tint: "#7c3aed", bg: "#f5f3ff" },
+  { icon: HelpCircle, label: "Quelles questions poser au client ?", tint: "#dc2626", bg: "#fef2f2" },
+  { icon: Search, label: "Que surveiller l'an prochain ?", tint: "#0891b2", bg: "#ecfeff" },
 ];
 
 export function MockCoteACote() {
   return (
-    <Stage variant="blue" designW={1180}>
+    <Stage variant="blue" designW={1240}>
       <div className="flex items-stretch gap-4">
-        {/* Excel : la balance générée par FEC Studio */}
-        <div className="w-[600px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        {/* Excel : la balance mensuelle, fond rouge appliqué par l'agent */}
+        <div className="w-[640px] overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2.5 border-b border-[#e6e8ec] bg-[#f6f8fa] px-4 py-2.5">
             <span className="flex h-5 w-5 items-center justify-center rounded bg-[#1d6f42]">
               <FileSpreadsheet className="h-3.5 w-3.5 text-white" />
             </span>
-            <span className="text-[12px] font-semibold text-[#1e293b]">FEC-2024-comptoir-des-flandres_studio</span>
+            <span className="text-[12px] font-semibold text-[#1e293b]">FEC 2025 Negoce du Port (xlsx)_studio</span>
             <span className="ml-auto text-[11px] text-[#94a3b8]">Enregistrement automatique</span>
           </div>
           <div className="flex gap-4 border-b border-[#e6e8ec] px-4 py-1.5 text-[11px] text-[#475569]">
@@ -452,95 +504,121 @@ export function MockCoteACote() {
             ))}
           </div>
           <div className="px-4 pt-3">
-            <p className="text-[13px] font-bold text-[#0f172a]">BALANCE GÉNÉRALE</p>
-            <div className="mt-1.5 flex gap-6 text-[10px] text-[#475569]">
-              <span>Total débits <b>656 493,86</b></span>
-              <span>Total crédits <b>656 493,86</b></span>
-              <span>Solde net <b>0,00</b></span>
-            </div>
+            <p className="text-[12.5px] font-bold text-[#0f172a]">BALANCE MENSUELLE</p>
+            <p className="mt-0.5 text-[9.5px] italic text-[#94a3b8]">
+              Le solde de chaque compte, mois par mois, en colonnes.
+            </p>
           </div>
-          <table className="mt-2.5 w-full border-collapse text-[10.5px]">
+          <table className="mt-2 w-full border-collapse text-[9.5px]">
             <thead>
               <tr className="bg-[#2f6db4] text-left text-white">
-                {["Compte", "Libellé", "Somme de Débit", "Somme de Solde"].map((h, i) => (
-                  <th key={h} className={`px-3 py-1.5 font-semibold ${i >= 2 ? "text-right" : ""}`}>{h}</th>
+                <th className="px-2.5 py-1.5 font-semibold">Compte</th>
+                <th className="px-2.5 py-1.5 font-semibold">Libellé</th>
+                {MOIS.map((m) => (
+                  <th key={m} className="px-2 py-1.5 text-right font-semibold">{m}</th>
                 ))}
+                <th className="px-2.5 py-1.5 text-right font-semibold">Total général</th>
               </tr>
             </thead>
             <tbody className="text-[#334155]">
-              {BALANCE_ROWS.map((r, i) => (
-                <tr key={i} className={i % 2 ? "bg-[#f8fafc]" : ""}>
-                  <td className="px-3 py-[5px]">{r[0]}</td>
-                  <td className="px-3 py-[5px]">{r[1]}</td>
-                  <td className="px-3 py-[5px] text-right">{r[2]}</td>
-                  <td className="px-3 py-[5px] text-right">{r[3]}</td>
+              {BALANCE_ROWS.map((r) => (
+                /* Le fond rouge que l'agent vient d'appliquer. */
+                <tr key={r[0]} className="bg-[#fde8e8]">
+                  <td className="px-2.5 py-[4px]">{r[0]}</td>
+                  <td className="px-2.5 py-[4px]">{r[1]}</td>
+                  {r[2].map((v, i) => (
+                    <td key={i} className="px-2 py-[4px] text-right">{v}</td>
+                  ))}
+                  <td className="px-2.5 py-[4px] text-right">{r[3]}</td>
                 </tr>
               ))}
-              <tr className="border-t border-[#dbe3ec] font-semibold text-[#0f172a]">
-                <td className="px-3 py-[5px]" colSpan={2}>Total général</td>
-                <td className="px-3 py-[5px] text-right">656 493,86</td>
-                <td className="px-3 py-[5px] text-right">0,00</td>
+              <tr className="bg-[#fde8e8] font-semibold text-[#0f172a] ring-1 ring-[#2f6db4]">
+                <td className="px-2.5 py-[4px]" colSpan={2}>Total général</td>
+                {MOIS.map((m) => (
+                  <td key={m} className="px-2 py-[4px] text-right">0,00</td>
+                ))}
+                <td className="px-2.5 py-[4px] text-right">0,00</td>
               </tr>
             </tbody>
           </table>
-          <div className="flex gap-1.5 border-t border-[#e6e8ec] bg-[#f6f8fa] px-3 py-1.5 text-[9.5px]">
-            {["Sommaire", "Synthèse du dossier", "Balance générale", "Balances (données)"].map((t, i) => (
-              <span key={t} className={`rounded px-2 py-0.5 ${i === 2 ? "bg-white font-semibold text-[#0f172a] ring-1 ring-[#dbe3ec]" : "text-[#64748b]"}`}>{t}</span>
+          <div className="flex gap-1.5 border-t border-[#e6e8ec] bg-[#f6f8fa] px-3 py-1.5 text-[9px]">
+            {["Sommaire", "Paramètres", "Synthèse du dossier", "Balance mensuelle", "Balances (données)"].map((t, i) => (
+              <span
+                key={t}
+                className={
+                  i === 3
+                    ? "rounded px-2 py-0.5 font-semibold text-[#0f172a] ring-1 ring-[#dbe3ec]"
+                    : "rounded bg-[#c0392b] px-2 py-0.5 font-medium text-white"
+                }
+                style={i === 3 ? { background: "#fdf6e3" } : undefined}
+              >
+                {t}
+              </span>
             ))}
           </div>
         </div>
 
-        {/* Le volet Ora : le résultat de FEC Studio */}
-        <div className="flex w-[350px] flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
+        {/* Le volet Ora, avec le menu du « + » ouvert */}
+        <div className="relative flex w-[360px] flex-col overflow-hidden rounded-[12px] bg-white font-inter shadow-[0_24px_70px_-24px_rgba(15,23,42,0.35)] ring-1 ring-black/[0.07]">
           <div className="flex items-center gap-2 border-b border-[#eef1f5] px-4 py-3">
             <OraStar className="h-4 w-4 text-[#3b82f6]" />
             <span className="text-[13px] font-semibold text-[#0f172a]">Fais la balance</span>
             <span className="ml-auto rounded bg-[#f6f8fb] px-2 py-0.5 text-[10px] font-medium text-[#64748b] ring-1 ring-[#e8edf3]">Côte à côte</span>
           </div>
+
           <div className="flex-1 px-4 py-3.5">
-            <div className="rounded-xl ring-1 ring-[#eef1f5]">
+            <div className="flex justify-end">
+              <p className="max-w-[80%] rounded-2xl rounded-br-md bg-[#f1f5f9] px-3.5 py-2 text-[11.5px] font-medium text-[#0f172a]">
+                peux-tu mettre en rouge la zone sélectionnée
+              </p>
+            </div>
+            <div className="mt-3 rounded-xl ring-1 ring-[#eef1f5]">
               <div className="flex items-center gap-2.5 px-3.5 py-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ecfdf5]">
-                  <Scale style={{ width: 15, height: 15, color: "#059669" }} />
+                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#eff6ff]">
+                  <Palette style={{ width: 15, height: 15, color: "#3b82f6" }} />
                 </span>
-                <div className="flex-1">
-                  <p className="text-[12px] font-semibold text-[#0f172a]">FEC Studio · Balance générale</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11.5px] font-semibold text-[#0f172a]">
+                    Édition du classeur · fond rouge · sélection A8:…
+                  </p>
                   <p className="text-[10.5px] text-[#94a3b8]">Terminé</p>
                 </div>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#10b981]">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#10b981]">
                   <Check className="h-3 w-3 text-white" strokeWidth={3} />
                 </span>
               </div>
-              <p className="border-t border-[#f1f5f9] px-3.5 py-1.5 text-[10px] text-[#94a3b8]">
-                Le journal du moteur (6 lignes)
-              </p>
             </div>
-            <p className="mt-3 text-[12px] leading-[1.6] text-[#334155]">
-              Voici le résultat. FEC Studio : 372 écritures (01/01/2024 → 28/12/2024),
-              1 feuille générée. Débit et crédit équilibrés.
+            <p className="mt-3 text-[11.5px] leading-[1.6] text-[#334155]">
+              Voici le résultat. Fond rouge appliqué sur : Balance mensuelle (lignes 8 à 34,
+              colonnes 1 à 16). Le classeur se rouvre dans Excel.
             </p>
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {[
-                "Écritures 372",
-                "Comptes 19",
-                "Opérations diverses 10,2 %",
-                "Total débit 656 494 €",
-              ].map((s) => (
-                <span key={s} className="rounded-full bg-[#f8fafc] px-2.5 py-1 text-[10.5px] font-medium text-[#475569] ring-1 ring-[#e8edf3]">{s}</span>
-              ))}
-            </div>
-            <div className="mt-3.5 flex items-center gap-2">
+            <div className="mt-3 flex items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-[11px] font-semibold text-[#0f172a] ring-1 ring-[#e2e8f0]">
                 <FileSpreadsheet className="h-3.5 w-3.5 text-[#1d6f42]" />
                 Ouvrir le classeur
               </span>
               <span className="text-[11px] font-medium text-[#64748b]">Éditer côte à côte</span>
             </div>
-            <p className="mt-3 text-[11px] font-medium text-[#64748b]">+ Composer d'autres balances</p>
           </div>
-          <div className="px-4 pb-3.5">
-            <div className="flex items-center gap-2 rounded-full py-2 pl-4 pr-2 ring-1 ring-[#e2e8f0]">
-              <span className="flex-1 text-[11.5px] text-[#94a3b8]">Demandez : « qu'est-ce qui »</span>
+
+          {/* Le menu des propositions, ouvert au-dessus de la barre. */}
+          <div className="absolute inset-x-3 bottom-[74px] overflow-hidden rounded-2xl bg-white py-1 shadow-[0_20px_50px_-12px_rgba(15,23,42,0.28)] ring-1 ring-[#eef1f5]">
+            {PLUS_MENU.map((m) => (
+              <div key={m.label} className="flex items-center gap-2.5 px-3 py-[4px]">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full" style={{ background: m.bg }}>
+                  <m.icon style={{ width: 11, height: 11, color: m.tint }} />
+                </span>
+                <span className="text-[11px] font-medium text-[#0f172a]">{m.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="relative px-4 pb-3.5">
+            <div className="flex items-center gap-2 rounded-full py-2 pl-3.5 pr-2 ring-1 ring-[#e2e8f0]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#eff6ff]">
+                <Plus className="h-3.5 w-3.5 text-[#3b82f6]" />
+              </span>
+              <span className="flex-1 text-[11.5px] text-[#94a3b8]">Demandez : « quelles questions… »</span>
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#3b82f6]">
                 <ArrowUp className="h-3 w-3 text-white" />
               </span>

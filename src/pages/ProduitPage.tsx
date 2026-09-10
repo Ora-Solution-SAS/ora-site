@@ -128,6 +128,15 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       visual: <MockAgentLecture />,
     },
     {
+      eyebrow: t({ fr: "Dans Excel, à côté du classeur", en: "In Excel, beside the workbook" }),
+      title: t({ fr: "L'agent, côte à côte avec Excel", en: "The agent, side by side with Excel" }),
+      desc: t({
+        fr: "Ora se range à côté du classeur et écrit dedans. Demandez la balance, un fond de couleur sur la sélection, une correction : le geste est fait dans Excel, et le bouton « + » ouvre les traitements du moment.",
+        en: "Ora docks next to the workbook and writes into it. Ask for the balance, a fill colour on the selection, a correction: the move happens inside Excel, and the plus button opens the tasks that matter right now.",
+      }),
+      visual: <MockCoteACote />,
+    },
+    {
       eyebrow: t({ fr: "Sous le capot", en: "Under the hood" }),
       title: t({ fr: "Le moteur calcule. L'IA rédige.", en: "The engine computes. The AI writes." }),
       desc: t({
@@ -135,15 +144,6 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         en: "Every figure comes out of the Ora engine, on your machine: a model never computes anything. The writing AI, Mistral's API, a French provider, only ever receives anonymized figures. And every figure can be redone by hand.",
       }),
       visual: <MockMoteur />,
-    },
-    {
-      eyebrow: t({ fr: "Dans Excel, à côté du classeur", en: "In Excel, beside the workbook" }),
-      title: t({ fr: "L'agent, côte à côte avec Excel", en: "The agent, side by side with Excel" }),
-      desc: t({
-        fr: "Demandez « fais la balance » : FEC Studio produit le classeur, débit et crédit équilibrés au centime, et le journal du moteur garde chaque étape. Le résultat s'ouvre dans Excel, prêt à éditer côte à côte.",
-        en: "Ask for the balance: FEC Studio produces the workbook, debit and credit balanced to the cent, and the engine's log keeps every step. The result opens in Excel, ready to edit side by side.",
-      }),
-      visual: <MockCoteACote />,
     },
   ];
 
