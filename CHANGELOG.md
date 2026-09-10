@@ -8,6 +8,9 @@ Format: `[version] YYYY-MM-DD — description`
 ## [Unreleased]
 
 ### Changed
+- **L'encadré de la rangée « L'agent, côte à côte avec Excel » est agrandi** (client 2026-09-10) : le panneau passe du 2/1 au 16/9, soit 507 px de haut au lieu de 450 à largeur égale, et les fenêtres grandissent avec (`designW` 1120 → 1050). Mesuré à 1440 px : contenu 868 × 405 dans un panneau de 901 × 507, soit 16 px de marge latérale. Descendre `designW` plus bas collerait les fenêtres au bord.
+
+### Changed
 - **`/produit` : angle du héro à l'équerre, et plus de cadre autour de la scène Excel** (client 2026-09-10). Le panneau du héro touche la barre de navigation depuis qu'il occupe l'espace du haut : son coin **haut-gauche passe droit** (`rounded-tl-none`), un arrondi y dessinait une encoche ; le coin bas-gauche garde le sien. Et le **cadre d'écran de la scène Excel est retiré** quelques heures après avoir été posé (« mets les éléments directement sur le background, le design est moche sinon ») : les deux fenêtres reposent maintenant à même le fond bleu, sans bureau ni barre de menus macOS. Un cadre dans un cadre donnait deux bords concentriques et rapetissait les fenêtres. Récupérable au commit `82aacd7` si l'idée revient.
 
 ### Changed
