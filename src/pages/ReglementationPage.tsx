@@ -1,14 +1,19 @@
 /**
- * ReglementationPage — « Réglementation », l'article de fond sur notre
- * position face au RGPD, à l'AI Act et au secret professionnel.
+ * ReglementationPage — le centre de ressources « Réglementation ».
  *
- * Mise en page éditoriale demandée par le client le 2026-09-10, capture de
- * medium.com à l'appui : colonne unique et étroite, titre sans empattement,
- * CORPS EN SERIF, gros interlignage, ligne d'auteur avec date et temps de
- * lecture. C'est la seule page du site dont le corps n'est pas en Inter :
- * c'est un texte long, il se lit comme un article, pas comme une interface.
- * La serif est une pile système (Iowan, Georgia), donc zéro requête réseau et
- * aucune police ajoutée à la charte.
+ * Deux vues dans un seul fichier, sans routeur (le site n'en a pas) :
+ *
+ *  1. L'INDEX, demandé le 2026-09-10 : un menu de rubriques à gauche, les
+ *     articles en encadrés à droite, chaque encadré portant les portraits de
+ *     l'équipe en ronds (les mêmes fichiers que « Mon espace Ora »). Les
+ *     rubriques filtrent la liste.
+ *  2. L'ARTICLE lui-même, en colonne étroite façon medium.com (capture
+ *     fournie par le client) : titre sans empattement, CORPS EN SERIF, gros
+ *     interlignage, ligne d'auteur avec date et temps de lecture. C'est la
+ *     seule page du site dont le corps n'est pas en Inter : c'est un texte
+ *     long, il se lit comme un article, pas comme une interface. La serif est
+ *     une pile système, donc zéro requête réseau et aucune police ajoutée à
+ *     la charte.
  *
  * ⚠ CE QUI EST ÉCRIT ICI ENGAGE. Le texte décrit une architecture, il ne
  * revendique AUCUNE certification (pas d'ISO 27001, pas de HDS, pas de label)
@@ -16,10 +21,14 @@
  * conformité attestée, de logo de certification ou de « certifié RGPD » sans
  * document à l'appui : sur cette page plus qu'ailleurs, une phrase de trop
  * est un risque juridique, pas une ligne de marketing.
+ *
+ * ⚠ LES ARTICLES ANNONCÉS ET NON ÉCRITS PORTENT LA MENTION « En préparation »
+ * et ne sont PAS cliquables. Ne jamais les rendre cliquables vers un contenu
+ * inventé : mieux vaut une grille à moitié vide qu'un article fantôme.
  */
 
-import { useEffect } from "react";
-import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { BOOKING_CTA } from "@/lib/bookingCta";
 
@@ -31,7 +40,7 @@ type Props = {
   onNavigate: (page: Page) => void;
 };
 
-/* La colonne d'article : 680 px de texte, la serif, l'interlignage long. */
+/* La colonne d'article : la serif, l'interlignage long. */
 const pageCSS = `
 .reg-body { font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif; }
 .reg-body p { font-size: 20px; line-height: 1.78; letter-spacing: -0.003em; margin-top: 1.55em; }
@@ -45,17 +54,162 @@ const pageCSS = `
 }
 .reg-quote { border-left: 3px solid #3b82f6; padding-left: 22px; }
 .reg-quote p { font-size: 21px; line-height: 1.6; font-style: italic; color: #42506b; }
+.reg-card { transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, border-color .25s; }
+.reg-card-live:hover { transform: translateY(-2px); box-shadow: 0 18px 40px -22px rgba(15,23,42,0.22); }
+.reg-card-live:hover .reg-card-arrow { transform: translateX(3px); }
+.reg-card-arrow { transition: transform .25s; }
 `;
+
+/* Les portraits de l'équipe, en pile de ronds : mêmes fichiers que « Mon
+   espace Ora », où ils servent déjà à dire qu'il y a quelqu'un derrière. */
+function TeamAvatars({ size = 34, dk }: { size?: number; dk: boolean }) {
+  const { t } = useLang();
+  const cls = "rounded-full object-cover select-none";
+  const ring = dk ? "ring-[#0f172a]" : "ring-white";
+  return (
+    <div className="flex -space-x-2.5 shrink-0">
+      {["/equipe/fondateur-1.png", "/equipe/fondateur-2.png"].map((src) => (
+        <img
+          key={src}
+          src={src}
+          alt={t({ fr: "Membre de l'équipe Ora", en: "Ora team member" })}
+          draggable={false}
+          style={{ width: size, height: size }}
+          className={`${cls} ring-[3px] ${ring}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ── Les rubriques du menu de gauche ──────────────────────────────────── */
+const TOPICS = [
+  {
+    id: "reglementation",
+    fr: "Réglementation",
+    en: "Regulation",
+    subFr: "RGPD, AI Act, secret professionnel",
+    subEn: "GDPR, AI Act, professional secrecy",
+  },
+  {
+    id: "produit",
+    fr: "Fonctionnement du produit",
+    en: "How the product works",
+    subFr: "Traitement local, moteur, journal",
+    subEn: "Local processing, engine, audit log",
+  },
+  {
+    id: "donnees",
+    fr: "Données et sécurité",
+    en: "Data and security",
+    subFr: "Anonymisation, hébergement, accès",
+    subEn: "Anonymisation, hosting, access",
+  },
+] as const;
+
+type TopicId = (typeof TOPICS)[number]["id"];
+
+/* ── Les articles ─────────────────────────────────────────────────────────
+   `live: true` = écrit et lisible. Les autres sont des sujets annoncés :
+   la carte le dit, et elle n'est pas cliquable. */
+const ARTICLES = [
+  {
+    id: "secret-professionnel",
+    topic: "reglementation" as TopicId,
+    live: true,
+    minutes: 9,
+    dateFr: "10 septembre 2026",
+    dateEn: "September 10, 2026",
+    titleFr: "L'IA dans un cabinet, sans renoncer au secret professionnel",
+    titleEn: "AI in an accounting firm, without giving up professional secrecy",
+    excerptFr:
+      "Où se place Ora face au RGPD, à l'AI Act et aux obligations de l'expert-comptable. Nos choix d'architecture, ce qu'ils garantissent, et ce que nous ne revendiquons pas.",
+    excerptEn:
+      "Where Ora stands on the GDPR, the AI Act and an accountant's professional duties. Our architecture choices, what they guarantee, and what we do not claim.",
+  },
+  {
+    id: "ai-act-calendrier",
+    topic: "reglementation" as TopicId,
+    live: false,
+    minutes: 6,
+    dateFr: "", dateEn: "",
+    titleFr: "AI Act : le calendrier d'application, lu par un cabinet",
+    titleEn: "The AI Act timeline, read from an accounting firm",
+    excerptFr:
+      "Ce que le règlement impose, à qui, et à quelle date. Les obligations qui concernent un utilisateur professionnel, et celles qui ne le concernent pas.",
+    excerptEn:
+      "What the regulation requires, from whom, and by when. The duties that apply to a professional user, and those that do not.",
+  },
+  {
+    id: "sous-traitance",
+    topic: "reglementation" as TopicId,
+    live: false,
+    minutes: 7,
+    dateFr: "", dateEn: "",
+    titleFr: "Responsable, sous-traitant, éditeur : qui est quoi",
+    titleEn: "Controller, processor, publisher: who is what",
+    excerptFr:
+      "Le partage des rôles du RGPD appliqué à un logiciel installé, et ce qu'il change aux clauses que votre cabinet doit signer.",
+    excerptEn:
+      "How the GDPR's roles apply to installed software, and what that changes in the clauses your firm has to sign.",
+  },
+  {
+    id: "moteur-deterministe",
+    topic: "produit" as TopicId,
+    live: false,
+    minutes: 8,
+    dateFr: "", dateEn: "",
+    titleFr: "Pourquoi le moteur calcule et le modèle rédige",
+    titleEn: "Why the engine computes and the model writes",
+    excerptFr:
+      "La séparation qui rend un chiffre reproductible : ce qui relève du calcul déterministe, ce qui relève de la rédaction, et pourquoi les deux ne doivent jamais se mélanger.",
+    excerptEn:
+      "The split that makes a figure reproducible: what belongs to deterministic computation, what belongs to drafting, and why the two must never mix.",
+  },
+  {
+    id: "journal-execution",
+    topic: "produit" as TopicId,
+    live: false,
+    minutes: 5,
+    dateFr: "", dateEn: "",
+    titleFr: "Le journal d'exécution, pièce justificative d'un traitement",
+    titleEn: "The execution log as evidence of a run",
+    excerptFr:
+      "Ce que consigne Ora à chaque traitement, comment le relire des mois plus tard, et ce que cela vaut face à une revue de dossier.",
+    excerptEn:
+      "What Ora records on every run, how to read it back months later, and what it is worth in a file review.",
+  },
+  {
+    id: "anonymisation",
+    topic: "donnees" as TopicId,
+    live: false,
+    minutes: 6,
+    dateFr: "", dateEn: "",
+    titleFr: "Ce qui part, ce qui reste : l'anonymisation en détail",
+    titleEn: "What leaves, what stays: anonymisation in detail",
+    excerptFr:
+      "Le détail de ce qui est remplacé avant un appel au modèle, ce qui ne quitte jamais le poste, et comment le vérifier vous-même.",
+    excerptEn:
+      "Exactly what gets replaced before a model call, what never leaves the machine, and how to check it yourself.",
+  },
+];
 
 const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate }) => {
   const { t } = useLang();
   const dk = theme === "dark";
   const ink = dk ? "text-white" : "text-[#111827]";
   const body = dk ? "text-[#cbd5e1]" : "text-[#42506b]";
+  const card = dk ? "bg-white/[0.04]" : "bg-white";
+  const line = dk ? "ring-white/10" : "ring-[#e8e4d9]";
+
+  /* Pas de routeur sur ce site : l'article ouvert est un état local, et
+     l'index revient avec le bouton de retour. */
+  const [openArticle, setOpenArticle] = useState<string | null>(null);
+  const [topic, setTopic] = useState<TopicId>("reglementation");
 
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [openArticle]);
 
   /* Un titre de section : sans empattement, comme chez la référence. */
   const H = ({ children }: { children: React.ReactNode }) => (
@@ -64,49 +218,48 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
     </h2>
   );
 
-  return (
-    <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fcfbf7" }}>
-      <style>{pageCSS}</style>
+  /* ══ L'ARTICLE ══════════════════════════════════════════════════════ */
+  if (openArticle === "secret-professionnel") {
+    return (
+      <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fcfbf7" }}>
+        <style>{pageCSS}</style>
 
-      <article className="mx-auto max-w-[720px] px-6 pb-28 pt-16 md:pt-24">
-        <button
-          onClick={() => onNavigate("home")}
-          className="font-inter text-[13px] font-medium text-[#6b7688] transition-colors hover:text-[#3b82f6]"
-        >
-          {t({ fr: "Ora", en: "Ora" })}
-          <span className="mx-2 text-[#c4cad6]">/</span>
-          <span className={dk ? "text-white" : "text-[#111827]"}>
-            {t({ fr: "Réglementation", en: "Regulation" })}
-          </span>
-        </button>
+        <article className="mx-auto max-w-[720px] px-6 pb-28 pt-16 md:pt-24">
+          <button
+            onClick={() => setOpenArticle(null)}
+            className="inline-flex items-center gap-2 font-inter text-[13px] font-medium text-[#6b7688] transition-colors hover:text-[#3b82f6]"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            {t({ fr: "Toutes les ressources", en: "All resources" })}
+          </button>
 
-        <h1 className={`mt-8 font-instrument text-[38px] font-normal leading-[1.12] tracking-[-0.03em] md:text-[46px] ${ink}`}>
-          {t({
-            fr: "L'IA dans un cabinet, sans renoncer au secret professionnel",
-            en: "AI in an accounting firm, without giving up professional secrecy",
-          })}
-        </h1>
-        <p className="mt-5 font-inter text-[19px] leading-[1.5] text-[#5b6577] md:text-[21px]">
-          {t({
-            fr: "Où se place Ora face au RGPD, à l'AI Act et aux obligations de l'expert-comptable. Nos choix d'architecture, ce qu'ils garantissent, et ce que nous ne revendiquons pas.",
-            en: "Where Ora stands on the GDPR, the AI Act and an accountant's professional duties. Our architecture choices, what they guarantee, and what we do not claim.",
-          })}
-        </p>
+          <h1 className={`mt-8 font-instrument text-[38px] font-normal leading-[1.12] tracking-[-0.03em] md:text-[46px] ${ink}`}>
+            {t({
+              fr: "L'IA dans un cabinet, sans renoncer au secret professionnel",
+              en: "AI in an accounting firm, without giving up professional secrecy",
+            })}
+          </h1>
+          <p className="mt-5 font-inter text-[19px] leading-[1.5] text-[#5b6577] md:text-[21px]">
+            {t({
+              fr: "Où se place Ora face au RGPD, à l'AI Act et aux obligations de l'expert-comptable. Nos choix d'architecture, ce qu'ils garantissent, et ce que nous ne revendiquons pas.",
+              en: "Where Ora stands on the GDPR, the AI Act and an accountant's professional duties. Our architecture choices, what they guarantee, and what we do not claim.",
+            })}
+          </p>
 
-        {/* La ligne d'auteur de la référence : identité, date, temps de lecture. */}
-        <div className="mt-10 flex items-center gap-3.5">
-          <img src="/logos/icon-color.png" alt="" className="h-11 w-11 rounded-full bg-white object-contain p-1.5 ring-1 ring-black/[0.06]" />
-          <div className="font-inter">
-            <p className={`text-[15px] font-semibold ${ink}`}>{t({ fr: "L'équipe Ora", en: "The Ora team" })}</p>
-            <p className="mt-0.5 text-[14px] text-[#6b7688]">
-              {t({ fr: "9 min de lecture", en: "9 min read" })}
-              <span className="mx-1.5">·</span>
-              {t({ fr: "10 septembre 2026", en: "September 10, 2026" })}
-            </p>
+          {/* La ligne d'auteur de la référence : les visages, la date, la durée. */}
+          <div className="mt-10 flex items-center gap-3.5">
+            <TeamAvatars size={44} dk={dk} />
+            <div className="font-inter">
+              <p className={`text-[15px] font-semibold ${ink}`}>{t({ fr: "L'équipe Ora", en: "The Ora team" })}</p>
+              <p className="mt-0.5 text-[14px] text-[#6b7688]">
+                {t({ fr: "9 min de lecture", en: "9 min read" })}
+                <span className="mx-1.5">·</span>
+                {t({ fr: "10 septembre 2026", en: "September 10, 2026" })}
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className={`mt-8 border-t ${dk ? "border-white/10" : "border-[#e8e4d9]"}`} />
+          <div className={`mt-8 border-t ${dk ? "border-white/10" : "border-[#e8e4d9]"}`} />
 
         <div className={`reg-body mt-12 ${body}`}>
           <p>
@@ -299,33 +452,174 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
           </p>
         </div>
 
-        <div className={`mt-16 rounded-3xl px-8 py-10 ${dk ? "bg-white/[0.04]" : "bg-white"} ring-1 ${dk ? "ring-white/10" : "ring-[#e8e4d9]"}`}>
-          <h2 className={`font-instrument text-[26px] font-normal leading-[1.2] tracking-[-0.02em] ${ink}`}>
-            {t({ fr: "Une question sur un point précis ?", en: "A question on a specific point?" })}
-          </h2>
-          <p className="mt-3 font-inter text-[15px] leading-[1.65] text-[#5b6577]">
-            {t({
-              fr: "Venez avec vos contraintes, nous venons avec l'application ouverte.",
-              en: "Come with your constraints, we come with the application open.",
+
+          <div className={`mt-16 rounded-3xl px-8 py-10 ${card} ring-1 ${line}`}>
+            <h2 className={`font-instrument text-[26px] font-normal leading-[1.2] tracking-[-0.02em] ${ink}`}>
+              {t({ fr: "Une question sur un point précis ?", en: "A question on a specific point?" })}
+            </h2>
+            <p className="mt-3 font-inter text-[15px] leading-[1.65] text-[#5b6577]">
+              {t({
+                fr: "Venez avec vos contraintes, nous venons avec l'application ouverte.",
+                en: "Come with your constraints, we come with the application open.",
+              })}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <button
+                onClick={openBooking}
+                className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-6 py-3 font-inter text-[15px] font-semibold text-white transition-colors hover:bg-[#2563eb]"
+              >
+                {t(BOOKING_CTA)}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => onNavigate("produit")}
+                className="font-inter text-[15px] font-semibold text-[#3b82f6] hover:underline"
+              >
+                {t({ fr: "Voir l'application", en: "See the application" })}
+              </button>
+            </div>
+          </div>
+        </article>
+      </main>
+    );
+  }
+
+  /* ══ L'INDEX : menu à gauche, encadrés d'articles à droite ═══════════ */
+  const shown = ARTICLES.filter((a) => a.topic === topic);
+
+  return (
+    <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fcfbf7" }}>
+      <style>{pageCSS}</style>
+
+      <div className="mx-auto max-w-[1180px] px-6 pb-28 pt-16 md:pt-24">
+        <button
+          onClick={() => onNavigate("home")}
+          className="font-inter text-[13px] font-medium text-[#6b7688] transition-colors hover:text-[#3b82f6]"
+        >
+          Ora
+          <span className="mx-2 text-[#c4cad6]">/</span>
+          <span className={dk ? "text-white" : "text-[#111827]"}>
+            {t({ fr: "Réglementation", en: "Regulation" })}
+          </span>
+        </button>
+
+        <h1 className={`mt-7 max-w-[19ch] font-instrument text-[38px] font-normal leading-[1.1] tracking-[-0.03em] md:text-[52px] ${ink}`}>
+          {t({ fr: "Ce que nous écrivons, et ce que nous engageons", en: "What we write, and what we commit to" })}
+        </h1>
+        <p className="mt-5 max-w-[62ch] font-inter text-[17px] leading-[1.6] text-[#5b6577] md:text-[19px]">
+          {t({
+            fr: "Nos positions sur la réglementation, le fonctionnement du produit et le traitement des données. Écrites par l'équipe, datées, et corrigées quand la règle change.",
+            en: "Our positions on regulation, how the product works and how data is handled. Written by the team, dated, and corrected when the rules change.",
+          })}
+        </p>
+
+        <div className="mt-14 grid gap-10 lg:grid-cols-[240px_1fr] lg:gap-16">
+          {/* Le menu des rubriques */}
+          <nav className="lg:sticky lg:top-28 lg:self-start">
+            <p className="font-inter text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6b7688]">
+              {t({ fr: "Rubriques", en: "Topics" })}
+            </p>
+            <div className="mt-4 flex flex-col gap-1">
+              {TOPICS.map((tp) => {
+                const active = tp.id === topic;
+                return (
+                  <button
+                    key={tp.id}
+                    onClick={() => setTopic(tp.id)}
+                    className={`rounded-xl px-4 py-3 text-left transition-colors ${
+                      active
+                        ? dk ? "bg-white/[0.07]" : "bg-white ring-1 ring-[#e8e4d9]"
+                        : "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <span className={`block font-inter text-[14.5px] font-semibold ${active ? (dk ? "text-white" : "text-[#111827]") : "text-[#5b6577]"}`}>
+                      {t({ fr: tp.fr, en: tp.en })}
+                    </span>
+                    <span className="mt-0.5 block font-inter text-[12.5px] leading-[1.45] text-[#6b7688]">
+                      {t({ fr: tp.subFr, en: tp.subEn })}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className={`mt-8 rounded-2xl p-5 ${card} ring-1 ${line}`}>
+              <TeamAvatars size={38} dk={dk} />
+              <p className={`mt-3.5 font-inter text-[14px] font-semibold ${ink}`}>
+                {t({ fr: "Une question hors sujet ?", en: "A question none of this covers?" })}
+              </p>
+              <p className="mt-1.5 font-inter text-[13px] leading-[1.55] text-[#6b7688]">
+                {t({
+                  fr: "Posez-la directement à ceux qui construisent Ora.",
+                  en: "Ask the people building Ora directly.",
+                })}
+              </p>
+              <button
+                onClick={openBooking}
+                className="mt-4 inline-flex items-center gap-1.5 font-inter text-[13.5px] font-semibold text-[#3b82f6] hover:underline"
+              >
+                {t(BOOKING_CTA)}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </nav>
+
+          {/* Les encadrés d'articles */}
+          <div className="flex flex-col gap-5">
+            {shown.map((a) => {
+              const inner = (
+                <>
+                  <div className="flex items-center gap-3">
+                    <TeamAvatars dk={dk} />
+                    <div className="font-inter">
+                      <p className={`text-[13.5px] font-semibold ${ink}`}>{t({ fr: "L'équipe Ora", en: "The Ora team" })}</p>
+                      <p className="text-[12.5px] text-[#6b7688]">
+                        {a.live
+                          ? <>{t({ fr: a.dateFr, en: a.dateEn })}<span className="mx-1.5">·</span>{a.minutes} {t({ fr: "min de lecture", en: "min read" })}</>
+                          : t({ fr: "En préparation", en: "In preparation" })}
+                      </p>
+                    </div>
+                    {a.live && (
+                      <span className="ml-auto rounded-full bg-[#eff6ff] px-3 py-1 font-inter text-[11.5px] font-semibold text-[#2563eb]">
+                        {t({ fr: "Publié", en: "Published" })}
+                      </span>
+                    )}
+                  </div>
+                  <h2 className={`mt-5 font-instrument text-[24px] font-normal leading-[1.2] tracking-[-0.02em] md:text-[27px] ${a.live ? ink : "text-[#6b7688]"}`}>
+                    {t({ fr: a.titleFr, en: a.titleEn })}
+                  </h2>
+                  <p className={`mt-3 max-w-[62ch] font-inter text-[15px] leading-[1.65] ${a.live ? "text-[#5b6577]" : "text-[#6b7688]"}`}>
+                    {t({ fr: a.excerptFr, en: a.excerptEn })}
+                  </p>
+                  {a.live && (
+                    <span className="mt-5 inline-flex items-center gap-1.5 font-inter text-[14px] font-semibold text-[#3b82f6]">
+                      {t({ fr: "Lire l'article", en: "Read the article" })}
+                      <ArrowRight className="reg-card-arrow h-4 w-4" />
+                    </span>
+                  )}
+                </>
+              );
+
+              const shell = `reg-card rounded-3xl px-7 py-7 md:px-8 ${card} ring-1 ${line}`;
+
+              /* Un sujet annoncé n'est pas cliquable : il n'y a rien à lire. */
+              return a.live ? (
+                <button
+                  key={a.id}
+                  onClick={() => setOpenArticle(a.id)}
+                  className={`${shell} reg-card-live block w-full text-left`}
+                >
+                  {inner}
+                </button>
+              ) : (
+                <div key={a.id} className={`${shell} opacity-[0.72]`}>
+                  {inner}
+                </div>
+              );
             })}
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <button
-              onClick={openBooking}
-              className="inline-flex items-center gap-2 rounded-full bg-[#3b82f6] px-6 py-3 font-inter text-[15px] font-semibold text-white transition-colors hover:bg-[#2563eb]"
-            >
-              {t(BOOKING_CTA)}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => onNavigate("produit")}
-              className="font-inter text-[15px] font-semibold text-[#3b82f6] hover:underline"
-            >
-              {t({ fr: "Voir l'application", en: "See the application" })}
-            </button>
           </div>
         </div>
-      </article>
+      </div>
     </main>
   );
 };
