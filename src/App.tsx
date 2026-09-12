@@ -509,6 +509,7 @@ import { OraFooter } from "./components/Footer";
 // below. File kept for reference.
 // import OraHeroVideo from "./components/OraHeroVideo";
 import OraHeroDemo from "./components/OraHeroDemo";
+import OraHeroScenes from "./components/OraHeroScenes";
 // DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: the main
 // demo (ora-1.mp4) now lives in the hero. Component file kept for reference.
 // import DemoVideoCurtain from "./components/DemoVideoCurtain";
@@ -523,6 +524,8 @@ import OraHeroDemo from "./components/OraHeroDemo";
    ⚠ L'ACCUEIL N'EST PAS DANS CETTE LISTE. Il est rendu en ligne dans la branche
    finale du conditionnel, sans import de page ; le découper n'aurait aucun sens,
    c'est la page qu'on vient chercher. */
+const ProduitPage = lazy(() => import("./pages/ProduitPage"));
+const ReglementationPage = lazy(() => import("./pages/ReglementationPage"));
 const ForBusinessPage = lazy(() => import("./pages/ForBusinessPage"));
 const OraExperiencePage = lazy(() => import("./pages/OraExperiencePage"));
 const SolutionTemplatePage = lazy(() => import("./pages/SolutionTemplatePage"));
@@ -645,6 +648,8 @@ const FadeInOnScroll = ({
 // === URL-based routing helpers ===
 type Page =
   | "home"
+  | "produit"
+  | "reglementation"
   | "for-business"
   | "ora-experience"
   | "solution-template"
@@ -664,6 +669,8 @@ type Page =
 
 const PAGE_TO_PATH: Record<Page, string> = {
   "home": "/",
+  "produit": "/produit",
+  "reglementation": "/reglementation",
   "for-business": "/for-business",
   "ora-experience": "/ora-experience",
   "solution-template": "/solution-template",
@@ -713,6 +720,20 @@ const PAGE_META: Record<Page, { title: { fr: string; en: string }; desc: { fr: s
     desc: {
       fr: "Ora enchaîne le travail répétitif qui va de la donnée brute au document final. Traitement local, résultat reproductible, journal d'audit.",
       en: "Ora runs the repetitive chain from raw data to finished document. Local processing, reproducible results, audit trail.",
+    },
+  },
+  "produit": {
+    title: { fr: "L'application Ora", en: "The Ora app" },
+    desc: {
+      fr: "L'application qui enchaîne vos traitements récurrents, de la donnée brute au livrable : démonstrations en vidéo, module par module.",
+      en: "The app that runs your recurring work from raw data to deliverable: video demos, module by module.",
+    },
+  },
+  "reglementation": {
+    title: { fr: "Réglementation et conformité", en: "Regulation and compliance" },
+    desc: {
+      fr: "Où se place Ora face au RGPD, à l'AI Act et au secret professionnel de l'expert-comptable : le détail de nos choix d'architecture.",
+      en: "Where Ora stands on GDPR, the AI Act and accountants' professional secrecy: our architecture choices, in detail.",
     },
   },
   "for-business": {
@@ -1172,6 +1193,19 @@ const App = () => {
      erreurs « comparaison impossible ». L'assertion garde l'union. */
   const theme = "light" as "light" | "dark";
 
+  /* Quel hero servir : voir le pavé au point de montage. Le seuil est celui du
+     `lg:` de Tailwind, et l'état est lu de façon synchrone pour qu'aucun
+     visiteur ne voie l'un des deux heros avant l'autre. */
+  const [isDesktopHero, setIsDesktopHero] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktopHero(mq.matches);
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const benefitsRef = useRef<HTMLElement | null>(null);
   const [_benefitsPhase, setBenefitsPhase] = useState<"problem" | "solution">("problem");
 
@@ -1257,6 +1291,10 @@ const App = () => {
       <Suspense fallback={<div className="min-h-screen" />}>
       {page === "not-found" ? (
         <NotFoundPage key={notFoundKey} theme={theme} onNavigate={navigateTo} />
+      ) : page === "produit" ? (
+        <ProduitPage theme={theme} openBooking={openBooking} />
+      ) : page === "reglementation" ? (
+        <ReglementationPage theme={theme} openBooking={openBooking} onNavigate={navigateTo} />
       ) : page === "for-business" ? (
         <ForBusinessPage theme={theme} openBooking={openBooking} />
       ) : page === "ora-experience" ? (
@@ -1303,7 +1341,28 @@ const App = () => {
       {/* Hero = démo scrollée RÉTABLIE (client 2026-07-29), mais elle OUVRE
           désormais sur l'interface du logiciel Ora, plus sur Excel. Le
           noircissement de fin de démo est conservé tel quel. */}
-      <OraHeroDemo theme={theme} openBooking={openBooking} />
+      {/* ⚠ DEUX HEROS, ET C'EST LA LARGEUR D'ÉCRAN QUI TRANCHE (client
+          2026-09-12 : « uniquement sur version PC la nouvelle version »).
+          · à partir de 1024 px : OraHeroScenes, le hero « façon attio »,
+            texte épinglé qui s'efface pendant que la scène monte et passe
+            d'une fenêtre à quatre ;
+          · en dessous : OraHeroDemo, la démo scrollée déjà en production.
+          L'ALTERNATIVE EN CSS A ÉTÉ ÉCARTÉE. Monter les deux et en masquer un
+          avec `hidden lg:block` paraît plus simple, mais OraHeroDemo porte une
+          machine à états de verrouillage du défilement, ses propres écouteurs
+          de scroll et une scène Three.js : monté caché, il continuerait de
+          tourner et de se disputer la molette avec l'autre hero. Un seul des
+          deux existe donc à la fois.
+          L'état part de `matchMedia` de façon SYNCHRONE, pas dans un effet :
+          initialisé à false puis corrigé après coup, le visiteur desktop
+          verrait l'ancien hero s'afficher puis être remplacé.
+          Le seuil suit le `lg:` de Tailwind, comme les media queries internes
+          d'OraHeroScenes : les deux doivent basculer au même pixel. */}
+      {isDesktopHero ? (
+        <OraHeroScenes theme={theme} openBooking={openBooking} />
+      ) : (
+        <OraHeroDemo theme={theme} openBooking={openBooking} />
+      )}
 
       {/* ExcelReveal — le défilement de phrases sur fond noir (« Votre temps
           est votre actif le plus précieux ») — RETIRÉ (client 2026-08-11 :

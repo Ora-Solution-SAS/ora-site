@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowUp, Paperclip, Play, Plus } from "lucide-react";
+import OraStar from "./ui/OraStar";
 import { VideoWithScrubber } from "./InViewVideo";
 import OraAppScene from "./OraAppScene";
 import { useLang } from "@/lib/i18n";
@@ -96,9 +97,18 @@ interface AutomationTabsProps {
   openBooking: () => void;
 }
 
-/** L'enregistrement d'écran du module Bilan développé (fourni le 2026-08-13,
- *  Built-in Retina Display.mp4, 1660 x 1080). */
-const DEMO_CLIP = "/demo-automatisation.mp4";
+/** ⚠ LE PANNEAU « BILAN DÉVELOPPÉ » PORTE UNE IMAGE, PLUS UN CLIP. Le client
+ *  a fourni le 2026-09-10 trois captures du module refait ; celle-ci est le
+ *  « bilan imagé » proprement dit : l'actif et le passif en blocs
+ *  proportionnels, et la formation du résultat dessous. L'enregistrement
+ *  d'écran qu'elle remplace (/demo-automatisation.mp4, 2026-08-13) montrait la
+ *  version précédente du module ; il reste dans public/, et tout
+ *  l'appareillage vidéo (VideoWithScrubber, reprise à zéro, barre de lecture)
+ *  est récupérable au commit a664e11.
+ *  Les deux autres captures sont disponibles si l'on veut détailler le
+ *  parcours : ora_bilan_entrees.jpg (le choix de la pièce) et
+ *  ora_bilan_developpe.jpg (les montants lus). */
+const BILAN_IMAGE = "/posters/ora_bilan_illustration.jpg";
 
 /** ── LA DÉMO PRINCIPALE ────────────────────────────────────────────────────
  *  ora-1.mp4, 3840 x 2160, 34 secondes : le film du produit, celui que le
@@ -359,7 +369,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     <section
       id="automatisations"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-0 bg-white dark:bg-black"
+      /* pt AUGMENTE le 2026-09-12 (client : « ajoute plus d'espace, surtout
+         au-dessus de Vos fichiers entrent »). 32 -> 44 : le grand titre
+         arrivait trop pres du hero, qui se termine desormais par une scene
+         epinglee et non par du texte. A garder en phase avec le pb de la
+         section du hero, les deux forment un seul intervalle. */
+      className="relative px-6 md:px-12 pt-16 md:pt-44 pb-0 bg-white dark:bg-black"
     >
       <div className={`mx-auto max-w-[86rem] border-x ${rule}`}>
         <motion.h2
@@ -747,15 +762,15 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                       <div className="mb-3 flex justify-end">
                         <ZoomButton
                           onClick={() => setZoom(i)}
-                          label={t({ fr: "Agrandir la vidéo", en: "Enlarge the video" })}
+                          label={t({ fr: "Agrandir l’image", en: "Enlarge the image" })}
                           inline
                         />
                       </div>
-                      <VideoWithScrubber
-                        src={DEMO_CLIP}
-                        frameClassName="relative overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
-                        frameStyle={{ aspectRatio: "1660 / 1037" }}
-                        className="block h-full w-full object-cover object-bottom"
+                      <img
+                        src={BILAN_IMAGE}
+                        alt=""
+                        loading="lazy"
+                        className="block w-full rounded-[12px] bg-white object-contain ring-1 ring-[#0a2540]/[0.10] shadow-[0_24px_60px_-30px_rgba(10,37,64,0.45)] dark:ring-white/10"
                       />
                     </div>
                     </div>
@@ -869,25 +884,54 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
                               })}
                             </span>
                           </p>
-                          {/* Le champ s'écrit tout seul (client 2026-08-13). Reste
-                              un DÉCOR : aria-hidden, aucun input réel, la vraie
-                              saisie vit dans le logiciel. `min-w-0` sur le
+                          {/* ⚠ CE N'EST PLUS UNE PILULE DE DÉCOR, C'EST LA TOOLBAR
+                              DE L'ASSISTANT, à l'identique (client 2026-09-10,
+                              trois captures du logiciel à l'appui : « reprends
+                              des designs issus du logiciel »). Ce qui la rend
+                              reconnaissable, c'est qu'elle a DEUX NIVEAUX : la
+                              question derrière le ✦, puis une ligne d'outils
+                              qui porte le +, le trombone, le rappel de saisie et
+                              le bouton d'envoi rond. La note d'anonymisation
+                              vit dessous, comme dans l'app.
+                              Reste un DÉCOR : aria-hidden, aucun input réel, la
+                              vraie saisie vit dans le logiciel. `min-w-0` sur le
                               conteneur du texte, sinon la phrase en cours de
-                              frappe pousse la pastille bleue hors du champ. */}
-                          <div aria-hidden className="mt-10 md:mt-16 flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] dark:bg-[#111827] dark:ring-white/10">
-                            <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#5b6577] dark:text-gray-300">
-                              <Typewriter
-                                phrases={[
-                                  t({
-                                    fr: "Comment optimiser la rémunération du dirigeant",
-                                    en: "How to optimise the director's pay",
-                                  }),
-                                ]}
-                              />
-                            </span>
-                            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
-                              <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
-                            </span>
+                              frappe pousse le bouton hors du champ. */}
+                          <div aria-hidden className="mt-10 md:mt-16">
+                            {/* ⚠ UNE SEULE RANGÉE, TOUS LES ÉLÉMENTS SUR LE MÊME
+                                AXE (client 2026-09-10 : « il faut que tous les
+                                éléments soient horizontalement alignés sur la
+                                toolbar »). C'est la barre d'ACCUEIL du logiciel,
+                                pas celle de la page Agent : le +, l'étoile, la
+                                question, le trombone et l'envoi se suivent sur
+                                une ligne. La version à deux niveaux décalait le
+                                texte de la seconde ligne par rapport à celui de
+                                la première, et le rappel « Entrée envoie… »,
+                                absent de la barre d'accueil, part avec elle. */}
+                            <div className="flex items-center gap-3 rounded-full bg-white py-2.5 pl-5 pr-2.5 ring-1 ring-[#0a2540]/[0.10] shadow-[0_10px_30px_-18px_rgba(10,37,64,0.35)] dark:bg-[#111827] dark:ring-white/10">
+                              <Plus className="h-4 w-4 shrink-0 text-[#64748b] dark:text-gray-400" />
+                              <OraStar className="h-4 w-4 shrink-0 text-[#3b82f6]" />
+                              <span className="min-w-0 flex-1 truncate font-inter text-[13.5px] text-[#0f172a] dark:text-gray-200">
+                                <Typewriter
+                                  phrases={[
+                                    t({
+                                      fr: "Comment optimiser la rémunération du dirigeant",
+                                      en: "How to optimise the director's pay",
+                                    }),
+                                  ]}
+                                />
+                              </span>
+                              <Paperclip className="h-4 w-4 shrink-0 text-[#94a3b8] dark:text-gray-500" />
+                              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#3b82f6] text-white">
+                                <ArrowUp className="h-4 w-4" strokeWidth={2.2} />
+                              </span>
+                            </div>
+                            <p className="mt-2.5 text-center font-inter text-[11px] text-[#a8b0bd] dark:text-gray-600">
+                              {t({
+                                fr: "Chiffres du moteur, anonymisés avant l'envoi ; à relire par le cabinet.",
+                                en: "Figures from the engine, anonymised before sending; to be reviewed by the firm.",
+                              })}
+                            </p>
                           </div>
                         </div>
 
@@ -1099,20 +1143,17 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
           onBook={openBooking}
           bookLabel={t(BOOKING_CTA)}
           seeLabel={
-            ITEMS[zoom].media === "video"
-              ? t({ fr: "Voir la démo", en: "Watch the demo" })
-              : t({ fr: "Voir l'aperçu", en: "See the preview" })
+t({ fr: "Voir l'aperçu", en: "See the preview" })
           }
           onClose={() => setZoom(null)}
         >
           {ITEMS[zoom].media === "previsionnel" ? (
             <PrevisionnelStudio />
           ) : ITEMS[zoom].media === "video" ? (
-            <VideoWithScrubber
-              src={DEMO_CLIP}
-              frameClassName="relative overflow-hidden rounded-[12px] ring-1 ring-[#0a2540]/[0.10] dark:ring-white/10"
-              frameStyle={{ aspectRatio: "1660 / 1037" }}
-              className="block h-full w-full object-cover object-bottom"
+            <img
+              src={BILAN_IMAGE}
+              alt=""
+              className="block w-full rounded-[12px] bg-white object-contain ring-1 ring-[#0a2540]/[0.10] dark:ring-white/10"
             />
           ) : ITEMS[zoom].media === "structure" ? (
             <StructureShowcaseCard />

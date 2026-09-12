@@ -9,12 +9,26 @@
       "autoPort": true
     },
     {
+      "name": "ora-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--port", "4820", "--strictPort"],
+      "port": 4820
+    },
+    {
       "name": "atlas-banc",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix",
         "/Users/gaugainraphael/Desktop/All/ORA/Site & Software/Ora_V2/atlas",
         "run", "dev", "--", "--port", "1430", "--strictPort"],
       "port": 1430
+    },
+    {
+      "name": "atlas-1420",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix",
+        "/Users/gaugainraphael/Desktop/All/ORA/Site & Software/Ora_V2/atlas",
+        "run", "dev", "--", "--port", "1420", "--strictPort"],
+      "port": 1420
     }
   ]
 }

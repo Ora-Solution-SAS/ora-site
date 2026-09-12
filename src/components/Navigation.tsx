@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/i18n";
 import { BOOKING_CTA } from "@/lib/bookingCta";
 
-type Page = "home" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
+type Page = "home" | "produit" | "reglementation" | "for-business" | "ora-experience" | "solution-template" | "solution-expertise-comptable" | "solution-audit" | "solution-fonds-investissement" | "solution-banque-affaires" | "confidentialite" | "pricing" | "mentions-legales" | "politique-confidentialite" | "cgu" | "espace-client" | "demo" | "not-found";
 
 type NavigationProps = {
   theme: "light" | "dark";
@@ -256,6 +256,40 @@ const Navigation: React.FC<NavigationProps> = ({
           <NavigationMenu className="hidden md:flex" value={menuValue} onValueChange={setMenuValue}>
             <NavigationMenuList>
 
+              {/* Produit — la page de présentation de l'application, en tête
+                  de barre comme chez la référence (legora.com). */}
+              <NavigationMenuItem>
+                <button
+                  type="button"
+                  onClick={() => { setMenuValue(""); setMobileOpen(false); onNavigate("produit"); }}
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "text-[15.5px] font-normal text-[#323338] hover:text-[#323338] dark:text-gray-300",
+                    overDark && "text-white/85 hover:text-white hover:bg-white/10",
+                  )}
+                >
+                  {t({ fr: "Produit", en: "Product" })}
+                </button>
+              </NavigationMenuItem>
+
+              {/* Réglementation — le centre de ressources (client 2026-09-10 :
+                  « mets aussi un lien pour voir la page réglementation »). En
+                  barre principale plutôt qu'en pied de page : sur ce marché la
+                  conformité est une objection d'achat, pas une mention légale. */}
+              <NavigationMenuItem>
+                <button
+                  type="button"
+                  onClick={() => { setMenuValue(""); setMobileOpen(false); onNavigate("reglementation"); }}
+                  className={cn(
+                    navigationMenuTriggerStyle(),
+                    "text-[15.5px] font-normal text-[#323338] hover:text-[#323338] dark:text-gray-300",
+                    overDark && "text-white/85 hover:text-white hover:bg-white/10",
+                  )}
+                >
+                  {t({ fr: "Réglementation", en: "Regulation" })}
+                </button>
+              </NavigationMenuItem>
+
               {/* Solutions */}
               {/* Liens en Figtree 400, 15,5 px, encre quasi noire #323338 — les
                   valeurs de la barre monday (client 2026-08-08 : « même police,
@@ -400,6 +434,22 @@ const Navigation: React.FC<NavigationProps> = ({
       {mobileOpen && typeof window !== "undefined" && createPortal(
         <div className="fixed top-[68px] inset-x-0 bottom-0 z-40 bg-[#ffffff]/95 dark:bg-black/95 backdrop-blur-xl border-t border-gray-200/60 dark:border-white/[0.08] md:hidden overflow-y-auto">
           <div className="px-6 py-4 flex flex-col gap-1">
+
+            <button
+              type="button"
+              onClick={() => { setMobileOpen(false); onNavigate("produit"); }}
+              className="flex items-center px-3 py-2.5 mt-1 rounded-lg text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-left"
+            >
+              {t({ fr: "Produit", en: "Product" })}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setMobileOpen(false); onNavigate("reglementation"); }}
+              className="flex items-center px-3 py-2.5 rounded-lg text-[14px] font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100/70 dark:hover:bg-white/[0.06] transition-colors text-left"
+            >
+              {t({ fr: "Réglementation", en: "Regulation" })}
+            </button>
 
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 px-3 pt-2 pb-1">{t({ fr: "Solutions", en: "Solutions" })}</p>
             {solutionsLinks.map((item) => (

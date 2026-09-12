@@ -386,18 +386,19 @@ const HD_CSS = `
    (l'effet monday.com — le changement est continu mais presque subliminal).
    hue-rotate sur le conteneur : le dégradé du texte ET le logo dérivent
    ensemble. */
-/* Client 2026-09-02 : « quand l'utilisateur arrive, la vitesse de changement
-   de couleur doit etre ultra rapide UNE fois, puis au rythme actuel ». Deux
-   animations chainees sur la meme propriete : la premiere fait un TOUR
-   COMPLET de teinte en 1,1 s et ne joue qu'une fois ; la seconde est la
-   derive lente d'origine (9 s, aller-retour), retardee d'autant pour prendre
-   le relais pile ou la premiere repose la teinte a zero. Meme filtre, donc
-   aucun saut au passage de relais.
+/* ⚠ LE TOUR DE TEINTE D'ACCUEIL A ETE RETIRE (client 2026-09-10 : « enleve ce
+   changement ultra rapide de couleur pour Ora Solution en action, c'est
+   affreux »). Il avait ete demande le 2026-09-02 sous la forme « ultra rapide
+   UNE fois, puis au rythme actuel » : un hdBrandTour de 1,1 s faisait un tour
+   complet de teinte a l'arrivee, avant de ceder la main a la derive lente.
+   A l'usage, ce tour vire au vert puis au rouge en une seconde sur la ligne
+   de marque, juste sous le logo bleu de la barre : c'est lu comme un bug
+   d'affichage, pas comme une intention. Ne pas le remettre sans une nouvelle
+   demande explicite. Reste la derive d'origine, continue et presque
+   subliminale (l'effet monday.com).
    (Pas d'accent grave dans ce bloc : template literal.) */
 .hd-brandline{display:inline-flex;align-items:center;gap:10px;
-  animation:hdBrandTour 1.1s cubic-bezier(.3,0,.2,1) 1,
-    hdBrandHue 9s ease-in-out 1.1s infinite alternate}
-@keyframes hdBrandTour{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-360deg)}}
+  animation:hdBrandHue 9s ease-in-out infinite alternate}
 @keyframes hdBrandHue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(-45deg)}}
 @media (prefers-reduced-motion:reduce){
   .hd-blob{animation:none}
