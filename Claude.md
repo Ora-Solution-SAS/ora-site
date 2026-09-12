@@ -131,6 +131,20 @@ Pages alternate between two backgrounds to create visual rhythm. Use these exact
 
 In JSX: `bg = dk ? "#111827" : "#fcfbf7"` and `bgContrast = dk ? "#0f172a" : "#ffffff"`
 
+> **Exception datée, deux pages : `/produit` et `/reglementation` sont en
+> `#fafaf9`, pas `#fcfbf7`** (client 2026-09-11, capture de legora.com à
+> l'appui : « le mien est trop foncé »). La valeur est relevée sur
+> `legora.com/product/editor`, `rgb(250, 250, 249)`.
+> Le piège, si quelqu'un veut « corriger » : `#fcfbf7` est **plus clair** que
+> `#fafaf9` en luminance (L\* 98,7 contre 98,2). Ce n'est donc pas un problème
+> de clarté mais de dominante : le crème tire vers le jaune et paraît sale
+> contre les cartes `#ffffff` posées dessus, là où le neutre de legora ne le
+> fait pas. Ces deux pages débrayent déjà l'alternance A/B et tiennent sur un
+> seul aplat, ce qui expose d'autant plus la dominante.
+> **Ne pas propager `#fafaf9` au reste du site sans le demander**, et ne pas
+> re-basculer ces deux pages vers `#fcfbf7`. Les liserés beiges `#e8e4d9` de
+> `/reglementation` n'ont pas été retouchés, eux.
+
 > `tailwind.config.cjs` carries all of the above as tokens (`brand-blue`,
 > `brand-blue-hover`, `bg-light`, `bg-dark-alt`, `ink-strong`, `ink-muted`,
 > `ink-faint`). Prefer the token over the raw hex in new code.

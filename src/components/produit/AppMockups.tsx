@@ -1091,8 +1091,12 @@ export function ModuleCard({ module: m }: { module: (typeof APP_MODULES)[number]
       <div className="relative aspect-[3/4] overflow-hidden rounded-[10px]" style={{ background: m.stage }}>
         <m.Scene />
       </div>
-      <h3 className="mt-4 text-[15px] font-semibold text-[#111827]">{m.title}</h3>
-      <p className="mt-1 text-[13px] leading-[1.6] text-[#5b6577]">{m.sub}</p>
+      {/* Graisse 400 et non 600 : relevé sur les tuiles « Explore the suite of
+          tools » de legora (15 px/400 pour le titre, 13 px/1,3 pour le sous-
+          titre, 4 px entre les deux). Le semi-gras faisait basculer la grille
+          du côté carte SaaS. */}
+      <h3 className="mt-4 text-[15px] font-normal leading-[1.3] text-[#111827]">{m.title}</h3>
+      <p className="mt-1 text-[13px] leading-[1.3] text-[#5b6577]">{m.sub}</p>
     </div>
   );
 }

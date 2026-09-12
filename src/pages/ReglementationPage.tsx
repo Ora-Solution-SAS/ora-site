@@ -240,7 +240,7 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
   /* ══ L'ARTICLE ══════════════════════════════════════════════════════ */
   if (openArticle === "secret-professionnel") {
     return (
-      <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fcfbf7" }}>
+      <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fafaf9" }}>
         <style>{pageCSS}</style>
 
         <article className="mx-auto max-w-[720px] px-6 pb-28 pt-16 md:pt-24">
@@ -507,7 +507,7 @@ const ReglementationPage: React.FC<Props> = ({ theme, openBooking, onNavigate })
   const shown = ARTICLES.filter((a) => a.topic === topic);
 
   return (
-    <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fcfbf7" }}>
+    <main className="min-h-screen" style={{ background: dk ? "#111827" : "#fafaf9" }}>
       <style>{pageCSS}</style>
 
       <div className="mx-auto max-w-[1180px] px-6 pb-28 pt-16 md:pt-24">

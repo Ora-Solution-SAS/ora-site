@@ -25,7 +25,35 @@ interface ProduitPageProps {
    couleurs restent celles d'Ora (Instrument Sans / Inter, un seul bleu).
    Les médias étaient d'abord les vidéos de démo ; remplacés le jour même par
    des maquettes JSX des écrans ACTUELS du logiciel (client : « en reprenant
-   ce à quoi ressemble actuellement le software »), voir AppMockups.tsx. */
+   ce à quoi ressemble actuellement le software »), voir AppMockups.tsx.
+
+   ── ÉCHELLE TYPOGRAPHIQUE, relevée sur legora le 2026-09-11 ───────────────
+   Le client a redemandé la référence, captures à l'appui : « reprends les
+   éléments de design, particulièrement pour écritures, leur taille,
+   positionnement, paragraphes ». Valeurs mesurées en `getComputedStyle` sur
+   legora.com/product/editor à 1440 px de large, marge de page 24 px :
+
+     fil d'Ariane   13,2 px / 400 / 1,4     gris #68655e puis encre pleine
+     h1             48 px   / 400 / 1,0     interlettrage -0,03em
+     corps du héros 15 px   / 400 / 1,3     encre PLEINE, pas grise
+     étiquette      11 px   / 400 / 1,3     capitales, AUCUN interlettrage
+     h2 de section  32 px   / 400 / 1,1     interlettrage -0,01em
+     corps colonne  15 px   / 400 / 1,3     gris
+     tuile          titre 15/400/1,3, sous-titre 13/400/1,3, 4 px entre les deux
+     verticales     étiquette → titre 12 px, titre → corps 16 px
+     colonnes       texte ≈ 30 % de la largeur utile, énoncé décalé d'un tiers
+                    et plafonné à 800 px, étiquette alignée sur SON HAUT
+
+   Deux points à ne pas « corriger » :
+   - **L'interligne de corps est 1,3, pas 1,7.** C'est le principal écart avec
+     le reste du site et c'est lui qui donne les pavés compacts de legora. En
+     français les paragraphes sont plus longs qu'en anglais, donc si le client
+     trouve cela serré, le levier est de RACCOURCIR le texte avant de relâcher
+     l'interligne.
+   - **Le h2 des rangées est à 29,6 px et non 32 px**, et sa colonne fait
+     308 px contre 419 px chez legora. Ce n'est pas un oubli : le média occupe
+     trois quarts de la rangée sur demande datée du client (2026-09-10), ce
+     qui laisse une colonne plus étroite que la référence. */
 
 const pageCSS = `
 @keyframes prdFadeUp {
@@ -52,13 +80,19 @@ const pageCSS = `
 .prd-thin { -webkit-font-smoothing: antialiased; }
 `;
 
-/* L'œil de section : la même convention que le reste du site (12 px, Inter
-   semi-gras, capitales espacées, encre #6b7688 sur clair). */
+/* L'œil de section. ⚠ CETTE PAGE S'ÉCARTE DE LA CONVENTION DU SITE (12 px,
+   Inter semi-gras, capitales espacées à 0.08em, encre #6b7688). Relevé sur
+   legora.com/product/editor le 2026-09-11 : 11 px, graisse 400, interligne
+   1,3, AUCUN interlettrage, et une encre quasi noire (#0a0a0a) et non grise.
+   C'est ce qui fait la différence de caractère : l'étiquette legora se lit
+   comme une légende posée, la nôtre criait comme un kicker SaaS.
+   Le composant est local à ce fichier, donc le reste du site n'est pas
+   touché. Ne pas « réaligner » sur la convention sans le demander. */
 function Eyebrow({ children, onDark = false }: { children: React.ReactNode; onDark?: boolean }) {
   return (
     <p
-      className={`font-inter text-[12px] font-semibold uppercase tracking-[0.08em] ${
-        onDark ? "text-white/50" : "text-[#6b7688]"
+      className={`font-inter text-[11px] font-normal uppercase leading-[1.3] ${
+        onDark ? "text-white/70" : "text-[#111827]"
       }`}
     >
       {children}
@@ -87,8 +121,12 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
      cohérence de couleur background... le background blanc derrière qui coupe
      tout ») : l'alternance beige/blanc de CLAUDE.md est débrayée sur cette
      page, comme chez legora où le corps est un seul blanc cassé et où la
-     variété vient des panneaux médias. */
-  const bg = dk ? "#111827" : "#fcfbf7";
+     variété vient des panneaux médias.
+     2026-09-11 : ce blanc cassé passe du crème #fcfbf7 au neutre #fafaf9,
+     relevé sur legora.com (rgb(250,250,249)). Le crème est pourtant plus
+     clair en luminance ; c'est sa dominante jaune qui le faisait paraître
+     sale à côté des cartes blanches posées dessus. */
+  const bg = dk ? "#111827" : "#fafaf9";
 
   useEffect(() => {
     requestAnimationFrame(() => setReady(true));
@@ -158,7 +196,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
                   </span>
                 </p>
                 <h1
-                  className={`prd-thin prd-stagger prd-d2 mt-8 font-instrument text-[clamp(2.2rem,4vw,3.4rem)] font-normal leading-[1.06] tracking-[-0.03em] ${
+                  className={`prd-thin prd-stagger prd-d2 mt-8 font-instrument text-[clamp(2.2rem,4vw,3rem)] font-normal leading-[1.02] tracking-[-0.03em] ${
                     dk ? "text-white" : "text-[#111827]"
                   }`}
                 >
@@ -167,7 +205,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
               </div>
 
               <div className="mt-10 lg:mt-0">
-                <p className={`prd-stagger prd-d3 max-w-[42ch] font-inter text-[15px] leading-[1.7] ${dk ? "text-gray-400" : "text-[#42506b]"}`}>
+                <p className={`prd-stagger prd-d3 max-w-[400px] font-inter text-[15px] leading-[1.3] ${dk ? "text-gray-300" : "text-[#111827]"}`}>
                   {t({
                     fr: "Ora est l'application qui enchaîne vos traitements récurrents, de la donnée brute au livrable final. Le traitement reste sur votre poste, le résultat est reproductible, chaque étape est consignée.",
                     en: "Ora is the app that runs your recurring work, from raw data to the final deliverable. Processing stays on your machine, results are reproducible, every step is logged.",
@@ -200,7 +238,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal grid gap-8 lg:grid-cols-[1fr_2fr]">
             <Eyebrow>{t({ fr: "De la donnée brute au livrable", en: "From raw data to deliverable" })}</Eyebrow>
-            <p className={`prd-thin max-w-[36ch] font-instrument text-[clamp(1.45rem,2.2vw,1.9rem)] font-normal leading-[1.22] tracking-[-0.015em] ${dk ? "text-white" : "text-[#111827]"}`}>
+            <p className={`prd-thin max-w-[800px] font-instrument text-[clamp(1.5rem,2.4vw,2rem)] font-normal leading-[1.1] tracking-[-0.01em] ${dk ? "text-white" : "text-[#111827]"}`}>
               {t({ fr: "Vous déposez un fichier, Ora déroule la chaîne complète. ", en: "Drop a file, and Ora runs the full chain. " })}
               <span className="text-[#6b7688]">
                 {t({
@@ -228,10 +266,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
                 </div>
                 <div className={i % 2 === 1 ? "lg:order-1" : ""}>
                   <Eyebrow>{f.eyebrow}</Eyebrow>
-                  <h2 className={`prd-thin mt-4 font-instrument text-[1.55rem] font-normal leading-[1.15] tracking-[-0.02em] md:text-[1.8rem] ${dk ? "text-white" : "text-[#111827]"}`}>
+                  <h2 className={`prd-thin mt-3 font-instrument text-[1.6rem] font-normal leading-[1.1] tracking-[-0.01em] md:text-[1.85rem] ${dk ? "text-white" : "text-[#111827]"}`}>
                     {f.title}
                   </h2>
-                  <p className={`mt-4 max-w-[46ch] font-inter text-[15px] leading-[1.7] ${dk ? "text-gray-400" : "text-[#5b6577]"}`}>
+                  <p className={`mt-4 max-w-[46ch] font-inter text-[15px] leading-[1.3] ${dk ? "text-gray-400" : "text-[#5b6577]"}`}>
                     {f.desc}
                   </p>
                 </div>
@@ -251,7 +289,7 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal">
             <Eyebrow onDark>{t({ fr: "Ora en action", en: "Ora in action" })}</Eyebrow>
-            <p className="prd-thin mt-4 max-w-[40ch] font-instrument text-[clamp(1.4rem,2.1vw,1.8rem)] font-normal leading-[1.24] tracking-[-0.015em] text-white">
+            <p className="prd-thin mt-3 max-w-[800px] font-instrument text-[clamp(1.5rem,2.4vw,2rem)] font-normal leading-[1.1] tracking-[-0.01em] text-white">
               {t({
                 fr: "L'agent répond sur vos dossiers, cite la provenance de chaque jugement et lance les traitements.",
                 en: "The agent answers on your files, cites where every judgement comes from and runs the processing.",
@@ -289,10 +327,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       <section className="py-20 md:py-28" style={{ background: bg }}>
         <div className="mx-auto max-w-[1600px] px-6 lg:px-8">
           <div className="prd-reveal">
-            <h2 className={`font-inter text-[15px] font-semibold ${dk ? "text-white" : "text-[#111827]"}`}>
+            <h2 className={`font-inter text-[15px] font-normal leading-[1.3] ${dk ? "text-white" : "text-[#111827]"}`}>
               {t({ fr: "Explorer les modules", en: "Explore the modules" })}
             </h2>
-            <p className="mt-1.5 font-inter text-[14px] text-[#5b6577]">
+            <p className="mt-1 font-inter text-[13px] leading-[1.3] text-[#5b6577]">
               {t({
                 fr: "Chaque module s'appuie sur la même chaîne de traitement.",
                 en: "Every module runs on the same processing chain.",
@@ -314,10 +352,10 @@ export default function ProduitPage({ theme, openBooking }: ProduitPageProps) {
       {/* ── Clôture ─────────────────────────────────────────────────── */}
       <section className="py-24 md:py-32" style={{ background: bg }}>
         <div className="prd-reveal mx-auto max-w-2xl px-6 text-center">
-          <h2 className={`prd-thin font-instrument text-[clamp(1.8rem,2.9vw,2.4rem)] font-normal leading-[1.14] tracking-[-0.025em] ${dk ? "text-white" : "text-[#111827]"}`}>
+          <h2 className={`prd-thin font-instrument text-[clamp(1.8rem,2.9vw,2.4rem)] font-normal leading-[1.1] tracking-[-0.02em] ${dk ? "text-white" : "text-[#111827]"}`}>
             {t({ fr: "Prêt à voir Ora sur vos fichiers ?", en: "Ready to see Ora on your files?" })}
           </h2>
-          <p className="mt-4 font-inter text-[16px] leading-[1.7] text-[#5b6577]">
+          <p className="mt-4 font-inter text-[16px] leading-[1.45] text-[#5b6577]">
             {t({
               fr: "Écrivez-nous, et venez avec un cas concret : nous regardons ensemble ce qu'Ora peut en faire.",
               en: "Write to us, and bring a real case: we will look together at what Ora can do with it.",
