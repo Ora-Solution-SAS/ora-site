@@ -1302,19 +1302,12 @@ export default function OraHeroScenes({ openBooking }: OraHeroScenesProps) {
           </div>
         </div>
 
-        {/* ── Petit écran : l'accueil seul, sans la mécanique de défilement ── */}
-        <div className="mt-10 pb-12 lg:hidden">
-          <div className="overflow-hidden rounded-[14px] bg-white ring-1 ring-black/[0.08] shadow-[0_24px_60px_-24px_rgba(15,23,42,0.35)]">
-            <TitleBar title="Ora" />
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <div className="absolute left-0 top-0 origin-top-left" style={{ width: 1180, transform: "scale(0.34)" }}>
-                <div style={{ height: 820 }}>
-                  <ScreenAccueil />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Aucun repli pour petit écran ici : en dessous de 1024 px c'est
+            OraHeroDemo qui est monté, pas ce composant (client 2026-09-12,
+            voir le pavé du point de montage dans App.tsx). Les règles mobiles
+            de `.ohs-track` / `.ohs-pin` restent dans le CSS : elles ne coûtent
+            rien et servent de garde-fou si le seuil des deux côtés se
+            désynchronisait un jour. */}
       </div>
     </section>
   );

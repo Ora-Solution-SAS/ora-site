@@ -508,7 +508,7 @@ import { OraFooter } from "./components/Footer";
 // OraHeroVideo (single ora-1.mp4 demo) replaced by the scroll-driven demo
 // below. File kept for reference.
 // import OraHeroVideo from "./components/OraHeroVideo";
-// import OraHeroDemo from "./components/OraHeroDemo";
+import OraHeroDemo from "./components/OraHeroDemo";
 import OraHeroScenes from "./components/OraHeroScenes";
 // DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: the main
 // demo (ora-1.mp4) now lives in the hero. Component file kept for reference.
@@ -1193,6 +1193,19 @@ const App = () => {
      erreurs « comparaison impossible ». L'assertion garde l'union. */
   const theme = "light" as "light" | "dark";
 
+  /* Quel hero servir : voir le pavé au point de montage. Le seuil est celui du
+     `lg:` de Tailwind, et l'état est lu de façon synchrone pour qu'aucun
+     visiteur ne voie l'un des deux heros avant l'autre. */
+  const [isDesktopHero, setIsDesktopHero] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setIsDesktopHero(mq.matches);
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const benefitsRef = useRef<HTMLElement | null>(null);
   const [_benefitsPhase, setBenefitsPhase] = useState<"problem" | "solution">("problem");
 
@@ -1328,15 +1341,28 @@ const App = () => {
       {/* Hero = démo scrollée RÉTABLIE (client 2026-07-29), mais elle OUVRE
           désormais sur l'interface du logiciel Ora, plus sur Excel. Le
           noircissement de fin de démo est conservé tel quel. */}
-      {/* ⚠ HERO « FAÇON ATTIO » À L'ESSAI (client 2026-09-11 : « je veux que tu
-          testes de copier coller ce que fait attio via ses deux screens »).
-          Texte centré, puis une scène qui passe d'UNE fenêtre (l'accueil) à
-          QUATRE (Excel + volet, chat, journal, livrable), en carrousel
-          automatique comme chez attio. OraHeroDemo n'est pas modifié : pour
-          revenir en arrière, réactiver son import et remettre la ligne
-          `<OraHeroDemo theme={theme} openBooking={openBooking} />`.
-          Voir l'en-tête d'OraHeroScenes.tsx pour ce qu'attio fait vraiment. */}
-      <OraHeroScenes theme={theme} openBooking={openBooking} />
+      {/* ⚠ DEUX HEROS, ET C'EST LA LARGEUR D'ÉCRAN QUI TRANCHE (client
+          2026-09-12 : « uniquement sur version PC la nouvelle version »).
+          · à partir de 1024 px : OraHeroScenes, le hero « façon attio »,
+            texte épinglé qui s'efface pendant que la scène monte et passe
+            d'une fenêtre à quatre ;
+          · en dessous : OraHeroDemo, la démo scrollée déjà en production.
+          L'ALTERNATIVE EN CSS A ÉTÉ ÉCARTÉE. Monter les deux et en masquer un
+          avec `hidden lg:block` paraît plus simple, mais OraHeroDemo porte une
+          machine à états de verrouillage du défilement, ses propres écouteurs
+          de scroll et une scène Three.js : monté caché, il continuerait de
+          tourner et de se disputer la molette avec l'autre hero. Un seul des
+          deux existe donc à la fois.
+          L'état part de `matchMedia` de façon SYNCHRONE, pas dans un effet :
+          initialisé à false puis corrigé après coup, le visiteur desktop
+          verrait l'ancien hero s'afficher puis être remplacé.
+          Le seuil suit le `lg:` de Tailwind, comme les media queries internes
+          d'OraHeroScenes : les deux doivent basculer au même pixel. */}
+      {isDesktopHero ? (
+        <OraHeroScenes theme={theme} openBooking={openBooking} />
+      ) : (
+        <OraHeroDemo theme={theme} openBooking={openBooking} />
+      )}
 
       {/* ExcelReveal — le défilement de phrases sur fond noir (« Votre temps
           est votre actif le plus précieux ») — RETIRÉ (client 2026-08-11 :
