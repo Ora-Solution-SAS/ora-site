@@ -508,7 +508,8 @@ import { OraFooter } from "./components/Footer";
 // OraHeroVideo (single ora-1.mp4 demo) replaced by the scroll-driven demo
 // below. File kept for reference.
 // import OraHeroVideo from "./components/OraHeroVideo";
-import OraHeroDemo from "./components/OraHeroDemo";
+// import OraHeroDemo from "./components/OraHeroDemo";
+import OraHeroScenes from "./components/OraHeroScenes";
 // DemoVideoCurtain (white "Vos dossiers financiers…" panel) removed: the main
 // demo (ora-1.mp4) now lives in the hero. Component file kept for reference.
 // import DemoVideoCurtain from "./components/DemoVideoCurtain";
@@ -1327,7 +1328,15 @@ const App = () => {
       {/* Hero = démo scrollée RÉTABLIE (client 2026-07-29), mais elle OUVRE
           désormais sur l'interface du logiciel Ora, plus sur Excel. Le
           noircissement de fin de démo est conservé tel quel. */}
-      <OraHeroDemo theme={theme} openBooking={openBooking} />
+      {/* ⚠ HERO « FAÇON ATTIO » À L'ESSAI (client 2026-09-11 : « je veux que tu
+          testes de copier coller ce que fait attio via ses deux screens »).
+          Texte centré, puis une scène qui passe d'UNE fenêtre (l'accueil) à
+          QUATRE (Excel + volet, chat, journal, livrable), en carrousel
+          automatique comme chez attio. OraHeroDemo n'est pas modifié : pour
+          revenir en arrière, réactiver son import et remettre la ligne
+          `<OraHeroDemo theme={theme} openBooking={openBooking} />`.
+          Voir l'en-tête d'OraHeroScenes.tsx pour ce qu'attio fait vraiment. */}
+      <OraHeroScenes theme={theme} openBooking={openBooking} />
 
       {/* ExcelReveal — le défilement de phrases sur fond noir (« Votre temps
           est votre actif le plus précieux ») — RETIRÉ (client 2026-08-11 :

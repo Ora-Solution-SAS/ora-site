@@ -369,7 +369,12 @@ export default function AutomationTabs({ theme, openBooking }: AutomationTabsPro
     <section
       id="automatisations"
       data-nav-shy
-      className="relative px-6 md:px-12 pt-14 md:pt-32 pb-0 bg-white dark:bg-black"
+      /* pt AUGMENTE le 2026-09-12 (client : « ajoute plus d'espace, surtout
+         au-dessus de Vos fichiers entrent »). 32 -> 44 : le grand titre
+         arrivait trop pres du hero, qui se termine desormais par une scene
+         epinglee et non par du texte. A garder en phase avec le pb de la
+         section du hero, les deux forment un seul intervalle. */
+      className="relative px-6 md:px-12 pt-16 md:pt-44 pb-0 bg-white dark:bg-black"
     >
       <div className={`mx-auto max-w-[86rem] border-x ${rule}`}>
         <motion.h2

@@ -9,6 +9,12 @@
       "autoPort": true
     },
     {
+      "name": "ora-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview", "--", "--port", "4820", "--strictPort"],
+      "port": 4820
+    },
+    {
       "name": "atlas-banc",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix",
